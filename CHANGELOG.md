@@ -36,6 +36,13 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-27 — On ne simule plus l'endpoint : on l'enregistre et on le rejoue
+
+- Décision remplacée sur objection du responsable : un serveur dédié étant fourni, l'endpoint d'inférence n'est pas une dépendance impossible à exécuter localement et **ne se simule pas** (`CLAUDE.md` §15). Le faux serveur Ollama prévu par la spécification est abandonné — réimplémenter un contrat mesurable revient à l'inventer et garantit sa dérive.
+- `docs/SPEC_HARNAIS.md` §H4.7 réécrit en **enregistreur/rejoueur** : `make record-llm` capture les échanges HTTP du vrai endpoint dans des cassettes expurgées de la clé et de l'hôte ; les tests les rejouent hors ligne ; une requête sans correspondance rend une erreur explicite au lieu d'une réponse inventée ; `make test-int-live` détecte toute dérive du contrat réel. Seules les fautes que le serveur ne produit pas à la demande (500, latence, coupure) sont injectées — les 401 et 413 réels sont enregistrés.
+- Composant renommé `llm-replay` par symétrie avec `arc-replay`, qui reste un service local pour une raison différente et documentée : chaque appel réel à l'API ARC publie un scorecard.
+- U4 réécrite en conséquence, U7 ajustée, `make record-llm` et `make test-int-live` ajoutées au contrat ; README, DAT, plan directeur et Makefile mis en cohérence.
+
 ### 2026-08-27 — U3 : squelette du harnais et chaîne d'outillage conteneurisée
 
 - Paquet `avo` (`src/avo`) sans aucune dépendance d'exécution, arborescence des sous-paquets prévus par la spécification, point d'entrée `python -m avo` avec `--version` et une aide qui déclare les sous-commandes du contrat ; une sous-commande spécifiée mais non livrée refuse explicitement en nommant l'unité de backlog qui la livrera.

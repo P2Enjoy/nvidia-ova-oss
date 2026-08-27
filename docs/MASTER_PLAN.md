@@ -23,7 +23,7 @@ session et produit du code ; aucune unité documentaire ne reste ouverte.
 
 | Lot | Unités | Contenu |
 |---|---|---|
-| A — Socle | U3–U5 | squelette Python, mock-llm, conteneurisation + seed |
+| A — Socle | U3–U5 | squelette Python, llm-replay, conteneurisation + seed |
 | B — Client LLM | U6–U8 | config, client d'inférence, comptabilité/journalisation |
 | C — Contexte | U9–U11 | transcript append-only, budget/continuation, notes |
 | D — Boucle | U12–U15 | outils, boucle P→I→E→B, lignée+score, superviseur |
@@ -54,14 +54,14 @@ l'unité en `[~]` si ses preuves n'ont pas toutes tourné.
   `make test-int` ciblés (`PYTEST_ARGS`), `make lint`, `make typecheck` ;
 - **campagne complète de fin de session** : `make check` = lint + typecheck +
   test-unit + test-int + test-e2e + build. C'est la « campagne » au sens de
-  `docs/CloudWorker.md` §2.3/§4.3. Elle tourne intégralement hors ligne (mocks,
+  `docs/CloudWorker.md` §2.3/§4.3. Elle tourne intégralement hors ligne (rejeu,
   `mode=replay`), sans `.env` et sans réseau externe.
 
 Ce dépôt n'a ni base de données applicative, ni messagerie, ni interface web : les
 classes « tests de base de données », « E2E de messagerie », « E2E d'interface »
 du contrat worker sont **sans objet** ici ; les sections Node/Playwright/port 4173 de
 `docs/CloudWorker.md` ne s'appliquent qu'aux dépôts qui portent cet outillage, pas à
-celui-ci. La pile compose du dépôt (`make up`) sert les mocks `mock-llm` et
+celui-ci. La pile compose du dépôt (`make up`) sert les services de rejeu `llm-replay` et
 `arc-replay` ; le seed est `make seed`.
 
 ## 5. Vérification « dans la peau de l'utilisateur » (adaptation CLAUDE.md §16)
@@ -82,7 +82,7 @@ Une unité passe à `[x]` seulement si :
    commentaires `@spec`/`@verifies` vers l'unité et les chapitres cités ;
 2. ses tests propres (unitaires + intégration et/ou E2E selon l'unité) existent et
    passent ; `make check` entier est vert en fin de session ;
-3. les mocks et le seed reflètent tout nouveau comportement (CLAUDE.md §8) ;
+3. les cassettes, fixtures et seed reflètent tout nouveau comportement (CLAUDE.md §8) ;
 4. `README.md`, `docs/DAT.md`, `CHANGELOG.md` ([Non publié]), le journal et le
    backlog sont à jour dans le même commit ; les documents rendus faux sont corrigés ;
 5. commit(s) poussé(s) sur `origin/main`.

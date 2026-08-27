@@ -49,7 +49,7 @@ RUN := $(DOCKER) run --rm -v "$(CURDIR)":/app -w /app $(USER_FLAG) \
 endif
 
 .DEFAULT_GOAL := aide
-.PHONY: aide image install lint typecheck test-unit test-int test-e2e check build up down seed smoke-live run-arc docker-check
+.PHONY: aide image install lint typecheck test-unit test-int test-e2e check build up down seed smoke-live run-arc record-llm test-int-live docker-check
 
 aide:
 	@echo "Cibles du dépôt (contrat : docs/SPEC_HARNAIS.md §H2.3) — tout tourne dans Docker"
@@ -62,9 +62,11 @@ aide:
 	@echo "  make test-e2e    tests de bout en bout"
 	@echo "  make check       CAMPAGNE COMPLÈTE (hors ligne, sans secret)"
 	@echo "  make build       image de production               [à venir : U5]"
-	@echo "  make up / down   pile locale (mocks)               [à venir : U5]"
+	@echo "  make up / down   pile locale (rejeu)               [à venir : U5]"
 	@echo "  make seed        données de démonstration          [à venir : U4/U16]"
 	@echo "  make smoke-live  fumée contre l'endpoint réel      [à venir : U8]"
+	@echo "  make record-llm  enregistre les cassettes sur le VRAI endpoint [à venir : U4]"
+	@echo "  make test-int-live  rejoue l'intégration contre le vrai serveur [à venir : U4]"
 	@echo "  make run-arc     campagne ARC-AGI-3                [à venir : U23]"
 	@echo ""
 	@echo "  AVO_NO_DOCKER=1 make test-unit   mode dégradé sur l'hôte (stdlib seule)"
@@ -129,7 +131,7 @@ endif
 
 test-int:
 	@if [ -z "$$(find tests/integration -name 'test_*.py' -print -quit 2>/dev/null)" ]; then \
-	  echo "aucun test d'intégration à ce stade — les premiers arrivent avec U4 (mock-llm)."; \
+	  echo "aucun test d'intégration à ce stade — les premiers arrivent avec U4 (llm-replay)."; \
 	elif [ -n "$(AVO_NO_DOCKER)" ]; then \
 	  PYTHONPATH=src $(PY) -m unittest discover -s tests/integration -t . -v; \
 	else \
@@ -177,6 +179,19 @@ seed:
 smoke-live:
 	@echo "make smoke-live : à venir en U8 — exige .env, jamais dans 'make check'" >&2
 	@echo "  (docs/SPEC_HARNAIS.md §H4.8)" >&2
+	@exit 2
+
+# Le contrat de l'endpoint n'est jamais inventé : il est enregistré sur le vrai
+# serveur, puis rejoué. Ces deux cibles exigent .env et ne sont JAMAIS dans
+# 'make check' (docs/SPEC_HARNAIS.md §H4.7).
+record-llm:
+	@echo "make record-llm : à venir en U4 — enregistre les cassettes sur le vrai endpoint" >&2
+	@echo "  (exige .env ; docs/SPEC_HARNAIS.md §H4.7)" >&2
+	@exit 2
+
+test-int-live:
+	@echo "make test-int-live : à venir en U4 — détection de dérive du contrat réel" >&2
+	@echo "  (exige .env ; docs/SPEC_HARNAIS.md §H4.7)" >&2
 	@exit 2
 
 run-arc:

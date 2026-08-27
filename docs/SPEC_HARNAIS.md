@@ -70,7 +70,7 @@ src/avo/            paquet applicatif
   runlog.py         H11
   arc/              SPEC_ARCAGI3 (client, rendu, interface, rhae, campagne)
   cli.py            point d'entrée `python -m avo`
-mocks/mock_llm/     serveur local contrat-Ollama (H4.7)
+mocks/llm_replay/   enregistreur/rejoueur du vrai endpoint (H4.7)
 mocks/arc_replay/   serveur local contrat-ARC (SPEC_ARCAGI3 §A3)
 tests/unit|integration|e2e/
 tests/fixtures/     fixtures déterministes (seed)
@@ -85,7 +85,8 @@ s'installe sur l'hôte), `make lint`, `make typecheck`, `make test-unit`,
 `make test-int`, `make test-e2e`, `make check` (campagne complète), `make build`
 (image de production), `make up`/`make down` (pile compose), `make seed` (régénère
 `tests/fixtures/`), `make smoke-live` (H4.8, hors campagne), `make run-arc`
-(SPEC_ARCAGI3 §A7). Toute preuve de session utilise ces cibles.
+(SPEC_ARCAGI3 §A7), `make record-llm` et `make test-int-live` (H4.7, exigent
+`.env`, hors campagne). Toute preuve de session utilise ces cibles.
 
 - **Cible non encore livrée** : elle échoue en nommant l'unité qui la livrera, jamais
   un succès simulé (CLAUDE.md §18).
@@ -103,9 +104,9 @@ s'installe sur l'hôte), `make lint`, `make typecheck`, `make test-unit`,
    + `pytest`, `ruff`, `mypy`. Le code n'y est pas copié mais monté en volume, pour
    qu'une modification locale soit prouvable sans reconstruction. C'est le seul endroit
    où l'outillage est installé.
-2. **Pile de services** (`docker-compose.yml`, livrée en U5) : services `mock-llm` et
+2. **Pile de services** (`docker-compose.yml`, livrée en U5) : services `llm-replay` et
    `arc-replay`, healthchecks HTTP, ports fixes documentés (défauts : 11435 pour
-   mock-llm, 8765 pour arc-replay).
+   llm-replay, 8765 pour arc-replay).
 
 La pile de développement est autonome : aucun service payant, aucun réseau externe,
 aucune installation sur la machine hôte.
@@ -142,7 +143,7 @@ valeur apprise et l'événement journalisé.
 variable requise absente pour le mode demandé) → erreur explicite au démarrage,
 nommant la variable. Jamais de valeur par défaut silencieuse pour un secret.
 
-**H3.4 — Modes.** `mode=replay` (défaut : mocks locaux, aucun réseau externe, aucun
+**H3.4 — Modes.** `mode=replay` (défaut : services de rejeu locaux, aucun réseau externe, aucun
 secret requis) et `mode=live` (endpoint réel + API ARC réelle ; exige les secrets).
 Les tests et le worker n'utilisent que `replay`.
 
@@ -175,13 +176,36 @@ est journalisé.
 credentials dans les logs. Au niveau INFO : compteurs et durées ; le contenu complet
 des échanges va dans le transcript du run (H11), fichier local uniquement.
 
-**H4.7 — mock-llm (seed du projet).** Serveur stdlib reproduisant le contrat mesuré :
-`GET /api/version` (401 sans Bearer, sinon `{"version":"mock"}`), `GET /api/tags`,
-`POST /api/chat` — réponses tirées d'un scénario JSONL chargé au démarrage
-(`tests/fixtures/llm/*.jsonl` : suites de `ChatResult` à servir dans l'ordre, y compris
-des `tool_calls` scriptés), erreurs simulables par requête de pilotage
-(`POST /_control` : forcer 401, 413 avec corps mesuré, 500, latence). Toute évolution
-du contrat réel mesurée en live se répercute sur le mock dans le même chunk.
+**H4.7 — `llm-replay` : on développe contre le VRAI serveur, on rejoue ses réponses.**
+
+Décision du responsable, 2026-08-27 : un endpoint d'inférence dédié est fourni ; il
+n'est donc **pas** une dépendance « impossible à exécuter localement » et **ne se
+simule pas** (CLAUDE.md §15). Aucun faux serveur Ollama n'est écrit : réimplémenter un
+contrat que l'on peut mesurer revient à l'inventer, et garantit sa dérive.
+
+Le dispositif est un **enregistreur/rejoueur** :
+
+1. **Enregistrement** (`make record-llm`, exige `.env`) : le client H4 appelle le
+   **vrai** endpoint ; chaque échange HTTP est capturé tel quel — requête envoyée,
+   statut, en-têtes retenus, corps de réponse intégral, durées — dans une cassette
+   `tests/fixtures/llm/cassettes/<nom>.jsonl`. La clé et l'hôte réel n'y figurent
+   jamais (expurgés à l'écriture, vérifié par test).
+2. **Rejeu** (défaut des tests, aucun secret, aucun réseau) : `llm-replay` sert les
+   cassettes en appariant les requêtes sur une clé stable (méthode, chemin, modèle,
+   empreinte des messages). Une requête qui ne correspond à aucune entrée rend une
+   erreur explicite nommant l'écart — un test rouge lisible, jamais une réponse
+   inventée.
+3. **Détection de dérive** : `make test-int-live` rejoue les mêmes scénarios contre le
+   serveur réel et compare au contrat enregistré. Un écart est un défaut à traiter,
+   pas une cassette à réécrire en silence.
+4. **Injection de fautes** : `llm-replay` sait rendre les erreurs que le serveur réel
+   ne produit pas à la demande (500, latence, coupure). Les erreurs **réelles** —
+   `401` sans clé ou avec clé invalide, `413` avec son corps de quota — sont
+   enregistrées depuis le vrai serveur, où elles ont déjà été mesurées le 2026-08-27,
+   et non fabriquées.
+
+Le contrat servi en rejeu est donc toujours d'origine mesurée. Les tests unitaires,
+eux, ne touchent ni cassette ni réseau.
 
 **H4.8 — `make smoke-live`.** Vérification manuelle hors campagne : version, modèles,
 une complétion courte, un tool-call. Exige `.env` ; jamais exécutée par les tests ni
@@ -355,9 +379,10 @@ notes (H6), registre d'outils (H7 : dispatch, erreurs, garde), machine d'états 
 transitions sur événements scriptés), lignée (H9 : politique de commit, isolation
 git), superviseur (H10 : déclencheurs sur trajectoires synthétiques), scorer (H9.4).
 
-**H14.2 — Intégration** (contre mock-llm) : boucle complète avec scénarios JSONL
-(tool_calls scriptés), 401/413/500/latence simulés, continuation réelle sous petit
-budget.
+**H14.2 — Intégration** (contre `llm-replay`, cassettes enregistrées sur le vrai
+serveur) : boucle complète, tool_calls, 401 et 413 **réels** rejoués, 500 et latence
+injectés, continuation réelle sous petit budget. Variante `test-int-live` contre le
+serveur réel pour détecter toute dérive du contrat.
 
 **H14.3 — E2E** : voir SPEC_ARCAGI3 §A8 (partie de jeu complète sur rejeu local, par
 la CLI réelle, artefacts vérifiés).

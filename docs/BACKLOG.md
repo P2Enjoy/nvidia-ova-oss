@@ -47,26 +47,38 @@ réécrits sur le réel.
   Contrôlé également qu'une exécution conteneurisée ne laisse ni cache ni fichier
   `root` dans le dépôt monté.
 
-## U4 — Serveur mock-llm `[ ]`
+## U4 — `llm-replay` : enregistrement et rejeu du vrai endpoint `[ ]`
 
-`@spec` H4.7 (+ contrat mesuré au journal 2026-08-27). Serveur stdlib :
-`/api/version`, `/api/tags`, `/api/chat` (scénarios JSONL, tool_calls scriptés),
-Bearer obligatoire (401 sinon), `/_control` (forcer 401/413 avec corps
-`{tokens_estimated, max_context_tokens}`/500/latence). Premières fixtures
-`tests/fixtures/llm/` + `make seed` (partie llm).
+`@spec` H4.7. **Aucun faux serveur Ollama n'est écrit** : le contrat n'est pas
+inventé, il est capturé sur le serveur dédié fourni. Livrer (a) l'enregistreur —
+un mode du client H4 qui écrit chaque échange HTTP réel dans une cassette
+`tests/fixtures/llm/cassettes/*.jsonl`, expurgée de la clé et de l'hôte ; (b) le
+rejoueur `mocks/llm_replay/`, qui sert ces cassettes en appariant les requêtes sur
+une clé stable et rend une **erreur explicite** si une requête ne correspond à
+aucune entrée ; (c) l'injection de fautes que le serveur réel ne produit pas à la
+demande (500, latence, coupure) ; (d) les cibles `make record-llm` et
+`make test-int-live` (toutes deux exigent `.env`) ; (e) `make seed` (partie llm).
+Les erreurs **réelles** — 401 sans clé et avec clé invalide, 413 avec son corps de
+quota — sont enregistrées depuis le vrai serveur, où elles ont déjà été mesurées le
+2026-08-27, jamais fabriquées.
 
-- Preuves : tests unitaires du serveur (auth, scénario, contrôle d'erreurs) ;
-  test d'intégration HTTP réel (serveur lancé sur port éphémère).
+- Preuves : unitaires (appariement de requêtes, expurgation vérifiée en cherchant la
+  clé dans les cassettes écrites, erreur explicite sur requête inconnue, injection de
+  fautes) ; intégration HTTP réelle contre le rejoueur sur port éphémère.
+- **[LIVE] pour l'enregistrement uniquement** : la capture initiale des cassettes
+  appelle le vrai endpoint (coût GPU modeste, aucun effet de bord irréversible). Le
+  worker planifié peut livrer le code et les tests de rejeu ; si `.env` est absent,
+  il laisse l'unité `[~]` en nommant les cassettes restant à enregistrer.
 
 ## U5 — Pile compose des services `[ ]`
 
 `@spec` H2.4. L'image de développement est déjà livrée par U3 : cette unité livre la
-**pile de services** — `docker-compose.yml` (service `mock-llm`, healthcheck ;
+**pile de services** — `docker-compose.yml` (service `llm-replay`, healthcheck ;
 `arc-replay` rejoindra en U16), image de production (`make build`), `make up/down/seed`
 opérationnels, README/DAT mis à jour (lancement, ports).
 
 - Preuves : `make build` ; `make up` puis healthcheck vert vérifié par script ;
-  E2E de fumée : `curl` du mock via le port composé, 401 sans clé, 200 avec.
+  E2E de fumée : `curl` du service de rejeu via le port composé, 401 sans clé, 200 avec.
 
 ## Lot B — Client LLM
 
@@ -84,8 +96,10 @@ opérationnels, README/DAT mis à jour (lancement, ports).
 `ChatResult`, erreurs typées, retries bornés avec jitter.
 
 - Preuves : unitaires (parsing, classification d'erreurs, politique de retry) ;
-  intégration contre mock-llm : nominal, tool_call scripté, 401 fatal, 413 →
-  `ContextOverflow` avec champs, 500 → retries puis échec, latence < timeout.
+  intégration contre `llm-replay` sur **cassettes enregistrées du vrai serveur** :
+  nominal, tool_call, 401 fatal, 413 → `ContextOverflow` avec ses champs réels,
+  500 → retries puis échec, latence < timeout. `make test-int-live` rejoue les mêmes
+  scénarios contre l'endpoint réel pour détecter toute dérive du contrat.
 
 ## U8 — Comptabilité, journalisation, workspace de run `[ ]`
 
@@ -95,7 +109,7 @@ opérationnels, README/DAT mis à jour (lancement, ports).
 
 - Preuves : unitaires (aucune fuite de secret dans les sorties — test qui greppe la
   clé dans les logs produits ; métriques cumulées correctes) ; intégration : un
-  échange complet contre mock-llm produit un workspace conforme H6.1.
+  échange complet contre llm-replay produit un workspace conforme H6.1.
 
 ## Lot C — Contexte et mémoire
 
@@ -114,7 +128,7 @@ estimation calibrée corrigée par `prompt_eval_count`.
 l'agent, nouveau segment (système + continuation + notes + observation), `413` →
 continuation immédiate + budget appris, double-413 → erreur fatale explicite.
 
-- Preuves : unitaires (seuils, recalcul du budget) ; intégration contre mock-llm
+- Preuves : unitaires (seuils, recalcul du budget) ; intégration contre llm-replay
   avec petit budget forcé : la continuation se produit, le contenu du segment frais
   est exactement celui spécifié, un 413 simulé est absorbé, deux → erreur.
 
@@ -136,7 +150,7 @@ des `tool_calls`, messages `role: tool` append-only, erreurs d'outil renvoyées 
 modèle, garde `AVO_TOOL_STEPS_MAX`.
 
 - Preuves : unitaires (dispatch, arguments invalides → erreur textuelle, garde) ;
-  intégration : scénario mock-llm à tool_calls multiples, transcript conforme.
+  intégration : scénario llm-replay à tool_calls multiples, transcript conforme.
 
 ## U13 — Boucle agent P→I→E→B `[ ]`
 
@@ -146,7 +160,7 @@ outils d'action, bornes d'actions, `think:false` par défaut (H12).
 
 - Preuves : unitaires des transitions (événements scriptés : action jouée, niveau
   complété, game over, contradiction) ; intégration : boucle complète contre
-  mock-llm scripté sur un environnement factice en mémoire (sans ARC), bornes
+  llm-replay scripté sur un environnement factice en mémoire (sans ARC), bornes
   respectées, transcript append-only préservé.
 
 ## U14 — Lignée et fonction de score `[ ]`
@@ -166,7 +180,7 @@ message de commit.
 séparé, injection `[SUPERVISEUR]` append-only, cooldown, journalisation des motifs.
 
 - Preuves : unitaires des détecteurs sur trajectoires synthétiques (positifs ET
-  négatifs) ; intégration : scénario mock-llm en stagnation → une intervention,
+  négatifs) ; intégration : scénario llm-replay en stagnation → une intervention,
   cooldown respecté, motif dans `metrics.jsonl`.
 
 ## Lot E — ARC-AGI-3
@@ -207,7 +221,7 @@ part), outils `action1..6`/`reset` filtrés par la frame, comptage officiel +
 réconciliation A5.3, branchement complet sur la boucle U13 et le scorer U14.
 
 - Preuves : unitaires (filtrage des actions déclarées, validation (row,col),
-  comptage RESET conforme A1.2) ; intégration : l'agent (mock-llm scripté) joue des
+  comptage RESET conforme A1.2) ; intégration : l'agent (llm-replay scripté) joue des
   actions sur arc-replay via l'interface, l'historique typé et les compteurs sont
   exacts ; revue explicite « zéro indice de jeu » consignée.
 

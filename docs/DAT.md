@@ -25,7 +25,7 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 | `avo.supervisor` | H10 | détection de stagnation, intervention conditionnelle |
 | `avo.runlog` | H11 | logs JSON sans secret, métriques, transcripts |
 | `avo.arc` | A2, A4–A7 | client API ARC, rendu texte, interface de tâche, RHAE, campagne |
-| `mocks/mock_llm` | H4.7 | contrat Ollama local, scénarios scriptés, erreurs simulables |
+| `mocks/llm_replay` | H4.7 | rejeu d'échanges enregistrés sur le vrai endpoint, injection de fautes |
 | `mocks/arc_replay` | A3 | contrat ARC local, jeu synthétique `cible`, rejeu d'épisodes |
 
 ## Flux principaux
@@ -49,7 +49,7 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 - **Workspace de run** `runs/<id>/` : manifest, transcripts JSONL, notes, frames
   typées, lignée (git dédié), métriques, rapport. Gitignoré ; les rapports de
   campagne officielle sont copiés sous `docs/rapports/`.
-- **Fixtures** `tests/fixtures/` : scénarios mock-llm (JSONL), paramètres du jeu
+- **Fixtures** `tests/fixtures/` : scénarios llm-replay (JSONL), paramètres du jeu
   `cible`, épisodes ARC expurgés. Régénérées par `make seed` (contrat de données de
   démonstration).
 
@@ -70,7 +70,7 @@ projet par le harnais (lignée isolée sous `runs/`).
 
 ## Déploiement et exécution
 
-Pile locale : `make up` (compose : mock-llm, arc-replay), `make seed`, `make check`
+Pile locale : `make up` (compose : llm-replay, arc-replay), `make seed`, `make check`
 (campagne de preuves complète, hors ligne). Live : `make smoke-live` (manuel),
 `python -m avo run-arc --mode live` avec garde d'accord explicite. Pas
 d'environnement de production : le « déploiement » est la campagne d'évaluation

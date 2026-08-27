@@ -180,3 +180,24 @@ Pour référence si un filtrage IP apparaissait ensuite : IP de sortie observée
 **Preuves exécutées, dans le conteneur.** `ruff check` : aucune anomalie (un dépassement de 105 colonnes trouvé et corrigé au passage) ; `ruff format --check` : 14 fichiers déjà formatés ; `mypy` en mode **strict** : 14 fichiers, aucune anomalie ; `pytest` : **7 tests verts**. Vérification opérateur refaite dans le conteneur. Contrôle final : aucun cache ni fichier `root` laissé dans le dépôt. **U3 est donc `[x]`** — toutes ses preuves ont réellement tourné.
 
 **Où reprendre.** U4 (serveur mock-llm), dans l'ordre du plan. Le mode dégradé `AVO_NO_DOCKER=1` reste documenté pour un environnement sans Docker, mais il n'est plus le chemin de cet hôte.
+
+---
+
+## 2026-08-27 (suite 6) — Décision remplacée : on ne simule pas l'endpoint, on l'enregistre et on le rejoue
+
+**Objection du responsable, et elle est fondée.** « Si je te donne un serveur dédié pour développer contre le réel, pourquoi veux-tu faire un mock ? » La spécification H4.7 prévoyait un serveur `mock-llm` reproduisant le contrat Ollama. C'était une erreur de conception : `CLAUDE.md` §15 réserve les mocks aux dépendances **impossibles à exécuter localement**, et l'endpoint fourni n'en est pas une. Réimplémenter un contrat que l'on peut mesurer revient à l'inventer, et garantit sa dérive — le défaut classique du mock, que le papier Tycho documente d'ailleurs pour ses propres verificateurs.
+
+**Décision remplacée (H4.7 réécrit).** Plus aucun faux serveur Ollama. Le dispositif est un **enregistreur/rejoueur** :
+
+1. `make record-llm` appelle le **vrai** endpoint et capture chaque échange HTTP tel quel dans une cassette, expurgée de la clé et de l'hôte ;
+2. les tests rejouent ces cassettes hors ligne, sans secret ; une requête sans correspondance rend une erreur explicite nommant l'écart, jamais une réponse inventée ;
+3. `make test-int-live` rejoue les mêmes scénarios contre le serveur réel : un écart est un défaut à traiter, pas une cassette à réécrire en silence ;
+4. seules les fautes que le serveur ne produit pas à la demande (500, latence, coupure) sont injectées. Les erreurs **réelles** — 401 sans clé et avec clé invalide, 413 avec son corps de quota — sont enregistrées depuis le vrai serveur, où elles ont déjà été mesurées (entrée « suite 2 »).
+
+Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est renommé `llm-replay`, par symétrie avec `arc-replay`.
+
+**Pourquoi `arc-replay` reste, lui, un serveur local.** La différence n'est pas de principe mais d'effet de bord : chaque partie jouée via l'API ARC **publie un scorecard** sur le compte du responsable. C'est exactement le cas « impossible à exécuter localement » de `CLAUDE.md` §15 — on ne peut pas s'entraîner gratuitement dessus. Son contrat est néanmoins lui aussi ancré sur du réel : la sonde U22 enregistre un épisode authentique qui sert de référence (A3.3), et le jeu synthétique `cible` n'imite aucun jeu officiel, c'est une fixture pour éprouver la mécanique du harnais.
+
+**Portée.** H4.7 réécrit ; H2.3 gagne `make record-llm` et `make test-int-live` ; U4 réécrite dans le backlog (avec la nuance : le code et les tests de rejeu sont livrables sans `.env`, seule la capture initiale des cassettes est [LIVE]) ; U7, README, DAT, MASTER_PLAN et Makefile mis en cohérence.
+
+**Où reprendre.** U4, dans sa nouvelle définition. Le cron horaire est armé (job `9347a105`, à :07) : cette correction est committée avant sa première itération, pour qu'il ne construise pas ce qui vient d'être écarté.

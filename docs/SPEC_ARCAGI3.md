@@ -92,7 +92,7 @@ healthcheck ; peuplé par `make seed`.
 expurgées de tout secret). La sonde U22 produit le premier épisode réel. Une requête
 qui dévie de l'épisode → réponse d'erreur explicite (test rouge lisible).
 
-**A3.4 — Seed.** `make seed` régénère les fixtures déterministes (scénarios mock-llm,
+**A3.4 — Seed.** `make seed` régénère les fixtures déterministes (scénarios llm-replay,
 paramètres du jeu `cible`, épisodes) — c'est le contrat de données de démonstration du
 dépôt (CLAUDE.md §8) : reproductible, couvrant succès, refus (401), erreurs (413,
 game over) et branches (RESET, continuation).
@@ -188,7 +188,7 @@ diff/inspect (A4.3), RHAE (A6.3), typage d'historique (A2.2), moteur du jeu `cib
 épisode dévié → erreur explicite, garde anti-publication A2.3).
 
 **A8.3 — E2E (preuve cœur du produit)** : depuis la CLI réelle, pile compose debout,
-l'agent complet (mock-llm scripté pour le déterminisme) joue le jeu `cible` de bout
+l'agent complet (llm-replay scripté pour le déterminisme) joue le jeu `cible` de bout
 en bout, gagne les 3 niveaux, le RHAE calculé est exactement la valeur attendue en
 forme fermée, `report.md` et la lignée existent et sont cohérents. Un second
 scénario E2E couvre l'échec : game over, RESET, puis victoire.

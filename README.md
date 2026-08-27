@@ -27,7 +27,7 @@ Les éléments constitutifs, tirés des sources exportées dans [`knowledge/`](k
 ## Stack
 
 - **Python ≥ 3.11, zéro dépendance d'exécution** (bibliothèque standard uniquement) ; outillage de développement : pytest, ruff, mypy (`docs/SPEC_HARNAIS.md` §H2, motifs inclus).
-- Pile locale conteneurisée (Docker Compose) : mocks `mock-llm` (contrat Ollama) et `arc-replay` (contrat ARC-AGI-3 + jeu synthétique) — développement et tests entièrement hors ligne.
+- Pile locale conteneurisée (Docker Compose) : `llm-replay` (rejeu d'échanges **enregistrés sur le vrai endpoint** — aucun faux serveur) et `arc-replay` (contrat ARC-AGI-3 + jeu synthétique, car chaque appel réel publie un scorecard). Les tests tournent ainsi hors ligne sans jamais inventer un contrat.
 
 ## Prérequis
 
@@ -89,7 +89,7 @@ Le plafond réellement applicable n'est pas cette variable seule : le proxy d'au
 ├── Makefile             # contrat des commandes, tout en conteneur
 ├── pyproject.toml       # paquet avo, zéro dépendance d'exécution
 ├── src/avo/             # paquet applicatif (cli, llm, context, memory, tools, loop, arc)
-├── mocks/               # serveurs locaux : mock-llm (U4), arc-replay (U16)
+├── mocks/               # serveurs locaux : llm-replay (U4), arc-replay (U16)
 ├── tests/               # unit, integration, e2e, fixtures
 ├── docs/
 │   ├── .routine         # entrée de la tâche planifiée (worker horaire)
