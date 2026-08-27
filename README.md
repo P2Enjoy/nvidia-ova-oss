@@ -39,7 +39,13 @@ Aucune commande de build, de test ou de lancement n'existe encore. Elles seront 
 
 ## Variables d'environnement
 
-Aucune pour l'instant. Le contrat exact (nom, rôle, format, caractère obligatoire) sera défini par la spécification du harnais et documenté ici. Aucun secret réel ne sera jamais ajouté au dépôt.
+Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors dépôt (fichier `.env` local ignoré par git, ou environnement du shell). Aucune valeur réelle ni aucun secret n'est jamais committé.
+
+| Variable | Rôle | Format attendu | Obligatoire | Exemple non sensible |
+|---|---|---|---|---|
+| `OLLAMA_HOST` | URL de base du serveur Ollama (surface compatible OpenAI sous `/v1`, API native sous `/api`) | URL `https://hôte[:port]` sans slash final | oui | `https://inference.example.com` |
+| `OLLAMA_API_KEY` | Clé d'authentification, envoyée en `Authorization: Bearer …` | chaîne opaque | oui | `sk-ollama-xxxxxxxx` |
+| `OLLAMA_CONTEXT_LENGTH` | Fenêtre de contexte configurée côté serveur, en tokens ; borne les budgets de contexte du harnais | entier | oui | `114688` |
 
 ## Structure du dépôt
 
@@ -62,7 +68,8 @@ Aucune pour l'instant. Le contrat exact (nom, rôle, format, caractère obligato
 ## Limites connues
 
 - Le harnais n'est pas implémenté : le dépôt ne contient que la connaissance de référence et la documentation de préparation.
-- L'accès à l'endpoint d'inférence et le choix du modèle dépendent du responsable ; sans eux, aucune évaluation n'est exécutable.
+- L'endpoint d'inférence fourni le 2026-08-27 est sain (vérifié depuis des points de mesure externes) mais **injoignable depuis l'environnement d'exécution**, dont la sortie réseau n'autorise le TLS que vers le port 443 alors que l'endpoint écoute sur un port non standard. Diagnostic complet et options de déblocage : `docs/JOURNAL.md`, entrée du 2026-08-27 (suite). Nécessite une action humaine.
+- Le nom du modèle à utiliser n'est pas encore confirmé par le responsable.
 - L'évaluation ARC-AGI-3 officielle suppose un accès à l'API ARC Prize (scorecards) ; cette dépendance sera traitée dans la spécification.
 
 ## Origine

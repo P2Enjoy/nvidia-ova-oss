@@ -23,7 +23,7 @@ Rédiger et committer, avant toute ligne de code, la spécification du harnais d
 
 Implémenter l'agent principal conformément à U2 : client d'inférence (API compatible OpenAI, retry/timeout/journalisation), boucle d'agent avec outils, mémoire persistante, lignée de solutions versionnée, fonction de score `f` branchable.
 
-- Bloqué par : U2, et par la fourniture par le responsable de l'URL de l'endpoint, de la clé API et du nom du modèle (**nécessite une action humaine**).
+- Bloqué par : U2 ; par la joignabilité de l'endpoint (fourni le 2026-08-27 mais servi sur un port non-443 alors que l'environnement ne sort qu'en 443 — diagnostic complet dans `docs/JOURNAL.md`, options de déblocage listées, **nécessite une action humaine**) ; et par le nom du modèle à utiliser (**nécessite une action humaine**).
 - DoD : tests unitaires et d'intégration propres verts (endpoint simulé localement pour les tests) ; démonstration reproductible documentée.
 
 ## U4 — Superviseur (anti-stagnation) `[ ]`

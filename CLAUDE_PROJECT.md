@@ -12,6 +12,13 @@ Implémentation open source du harnais d'agent **AVO** (papier arXiv:2603.24517)
 - Ces exports sont des instantanés en lecture seule : ne pas les modifier à la main ; en cas de divergence avec la source, re-générer l'export et le consigner dans `docs/JOURNAL.md`.
 - En cas de doute d'interprétation, le PDF sous `knowledge/pdf/` fait foi.
 
+## Configuration de l'endpoint d'inférence
+
+- Trois variables, fournies par le responsable hors dépôt : `OLLAMA_HOST`, `OLLAMA_API_KEY`, `OLLAMA_CONTEXT_LENGTH` (rôles et formats documentés dans `README.md`). En session, elles vivent dans un `.env` local à la racine, couvert par `.gitignore` — vérifier `git check-ignore .env` avant tout commit.
+- Le serveur est un Ollama : surface compatible OpenAI sous `$OLLAMA_HOST/v1` (`/v1/models`, `/v1/chat/completions`), API native sous `/api` (`/api/tags`, `/api/show`, `/api/version`). Authentification `Authorization: Bearer $OLLAMA_API_KEY`.
+- Ni l'URL réelle, ni la clé, ni les adresses d'infrastructure du responsable ne sont écrites dans les fichiers committés (docs comprises) : les documents parlent de « l'endpoint fourni » et des noms de variables.
+- État de joignabilité et procédure de re-test : dernière entrée de `docs/JOURNAL.md`.
+
 ## Conventions locales
 
 - Documentation projet en français ; les exports de `knowledge/` conservent le texte original anglais sous un en-tête de provenance français.

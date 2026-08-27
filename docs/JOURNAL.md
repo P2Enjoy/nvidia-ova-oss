@@ -33,3 +33,33 @@ Trace chronologique des décisions et investigations significatives. La dernièr
 - Confirmation du périmètre « common benchmarks » : ARC-AGI-3 est le benchmark central des sources (nécessite l'API ARC Prize pour un scorecard officiel) ; préciser s'il faut d'autres benchmarks (par ex. SWE-bench-like, optimisation de code) et lesquels sont accessibles depuis cet environnement.
 
 **Où reprendre.** Unité U2 du backlog : rédiger la spécification complète du harnais (architecture, contrat de configuration par variables d'environnement, interface de tâche, protocole d'évaluation, plan de tests) dans `docs/`, la committer, PUIS seulement commencer le code (U3+), une fois l'endpoint fourni.
+
+---
+
+## 2026-08-27 (suite) — Test de l'endpoint d'inférence : serveur sain, mais injoignable depuis cet environnement (sortie limitée au port 443)
+
+**Contexte.** Le responsable a fourni les valeurs `OLLAMA_HOST` (URL https avec port non standard), `OLLAMA_API_KEY` et `OLLAMA_CONTEXT_LENGTH=114688`, avec pour consigne : « before anything, test this endpoint works ». Les valeurs sont conservées hors dépôt (`.env` local, ignoré par git ; vérifié par `git check-ignore`).
+
+**Problème.** Toute connexion TLS vers l'endpoint échoue depuis cet environnement : le tunnel CONNECT du proxy s'établit, le ClientHello part, aucun octet TLS ne revient, reset après ~6 s. Identique avec/sans SNI, en TLS 1.2 forcé, sur 3 tentatives espacées.
+
+**Hypothèses testées et observations (toutes mesurées ce jour).**
+
+1. *Proxy de l'environnement en panne ?* Non : `https://arxiv.org` répond 200 en 0,37 s ; statut du proxy sain.
+2. *Serveur en panne pour tout le monde ?* Non : depuis 5 points de mesure externes (check-host.net : BG, DE ×2, IL, US), le port TCP de l'endpoint accepte la connexion en 0,06–0,48 s ; en HTTPS complet depuis 4 nœuds externes (ES, FI, IT, TR), le handshake TLS aboutit et le serveur répond `404` sur `/` ; en HTTP clair il répond `400` (comportement classique d'un port TLS). **Le service est donc debout et sert TLS au public.** Des nœuds hébergés en datacenter (Hetzner, Miami) passent : pas de filtrage anti-datacenter côté serveur.
+3. *Filtrage IP côté serveur contre notre IP de sortie ?* Non prouvé et devenu inutile comme explication : voir 4.
+4. *Politique de sortie de l'environnement ?* **Oui — cause établie.** Test discriminant : `www.cloudflare.com:443` → handshake TLS 1.3 complet ; `blog.cloudflare.com:2053` (port HTTPS alternatif officiel de Cloudflare, joignable publiquement) → même échec silencieux que l'endpoint ; `1.1.1.1:853` (DoT) → idem. **La sortie réseau de cet environnement n'autorise le TLS que vers le port 443.** Tout port non standard est bloqué, quel que soit l'hôte.
+5. *Et le port 443 de l'hôte de l'endpoint ?* Fermé pour tout le monde (timeout depuis 4 nœuds externes) : il n'est simplement pas exposé/redirigé sur la box.
+
+**Conclusion.** Le serveur d'inférence fonctionne, la clé n'a pas pu être testée (aucun octet applicatif échangé), et le blocage est structurel : l'endpoint écoute sur un port non-443 alors que l'environnement ne sort qu'en 443. Aucune modification du serveur du responsable n'a été tentée.
+
+**Options de déblocage (nécessite une action humaine), au choix :**
+
+1. Exposer le même reverse-proxy TLS sur le **port externe 443** de la box (redirection 443 → service TLS existant) et utiliser `OLLAMA_HOST=https://<hôte>` sans port ;
+2. Mettre l'endpoint derrière un tunnel type **Cloudflare Tunnel** (hostname public en 443, IP du domicile masquée) ;
+3. Vérifier dans les réglages de l'environnement Claude (claude.ai → environnements, politique réseau) si un niveau d'accès autorisant les ports non standard existe.
+
+Pour référence si un filtrage IP apparaissait ensuite : IP de sortie observée `160.79.106.137`, dans la plage de sortie publiée par Anthropic `160.79.104.0/21` (docs.claude.com/en/api/ip-addresses).
+
+**Vérifications réalisées.** Toutes les mesures ci-dessus exécutées ce jour depuis l'environnement (curl, openssl s_client via proxy, check-host.net) ; rapport externe permanent : check-host.net/check-report/49080edck800.
+
+**Où reprendre.** Dès que l'endpoint est joignable en 443 : rejouer le test (version serveur, liste des modèles `/v1/models` et `/api/tags`, complétion `/v1/chat/completions`, `/api/show` pour la fenêtre de contexte), consigner les résultats ici, puis enchaîner sur U2 (spécification du harnais).
