@@ -2,50 +2,257 @@
 
 Statuts : `[ ]` non commencé · `[~]` en cours ou insuffisamment vérifié · `[x]` terminé et intégralement vérifié.
 
-Une unité ne passe à `[x]` qu'après validation de sa Definition of Done (CLAUDE.md §17).
+Ordre d'exécution et Definition of Done commune : `docs/MASTER_PLAN.md`. Chaque unité
+cite ses chapitres de spécification (`docs/SPEC_HARNAIS.md` = H, `docs/SPEC_ARCAGI3.md`
+= A) ; ses spécifications sont déjà écrites — une session la prenant code directement.
+Les unités marquées **[LIVE]** ne sont jamais prises par le worker planifié
+(MASTER_PLAN §3).
 
 ---
 
 ## U1 — Import des sources de connaissance dans `knowledge/` `[x]`
 
-Exporter en markdown + images locales les quatre sources de référence (billet NVIDIA AVO/ARC-AGI-3, papier AVO arXiv:2603.24517, page projet VISTA, papier Tycho arXiv:2607.28287), avec provenance, PDF d'origine et index.
+Réalisé le 2026-08-27 (4 exports fidèles, images, PDF, index ; vérifications au
+journal). Unité documentaire close.
 
-- DoD : 4 exports fidèles présents ; images extraites et liées en relatif ; tous les liens d'images résolvent (vérifié par script) ; figures recadrées inspectées visuellement ; index `knowledge/README.md` écrit ; commit poussé.
-- Réalisé le 2026-08-27. Vérifications listées dans `docs/JOURNAL.md` (entrée du 2026-08-27). Unité documentaire : pas de tests automatisés associés.
+## U2 — Spécification complète du harnais `[x]`
 
-## U2 — Spécification complète du harnais AVO `[ ]`
+Réalisé le 2026-08-27 : `docs/SPEC_HARNAIS.md` (H1–H14), `docs/SPEC_ARCAGI3.md`
+(A1–A8), `docs/MASTER_PLAN.md`, backlog redécoupé en unités d'une session, DAT mis à
+jour. Spécification rédigée après lecture intégrale des quatre exports et sur les
+mesures live du 2026-08-27 (endpoint, `/api/games`). Unité documentaire close —
+c'est la dernière : toutes les suivantes livrent du code.
 
-Rédiger et committer, avant toute ligne de code, la spécification du harnais dans `docs/` (et compléter `docs/DAT.md`) à partir de `knowledge/` : architecture (agent principal, boucle Planning→Implementation→Evaluation→Bug-Fixing, mémoire persistante, lignée git, superviseur), contrat de configuration (variables d'environnement pour l'endpoint compatible OpenAI, le modèle, les budgets), interface de tâche (dont l'interface ARC-AGI-3 direct-interaction en grilles texte 64×64), protocole d'évaluation et métriques (RHAE selon la définition officielle reprise dans l'export Tycho), plan de tests (unitaires, intégration, E2E) et découpage des unités d'implémentation.
+---
 
-- DoD : spécification relue contre les trois sources techniques ; contrat d'API et de configuration défini sans secret ; `docs/DAT.md` mis à jour ; backlog détaillé des unités d'implémentation ; commit documentaire poussé.
+## Lot A — Socle
 
-## U3 — Cœur du harnais : boucle agent + client endpoint compatible OpenAI `[ ]`
+## U3 — Squelette Python et outillage `[ ]`
 
-Implémenter l'agent principal conformément à U2 : client d'inférence (API compatible OpenAI, retry/timeout/journalisation), boucle d'agent avec outils, mémoire persistante, lignée de solutions versionnée, fonction de score `f` branchable.
+`@spec` H2. `pyproject.toml` (paquet `avo`, py ≥ 3.11, zéro dépendance runtime ;
+dev : pytest, ruff, mypy), arborescence H2.2, `Makefile` avec toutes les cibles H2.3
+(celles dont l'objet n'existe pas encore échouent avec un message explicite « à venir
+en Ux »), `python -m avo --version`, `.gitignore` complété (`runs/`).
+README : sections Commandes/Structure réécrites sur le réel.
 
-- Bloqué par : U2 uniquement. L'endpoint et le modèle ne sont plus des blocages : endpoint testé et validé de bout en bout le 2026-08-27 (authentification, tool calling, contexte long), modèle de travail `qwen3.6:35b` (`docs/JOURNAL.md`, entrée du 2026-08-27 (suite 2)).
-- Contraintes d'implémentation issues des mesures : historique append-only (cache de préfixe), budget de contexte sous la marge de 15 % du proxy avec gestion du `HTTP 413`, politique de raisonnement explicite.
-- DoD : tests unitaires et d'intégration propres verts (endpoint simulé localement pour les tests) ; démonstration reproductible documentée.
+- Preuves : test unitaire de `--version` ; `make lint`, `make typecheck`,
+  `make test-unit` verts ; `make check` vert (périmètre existant).
 
-## U4 — Superviseur (anti-stagnation) `[ ]`
+## U4 — Serveur mock-llm `[ ]`
 
-Implémenter l'agent superviseur : détection de stagnation et de cycles improductifs, revue de trajectoire, intervention conditionnelle qui redirige l'agent principal.
+`@spec` H4.7 (+ contrat mesuré au journal 2026-08-27). Serveur stdlib :
+`/api/version`, `/api/tags`, `/api/chat` (scénarios JSONL, tool_calls scriptés),
+Bearer obligatoire (401 sinon), `/_control` (forcer 401/413 avec corps
+`{tokens_estimated, max_context_tokens}`/500/latence). Premières fixtures
+`tests/fixtures/llm/` + `make seed` (partie llm).
 
-- Bloqué par : U3.
-- DoD : tests spécifiques verts, comportement démontré sur un scénario reproductible.
+- Preuves : tests unitaires du serveur (auth, scénario, contrôle d'erreurs) ;
+  test d'intégration HTTP réel (serveur lancé sur port éphémère).
 
-## U5 — Interface(s) de benchmark `[ ]`
+## U5 — Conteneurisation et pile compose `[ ]`
 
-Implémenter l'interface de tâche d'évaluation, en commençant par ARC-AGI-3 en mode direct-interaction texte (grilles 64×64 exactes, actions sans description des règles), et le calcul RHAE ; brancher l'API officielle ARC Prize (accès disponible) et fournir un environnement local de rejeu déterministe pour les tests, afin qu'aucune exécution d'essai n'ouvre de scorecard.
+`@spec` H2.4. `Dockerfile`, `docker-compose.yml` (service `mock-llm`, healthcheck ;
+`arc-replay` rejoindra en U16), `make up/down/build/seed` opérationnels, README/DAT
+mis à jour (lancement, ports).
 
-- Bloqué par : U3. Périmètre arrêté : ARC-AGI-3, ensemble public, seul benchmark du périmètre initial (décision du 2026-08-27, `docs/JOURNAL.md`).
-- Accès API ARC Prize fourni et vérifié le 2026-08-27 (`ARC_API_KEY`) : 25 jeux et 183 niveaux exposés, avec les `baseline_actions` humaines par niveau, qui font foi pour le calcul du RHAE.
-- DoD : rejeu déterministe testé ; comptage d'actions et scores vérifiés contre la définition officielle.
+- Preuves : `make build` ; `make up` puis healthcheck vert vérifié par script ;
+  E2E de fumée : `curl` du mock via le port composé, 401 sans clé, 200 avec.
 
-## U6 — Campagne d'évaluation et rapport `[ ]`
+## Lot B — Client LLM
 
-Exécuter le harnais sur ARC-AGI-3 (ensemble public) avec le modèle fourni, collecter les scores, actions et coûts, produire le rapport comparatif face aux références de `knowledge/` (AVO 100.00/6 624 ; VISTA 100.00/7 542 ; Tycho 100.00/6 641).
+## U6 — Configuration `avo.config` `[ ]`
 
-- Bloqué par : U3–U5. Endpoint, modèle et accès ARC Prize disponibles et validés.
-- Toute campagne passant par l'API officielle dépose ses résultats dans un scorecard rattaché au compte du responsable : le périmètre exact (jeux retenus, plafonds d'actions, budget de temps) est arrêté dans la spécification avant exécution, et l'accord du responsable est requis avant la première campagne officielle.
-- DoD : résultats reproductibles, rapport committé, CHANGELOG mis à jour.
+`@spec` H3. Lecture env + `.env`, validation nommée, modes replay/live, budget
+`H3.2`, aucune valeur secrète journalisée.
+
+- Preuves : tests unitaires nominal/limites/erreurs (variable absente, entier
+  invalide, budget dérivé, mode live sans secret → erreur explicite).
+
+## U7 — Client d'inférence `[ ]`
+
+`@spec` H4.1–H4.5. `LLMClient.chat` sur `/api/chat` (think, options, tools), parsing
+`ChatResult`, erreurs typées, retries bornés avec jitter.
+
+- Preuves : unitaires (parsing, classification d'erreurs, politique de retry) ;
+  intégration contre mock-llm : nominal, tool_call scripté, 401 fatal, 413 →
+  `ContextOverflow` avec champs, 500 → retries puis échec, latence < timeout.
+
+## U8 — Comptabilité, journalisation, workspace de run `[ ]`
+
+`@spec` H4.6, H6.1, H11 ; H4.8. `runlog` (logs JSON sans secret, id de run),
+`manifest.json`, `metrics.jsonl`, transcripts JSONL par segment ; `TokenLedger`
+(estimé vs réel) ; cible `make smoke-live` (jamais dans check).
+
+- Preuves : unitaires (aucune fuite de secret dans les sorties — test qui greppe la
+  clé dans les logs produits ; métriques cumulées correctes) ; intégration : un
+  échange complet contre mock-llm produit un workspace conforme H6.1.
+
+## Lot C — Contexte et mémoire
+
+## U9 — Transcript append-only `[ ]`
+
+`@spec` H5.1–H5.2. Structure immuable en tête, hash de préfixe, sérialisation,
+estimation calibrée corrigée par `prompt_eval_count`.
+
+- Preuves : unitaires — l'invariant : après N tours simulés, le hash du préfixe
+  envoyé au tour k est préfixe de celui du tour k+1 ; toute API qui muterait la tête
+  n'existe pas (test de surface du module).
+
+## U10 — Budget et continuation en contexte frais `[ ]`
+
+`@spec` H5.3–H5.4, H3.2. Déclenchement au seuil, état de continuation écrit par
+l'agent, nouveau segment (système + continuation + notes + observation), `413` →
+continuation immédiate + budget appris, double-413 → erreur fatale explicite.
+
+- Preuves : unitaires (seuils, recalcul du budget) ; intégration contre mock-llm
+  avec petit budget forcé : la continuation se produit, le contenu du segment frais
+  est exactement celui spécifié, un 413 simulé est absorbé, deux → erreur.
+
+## U11 — Notes persistantes `[ ]`
+
+`@spec` H6.2, H7.3. `GUIDE.md`/`WORKING.md` dans le workspace, outils
+`note_read`/`note_write` (limités à ces deux noms), injection en tête de segment
+frais.
+
+- Preuves : unitaires (lecture/écriture/refus d'un autre nom) ; intégration :
+  après continuation (U10), les notes réapparaissent dans le prompt du segment frais.
+
+## Lot D — Outils et boucle
+
+## U12 — Registre d'outils et dispatch `[ ]`
+
+`@spec` H7. Déclaration (nom, description, schéma), rendu vers `tools` API, routage
+des `tool_calls`, messages `role: tool` append-only, erreurs d'outil renvoyées au
+modèle, garde `AVO_TOOL_STEPS_MAX`.
+
+- Preuves : unitaires (dispatch, arguments invalides → erreur textuelle, garde) ;
+  intégration : scénario mock-llm à tool_calls multiples, transcript conforme.
+
+## U13 — Boucle agent P→I→E→B `[ ]`
+
+`@spec` H8, H12. Machine d'états événementielle, prompts par phase versionnés
+(prédiction avant action, bilan après — contrat A5.1), exposition conditionnelle des
+outils d'action, bornes d'actions, `think:false` par défaut (H12).
+
+- Preuves : unitaires des transitions (événements scriptés : action jouée, niveau
+  complété, game over, contradiction) ; intégration : boucle complète contre
+  mock-llm scripté sur un environnement factice en mémoire (sans ARC), bornes
+  respectées, transcript append-only préservé.
+
+## U14 — Lignée et fonction de score `[ ]`
+
+`@spec` H9. Dépôt git jetable sous `runs/<id>/lineage/`, politique « correct ∧ ≥
+meilleur », `Scorer` branchable (scorer de test + scorer ARC H9.2), score dans le
+message de commit.
+
+- Preuves : unitaires (politique de commit : amélioration committée, régression
+  refusée, égalité committée ; isolation — le `.git` de lignée n'est pas celui du
+  projet, test qui le vérifie par chemin) ; intégration : trois progressions
+  simulées → trois commits de lignée avec scores exacts.
+
+## U15 — Superviseur `[ ]`
+
+`@spec` H10. Déclencheurs mesurables (stall, cycles, bug-fixing en rafale), appel LLM
+séparé, injection `[SUPERVISEUR]` append-only, cooldown, journalisation des motifs.
+
+- Preuves : unitaires des détecteurs sur trajectoires synthétiques (positifs ET
+  négatifs) ; intégration : scénario mock-llm en stagnation → une intervention,
+  cooldown respecté, motif dans `metrics.jsonl`.
+
+## Lot E — ARC-AGI-3
+
+## U16 — Serveur de rejeu `arc-replay` et jeu `cible` `[ ]`
+
+`@spec` A3 (+ A1 pour le contrat). Serveur stdlib au contrat A1.3/A2.1, moteur du jeu
+`cible` (A3.2 : transitions, bordures, 3 clics → game over, RESET, baselines en forme
+fermée, frame transitoire), mode épisodes (A3.3), intégration compose + healthcheck,
+`make seed` (partie arc).
+
+- Preuves : unitaires du moteur (déplacements, bordure, clics, game over, RESET,
+  baseline par niveau) ; intégration HTTP réelle (partie gagnée à la main par
+  requêtes, protocole A1.2 respecté action par action).
+
+## U17 — Client API ARC `[ ]`
+
+`@spec` A2 (+ A1.3–A1.5). `ArcClient` typé, `FrameResult`, historique typé A2.2
+persisté, garde anti-publication A2.3, transport H4.5/H4.6.
+
+- Preuves : unitaires (typage des frames, étiquetage, garde : hôte non-replay en
+  mode replay → erreur) ; intégration contre arc-replay : partie complète, RESET,
+  game over, épisode dévié → erreur explicite.
+
+## U18 — Rendu texte, inspection, mémoire de frames `[ ]`
+
+`@spec` A4. Rendu canonique 64×64 + ligne d'état, coordonnées (row,col) 0-basées,
+mémoire de frames sans perte, `inspect`, `read_pixels`, `diff`.
+
+- Preuves : unitaires à sorties attendues exactes sur fixtures (rendu, découpes avec
+  marges d'index, diff borné) ; propriété : rendu ∘ parsing = identité sur toute
+  grille fixture.
+
+## U19 — Interface de tâche direct-interaction `[ ]`
+
+`@spec` A5 (+ A1.2). Prompt de tâche minimal calqué VISTA (aucune règle de jeu nulle
+part), outils `action1..6`/`reset` filtrés par la frame, comptage officiel + 
+réconciliation A5.3, branchement complet sur la boucle U13 et le scorer U14.
+
+- Preuves : unitaires (filtrage des actions déclarées, validation (row,col),
+  comptage RESET conforme A1.2) ; intégration : l'agent (mock-llm scripté) joue des
+  actions sur arc-replay via l'interface, l'historique typé et les compteurs sont
+  exacts ; revue explicite « zéro indice de jeu » consignée.
+
+## U20 — RHAE `[ ]`
+
+`@spec` A6. Implémentation de la définition Tycho §3.1, baselines depuis
+`/api/games` (live) ou `cible` (replay).
+
+- Preuves : unitaires — tous les vecteurs A6.3, valeurs exactes en forme fermée.
+
+## U21 — E2E : partie complète sur rejeu local `[ ]`
+
+`@spec` A8.3 (+ H13.2). Scénarios E2E par la CLI réelle sur pile compose : victoire
+3 niveaux avec RHAE exact attendu, et scénario échec (game over → RESET → victoire) ;
+artefacts (report, lignée, métriques) vérifiés ; reprise `resume` couverte.
+
+- Preuves : `make test-e2e` vert avec les deux scénarios ; vérification opérateur
+  MASTER_PLAN §5 exécutée et consignée.
+
+## U22 — Sonde de contrat API officielle `[ ]` **[LIVE]**
+
+`@spec` A1.4, A2, A3.3. En session interactive : un scorecard explicitement étiqueté
+sonde, RESET + quelques actions sur un jeu court, capture de l'épisode réel expurgé
+→ fixture A3.3, confirmation/correction du format de fil (coordonnées A4.2 comprises)
+dans le client ET arc-replay, journal détaillé. Publie un scorecard (accord du
+responsable du 2026-08-27 pour l'usage de l'API ; périmètre minimal).
+
+- Preuves : épisode réel rejoué vert par `make test-int` ; écarts constatés corrigés
+  et testés ; scorecard référencé au journal.
+
+## Lot F — Campagne
+
+## U23 — Runner de campagne et rapport `[ ]`
+
+`@spec` A7 (+ H13.2). `run-arc` multi-jeux, plafonds obligatoires en live, garde
+d'accord A7.2, reprise sans rejouer les jeux terminés, `report.md` complet A7.3.
+
+- Preuves : unitaires (config, plafonds, garde : live sans drapeau → refus) ;
+  intégration/E2E : mini-campagne replay sur `cible`, rapport conforme, reprise
+  après interruption simulée.
+
+## U24 — Campagne pilote `[ ]` **[LIVE]**
+
+`@spec` A7. En session interactive : périmètre serré (1–2 jeux courts, plafonds
+stricts) consigné au journal avant lancement, endpoint réel + API réelle, scorecard
+fermé, rapport committé sous `docs/rapports/`, enseignements (débits réels, coûts,
+comportement du modèle) au journal.
+
+- Preuves : rapport et scorecard référencés ; réconciliation compteurs locale/API
+  exacte ; limites énoncées.
+
+## U25 — Campagne étendue et rapport final `[ ]` **[LIVE]**
+
+`@spec` A7. Périmètre arrêté avec le responsable au vu de U24 (jeux, plafonds,
+budget temps/coût), exécution par tranches reprenables, rapport final comparatif aux
+références (A7.3) committé, CHANGELOG et README mis à jour.
+
+- Preuves : rapport final, scorecards, coûts mesurés ; écarts au périmètre nommés.

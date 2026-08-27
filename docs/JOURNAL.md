@@ -126,3 +126,24 @@ Pour référence si un filtrage IP apparaissait ensuite : IP de sortie observée
 3. **Le volume interdit la campagne improvisée** : 183 niveaux, référence humaine de 17 135 actions, agents de référence autour de 7 000 actions, à multiplier par le coût de préremplissage mesuré sur l'endpoint. Le périmètre d'une campagne est un paramètre spécifié, jamais un défaut implicite.
 
 **Où reprendre.** Le préalable à la planification du worker : `docs/MASTER_PLAN.md` (absent alors que le contrat du worker le lit), redécoupage du backlog en unités d'une session portant chacune du code, adaptation du contrat de worker à une pile Python sans interface, et commandes du dépôt dans le `README.md`. Ensuite seulement, la boucle planifiée peut être armée.
+
+---
+
+## 2026-08-27 (suite 4) — U2 close : spécification complète, plan directeur, backlog redécoupé en sessions
+
+**Contexte.** Le responsable a demandé de spécifier toutes les unités et toutes les sessions maintenant, pour que la boucle planifiée puisse avancer seule jusqu'à sa fin. Constat partagé : le backlog en 6 unités ne portait pas la charge d'un harnais complet, et trois manques structurels bloquaient l'armement du worker (pas de `docs/MASTER_PLAN.md` alors que son contrat le lit ; unités trop grosses pour une session, dont une unité purement documentaire piégeuse au sens de son §4.2 bis ; contrat de preuves calibré pour une stack web absente de ce dépôt).
+
+**Méthode.** Relecture intégrale des quatre exports de `knowledge/` avant rédaction (papier AVO : formalisme Vary/lignée/superviseur, anatomie d'un pas de variation ; billet NVIDIA : configuration ARC texte-seul, actions sans description ; VISTA : prompt exact, outils inspect/read_pixels, notes GUIDE/WORKING, continuation en contexte frais ; Tycho : formalisation Moore, protocole de score et définition RHAE §3.1, surface d'outils annexe A, garde-fous d'évaluation). Les contraintes mesurées du jour (préremplissage, plafond par clé, raisonnement) sont intégrées comme exigences.
+
+**Livré (committé avec cette entrée).**
+
+- `docs/SPEC_HARNAIS.md` (H1–H14) et `docs/SPEC_ARCAGI3.md` (A1–A8) : chaque exigence a un identifiant stable pour les `@spec`.
+- `docs/MASTER_PLAN.md` : ordre d'exécution, DoD commune, règle [LIVE], campagne `make check` hors ligne, adaptation CLI de la vérification utilisateur, condition de fin de boucle.
+- `docs/BACKLOG.md` : U1/U2 closes ; 23 unités de code U3–U25 (lots A–F), une session chacune, preuves nommées.
+- `docs/DAT.md`, `README.md`, `CLAUDE_PROJECT.md`, `CHANGELOG.md` mis en cohérence.
+
+**Décisions principales (motifs dans les spécifications).** Python ≥ 3.11 stdlib sans dépendance d'exécution (H2.1) ; surface Ollama native derrière interface remplaçable (H4.1) ; `think:false` par défaut (H12) ; historique append-only + continuation à la VISTA (H5) ; lignée = git jetable par run, politique « correct ∧ ≥ meilleur » (H9) ; instanciation ARC du couple solution/score = connaissance validée / (niveaux, −actions) — décision explicitement marquée, les sources ne publiant pas ce détail (H9.2) ; jeu synthétique `cible` spécifié en forme fermée pour des E2E à valeurs exactes (A3.2) ; garde anti-publication dans les tests et garde d'accord explicite pour toute campagne live (A2.3, A7.2).
+
+**Hypothèse restante, nommée.** Le format de fil exact de l'API ARC (chemins, corps, x/y vs row/col) est déduit de l'export Tycho, pas mesuré — le mesurer publierait un scorecard. Il est traité comme contrat à confirmer par la sonde U22 [LIVE], qui corrigera client ET rejeu local dans le même chunk (A1.4).
+
+**Où reprendre.** U3 (squelette Python et outillage), puis l'ordre du plan. Le worker planifié peut être armé : il lira MASTER_PLAN, prendra U3, et s'arrêtera de lui-même quand il ne restera que les unités [LIVE]. L'armement de la tâche planifiée reste un geste du responsable (dépense en son nom).

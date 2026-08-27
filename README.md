@@ -21,22 +21,31 @@ Les éléments constitutifs, tirés des sources exportées dans [`knowledge/`](k
 - Fait : import des quatre sources de référence dans `knowledge/` (markdown + images + PDF), documentation projet initialisée.
 - Fait : endpoint d'inférence fourni par le responsable, **testé et validé de bout en bout** le 2026-08-27 (authentification, tool calling, contexte long réellement exploité) ; le modèle de travail est `qwen3.6:35b`, seul modèle de complétion servi par cet endpoint. Mesures et contraintes qui en découlent : `docs/JOURNAL.md`, entrée du 2026-08-27 (suite 2).
 - Décidé : le benchmark de référence est **ARC-AGI-3, ensemble public** (décision prise par défaut le 2026-08-27 au titre de `CLAUDE.md` §1, « Autonomie de décision » ; motif et options écartées dans `docs/JOURNAL.md`). Aucun autre benchmark n'entre dans le périmètre initial.
-- Prochaine étape : spécification complète du harnais (`docs/`) avant toute ligne de code, conformément à `CLAUDE.md`.
+- Fait : **spécification complète écrite et committée** — `docs/SPEC_HARNAIS.md` (noyau agent, H1–H14), `docs/SPEC_ARCAGI3.md` (interface et évaluation, A1–A8), `docs/MASTER_PLAN.md` (ordre d'exécution, DoD commune), backlog redécoupé en unités d'une session (U3–U25), chacune portant ses références de spécification et ses preuves.
+- Prochaine étape : implémentation dans l'ordre du plan, U3 en tête. Les unités marquées [LIVE] (sonde d'API et campagnes) se font en session interactive uniquement.
 
 ## Stack
 
-- Cible prévue : **Python** (conforme aux préférences du socle P2Enjoy pour l'IA/ML ; à confirmer dans la spécification, `docs/BACKLOG.md` U2).
-- Aucune dépendance installée à ce stade.
+- **Python ≥ 3.11, zéro dépendance d'exécution** (bibliothèque standard uniquement) ; outillage de développement : pytest, ruff, mypy (`docs/SPEC_HARNAIS.md` §H2, motifs inclus).
+- Pile locale conteneurisée (Docker Compose) : mocks `mock-llm` (contrat Ollama) et `arc-replay` (contrat ARC-AGI-3 + jeu synthétique) — développement et tests entièrement hors ligne.
 
 ## Prérequis
 
-- Git.
-- Python 3 (pour la phase d'implémentation à venir).
-- Un endpoint d'inférence compatible OpenAI (URL + clé API) — fourni séparément, jamais committé.
+- Git, Python ≥ 3.11, Docker + Compose.
+- Pour les exécutions live uniquement : l'endpoint d'inférence et la clé ARC Prize (variables ci-dessous, jamais committées).
 
 ## Commandes
 
-Aucune commande de build, de test ou de lancement n'existe encore. Elles seront documentées ici dans le même commit que leur introduction.
+Contrat des commandes : `docs/SPEC_HARNAIS.md` §H2.3 — créées par l'unité U3, listées ici comme engagement (chaque cible échoue avec un message explicite tant que son objet n'est pas livré) :
+
+| Commande | Rôle |
+|---|---|
+| `make install` / `make lint` / `make typecheck` | outillage |
+| `make test-unit` / `make test-int` / `make test-e2e` | preuves par classe |
+| `make check` | **campagne complète** (lint + typecheck + tests + build), hors ligne, sans secret |
+| `make up` / `make down` / `make seed` / `make build` | pile compose et données de démonstration |
+| `make smoke-live` | fumée manuelle contre l'endpoint réel (exige `.env`, hors campagne) |
+| `python -m avo run-arc …` | campagne ARC (replay par défaut ; live sous garde d'accord explicite) |
 
 ## Variables d'environnement
 
@@ -62,8 +71,11 @@ Le plafond réellement applicable n'est pas cette variable seule : le proxy d'au
 ├── docs/
 │   ├── .routine         # entrée de la tâche planifiée (worker horaire)
 │   ├── CloudWorker.md   # contrat d'exécution du worker planifié
-│   ├── DAT.md           # dossier d'architecture technique (embryonnaire)
-│   ├── BACKLOG.md       # unités de travail et statuts
+│   ├── MASTER_PLAN.md   # ordre d'exécution des unités, DoD commune
+│   ├── SPEC_HARNAIS.md  # spécification du noyau agent (H1–H14)
+│   ├── SPEC_ARCAGI3.md  # spécification interface ARC-AGI-3 et évaluation (A1–A8)
+│   ├── DAT.md           # dossier d'architecture technique (vue d'ensemble)
+│   ├── BACKLOG.md       # unités de travail et statuts (U1–U25)
 │   ├── JOURNAL.md       # décisions et investigations
 │   └── DESIGN_SYSTEM.md # socle UI global P2Enjoy (pas d'UI dans ce projet à ce stade)
 └── knowledge/           # sources de référence exportées (voir knowledge/README.md)
@@ -71,7 +83,8 @@ Le plafond réellement applicable n'est pas cette variable seule : le proxy d'au
 
 ## Limites connues
 
-- Le harnais n'est pas implémenté : le dépôt ne contient que la connaissance de référence et la documentation de préparation.
+- Le harnais n'est pas encore implémenté : le dépôt contient la connaissance de référence et la spécification complète ; le code arrive avec les unités U3+ du backlog.
+- Le contrat de fil exact de l'API ARC (chemins, corps, coordonnées) est écrit d'après les sources et sera confirmé par la sonde U22 — jouer via l'API publie un scorecard, donc aucune sonde n'a été exécutée d'office (`docs/SPEC_ARCAGI3.md` §A1.4).
 - **Le préremplissage du contexte est le coût dominant de l'endpoint**, très loin devant la génération (débit mesuré le 2026-08-27 : voir `docs/JOURNAL.md`). Un harnais qui réémettrait l'historique complet à chaque tour serait inexploitable en temps sur un benchmark de plusieurs milliers d'actions : l'historique doit rester strictement append-only pour bénéficier du cache de préfixe.
 - **Le budget de contexte utile est inférieur au plafond nominal** de la clé, à cause de la marge de 15 % appliquée par le proxy (voir « Variables d'environnement »).
 - **Le modèle servi est un modèle à raisonnement** : le raisonnement consomme le budget de sortie avant tout contenu, et une valeur de `max_tokens` trop basse produit une réponse vide avec `finish_reason: length`. Politique à arrêter dans la spécification (budget large, ou raisonnement désactivé).

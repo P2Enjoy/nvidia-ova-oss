@@ -1,27 +1,97 @@
 # Dossier d'architecture technique (DAT)
 
-> État : embryonnaire. Aucun code applicatif n'existe encore ; ce document sera complété par l'unité U2 (`docs/BACKLOG.md`) — la spécification du harnais — avant toute implémentation.
+> Le détail normatif vit dans `docs/SPEC_HARNAIS.md` (H1–H14) et
+> `docs/SPEC_ARCAGI3.md` (A1–A8) ; ce dossier est la vue d'ensemble. Le code
+> n'existe pas encore : l'implémentation suit `docs/MASTER_PLAN.md` (U3+).
 
 ## Objet du système
 
-Harnais d'agent AVO (Agentic Variation Operators) : implémentation open source de l'architecture décrite dans `knowledge/arxiv-2603.24517-avo-agentic-variation-operators.md`, pilotant un LLM servi par un endpoint compatible OpenAI, évaluée sur des benchmarks (ARC-AGI-3 en premier lieu).
+Harnais d'agent AVO (arXiv:2603.24517) : agent LLM autonome longue-durée — boucle
+Planning → Implementation → Evaluation → Bug-Fixing, mémoire persistante, lignée de
+solutions scorées, superviseur anti-stagnation — évalué sur ARC-AGI-3 (ensemble
+public) en direct-interaction texte (grilles 64×64 exactes, actions sans description).
 
-## Composants prévus (à spécifier en U2)
+## Composants
 
-- **Agent principal** : boucle Planning → Implementation → Evaluation → Bug-Fixing ; outils (édition, exécution, consultation de la base de connaissances) ; mémoire persistante.
-- **Lignée de solutions** `Pₜ` : paires (solution, score) persistées en git, une version committée seulement si correcte et au moins égale au meilleur score.
-- **Base de connaissances** `K` : documents de référence propres à la tâche.
-- **Fonction de score** `f` : vecteur par configuration de test ; zéro si la correction échoue.
-- **Superviseur** : détection de stagnation, intervention conditionnelle.
-- **Client d'inférence** : API compatible OpenAI (URL, clé, modèle par variables d'environnement) avec timeout, retry contrôlé, journalisation sans secret.
-- **Interface de benchmark** : ARC-AGI-3 direct-interaction en grilles texte 64×64 (principes VISTA, cf. `knowledge/`), calcul RHAE.
+| Composant | Spéc. | Rôle |
+|---|---|---|
+| `avo.config` | H3 | configuration par variables d'environnement, budgets dérivés |
+| `avo.llm` | H4 | client d'inférence (Ollama natif `/api/chat`), erreurs typées, retries |
+| `avo.context` | H5 | transcript append-only, budget de contexte, continuation en contexte frais |
+| `avo.memory` | H6 | workspace de run, notes persistantes GUIDE/WORKING |
+| `avo.tools` | H7 | registre d'outils, dispatch des tool_calls, garde |
+| `avo.loop` | H8, H12 | machine d'états P→I→E→B, prompts de phase, politique de raisonnement |
+| `avo.lineage` | H9 | lignée git jetable par run, politique correct ∧ ≥ meilleur, `Scorer` |
+| `avo.supervisor` | H10 | détection de stagnation, intervention conditionnelle |
+| `avo.runlog` | H11 | logs JSON sans secret, métriques, transcripts |
+| `avo.arc` | A2, A4–A7 | client API ARC, rendu texte, interface de tâche, RHAE, campagne |
+| `mocks/mock_llm` | H4.7 | contrat Ollama local, scénarios scriptés, erreurs simulables |
+| `mocks/arc_replay` | A3 | contrat ARC local, jeu synthétique `cible`, rejeu d'épisodes |
 
-## Décisions déjà actées
+## Flux principaux
 
-- Aucune ligne de code avant la spécification committée (CLAUDE.md §5).
-- Stack pressentie : Python (préférence du socle pour l'IA/ML) — à confirmer en U2.
-- Les secrets (clé API) ne sont jamais committés ; configuration par variables d'environnement documentées.
+1. **Tour de jeu** : observation (grille texte + actions disponibles) → Planning
+   (hypothèses + prédiction) → Implementation (une action via outil → `ArcClient`) →
+   Evaluation (frames typées, notes, score) → [Bug-Fixing]. Frames archivées sans
+   perte ; inspection gratuite au score.
+2. **Continuation** : seuil de budget ou `HTTP 413` → état de continuation écrit par
+   l'agent → segment frais (système + continuation + notes + observation). Historique
+   d'un segment strictement append-only (cache de préfixe).
+3. **Lignée** : complétion de niveau → commit (connaissance + score) dans le dépôt
+   git jetable du run.
+4. **Supervision** : stall/cycles détectés → appel LLM séparé → directive
+   `[SUPERVISEUR]` injectée en append.
+5. **Campagne** : runner séquentiel multi-jeux, scorecard officiel (live) ou
+   arc-replay (replay), RHAE, `report.md`.
 
-## Flux, modèles de données, déploiement, reprise
+## Données
 
-À définir en U2.
+- **Workspace de run** `runs/<id>/` : manifest, transcripts JSONL, notes, frames
+  typées, lignée (git dédié), métriques, rapport. Gitignoré ; les rapports de
+  campagne officielle sont copiés sous `docs/rapports/`.
+- **Fixtures** `tests/fixtures/` : scénarios mock-llm (JSONL), paramètres du jeu
+  `cible`, épisodes ARC expurgés. Régénérées par `make seed` (contrat de données de
+  démonstration).
+
+## Interfaces externes
+
+- **Endpoint d'inférence** (fourni, hors dépôt) : Ollama derrière proxy authentifiant,
+  surface native `/api/*` ; contraintes mesurées (préremplissage dominant, plafond par
+  clé +15 %, modèle à raisonnement) — `docs/JOURNAL.md` 2026-08-27.
+- **API ARC Prize** : `X-API-Key` ; **évaluer = publier un scorecard** → tests
+  uniquement sur arc-replay (garde anti-publication A2.3), campagnes en session
+  interactive avec accord.
+
+## Sécurité et autorisations
+
+Secrets uniquement en `.env` local (gitignoré) ; jamais journalisés (tests dédiés).
+Mode `replay` sans réseau externe par construction. Aucune écriture dans le dépôt
+projet par le harnais (lignée isolée sous `runs/`).
+
+## Déploiement et exécution
+
+Pile locale : `make up` (compose : mock-llm, arc-replay), `make seed`, `make check`
+(campagne de preuves complète, hors ligne). Live : `make smoke-live` (manuel),
+`python -m avo run-arc --mode live` avec garde d'accord explicite. Pas
+d'environnement de production : le « déploiement » est la campagne d'évaluation
+(contrat A7).
+
+## Choix techniques actés (motifs dans les spécifications)
+
+- Python ≥ 3.11, **zéro dépendance d'exécution** (stdlib) ; dev : pytest, ruff, mypy (H2.1).
+- Surface Ollama **native** plutôt qu'OpenAI `/v1` (contrôle `think`, `num_ctx`,
+  compteurs) derrière une interface remplaçable (H4.1).
+- `think:false` par défaut, raisonnement en clair dans le contenu (H12).
+- Historique append-only + continuation en contexte frais à la VISTA (H5).
+- Lignée = git jetable par run, jamais le dépôt projet (H9.3).
+- Instanciation ARC du couple (xᵢ, f) : connaissance validée / (niveaux, −actions)
+  — décision documentée H9.2, les sources ne publiant pas ce détail.
+
+## Compromis connus
+
+- Le contrat de fil ARC exact reste à confirmer par la sonde U22 (A1.4) — écrit
+  d'après l'export Tycho, corrigeable des deux côtés (client + rejeu).
+- Une campagne complète 25 jeux est hors budget temps d'une session : périmètre
+  toujours explicite (A7.1), exécution par tranches reprenables.
+- Le RHAE officiel dépend des baselines servies par l'API ; en rejeu local il repose
+  sur les baselines synthétiques du jeu `cible` (valeur de test, pas de référence).

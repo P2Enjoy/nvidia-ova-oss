@@ -36,6 +36,14 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-27 — Spécification complète du harnais et plan d'exécution (U2 close)
+
+- Ajout de `docs/SPEC_HARNAIS.md` (noyau agent, chapitres H1–H14 : stack stdlib, configuration, client d'inférence natif Ollama, transcript append-only et continuation en contexte frais, notes persistantes, outils, boucle P→I→E→B, lignée git jetable avec politique « correct ∧ ≥ meilleur », superviseur, observabilité, politique de raisonnement, plan de tests) — rédigé après relecture intégrale des quatre exports de `knowledge/` et sur les contraintes mesurées de l'endpoint.
+- Ajout de `docs/SPEC_ARCAGI3.md` (chapitres A1–A8 : formalisation et protocole officiel d'après l'export Tycho, client API, environnement local de rejeu avec jeu synthétique `cible` spécifié en forme fermée, rendu texte 64×64 et mémoire de frames sans perte, interface direct-interaction calquée sur VISTA, RHAE selon la définition Tycho §3.1, campagne sous garde d'accord, plan de tests). Les tests n'atteignent jamais l'API officielle (garde anti-publication).
+- Ajout de `docs/MASTER_PLAN.md` : ordre d'exécution (lots A–F), règle des unités [LIVE] interdites au worker, définition de la campagne de preuves (`make check`, hors ligne), adaptation de la vérification utilisateur à un produit CLI, condition de fin de la boucle planifiée.
+- `docs/BACKLOG.md` redécoupé : U1–U2 closes, 23 unités d'implémentation U3–U25 tenant chacune dans une session, chacune avec références `@spec`, périmètre et preuves propres.
+- `docs/DAT.md` complété (composants, flux, données, interfaces externes, choix actés, compromis) ; `README.md` (stack réelle, prérequis, contrat de commandes, structure, limites) et `CLAUDE_PROJECT.md` (règle de code spécifié, unités [LIVE], vérification CLI) mis en cohérence.
+
 ## [Publié]
 
 _Aucune publication pour le moment._
