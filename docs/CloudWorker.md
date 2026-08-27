@@ -476,6 +476,10 @@ Le script de démarrage de la pile s'arrêterait alors avant de démarrer le moi
 
 ### 2.1 bis. NODE 24 : L'HÔTE A "nvm", MAIS PAS LA BONNE VERSION — INSTALLE-LA TOI-MÊME
 
+> **Portée : uniquement si le dépôt exige Node** (un `.nvmrc`, un `package.json`). Le présent
+> dépôt est un produit Python sans outillage Node : ce paragraphe ne s'applique pas ici, ne
+> l'exécute pas. Ses mesures restent vraies pour l'hôte et servent aux dépôts qui portent Node.
+
 Comme pour Docker au §2, l'outil est là et rien n'est prêt : c'est à toi de le faire. Ne le
 redécouvre pas, tout ce qui suit est MESURÉ.
 
@@ -552,6 +556,11 @@ entrent dans leurs étapes, là où ils s'arrêtaient sur leur première ligne. 
 pile debout — ils appellent "docker compose" —, donc §2 puis §2.2 avant eux.
 
 ### 2.1 ter. LES `verify-*.sh` SONT EXÉCUTABLES ICI — DEUX CONDITIONS, TOUTES DEUX MESURÉES
+
+> **Portée : uniquement si le dépôt porte des harnais `verify-*.sh`** (pile web, Playwright,
+> `vite preview`). Le présent dépôt n'en a pas : ses classes de preuves et sa campagne complète
+> sont définies dans `docs/MASTER_PLAN.md` §4 (`make check`, entièrement hors ligne), et sa
+> vérification « dans la peau de l'utilisateur » dans `docs/MASTER_PLAN.md` §5 (produit CLI).
 
 Le §2.1 bis a levé le blocage de la version de Node. Il en restait deux autres, extérieurs au
 dépôt, qui faisaient rendre à ces harnais des verdicts ne disant RIEN du produit. Les deux sont
