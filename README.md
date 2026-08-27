@@ -19,7 +19,8 @@ Les éléments constitutifs, tirés des sources exportées dans [`knowledge/`](k
 **Phase de préparation — aucun code applicatif n'existe encore.**
 
 - Fait : import des quatre sources de référence dans `knowledge/` (markdown + images + PDF), documentation projet initialisée.
-- En attente d'une action humaine : URL de l'endpoint compatible OpenAI, clé API et nom du modèle à utiliser (annoncés par le responsable, non encore fournis), et confirmation de la liste des benchmarks visés.
+- Fait : endpoint d'inférence fourni par le responsable, **testé et validé de bout en bout** le 2026-08-27 (authentification, tool calling, contexte long réellement exploité) ; le modèle de travail est `qwen3.6:35b`, seul modèle de complétion servi par cet endpoint. Mesures et contraintes qui en découlent : `docs/JOURNAL.md`, entrée du 2026-08-27 (suite 2).
+- Décidé : le benchmark de référence est **ARC-AGI-3, ensemble public** (décision prise par défaut le 2026-08-27 au titre de `CLAUDE.md` §1, « Autonomie de décision » ; motif et options écartées dans `docs/JOURNAL.md`). Aucun autre benchmark n'entre dans le périmètre initial.
 - Prochaine étape : spécification complète du harnais (`docs/`) avant toute ligne de code, conformément à `CLAUDE.md`.
 
 ## Stack
@@ -45,7 +46,9 @@ Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors d
 |---|---|---|---|---|
 | `OLLAMA_HOST` | URL de base du serveur Ollama (surface compatible OpenAI sous `/v1`, API native sous `/api`) | URL `https://hôte[:port]` sans slash final | oui | `https://inference.example.com` |
 | `OLLAMA_API_KEY` | Clé d'authentification, envoyée en `Authorization: Bearer …` | chaîne opaque | oui | `sk-ollama-xxxxxxxx` |
-| `OLLAMA_CONTEXT_LENGTH` | Fenêtre de contexte configurée côté serveur, en tokens ; borne les budgets de contexte du harnais | entier | oui | `114688` |
+| `OLLAMA_CONTEXT_LENGTH` | Fenêtre de contexte demandée au serveur, en tokens (transmise en `options.num_ctx`) ; borne les budgets de contexte du harnais | entier | oui | `131072` |
+
+Le plafond réellement applicable n'est pas cette variable seule : le proxy d'authentification impose une **limite de contexte par clé API**, qu'il publie dans le corps de sa réponse `HTTP 413` (`max_context_tokens`), et il compare à ce plafond une estimation **majorée de 15 %**. Le budget exploitable par le harnais vaut donc environ `max_context_tokens / 1,15`. Le `413` doit être traité comme un cas nominal (repli par compaction ou continuation en contexte frais), pas comme une erreur fatale ; son corps renvoie `tokens_estimated`, directement exploitable. Valeurs mesurées sur l'endpoint courant : `docs/JOURNAL.md`, entrée du 2026-08-27 (suite 2).
 
 ## Structure du dépôt
 
@@ -68,8 +71,9 @@ Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors d
 ## Limites connues
 
 - Le harnais n'est pas implémenté : le dépôt ne contient que la connaissance de référence et la documentation de préparation.
-- L'endpoint d'inférence fourni le 2026-08-27 est sain (vérifié depuis des points de mesure externes) mais **injoignable depuis l'environnement d'exécution**, dont la sortie réseau n'autorise le TLS que vers le port 443 alors que l'endpoint écoute sur un port non standard. Diagnostic complet et options de déblocage : `docs/JOURNAL.md`, entrée du 2026-08-27 (suite). Nécessite une action humaine.
-- Le nom du modèle à utiliser n'est pas encore confirmé par le responsable.
+- **Le préremplissage du contexte est le coût dominant de l'endpoint**, très loin devant la génération (débit mesuré le 2026-08-27 : voir `docs/JOURNAL.md`). Un harnais qui réémettrait l'historique complet à chaque tour serait inexploitable en temps sur un benchmark de plusieurs milliers d'actions : l'historique doit rester strictement append-only pour bénéficier du cache de préfixe.
+- **Le budget de contexte utile est inférieur au plafond nominal** de la clé, à cause de la marge de 15 % appliquée par le proxy (voir « Variables d'environnement »).
+- **Le modèle servi est un modèle à raisonnement** : le raisonnement consomme le budget de sortie avant tout contenu, et une valeur de `max_tokens` trop basse produit une réponse vide avec `finish_reason: length`. Politique à arrêter dans la spécification (budget large, ou raisonnement désactivé).
 - L'évaluation ARC-AGI-3 officielle suppose un accès à l'API ARC Prize (scorecards) ; cette dépendance sera traitée dans la spécification.
 
 ## Origine

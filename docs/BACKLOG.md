@@ -23,7 +23,8 @@ Rédiger et committer, avant toute ligne de code, la spécification du harnais d
 
 Implémenter l'agent principal conformément à U2 : client d'inférence (API compatible OpenAI, retry/timeout/journalisation), boucle d'agent avec outils, mémoire persistante, lignée de solutions versionnée, fonction de score `f` branchable.
 
-- Bloqué par : U2 ; par la joignabilité de l'endpoint (fourni le 2026-08-27 mais servi sur un port non-443 alors que l'environnement ne sort qu'en 443 — diagnostic complet dans `docs/JOURNAL.md`, options de déblocage listées, **nécessite une action humaine**) ; et par le nom du modèle à utiliser (**nécessite une action humaine**).
+- Bloqué par : U2 uniquement. L'endpoint et le modèle ne sont plus des blocages : endpoint testé et validé de bout en bout le 2026-08-27 (authentification, tool calling, contexte long), modèle de travail `qwen3.6:35b` (`docs/JOURNAL.md`, entrée du 2026-08-27 (suite 2)).
+- Contraintes d'implémentation issues des mesures : historique append-only (cache de préfixe), budget de contexte sous la marge de 15 % du proxy avec gestion du `HTTP 413`, politique de raisonnement explicite.
 - DoD : tests unitaires et d'intégration propres verts (endpoint simulé localement pour les tests) ; démonstration reproductible documentée.
 
 ## U4 — Superviseur (anti-stagnation) `[ ]`
@@ -37,12 +38,12 @@ Implémenter l'agent superviseur : détection de stagnation et de cycles improdu
 
 Implémenter l'interface de tâche d'évaluation, en commençant par ARC-AGI-3 en mode direct-interaction texte (grilles 64×64 exactes, actions sans description des règles), et le calcul RHAE local ; intégrer l'API officielle ARC Prize si un accès est disponible.
 
-- Bloqué par : U3 ; périmètre exact des benchmarks à confirmer par le responsable (**nécessite une action humaine**).
+- Bloqué par : U3. Périmètre arrêté : ARC-AGI-3, ensemble public, seul benchmark du périmètre initial (décision du 2026-08-27, `docs/JOURNAL.md`).
 - DoD : rejeu déterministe testé ; comptage d'actions et scores vérifiés contre la définition officielle.
 
 ## U6 — Campagne d'évaluation et rapport `[ ]`
 
-Exécuter le harnais sur les benchmarks retenus avec le modèle fourni, collecter les scores, actions et coûts, produire le rapport comparatif face aux références de `knowledge/` (AVO 100.00/6 624 ; VISTA 100.00/7 542 ; Tycho 100.00/6 641).
+Exécuter le harnais sur ARC-AGI-3 (ensemble public) avec le modèle fourni, collecter les scores, actions et coûts, produire le rapport comparatif face aux références de `knowledge/` (AVO 100.00/6 624 ; VISTA 100.00/7 542 ; Tycho 100.00/6 641).
 
-- Bloqué par : U3–U5, endpoint et modèle fournis.
+- Bloqué par : U3–U5. Endpoint et modèle disponibles et validés.
 - DoD : résultats reproductibles, rapport committé, CHANGELOG mis à jour.
