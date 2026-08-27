@@ -36,6 +36,14 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-27 — U4 : `llm-replay`, contrat de l'endpoint enregistré et rejoué
+
+- Format de cassette JSONL : échanges HTTP réels, appariés sur méthode, chemin, nature d'authentification et empreinte du corps canonisé. Ni clé ni hôte n'atteignent le disque — seule la nature de l'authentification est notée, les en-têtes de réponse passent par une liste blanche, et l'expurgation est vérifiée par un test qui cherche un secret dans le fichier écrit.
+- Serveur de rejeu : sert exclusivement des échanges enregistrés et rend une erreur nommant l'écart quand une requête ne correspond à aucune entrée, au lieu de fabriquer une réponse. Injection des seules fautes que le serveur réel ne produit pas à la demande (500, latence, coupure).
+- **Contrat réel enregistré** : 7 échanges couvrant le refus sans clé, la version, le listing des modèles, une conversation, une conversation avec appel d'outil, le refus sur clé invalide et le dépassement de contexte avec son corps de quota. La requête de dépassement, de près de 2 Mo, n'est pas stockée : son empreinte suffit à l'appariement.
+- Cibles `make record-llm`, `make test-int-live` (détection de dérive contre le serveur réel) et `make seed` (contrôle de présence des fixtures, sans jamais fabriquer de contrat). Le fichier `.env` est passé au conteneur par Docker : aucun analyseur maison, aucun secret dans le code.
+- Preuves : 31 tests verts (19 unitaires, 12 d'intégration HTTP réels dont le rejeu intégral de la cassette enregistrée), lint, format et mypy strict sur 24 fichiers ; `make test-int-live` vert, aucune dérive.
+
 ### 2026-08-27 — On ne simule plus l'endpoint : on l'enregistre et on le rejoue
 
 - Décision remplacée sur objection du responsable : un serveur dédié étant fourni, l'endpoint d'inférence n'est pas une dépendance impossible à exécuter localement et **ne se simule pas** (`CLAUDE.md` §15). Le faux serveur Ollama prévu par la spécification est abandonné — réimplémenter un contrat mesurable revient à l'inventer et garantit sa dérive.

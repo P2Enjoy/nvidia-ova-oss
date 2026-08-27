@@ -41,9 +41,14 @@ endif
 CACHES := -e RUFF_CACHE_DIR=/tmp/.ruff_cache -e MYPY_CACHE_DIR=/tmp/.mypy_cache \
           -e PYTEST_ADDOPTS=-p\ no:cacheprovider
 
+# Cibles [LIVE] : dans le conteneur les variables sont déjà présentes (passées par
+# --env-file) ; depuis l'hôte, Docker les injecte. Aucun analyseur de .env n'existe.
 ifdef AVO_IN_CONTAINER
 RUN :=
+RUN_LIVE :=
 else
+RUN_LIVE := $(DOCKER) run --rm --env-file .env -v "$(CURDIR)":/app -w /app $(USER_FLAG) \
+            -e HOME=/tmp $(CACHES) $(IMAGE)
 RUN := $(DOCKER) run --rm -v "$(CURDIR)":/app -w /app $(USER_FLAG) \
        -e PYTHONPATH=/app/src:/app/mocks -e HOME=/tmp $(CACHES) $(IMAGE)
 endif
@@ -157,8 +162,8 @@ check: lint typecheck test-unit test-int test-e2e
 ifdef AVO_NO_DOCKER
 	@echo "MODE     : DÉGRADÉ (hors Docker) — lint réduit, typecheck NON exécuté"
 endif
-	@echo "sans objet à ce stade : build (U5), up/down (U5), seed (U4/U16),"
-	@echo "                        smoke-live (U8), run-arc (U23)"
+	@echo "hors campagne ([LIVE], exigent .env) : record-llm, test-int-live, smoke-live"
+	@echo "sans objet à ce stade : build (U5), up/down (U5), seed arc (U16), run-arc (U23)"
 	@echo "─────────────────────────────────────"
 
 build:
@@ -171,10 +176,18 @@ up down:
 	@echo "  (docs/BACKLOG.md U5, docs/SPEC_HARNAIS.md §H2.4)" >&2
 	@exit 2
 
+# Contrat de données de démonstration (CLAUDE.md §8, docs/SPEC_ARCAGI3.md §A3.4).
+# La fixture llm n'est pas GÉNÉRÉE : elle est ENREGISTRÉE sur le vrai endpoint
+# (make record-llm). Cette cible en contrôle donc la présence et l'intégrité, et
+# dit précisément ce qui manque plutôt que de fabriquer un contrat.
 seed:
-	@echo "make seed : les fixtures n'existent pas encore — à venir en U4 (llm) et U16 (arc)" >&2
-	@echo "  (docs/SPEC_ARCAGI3.md §A3.4)" >&2
-	@exit 2
+	@echo "→ fixtures llm (cassettes enregistrées sur le vrai endpoint)"
+	@if [ -s tests/fixtures/llm/cassettes/contrat_endpoint.jsonl ]; then \
+	  echo "  contrat_endpoint.jsonl : $$(wc -l < tests/fixtures/llm/cassettes/contrat_endpoint.jsonl) échanges"; \
+	else \
+	  echo "  ABSENTE — lancez « make record-llm » ([LIVE], exige .env)"; \
+	fi
+	@echo "→ fixtures arc (jeu synthétique cible, épisodes) : à venir en U16"
 
 smoke-live:
 	@echo "make smoke-live : à venir en U8 — exige .env, jamais dans 'make check'" >&2
@@ -188,21 +201,20 @@ smoke-live:
 # d'environnement au conteneur (--env-file), ce qui évite tout analyseur maison
 # et toute trace de secret dans le dépôt.
 record-llm: _exige-env
-	@$(MAKE) --no-print-directory docker-check
-	$(DOCKER) run --rm --env-file .env -v "$(CURDIR)":/app -w /app $(USER_FLAG) \
-	  -e HOME=/tmp $(IMAGE) python -m llm_replay record
+	$(RUN_LIVE) python -m llm_replay record
 
 test-int-live: _exige-env
-	@$(MAKE) --no-print-directory docker-check
-	$(DOCKER) run --rm --env-file .env -v "$(CURDIR)":/app -w /app $(USER_FLAG) \
-	  -e HOME=/tmp $(CACHES) $(IMAGE) pytest tests/live $(PYTEST_ARGS)
+	$(RUN_LIVE) pytest tests/live $(PYTEST_ARGS)
 
 _exige-env:
+ifndef AVO_IN_CONTAINER
+	@$(MAKE) --no-print-directory docker-check
 	@if [ ! -r .env ]; then \
 	  echo "ERREUR : .env absent — cette cible appelle le VRAI endpoint." >&2; \
 	  echo "  Elle est [LIVE] et n'entre jamais dans 'make check'." >&2; \
 	  exit 2; \
 	fi
+endif
 
 run-arc:
 	@$(MAKE) --no-print-directory docker-check

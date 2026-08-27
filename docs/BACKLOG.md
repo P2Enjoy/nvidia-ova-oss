@@ -47,7 +47,7 @@ réécrits sur le réel.
   Contrôlé également qu'une exécution conteneurisée ne laisse ni cache ni fichier
   `root` dans le dépôt monté.
 
-## U4 — `llm-replay` : enregistrement et rejeu du vrai endpoint `[ ]`
+## U4 — `llm-replay` : enregistrement et rejeu du vrai endpoint `[x]`
 
 `@spec` H4.7. **Aucun faux serveur Ollama n'est écrit** : le contrat n'est pas
 inventé, il est capturé sur le serveur dédié fourni. Livrer (a) l'enregistreur —
@@ -69,6 +69,17 @@ quota — sont enregistrées depuis le vrai serveur, où elles ont déjà été 
   appelle le vrai endpoint (coût GPU modeste, aucun effet de bord irréversible). Le
   worker planifié peut livrer le code et les tests de rejeu ; si `.env` est absent,
   il laisse l'unité `[~]` en nommant les cassettes restant à enregistrer.
+- **Livré et intégralement vérifié le 2026-08-27.** Contrat réel enregistré :
+  7 échanges (`tests/fixtures/llm/cassettes/contrat_endpoint.jsonl`, 5,6 Ko) —
+  401 sans clé, 200 version, 200 tags, 200 conversation, 200 conversation avec
+  appel d'outil, 401 clé invalide, 413 avec son corps de quota
+  (`max_context_tokens = 229376`). La requête de dépassement pesant 1,98 Mo n'est
+  pas stockée : seule son empreinte l'est. Aucun secret ni hôte dans la cassette,
+  vérifié par test. Preuves : 12 tests unitaires de cassette, 12 tests d'intégration
+  HTTP réels (dont le rejeu des 7 échanges enregistrés, l'erreur explicite sur
+  requête inconnue et l'injection de fautes), `make test-int-live` vert contre le
+  serveur réel — aucune dérive. Campagne complète verte en conteneur : ruff, ruff
+  format, mypy strict (24 fichiers), 31 tests.
 
 ## U5 — Pile compose des services `[ ]`
 

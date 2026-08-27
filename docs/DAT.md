@@ -49,9 +49,10 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 - **Workspace de run** `runs/<id>/` : manifest, transcripts JSONL, notes, frames
   typées, lignée (git dédié), métriques, rapport. Gitignoré ; les rapports de
   campagne officielle sont copiés sous `docs/rapports/`.
-- **Fixtures** `tests/fixtures/` : scénarios llm-replay (JSONL), paramètres du jeu
-  `cible`, épisodes ARC expurgés. Régénérées par `make seed` (contrat de données de
-  démonstration).
+- **Fixtures** `tests/fixtures/` : cassettes llm **enregistrées sur le vrai endpoint**
+  (`make record-llm`, [LIVE]), paramètres du jeu `cible` et épisodes ARC expurgés (U16).
+  `make seed` contrôle leur présence et nomme ce qui manque — il ne fabrique aucun
+  contrat (CLAUDE.md §8).
 
 ## Interfaces externes
 

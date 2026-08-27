@@ -201,3 +201,27 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Portée.** H4.7 réécrit ; H2.3 gagne `make record-llm` et `make test-int-live` ; U4 réécrite dans le backlog (avec la nuance : le code et les tests de rejeu sont livrables sans `.env`, seule la capture initiale des cassettes est [LIVE]) ; U7, README, DAT, MASTER_PLAN et Makefile mis en cohérence.
 
 **Où reprendre.** U4, dans sa nouvelle définition. Le cron horaire est armé (job `9347a105`, à :07) : cette correction est committée avant sa première itération, pour qu'il ne construise pas ce qui vient d'être écarté.
+
+---
+
+## 2026-08-27 (suite 7) — Session planifiée n° 2 : U4 livré et prouvé, contrat de l'endpoint enregistré
+
+**Unité.** U4 — `llm-replay`, désignée par le journal et première `[ ]` du plan. Spécification existante (H4.7) : lue, puis code directement, sans la réécrire.
+
+**Environnement.** Docker rootless opérationnel (serveur 29.7.2), image `avo-dev` présente. Pas de fichier compose : c'est l'objet de U5, non livrée — état attendu du plan, pas un échec de démarrage. `make` toujours absent de l'hôte ; toutes les preuves passent par le conteneur.
+
+**Livré.** Trois modules sous `mocks/llm_replay/` : `cassette` (format JSONL, clé d'appariement = méthode + chemin + nature d'authentification + empreinte SHA-256 du corps canonisé, expurgation, corps volumineux non stockés), `server` (rejeu strict des échanges enregistrés, erreur explicite nommant l'écart sur requête inconnue, injection de fautes 500/latence/coupure par route de pilotage hors contrat), `record` (exécution des sept scénarios contre le vrai serveur). Cibles `make record-llm`, `make test-int-live` et `make seed` implémentées ; `mocks/` rendu importable par pytest, ruff, mypy et l'image.
+
+**Contrat réellement enregistré** (`tests/fixtures/llm/cassettes/contrat_endpoint.jsonl`, 7 échanges, 5,6 Ko) : 401 sans clé, 200 sur version, 200 sur tags, 200 conversation simple, 200 conversation **avec appel d'outil bien formé**, 401 avec clé invalide, 413 avec son corps de quota (`max_context_tokens = 229376`). La requête de dépassement pèse 1,98 Mo : elle n'est pas stockée, seule son empreinte l'est — la cassette reste à 5,6 Ko.
+
+**Décisions de conception.**
+
+1. **Aucun analyseur de `.env` n'est écrit.** Docker passe le fichier au conteneur (`--env-file`), donc aucun secret ne transite par du code du dépôt et la configuration centralisée reste l'affaire de U6.
+2. **Le corps de requête volumineux n'est pas persisté**, son empreinte suffisant à l'appariement. Motif : garder le dépôt léger sans perdre la capacité d'apparier exactement.
+3. **Le test de dérive vit sous `tests/live/`**, jamais ramassé par `make check`. Il compare statut et **forme** de la réponse, en ignorant les champs légitimement volatils d'un modèle non déterministe (contenu généré, durées, compteurs).
+
+**Preuves exécutées, toutes en conteneur.** ruff `check` et `format` : aucune anomalie ; mypy **strict** : 24 fichiers, aucune anomalie ; **31 tests verts** — 19 unitaires (dont l'expurgation vérifiée en cherchant un secret dans le fichier écrit, et l'appariement insensible à l'ordre des clés JSON) et 12 d'intégration HTTP réels sur port éphémère, dont le **rejeu des sept échanges enregistrés**, la présence de `max_context_tokens` dont dépendent H3.2 et H5.4, et l'appel d'outil dont dépend H8. `make test-int-live` : vert contre le serveur réel, **aucune dérive**.
+
+**Observation utile pour la suite.** Le rejeu live des mêmes scénarios a pris 3,3 s contre 17 s à l'enregistrement : le cache de préfixe d'Ollama a servi les conversations identiques quasi instantanément. C'est la confirmation empirique du choix d'historique append-only (H1.3.1).
+
+**Où reprendre.** U5 — pile compose des services (`llm-replay` en service, healthcheck, image de production, `make up/down/build`).
