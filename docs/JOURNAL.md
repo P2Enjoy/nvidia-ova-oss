@@ -105,6 +105,24 @@ Pour référence si un filtrage IP apparaissait ensuite : IP de sortie observée
 - *Motif* : le dépôt permet de le déduire, il ne s'agit donc pas d'un choix de produit indéductible (`CLAUDE.md` §1, « Demande d'arbitrage », cas 3). Les quatre sources de `knowledge/` convergent sur ce benchmark : c'est celui du billet NVIDIA, celui sur lequel AVO est démontré à 100.00 RHAE, celui de la page VISTA, et celui que le papier Tycho formalise, définition de RHAE comprise. Les valeurs de comparaison sont déjà dans le dépôt (AVO 100.00/6 624 ; VISTA 100.00/7 542 ; Tycho 100.00/6 641), ce qui rend le résultat interprétable sans donnée externe supplémentaire.
 - *Écarté* : les benchmarks d'optimisation de code du papier AVO (kernels d'attention B200), qui exigent un matériel dont le projet ne dispose pas ; et l'ajout de benchmarks de type SWE-bench, qu'aucune source du dépôt ne rattache à AVO et qui dilueraient la comparaison au lieu de l'étayer.
 - *Réversibilité* : décision peu coûteuse à défaire, l'interface de tâche étant de toute façon spécifiée comme branchable en U2 ; un élargissement se réexamine en U6 au vu des premiers résultats.
-- *Réserve* : le scorecard **officiel** ARC-AGI-3 suppose un accès à l'API ARC Prize, qui relève du cas 4 de la « Demande d'arbitrage » (autorité ou accès externes indispensables). À défaut de cet accès, l'évaluation se fera en RHAE calculé localement selon la définition de l'export Tycho, et le rapport dira explicitement laquelle des deux voies a servi.
+- *Réserve, levée le jour même* : le scorecard **officiel** ARC-AGI-3 suppose un accès à l'API ARC Prize, qui relevait du cas 4 de la « Demande d'arbitrage » (autorité ou accès externes indispensables). L'arbitrage a été rendu et l'accès fourni : voir l'entrée suivante. L'évaluation passera donc par la voie officielle.
 
-**Où reprendre.** Unité U2 : rédiger et committer la spécification du harnais, en y intégrant comme contraintes de conception les trois points mesurés ci-dessus (historique append-only pour le cache de préfixe, budget de ~199 k tokens avec gestion du `413`, politique de raisonnement) ainsi que le périmètre arrêté. Plus aucun point n'est en attente du responsable.
+**Où reprendre.** Unité U2 : rédiger et committer la spécification du harnais, en y intégrant comme contraintes de conception les trois points mesurés ci-dessus (historique append-only pour le cache de préfixe, budget de ~199 k tokens avec gestion du `413`, politique de raisonnement) ainsi que le périmètre arrêté.
+
+---
+
+## 2026-08-27 (suite 3) — Accès ARC Prize fourni et vérifié ; « évaluer, c'est publier »
+
+**Contexte.** L'arbitrage demandé sur l'accès externe (cas 4) a été rendu par le responsable, qui a fourni une clé d'API ARC Prize et demandé qu'elle soit consignée avec les autres valeurs hors dépôt.
+
+**Vérification, en lecture seule.** `GET /api/games` sur l'API ARC-AGI-3 : `401` sans clé, `200` avec — le contrôle d'accès est réel et la clé est valide. **Aucun scorecard n'a été ouvert et aucune partie n'a été jouée** : la vérification s'est délibérément limitée au listing.
+
+**Observations.** L'API expose **25 jeux et 183 niveaux**, ce qui recoupe exactement le billet NVIDIA. Chaque jeu porte ses `baseline_actions` humaines **par niveau** ; la somme des références humaines vaut 17 135 actions. Contrôle croisé avec l'export VISTA de `knowledge/` : pour `sc25`, le cumul reconstruit depuis l'API vaut `[36, 42, 74, 157, 300, 350]`, identique au tableau exporté. Les jeux portent des étiquettes de modalité d'entrée (`click`, `keyboard`, `keyboard_click`) dont l'interface de tâche devra tenir compte.
+
+**Conséquences.**
+
+1. **Le RHAE se calculera sur la donnée officielle** servie par l'API, et non sur les tables recopiées dans `knowledge/`, qui ne gardent qu'une valeur de contrôle.
+2. **Évaluer, c'est publier.** Chaque partie officielle s'enregistre dans un scorecard rattaché au compte porteur de la clé ; il n'existe pas de mode officiel sans dépôt de résultat. Deux règles en découlent, écrites dans le backlog : les exécutions d'essai passent par un environnement local de rejeu déterministe et n'appellent jamais l'API, et la première campagne officielle requiert l'accord explicite du responsable, puisqu'elle engage son compte.
+3. **Le volume interdit la campagne improvisée** : 183 niveaux, référence humaine de 17 135 actions, agents de référence autour de 7 000 actions, à multiplier par le coût de préremplissage mesuré sur l'endpoint. Le périmètre d'une campagne est un paramètre spécifié, jamais un défaut implicite.
+
+**Où reprendre.** Le préalable à la planification du worker : `docs/MASTER_PLAN.md` (absent alors que le contrat du worker le lit), redécoupage du backlog en unités d'une session portant chacune du code, adaptation du contrat de worker à une pile Python sans interface, et commandes du dépôt dans le `README.md`. Ensuite seulement, la boucle planifiée peut être armée.

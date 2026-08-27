@@ -25,6 +25,13 @@
 - Retrait des mentions de blocage devenues fausses : l'injoignabilité de l'endpoint relevée précédemment était propre à l'environnement d'exécution d'alors, pas au serveur. `README.md` (état actuel, variables d'environnement, limites connues), `docs/BACKLOG.md` (U3 n'est plus bloquée que par U2) et `CLAUDE_PROJECT.md` (contrat d'endpoint) mis à jour ; l'entrée de journal correspondante est marquée résolue sur place.
 - Documentation du modèle de travail `qwen3.6:35b` et du rôle réel de `OLLAMA_CONTEXT_LENGTH`.
 
+### 2026-08-27 — Accès ARC Prize fourni et vérifié
+
+- Ajout de la variable `ARC_API_KEY` au contrat de configuration (`README.md`, `CLAUDE_PROJECT.md`), sans valeur ; clé vérifiée en lecture seule (`401` sans clé, `200` avec) sans ouvrir de scorecard ni jouer de partie.
+- L'API officielle expose 25 jeux et 183 niveaux avec les références humaines par niveau, qui font désormais foi pour le calcul du RHAE à la place des tables recopiées dans `knowledge/` ; recoupement exact vérifié sur un jeu.
+- Règle consignée dans le backlog et les règles locales : évaluer via l'API officielle publie un scorecard sur le compte du responsable, donc les exécutions d'essai passent par un environnement local de rejeu et la première campagne officielle requiert son accord.
+- Retrait de la réserve sur l'absence d'accès ARC Prize, devenue fausse.
+
 ### 2026-08-27 — Périmètre des benchmarks arrêté
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.

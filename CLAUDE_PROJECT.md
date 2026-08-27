@@ -24,6 +24,11 @@ Implémentation open source du harnais d'agent **AVO** (papier arXiv:2603.24517)
   3. le modèle **raisonne avant de répondre**, et le raisonnement consomme le budget `max_tokens` — un budget trop court rend `content` vide avec `finish_reason: length`. Le raisonnement est exposé dans `message.reasoning` et désactivable par `think: false` sur l'API native.
 - État de joignabilité et procédure de re-test : dernière entrée de `docs/JOURNAL.md`. L'endpoint a été testé et validé de bout en bout le 2026-08-27 ; un échec de joignabilité constaté depuis un autre environnement d'exécution ne remet pas en cause le serveur (voir l'entrée précédente du journal, marquée résolue).
 
+## Accès ARC-AGI-3 (ARC Prize)
+
+- Variable `ARC_API_KEY`, fournie hors dépôt comme les autres, envoyée en en-tête `X-API-Key` sur l'API ARC-AGI-3. Vérifiée le 2026-08-27 en lecture seule : 25 jeux, 183 niveaux, `baseline_actions` humaines par niveau, qui **font foi** pour le calcul du RHAE.
+- **Évaluer, c'est publier.** Toute partie jouée via l'API officielle s'enregistre dans un scorecard rattaché au compte du responsable ; il n'existe pas de mode officiel sans dépôt de résultat. Les tests et les exécutions d'essai passent donc obligatoirement par l'environnement local de rejeu déterministe et **n'appellent jamais l'API**. La première campagne officielle requiert l'accord explicite du responsable.
+
 ## Conventions locales
 
 - Documentation projet en français ; les exports de `knowledge/` conservent le texte original anglais sous un en-tête de provenance français.

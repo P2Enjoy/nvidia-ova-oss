@@ -36,14 +36,16 @@ Implémenter l'agent superviseur : détection de stagnation et de cycles improdu
 
 ## U5 — Interface(s) de benchmark `[ ]`
 
-Implémenter l'interface de tâche d'évaluation, en commençant par ARC-AGI-3 en mode direct-interaction texte (grilles 64×64 exactes, actions sans description des règles), et le calcul RHAE local ; intégrer l'API officielle ARC Prize si un accès est disponible.
+Implémenter l'interface de tâche d'évaluation, en commençant par ARC-AGI-3 en mode direct-interaction texte (grilles 64×64 exactes, actions sans description des règles), et le calcul RHAE ; brancher l'API officielle ARC Prize (accès disponible) et fournir un environnement local de rejeu déterministe pour les tests, afin qu'aucune exécution d'essai n'ouvre de scorecard.
 
 - Bloqué par : U3. Périmètre arrêté : ARC-AGI-3, ensemble public, seul benchmark du périmètre initial (décision du 2026-08-27, `docs/JOURNAL.md`).
+- Accès API ARC Prize fourni et vérifié le 2026-08-27 (`ARC_API_KEY`) : 25 jeux et 183 niveaux exposés, avec les `baseline_actions` humaines par niveau, qui font foi pour le calcul du RHAE.
 - DoD : rejeu déterministe testé ; comptage d'actions et scores vérifiés contre la définition officielle.
 
 ## U6 — Campagne d'évaluation et rapport `[ ]`
 
 Exécuter le harnais sur ARC-AGI-3 (ensemble public) avec le modèle fourni, collecter les scores, actions et coûts, produire le rapport comparatif face aux références de `knowledge/` (AVO 100.00/6 624 ; VISTA 100.00/7 542 ; Tycho 100.00/6 641).
 
-- Bloqué par : U3–U5. Endpoint et modèle disponibles et validés.
+- Bloqué par : U3–U5. Endpoint, modèle et accès ARC Prize disponibles et validés.
+- Toute campagne passant par l'API officielle dépose ses résultats dans un scorecard rattaché au compte du responsable : le périmètre exact (jeux retenus, plafonds d'actions, budget de temps) est arrêté dans la spécification avant exécution, et l'accord du responsable est requis avant la première campagne officielle.
 - DoD : résultats reproductibles, rapport committé, CHANGELOG mis à jour.
