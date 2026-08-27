@@ -15,7 +15,7 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 
 | Composant | Spéc. | Rôle |
 |---|---|---|
-| `avo.config` | H3 | configuration par variables d'environnement, budgets dérivés |
+| `avo.config` | H3 | configuration (env puis `.env`), validation nommée, modes rejeu/live, budget dérivé du plafond par clé |
 | `avo.llm` | H4 | client d'inférence (Ollama natif `/api/chat`), erreurs typées, retries |
 | `avo.context` | H5 | transcript append-only, budget de contexte, continuation en contexte frais |
 | `avo.memory` | H6 | workspace de run, notes persistantes GUIDE/WORKING |

@@ -107,13 +107,23 @@ opérationnels, README/DAT mis à jour (lancement, ports).
 
 ## Lot B — Client LLM
 
-## U6 — Configuration `avo.config` `[ ]`
+## U6 — Configuration `avo.config` `[x]`
 
 `@spec` H3. Lecture env + `.env`, validation nommée, modes replay/live, budget
 `H3.2`, aucune valeur secrète journalisée.
 
 - Preuves : tests unitaires nominal/limites/erreurs (variable absente, entier
   invalide, budget dérivé, mode live sans secret → erreur explicite).
+- **Livré et intégralement vérifié le 2026-08-28.** `src/avo/config.py` : analyse de
+  `.env` (commentaires, guillemets, `export`, ligne ininterprétable → erreur nommant
+  le numéro de ligne), précédence environnement > fichier, validation nommée de
+  chaque variable (entier, réel borné, booléen, URL), modes rejeu/live, budget
+  `floor(contexte / 1,15) − num_predict`, plafond appris qui **abaisse seulement**
+  (un `413` ne peut pas élargir une fenêtre configurée plus étroite), et masquage
+  des secrets dans `resume()` comme dans `repr()`.
+  **28 tests unitaires** couvrant ces cas ; vérification opérateur dans le conteneur
+  sur les deux modes, la clé réelle n'apparaissant ni dans le résumé ni dans la
+  représentation. Campagne complète verte : 60 tests, lint, format, mypy strict.
 
 ## U7 — Client d'inférence `[ ]`
 

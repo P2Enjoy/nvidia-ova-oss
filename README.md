@@ -90,6 +90,8 @@ Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors d
 | `OLLAMA_CONTEXT_LENGTH` | Fenêtre de contexte demandée au serveur, en tokens (transmise en `options.num_ctx`) ; borne les budgets de contexte du harnais | entier | oui | `131072` |
 | `ARC_API_KEY` | Clé d'accès à l'API ARC Prize (ARC-AGI-3), envoyée en en-tête `X-API-Key` ; donne accès aux environnements officiels et à l'ouverture des scorecards | UUID | oui pour l'évaluation ARC-AGI-3, inutile pour le reste du harnais | `00000000-0000-0000-0000-000000000000` |
 
+En **mode rejeu** (le mode par défaut, celui des tests et du worker), aucune de ces variables n'est requise : la configuration pointe la pile locale (`http://127.0.0.1:11435`), emploie un jeton qui n'est pas un secret et une fenêtre de contexte par défaut. En **mode live**, l'absence de `OLLAMA_HOST`, `OLLAMA_API_KEY`, `OLLAMA_CONTEXT_LENGTH` ou `ARC_API_KEY` est une erreur au démarrage qui nomme la variable — jamais une valeur par défaut silencieuse.
+
 Le plafond réellement applicable n'est pas cette variable seule : le proxy d'authentification impose une **limite de contexte par clé API**, qu'il publie dans le corps de sa réponse `HTTP 413` (`max_context_tokens`), et il compare à ce plafond une estimation **majorée de 15 %**. Le budget exploitable par le harnais vaut donc environ `max_context_tokens / 1,15`. Le `413` doit être traité comme un cas nominal (repli par compaction ou continuation en contexte frais), pas comme une erreur fatale ; son corps renvoie `tokens_estimated`, directement exploitable. Valeurs mesurées sur l'endpoint courant : `docs/JOURNAL.md`, entrée du 2026-08-27 (suite 2).
 
 ## Structure du dépôt

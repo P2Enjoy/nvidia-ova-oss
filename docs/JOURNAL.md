@@ -243,3 +243,25 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Un attendu faux, corrigé.** La fumée a d'abord échoué sur la comparaison du corps rejoué : le rejoueur re-sérialise en JSON canonique, sans espace après le deux-points, alors que mon attendu en portait un. C'est l'attendu qui était faux, pas le produit — corrigé avec la raison écrite dans le script.
 
 **Où reprendre.** U6 — configuration `avo.config` (lecture d'environnement et de `.env`, validation nommée, modes replay/live, budget de contexte dérivé du plafond par clé).
+
+---
+
+## 2026-08-28 (suite) — Session planifiée n° 4 : U6 livré, configuration validée et sans fuite
+
+**Unité.** U6 — configuration `avo.config`, désignée par le journal et première `[ ]`. Spécification existante (H3) : lue, puis code directement. Pile démarrée et saine avant le travail, seed vérifié (7 échanges).
+
+**Livré.** `src/avo/config.py` : analyse d'un `.env` minimal (commentaires, lignes vides, guillemets encadrants, préfixe `export`, et **ligne ininterprétable → erreur nommant le numéro de ligne** plutôt qu'ignorée silencieusement) ; précédence environnement puis fichier ; validation nommée de chaque variable — entier strictement positif, réel borné, booléen aux formes usuelles, URL http(s) avec hôte et slash final retiré ; modes rejeu et live ; budget `floor(contexte / 1,15) − num_predict` ; plafond appris depuis un `413`.
+
+**Décisions.**
+
+1. **En mode rejeu, aucun secret n'est requis** : la configuration pointe la pile locale, avec un jeton explicitement nommé « rejeu-sans-secret » et une fenêtre par défaut. En mode live, l'absence d'un secret est une erreur nommée — jamais une valeur par défaut, conformément à H3.3.
+2. **Le plafond appris n'abaisse que.** Un `413` renvoyant un `max_context_tokens` supérieur à la fenêtre configurée ne l'élargit pas : une réponse d'erreur ne doit pas pouvoir relever silencieusement une limite que l'exploitant a choisie plus étroite.
+3. **Un objet `Config` peut atterrir dans un journal.** `resume()` et `repr()` masquent les deux clés ; c'est vérifié par test et par exécution réelle.
+
+**Observation relevée en vérifiant sur la configuration réelle.** `OLLAMA_CONTEXT_LENGTH` vaut désormais 262144 — le contexte natif du modèle — alors que le plafond mesuré de la clé est 229376. Le budget dérivé vaut donc 223855 tokens, au-dessus des 195361 réellement exploitables : un prompt proche de ce budget déclencherait un `413`. Ce n'est pas un défaut du module, c'est exactement le cas que le plafond appris rattrape (H3.2), au prix d'un aller-retour perdu. Poser 229376 dans la configuration l'éviterait ; la décision appartient au responsable, le harnais fonctionne dans les deux cas.
+
+**Preuves exécutées, toutes en conteneur.** ruff `check` et `format`, mypy **strict** : aucune anomalie. **60 tests verts** — 47 unitaires dont **28 pour la configuration** (analyse du fichier, précédence des sources, chaque variable requise manquante nommée une par une, entier et booléen et URL invalides, valeur exacte du budget, plafond appris dans les deux sens, masquage des secrets), et 13 d'intégration. Vérification opérateur dans le conteneur sur les deux modes : la clé réelle n'apparaît ni dans le résumé ni dans la représentation.
+
+**Un test qui a pris mon propre calcul en défaut.** Le littéral attendu du budget était faux — j'avais écrit 195407 là où `floor(229376 / 1,15) − 4096` vaut 195361. L'assertion par formule passait, l'assertion en clair a rougi. Le littéral est corrigé et commenté, pour que le contrat reste lisible sans recalcul.
+
+**Où reprendre.** U7 — client d'inférence : `LLMClient.chat` sur `/api/chat`, erreurs typées, retries bornés, éprouvé contre les cassettes enregistrées.

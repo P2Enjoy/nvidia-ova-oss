@@ -36,6 +36,15 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U6 : configuration du harnais
+
+- `avo.config` : lecture de l'environnement puis d'un `.env` minimal, avec précédence de l'environnement. Une ligne de fichier ininterprétable est une erreur qui nomme son numéro de ligne, jamais une ligne ignorée en silence.
+- Validation nommée de chaque variable : entier strictement positif, réel borné, booléen aux formes usuelles, URL http(s) avec hôte vérifié et slash final retiré. Une configuration fausse s'arrête au démarrage en désignant la variable fautive.
+- Deux modes : en **rejeu**, aucun secret n'est requis et la configuration pointe la pile locale ; en **live**, l'absence d'un secret est une erreur explicite — jamais une valeur par défaut.
+- Budget de prompt dérivé de la marge que le proxy applique, et plafond appris depuis un `413` qui **abaisse seulement** la fenêtre : une réponse d'erreur ne peut pas relever silencieusement une limite choisie plus étroite.
+- Aucun secret journalisable : le résumé et la représentation masquent les clés, vérifié par test et par exécution réelle.
+- Preuves : 60 tests verts dont 28 pour la configuration, lint, format et mypy strict.
+
 ### 2026-08-28 — U5 : pile de services locale
 
 - `Dockerfile` multi-étages : image de **production** `avo` (176 Mo — le paquet seul, aucune dépendance d'exécution) séparée de l'image de développement `avo-dev` (320 Mo — seul endroit où vivent make, pytest, ruff et mypy).
