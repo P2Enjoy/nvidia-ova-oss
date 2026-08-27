@@ -31,21 +31,38 @@ Les éléments constitutifs, tirés des sources exportées dans [`knowledge/`](k
 
 ## Prérequis
 
-- Git, Python ≥ 3.11, Docker + Compose.
-- Pour les exécutions live uniquement : l'endpoint d'inférence et la clé ARC Prize (variables ci-dessous, jamais committées).
+**Rien n'est installé sur votre machine : tout s'exécute dans Docker.** Il vous faut donc uniquement :
+
+- `git` et `docker` avec un démon joignable par votre utilisateur — **le mode rootless convient et est le mode vérifié** ;
+- `make` est facultatif sur l'hôte : il est installé dans l'image, et la campagne complète s'exécute avec Docker seul (commande ci-dessous) ;
+- si `docker info` répond « permission denied » en mode classique, l'ajout au groupe `docker` est nécessaire, une seule fois : `sudo usermod -aG docker $USER` puis rouvrir la session ;
+- Python n'est requis sur l'hôte que pour le mode dégradé décrit plus bas ;
+- pour les exécutions live uniquement : l'endpoint d'inférence et la clé ARC Prize (variables ci-dessous, jamais committées).
 
 ## Commandes
 
-Contrat des commandes : `docs/SPEC_HARNAIS.md` §H2.3 — créées par l'unité U3, listées ici comme engagement (chaque cible échoue avec un message explicite tant que son objet n'est pas livré) :
+Contrat : `docs/SPEC_HARNAIS.md` §H2.3. Chaque cible lance un **conteneur jetable** sur le dépôt monté en volume ; l'outillage (pytest, ruff, mypy) vit dans l'image, jamais sur l'hôte. Une cible dont l'objet n'est pas encore livré échoue en nommant l'unité de backlog qui le livrera.
 
 | Commande | Rôle |
 |---|---|
-| `make install` / `make lint` / `make typecheck` | outillage |
+| `make image` (`make install`) | construit l'image de développement `avo-dev` |
+| `make lint` / `make typecheck` | ruff / mypy, dans le conteneur |
 | `make test-unit` / `make test-int` / `make test-e2e` | preuves par classe |
-| `make check` | **campagne complète** (lint + typecheck + tests + build), hors ligne, sans secret |
-| `make up` / `make down` / `make seed` / `make build` | pile compose et données de démonstration |
+| `make check` | **campagne complète**, hors ligne et sans secret |
+| `make up` / `make down` / `make seed` / `make build` | pile de services et données de démonstration |
 | `make smoke-live` | fumée manuelle contre l'endpoint réel (exige `.env`, hors campagne) |
-| `python -m avo run-arc …` | campagne ARC (replay par défaut ; live sous garde d'accord explicite) |
+| `make run-arc` | campagne ARC (replay par défaut ; live sous garde d'accord explicite) |
+
+**Sans `make` sur l'hôte** — campagne complète avec Docker pour seul prérequis :
+
+```sh
+docker build -t avo-dev .
+docker run --rm -v "$PWD":/app -w /app -e HOME=/tmp \
+  -e RUFF_CACHE_DIR=/tmp/.ruff_cache -e MYPY_CACHE_DIR=/tmp/.mypy_cache \
+  avo-dev make check          # hors rootless, ajouter --user $(id -u):$(id -g)
+```
+
+**Mode dégradé, sans Docker et sans rien installer** : `AVO_NO_DOCKER=1 make test-unit` exécute les tests sur l'hôte avec la seule bibliothèque standard. Le lint y est réduit à une compilation et le typecheck n'est **pas** exécuté ; les commandes le signalent, et le bilan de `make check` le répète. Ce repli ne vaut pas preuve de style ni de typage.
 
 ## Variables d'environnement
 
@@ -68,6 +85,12 @@ Le plafond réellement applicable n'est pas cette variable seule : le proxy d'au
 ├── CLAUDE_PROJECT.md    # règles propres à ce dépôt
 ├── README.md
 ├── CHANGELOG.md
+├── Dockerfile           # image de développement et de preuves (outillage)
+├── Makefile             # contrat des commandes, tout en conteneur
+├── pyproject.toml       # paquet avo, zéro dépendance d'exécution
+├── src/avo/             # paquet applicatif (cli, llm, context, memory, tools, loop, arc)
+├── mocks/               # serveurs locaux : mock-llm (U4), arc-replay (U16)
+├── tests/               # unit, integration, e2e, fixtures
 ├── docs/
 │   ├── .routine         # entrée de la tâche planifiée (worker horaire)
 │   ├── CloudWorker.md   # contrat d'exécution du worker planifié
@@ -83,7 +106,7 @@ Le plafond réellement applicable n'est pas cette variable seule : le proxy d'au
 
 ## Limites connues
 
-- Le harnais n'est pas encore implémenté : le dépôt contient la connaissance de référence et la spécification complète ; le code arrive avec les unités U3+ du backlog.
+- Le harnais n'est pas encore implémenté : le dépôt contient la connaissance de référence, la spécification complète, et le squelette outillé (U3). Les composants arrivent avec les unités U4+ du backlog.
 - Le contrat de fil exact de l'API ARC (chemins, corps, coordonnées) est écrit d'après les sources et sera confirmé par la sonde U22 — jouer via l'API publie un scorecard, donc aucune sonde n'a été exécutée d'office (`docs/SPEC_ARCAGI3.md` §A1.4).
 - **Le préremplissage du contexte est le coût dominant de l'endpoint**, très loin devant la génération (débit mesuré le 2026-08-27 : voir `docs/JOURNAL.md`). Un harnais qui réémettrait l'historique complet à chaque tour serait inexploitable en temps sur un benchmark de plusieurs milliers d'actions : l'historique doit rester strictement append-only pour bénéficier du cache de préfixe.
 - **Le budget de contexte utile est inférieur au plafond nominal** de la clé, à cause de la marge de 15 % appliquée par le proxy (voir « Variables d'environnement »).

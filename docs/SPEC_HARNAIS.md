@@ -40,8 +40,20 @@ motif. Le résultat est « une implémentation fidèle aux mécanismes publiés 
 **H2.1 — Décision : Python ≥ 3.11, zéro dépendance d'exécution.** Le harnais n'utilise
 que la bibliothèque standard (`urllib`, `http.server`, `json`, `subprocess`, `hashlib`,
 `logging`). Motif : CLAUDE.md §19 (une fonction native suffit — HTTP/JSON sans
-streaming), surface d'audit minimale, image Docker triviale. Dépendances de
-développement uniquement : `pytest`, `ruff`, `mypy`.
+streaming), surface d'audit minimale, image Docker triviale.
+
+**Outillage de développement : dans Docker, jamais sur l'hôte** (règle du responsable,
+2026-08-27). `pytest`, `ruff` et `mypy` sont installés dans l'image de développement
+(`Dockerfile`) et nulle part ailleurs ; aucune commande du dépôt n'installe quoi que ce
+soit sur la machine de l'utilisateur.
+
+**Décision : les tests sont écrits avec `unittest` (bibliothèque standard).** Ils
+s'exécutent sous `pytest` dans le conteneur comme sous `python -m unittest` sans rien
+installer. Motif : cohérence avec le principe « zéro dépendance » ci-dessus, et un dépôt
+qui reste vérifiable même là où l'outillage optionnel est absent — mesuré le 2026-08-27
+sur l'hôte de développement, dépourvu de `pip`, `ensurepip`, `pytest`, `ruff` et `mypy`.
+Écrire les tests en `unittest` ne coûte rien et supprime cette dépendance ; `pytest`
+reste l'exécuteur privilégié dans le conteneur pour ses rapports.
 
 **H2.2 — Arborescence cible.**
 
@@ -65,17 +77,41 @@ tests/fixtures/     fixtures déterministes (seed)
 runs/               artefacts d'exécution (gitignoré)
 ```
 
-**H2.3 — Commandes contractuelles** (Makefile, documentées dans `README.md`) :
-`make install`, `make lint`, `make typecheck`, `make test-unit`, `make test-int`,
-`make test-e2e`, `make check` (campagne complète : lint + typecheck + unit + int +
-e2e + build), `make build` (image Docker), `make up`/`make down` (pile compose),
-`make seed` (régénère `tests/fixtures/`), `make smoke-live` (H4.8, hors campagne),
-`make run-arc` (SPEC_ARCAGI3 §A7). Toute preuve de session utilise ces cibles.
+**H2.3 — Commandes contractuelles** (Makefile, documentées dans `README.md`).
+**Chaque cible s'exécute dans un conteneur jetable** monté sur le dépôt
+(`docker run --rm -v $PWD:/app --user $(id -u):$(id -g) avo-dev …`) : `make image`
+(construit l'image de développement ; `make install` en est l'alias, puisque rien ne
+s'installe sur l'hôte), `make lint`, `make typecheck`, `make test-unit`,
+`make test-int`, `make test-e2e`, `make check` (campagne complète), `make build`
+(image de production), `make up`/`make down` (pile compose), `make seed` (régénère
+`tests/fixtures/`), `make smoke-live` (H4.8, hors campagne), `make run-arc`
+(SPEC_ARCAGI3 §A7). Toute preuve de session utilise ces cibles.
 
-**H2.4 — Conteneurisation.** `Dockerfile` unique (image Python slim, le paquet et les
-mocks) ; `docker-compose.yml` avec services `mock-llm` et `arc-replay`, healthchecks
-HTTP, ports fixes documentés (défauts : 11435 pour mock-llm, 8765 pour arc-replay).
-La pile de développement est autonome : aucun service payant, aucun réseau externe.
+- **Cible non encore livrée** : elle échoue en nommant l'unité qui la livrera, jamais
+  un succès simulé (CLAUDE.md §18).
+- **Garde Docker** : si le démon est injoignable, la cible dit pourquoi et donne le
+  correctif (appartenance au groupe `docker`), au lieu d'un échec opaque.
+- **Mode dégradé `AVO_NO_DOCKER=1`** : exécute les tests sur l'hôte avec la seule
+  bibliothèque standard, sans rien installer. Il **annonce** que le lint est réduit à
+  une compilation et que le typecheck n'est pas exécuté ; le bilan de `make check`
+  répète cette mention. C'est un repli d'environnement contraint, jamais le mode
+  nominal, et il ne vaut pas preuve de style ni de typage.
+
+**H2.4 — Conteneurisation.** Deux objets distincts :
+
+1. **Image de développement et de preuves** (`Dockerfile`, livrée en U3) : Python slim
+   + `pytest`, `ruff`, `mypy`. Le code n'y est pas copié mais monté en volume, pour
+   qu'une modification locale soit prouvable sans reconstruction. C'est le seul endroit
+   où l'outillage est installé.
+2. **Pile de services** (`docker-compose.yml`, livrée en U5) : services `mock-llm` et
+   `arc-replay`, healthchecks HTTP, ports fixes documentés (défauts : 11435 pour
+   mock-llm, 8765 pour arc-replay).
+
+La pile de développement est autonome : aucun service payant, aucun réseau externe,
+aucune installation sur la machine hôte.
+
+**Prérequis hôte, et eux seuls** : `git`, `docker` (démon joignable par l'utilisateur),
+`make`. Python n'est requis sur l'hôte que pour le mode dégradé `AVO_NO_DOCKER=1`.
 
 ## H3. Configuration
 

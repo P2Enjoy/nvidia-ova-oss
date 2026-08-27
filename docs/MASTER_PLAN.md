@@ -44,7 +44,11 @@ les campagnes se font en session interactive.
 ## 4. Preuves du dépôt et campagne complète
 
 Les classes de preuves de ce dépôt sont portées par le Makefile (contrat
-`docs/SPEC_HARNAIS.md` §H2.3) :
+`docs/SPEC_HARNAIS.md` §H2.3) et **s'exécutent toutes dans un conteneur** : rien n'est
+installé sur la machine hôte. Une session qui ne peut pas joindre le démon Docker le
+consigne (§2.5 du contrat worker), exécute ce qui reste vérifiable via
+`AVO_NO_DOCKER=1` — mode dégradé, sans lint ni typecheck, qui l'annonce — et laisse
+l'unité en `[~]` si ses preuves n'ont pas toutes tourné.
 
 - pendant le travail (preuves de l'unité seule) : `make test-unit`,
   `make test-int` ciblés (`PYTEST_ARGS`), `make lint`, `make typecheck` ;

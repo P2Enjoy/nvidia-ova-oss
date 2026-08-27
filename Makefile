@@ -19,8 +19,34 @@ PYTEST_ARGS ?=
 
 DOCKER := $(shell command -v docker 2>/dev/null)
 UIDGID := $(shell id -u):$(shell id -g)
-RUN := $(DOCKER) run --rm -v "$(CURDIR)":/app -w /app --user $(UIDGID) \
-       -e PYTHONPATH=/app/src -e HOME=/tmp $(IMAGE)
+
+# AVO_IN_CONTAINER est posé par l'image : les cibles y appellent les outils
+# directement, au lieu de relancer un conteneur depuis un conteneur. C'est ce
+# qui permet d'exécuter la campagne complète avec Docker pour seul prérequis :
+#   docker run --rm -v "$$PWD":/app -w /app --user $$(id -u):$$(id -g) \
+#     -e HOME=/tmp avo-dev make check
+# En mode rootless, l'utilisateur de l'hôte est DÉJÀ mappé sur root dans le
+# conteneur : y ajouter --user le priverait de droits sur le volume monté.
+# En mode classique, --user est au contraire indispensable pour ne pas laisser
+# de fichiers root dans le dépôt. La distinction est mesurée, pas supposée.
+ROOTLESS := $(shell $(DOCKER) info -f '{{.SecurityOptions}}' 2>/dev/null | grep -c rootless)
+ifeq ($(ROOTLESS),0)
+USER_FLAG := --user $(UIDGID)
+else
+USER_FLAG :=
+endif
+
+# Les caches des outils vont dans /tmp du conteneur : le dépôt monté ne reçoit
+# jamais de répertoire de cache.
+CACHES := -e RUFF_CACHE_DIR=/tmp/.ruff_cache -e MYPY_CACHE_DIR=/tmp/.mypy_cache \
+          -e PYTEST_ADDOPTS=-p\ no:cacheprovider
+
+ifdef AVO_IN_CONTAINER
+RUN :=
+else
+RUN := $(DOCKER) run --rm -v "$(CURDIR)":/app -w /app $(USER_FLAG) \
+       -e PYTHONPATH=/app/src -e HOME=/tmp $(CACHES) $(IMAGE)
+endif
 
 .DEFAULT_GOAL := aide
 .PHONY: aide image install lint typecheck test-unit test-int test-e2e check build up down seed smoke-live run-arc docker-check
@@ -42,9 +68,16 @@ aide:
 	@echo "  make run-arc     campagne ARC-AGI-3                [à venir : U23]"
 	@echo ""
 	@echo "  AVO_NO_DOCKER=1 make test-unit   mode dégradé sur l'hôte (stdlib seule)"
+	@echo ""
+	@echo "  Sans 'make' sur l'hôte, la campagne complète s'exécute ainsi :"
+	@echo "    docker build -t $(IMAGE) ."
+	@echo "    docker run --rm -v \"\$$PWD\":/app -w /app -e HOME=/tmp \\"
+	@echo "      -e RUFF_CACHE_DIR=/tmp/.ruff_cache -e MYPY_CACHE_DIR=/tmp/.mypy_cache \\"
+	@echo "      $(IMAGE) make check      # ajouter --user \$$(id -u):\$$(id -g) hors rootless"
 
 # Garde : dit précisément ce qui manque, plutôt que de laisser échouer docker.
 docker-check:
+ifndef AVO_IN_CONTAINER
 	@if [ -z "$(DOCKER)" ]; then \
 	  echo "ERREUR : docker introuvable dans le PATH." >&2; exit 2; \
 	fi
@@ -57,6 +90,7 @@ docker-check:
 	  echo "      AVO_NO_DOCKER=1 make test-unit   (dégradé : stdlib seule)" >&2; \
 	  exit 2; \
 	fi
+endif
 
 image: docker-check
 	$(DOCKER) build -t $(IMAGE) .

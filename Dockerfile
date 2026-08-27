@@ -15,9 +15,17 @@ FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app/src
+    PYTHONPATH=/app/src \
+    AVO_IN_CONTAINER=1
 
 WORKDIR /app
+
+# `make` est installé ICI et non sur l'hôte : la campagne complète s'exécute
+# donc avec Docker pour seul prérequis (§H2.4). AVO_IN_CONTAINER=1 indique au
+# Makefile qu'il est déjà dans le conteneur et ne doit pas en relancer un.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends make \
+ && rm -rf /var/lib/apt/lists/*
 
 # Outillage de preuve, épinglé par plancher de version (cf. pyproject [dev]).
 RUN pip install --no-cache-dir "pytest>=8" "ruff>=0.6" "mypy>=1.11"

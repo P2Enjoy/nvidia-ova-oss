@@ -27,16 +27,25 @@ c'est la dernière : toutes les suivantes livrent du code.
 
 ## Lot A — Socle
 
-## U3 — Squelette Python et outillage `[ ]`
+## U3 — Squelette Python et outillage conteneurisé `[x]`
 
 `@spec` H2. `pyproject.toml` (paquet `avo`, py ≥ 3.11, zéro dépendance runtime ;
-dev : pytest, ruff, mypy), arborescence H2.2, `Makefile` avec toutes les cibles H2.3
-(celles dont l'objet n'existe pas encore échouent avec un message explicite « à venir
-en Ux »), `python -m avo --version`, `.gitignore` complété (`runs/`).
-README : sections Commandes/Structure réécrites sur le réel.
+dev : pytest, ruff, mypy **dans l'image**), arborescence H2.2, `Dockerfile` de
+développement, `Makefile` Docker-first avec toutes les cibles H2.3 (celles dont
+l'objet n'existe pas encore échouent en nommant leur unité), `python -m avo
+--version`, `.gitignore` complété (`runs/`). README : Prérequis/Commandes/Structure
+réécrits sur le réel.
 
 - Preuves : test unitaire de `--version` ; `make lint`, `make typecheck`,
   `make test-unit` verts ; `make check` vert (périmètre existant).
+- **Livré et intégralement vérifié le 2026-08-27**, campagne complète exécutée **dans
+  le conteneur** : `ruff check` et `ruff format --check` (14 fichiers), `mypy` en mode
+  strict (14 fichiers, aucune anomalie), `pytest` (7 tests verts, dont une invocation
+  réelle de `python -m avo` dans un processus séparé et le refus explicite de chaque
+  commande non livrée). Vérification opérateur (MASTER_PLAN §5) des commandes de la
+  CLI, sur l'hôte puis dans le conteneur : sorties et codes de sortie conformes.
+  Contrôlé également qu'une exécution conteneurisée ne laisse ni cache ni fichier
+  `root` dans le dépôt monté.
 
 ## U4 — Serveur mock-llm `[ ]`
 
@@ -49,11 +58,12 @@ Bearer obligatoire (401 sinon), `/_control` (forcer 401/413 avec corps
 - Preuves : tests unitaires du serveur (auth, scénario, contrôle d'erreurs) ;
   test d'intégration HTTP réel (serveur lancé sur port éphémère).
 
-## U5 — Conteneurisation et pile compose `[ ]`
+## U5 — Pile compose des services `[ ]`
 
-`@spec` H2.4. `Dockerfile`, `docker-compose.yml` (service `mock-llm`, healthcheck ;
-`arc-replay` rejoindra en U16), `make up/down/build/seed` opérationnels, README/DAT
-mis à jour (lancement, ports).
+`@spec` H2.4. L'image de développement est déjà livrée par U3 : cette unité livre la
+**pile de services** — `docker-compose.yml` (service `mock-llm`, healthcheck ;
+`arc-replay` rejoindra en U16), image de production (`make build`), `make up/down/seed`
+opérationnels, README/DAT mis à jour (lancement, ports).
 
 - Preuves : `make build` ; `make up` puis healthcheck vert vérifié par script ;
   E2E de fumée : `curl` du mock via le port composé, 401 sans clé, 200 avec.

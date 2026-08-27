@@ -36,6 +36,15 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-27 — U3 : squelette du harnais et chaîne d'outillage conteneurisée
+
+- Paquet `avo` (`src/avo`) sans aucune dépendance d'exécution, arborescence des sous-paquets prévus par la spécification, point d'entrée `python -m avo` avec `--version` et une aide qui déclare les sous-commandes du contrat ; une sous-commande spécifiée mais non livrée refuse explicitement en nommant l'unité de backlog qui la livrera.
+- **Toute la chaîne d'outillage s'exécute dans Docker** (`Dockerfile`, `Makefile`) : pytest, ruff et mypy vivent dans l'image, jamais sur la machine hôte. Chaque cible lance un conteneur jetable sur le dépôt monté en volume ; une garde nomme le correctif quand le démon Docker est injoignable.
+- Mode dégradé `AVO_NO_DOCKER=1` pour les environnements sans Docker : exécute les tests avec la seule bibliothèque standard, en annonçant que le lint est réduit et le typecheck non exécuté.
+- Tests écrits avec `unittest` (bibliothèque standard) : exécutables sous pytest dans le conteneur comme sans rien installer. Sept tests unitaires couvrent la version, l'invocation réelle du module et le refus des commandes non livrées.
+- Campagne complète exécutée dans le conteneur : ruff (check et format), mypy en mode strict, pytest — 7 tests verts, aucune anomalie. Le Makefile détecte le mode rootless (où `--user` doit être omis) et dirige les caches des outils hors du dépôt.
+- Spécification mise en accord (`docs/SPEC_HARNAIS.md` §H2.1, §H2.3, §H2.4), plan directeur, backlog (U3 close, périmètre de U5 ajusté), README (prérequis, commandes, structure, limites).
+
 ### 2026-08-27 — Spécification complète du harnais et plan d'exécution (U2 close)
 
 - Ajout de `docs/SPEC_HARNAIS.md` (noyau agent, chapitres H1–H14 : stack stdlib, configuration, client d'inférence natif Ollama, transcript append-only et continuation en contexte frais, notes persistantes, outils, boucle P→I→E→B, lignée git jetable avec politique « correct ∧ ≥ meilleur », superviseur, observabilité, politique de raisonnement, plan de tests) — rédigé après relecture intégrale des quatre exports de `knowledge/` et sur les contraintes mesurées de l'endpoint.

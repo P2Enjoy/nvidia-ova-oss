@@ -147,3 +147,36 @@ Pour référence si un filtrage IP apparaissait ensuite : IP de sortie observée
 **Hypothèse restante, nommée.** Le format de fil exact de l'API ARC (chemins, corps, x/y vs row/col) est déduit de l'export Tycho, pas mesuré — le mesurer publierait un scorecard. Il est traité comme contrat à confirmer par la sonde U22 [LIVE], qui corrigera client ET rejeu local dans le même chunk (A1.4).
 
 **Où reprendre.** U3 (squelette Python et outillage), puis l'ordre du plan. Le worker planifié peut être armé : il lira MASTER_PLAN, prendra U3, et s'arrêtera de lui-même quand il ne restera que les unités [LIVE]. L'armement de la tâche planifiée reste un geste du responsable (dépense en son nom).
+
+---
+
+## 2026-08-27 (suite 5) — Session planifiée n° 1 : U3 livré et prouvé, chaîne d'outillage entièrement conteneurisée
+
+**Contexte.** Première exécution de la tâche planifiée (`docs/CloudWorker.md`), lancée en session interactive. État Git initial : `main`, propre, rien à récupérer. Unité choisie selon §4.2 : **U3**, désignée par la dernière entrée du journal et première `[ ]` dans l'ordre du plan. Sa spécification existait (H2) : codée directement, sans la réécrire.
+
+**Instruction du responsable reçue en cours de session.** « Le tout doit tourner dans un docker, n'installe rien sur la machine locale. » Elle arrive au bon moment : la mesure ci-dessous venait de montrer que l'outillage n'était de toute façon pas installable ici.
+
+**Observations d'environnement (mesurées, pas supposées).**
+
+1. **Docker inutilisable par l'agent — situation levée en cours de session (voir plus bas).** Le démon tournait (`docker` 29.7.2, compose v5.5.0) mais `docker info` rend `permission denied` sur `/var/run/docker.sock` : l'utilisateur `p2enjoy` n'appartient pas au groupe `docker` (groupes : p2enjoy adm cdrom sudo dip plugdev users lpadmin lxd). `sudo` exige une authentification interactive, `sg` n'existe pas, aucun socket rootless n'est actif, et configurer le rootless installerait des composants chez le responsable — ce que son instruction interdit. **Aucune voie sans privilège.**
+2. **Outillage Python absent et non installable.** Python 3.14.4 présent, mais ni `pip`, ni `ensurepip`, ni `uv`, ni `pipx`, ni `pytest`/`ruff`/`mypy`. `python3 -m venv` échoue à amorcer pip.
+3. **`make` n'est pas installé** sur l'hôte : le contrat de commandes n'y est donc pas exerçable du tout.
+
+**Décisions (règle d'autonomie, motifs consignés dans les spécifications).**
+
+1. **Toute la chaîne d'outillage vit dans une image Docker** (`Dockerfile`, U3) : pytest, ruff et mypy y sont installés, jamais sur l'hôte. Le `Makefile` lance un conteneur jetable sur le dépôt monté en volume, avec `--user $(id -u):$(id -g)` pour ne pas laisser de fichiers root sur le volume. Une garde nomme le correctif quand le démon est injoignable, au lieu d'un échec opaque. L'image de développement, initialement prévue en U5, est donc livrée par U3 ; U5 ne garde que la pile de services.
+2. **Les tests sont écrits avec `unittest` (stdlib)**, exécutables sous pytest dans le conteneur comme sans rien installer. Motif : cohérent avec le principe « zéro dépendance » déjà acté, et supprime une dépendance qui rendait ce dépôt invérifiable sur cet hôte. Coût nul, les tests restant compatibles pytest.
+3. **Mode dégradé `AVO_NO_DOCKER=1`**, qui exécute les tests sur l'hôte sans rien installer, **en annonçant** que le lint est réduit à une compilation et que le typecheck n'est pas exécuté. Le bilan de `make check` répète la mention. Il ne vaut pas preuve de style ni de typage — un vert ne doit jamais être lu comme une preuve non exécutée (CLAUDE.md §18).
+
+**Livré.** Paquet `src/avo` sans dépendance d'exécution, sous-paquets du squelette H2.2, `python -m avo` avec `--version` et une aide qui déclare les sous-commandes du contrat ; une sous-commande spécifiée mais non livrée **refuse explicitement en nommant son unité de backlog**. `pyproject.toml`, `Dockerfile`, `.dockerignore`, `Makefile` Docker-first, `.gitignore` complété (`runs/`), squelette `tests/` et `mocks/`.
+
+**Preuves exécutées.** Compilation de `src` et `tests` : OK. **7 tests unitaires verts**, dont une invocation réelle de `python -m avo --version` dans un processus séparé, la cohérence de version entre paquet et `pyproject.toml`, et le refus explicite de chaque commande non livrée. Vérification opérateur (MASTER_PLAN §5) des quatre commandes de la CLI : sorties observées conformes, codes de sortie 0/0/2/2.
+
+**Déblocage en cours de session.** Le responsable a installé **Docker rootless** pendant la session (socket `/run/user/1000/docker.sock`, contexte `rootless`, serveur 29.7.2). Deux corrections mesurées ont suivi :
+
+1. **En rootless, ne pas passer `--user`.** L'utilisateur de l'hôte est déjà mappé sur root dans le conteneur ; ajouter `--user $(id -u):$(id -g)` le prive de droits sur le volume monté (constaté : `Failed to initialize cache at /app/.ruff_cache: Permission denied`). Le Makefile détecte donc le mode rootless et n'ajoute `--user` qu'en mode classique, où il reste indispensable pour ne pas laisser de fichiers `root` dans le dépôt.
+2. **`make` absent de l'hôte** : il est installé dans l'image, et le Makefile reçoit un mode « déjà en conteneur » (`AVO_IN_CONTAINER`, posé par l'image) qui appelle les outils directement au lieu de relancer un conteneur depuis un conteneur. La campagne complète s'exécute ainsi avec **Docker pour seul prérequis**. Les caches des outils sont dirigés vers `/tmp` du conteneur : le dépôt monté n'en reçoit aucun.
+
+**Preuves exécutées, dans le conteneur.** `ruff check` : aucune anomalie (un dépassement de 105 colonnes trouvé et corrigé au passage) ; `ruff format --check` : 14 fichiers déjà formatés ; `mypy` en mode **strict** : 14 fichiers, aucune anomalie ; `pytest` : **7 tests verts**. Vérification opérateur refaite dans le conteneur. Contrôle final : aucun cache ni fichier `root` laissé dans le dépôt. **U3 est donc `[x]`** — toutes ses preuves ont réellement tourné.
+
+**Où reprendre.** U4 (serveur mock-llm), dans l'ordre du plan. Le mode dégradé `AVO_NO_DOCKER=1` reste documenté pour un environnement sans Docker, mais il n'est plus le chemin de cet hôte.
