@@ -45,11 +45,11 @@ ifdef AVO_IN_CONTAINER
 RUN :=
 else
 RUN := $(DOCKER) run --rm -v "$(CURDIR)":/app -w /app $(USER_FLAG) \
-       -e PYTHONPATH=/app/src -e HOME=/tmp $(CACHES) $(IMAGE)
+       -e PYTHONPATH=/app/src:/app/mocks -e HOME=/tmp $(CACHES) $(IMAGE)
 endif
 
 .DEFAULT_GOAL := aide
-.PHONY: aide image install lint typecheck test-unit test-int test-e2e check build up down seed smoke-live run-arc record-llm test-int-live docker-check
+.PHONY: aide image install lint typecheck test-unit test-int test-e2e check build up down seed smoke-live run-arc record-llm test-int-live _exige-env docker-check
 
 aide:
 	@echo "Cibles du dépôt (contrat : docs/SPEC_HARNAIS.md §H2.3) — tout tourne dans Docker"
@@ -65,8 +65,8 @@ aide:
 	@echo "  make up / down   pile locale (rejeu)               [à venir : U5]"
 	@echo "  make seed        données de démonstration          [à venir : U4/U16]"
 	@echo "  make smoke-live  fumée contre l'endpoint réel      [à venir : U8]"
-	@echo "  make record-llm  enregistre les cassettes sur le VRAI endpoint [à venir : U4]"
-	@echo "  make test-int-live  rejoue l'intégration contre le vrai serveur [à venir : U4]"
+	@echo "  make record-llm     [LIVE] enregistre les cassettes sur le VRAI endpoint"
+	@echo "  make test-int-live  [LIVE] détecte la dérive du contrat réel"
 	@echo "  make run-arc     campagne ARC-AGI-3                [à venir : U23]"
 	@echo ""
 	@echo "  AVO_NO_DOCKER=1 make test-unit   mode dégradé sur l'hôte (stdlib seule)"
@@ -103,12 +103,12 @@ lint:
 ifdef AVO_NO_DOCKER
 	@echo "AVERTISSEMENT : mode dégradé — ruff indisponible hors conteneur."
 	@echo "                Vérification RÉDUITE à la compilation. Ce n'est pas un lint."
-	@PYTHONPATH=src $(PY) -m compileall -q src tests
+	@PYTHONPATH=src $(PY) -m compileall -q src mocks tests
 	@echo "compilation : OK (réduit)"
 else
 	@$(MAKE) --no-print-directory docker-check
-	$(RUN) ruff check src tests
-	$(RUN) ruff format --check src tests
+	$(RUN) ruff check src mocks tests
+	$(RUN) ruff format --check src mocks tests
 endif
 
 typecheck:
@@ -117,13 +117,13 @@ ifdef AVO_NO_DOCKER
 	@echo "                Vérification de types NON EXÉCUTÉE, aucune garantie apportée."
 else
 	@$(MAKE) --no-print-directory docker-check
-	$(RUN) mypy src tests
+	$(RUN) mypy src mocks tests
 endif
 
 test-unit:
 ifdef AVO_NO_DOCKER
 	@echo "AVERTISSEMENT : mode dégradé — exécution sur l'hôte avec unittest (stdlib)."
-	@PYTHONPATH=src $(PY) -m unittest discover -s tests/unit -t . -v
+	@PYTHONPATH=src:mocks $(PY) -m unittest discover -s tests/unit -t . -v
 else
 	@$(MAKE) --no-print-directory docker-check
 	$(RUN) pytest tests/unit $(PYTEST_ARGS)
@@ -133,7 +133,7 @@ test-int:
 	@if [ -z "$$(find tests/integration -name 'test_*.py' -print -quit 2>/dev/null)" ]; then \
 	  echo "aucun test d'intégration à ce stade — les premiers arrivent avec U4 (llm-replay)."; \
 	elif [ -n "$(AVO_NO_DOCKER)" ]; then \
-	  PYTHONPATH=src $(PY) -m unittest discover -s tests/integration -t . -v; \
+	  PYTHONPATH=src:mocks $(PY) -m unittest discover -s tests/integration -t . -v; \
 	else \
 	  $(MAKE) --no-print-directory docker-check && $(RUN) pytest tests/integration $(PYTEST_ARGS); \
 	fi
@@ -142,7 +142,7 @@ test-e2e:
 	@if [ -z "$$(find tests/e2e -name 'test_*.py' -print -quit 2>/dev/null)" ]; then \
 	  echo "aucun test E2E à ce stade — le premier arrive avec U21 (partie complète sur rejeu)."; \
 	elif [ -n "$(AVO_NO_DOCKER)" ]; then \
-	  PYTHONPATH=src $(PY) -m unittest discover -s tests/e2e -t . -v; \
+	  PYTHONPATH=src:mocks $(PY) -m unittest discover -s tests/e2e -t . -v; \
 	else \
 	  $(MAKE) --no-print-directory docker-check && $(RUN) pytest tests/e2e $(PYTEST_ARGS); \
 	fi
@@ -184,15 +184,25 @@ smoke-live:
 # Le contrat de l'endpoint n'est jamais inventé : il est enregistré sur le vrai
 # serveur, puis rejoué. Ces deux cibles exigent .env et ne sont JAMAIS dans
 # 'make check' (docs/SPEC_HARNAIS.md §H4.7).
-record-llm:
-	@echo "make record-llm : à venir en U4 — enregistre les cassettes sur le vrai endpoint" >&2
-	@echo "  (exige .env ; docs/SPEC_HARNAIS.md §H4.7)" >&2
-	@exit 2
+# Le fichier .env n'est jamais lu par le code : Docker le passe en variables
+# d'environnement au conteneur (--env-file), ce qui évite tout analyseur maison
+# et toute trace de secret dans le dépôt.
+record-llm: _exige-env
+	@$(MAKE) --no-print-directory docker-check
+	$(DOCKER) run --rm --env-file .env -v "$(CURDIR)":/app -w /app $(USER_FLAG) \
+	  -e HOME=/tmp $(IMAGE) python -m llm_replay record
 
-test-int-live:
-	@echo "make test-int-live : à venir en U4 — détection de dérive du contrat réel" >&2
-	@echo "  (exige .env ; docs/SPEC_HARNAIS.md §H4.7)" >&2
-	@exit 2
+test-int-live: _exige-env
+	@$(MAKE) --no-print-directory docker-check
+	$(DOCKER) run --rm --env-file .env -v "$(CURDIR)":/app -w /app $(USER_FLAG) \
+	  -e HOME=/tmp $(CACHES) $(IMAGE) pytest tests/live $(PYTEST_ARGS)
+
+_exige-env:
+	@if [ ! -r .env ]; then \
+	  echo "ERREUR : .env absent — cette cible appelle le VRAI endpoint." >&2; \
+	  echo "  Elle est [LIVE] et n'entre jamais dans 'make check'." >&2; \
+	  exit 2; \
+	fi
 
 run-arc:
 	@$(MAKE) --no-print-directory docker-check

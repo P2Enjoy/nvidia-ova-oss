@@ -32,17 +32,17 @@ where = ["src"]
 # Les tests sont écrits avec `unittest` : ils s'exécutent sous `python -m unittest`
 # comme sous pytest. pytest n'est jamais requis.
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "mocks"]
 
 [tool.ruff]
 line-length = 100
-src = ["src", "tests", "mocks"]
+src = ["src", "mocks", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B"]
 
 [tool.mypy]
 python_version = "3.11"
-mypy_path = "src"
+mypy_path = "src:mocks"
 strict = true
 warn_unused_ignores = true

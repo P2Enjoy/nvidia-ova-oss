@@ -15,7 +15,7 @@ FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app/src \
+    PYTHONPATH=/app/src:/app/mocks \
     AVO_IN_CONTAINER=1
 
 WORKDIR /app
