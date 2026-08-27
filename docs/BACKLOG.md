@@ -81,7 +81,7 @@ quota — sont enregistrées depuis le vrai serveur, où elles ont déjà été 
   serveur réel — aucune dérive. Campagne complète verte en conteneur : ruff, ruff
   format, mypy strict (24 fichiers), 31 tests.
 
-## U5 — Pile compose des services `[ ]`
+## U5 — Pile compose des services `[x]`
 
 `@spec` H2.4. L'image de développement est déjà livrée par U3 : cette unité livre la
 **pile de services** — `docker-compose.yml` (service `llm-replay`, healthcheck ;
@@ -90,6 +90,20 @@ opérationnels, README/DAT mis à jour (lancement, ports).
 
 - Preuves : `make build` ; `make up` puis healthcheck vert vérifié par script ;
   E2E de fumée : `curl` du service de rejeu via le port composé, 401 sans clé, 200 avec.
+- **Livré et intégralement vérifié le 2026-08-28.** `Dockerfile` multi-étages :
+  `avo` (production, 176 Mo, paquet seul) et `avo-dev` (320 Mo, outillage).
+  `docker-compose.yml` : service `llm-replay` sur 11435, healthcheck sur `/_health`,
+  dépôt monté, **aucun secret injecté**. Cibles `build`, `up`, `down`, `ps`, `logs`,
+  `smoke-pile` livrées, les cibles de pile étant refusées depuis l'intérieur d'un
+  conteneur avec un message qui le dit. Fumée `scripts/smoke_pile.sh` : **6 contrôles
+  verts** (healthcheck `healthy`, `/_health` 200, `/api/version` 401 sans clé et 200
+  avec, `/api/tags` 200, corps rejoué identique à l'enregistrement). Cycle
+  `up → down → up` rejoué. Campagne complète verte : 32 tests, lint, format, mypy
+  strict (24 fichiers).
+- Défaut trouvé et corrigé pendant l'unité : le rejoueur écoutait sur la boucle
+  locale **du conteneur**, que le port publié n'atteint pas. L'interface d'écoute est
+  désormais explicite — `127.0.0.1` par défaut pour ne rien exposer par accident,
+  `0.0.0.0` passé par la pile.
 
 ## Lot B — Client LLM
 

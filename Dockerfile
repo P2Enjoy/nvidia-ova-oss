@@ -1,28 +1,40 @@
-# Image de développement et de preuves du harnais AVO.
+# Images du harnais AVO — deux étages, deux objets distincts.
 #
-# @spec docs/BACKLOG.md U3 — Squelette Python et outillage (chaîne conteneurisée)
-# @spec docs/SPEC_HARNAIS.md §H2.1 (outillage), §H2.3 (commandes), §H2.4 (conteneurisation)
+# @spec docs/BACKLOG.md U3 (image de développement) · U5 (image de production)
+# @spec docs/SPEC_HARNAIS.md §H2.1 (zéro dépendance d'exécution), §H2.4 (conteneurisation)
 #
 # Règle du responsable (2026-08-27) : TOUT s'exécute dans Docker ; rien n'est
-# installé sur la machine hôte. L'outillage de développement (pytest, ruff,
-# mypy) vit donc ICI, dans l'image, et nulle part ailleurs.
+# installé sur la machine hôte.
 #
-# Le harnais lui-même n'a AUCUNE dépendance d'exécution (§H2.1) : l'image de
-# production n'installerait que le paquet. Cette image-ci ajoute uniquement de
-# quoi PROUVER le code.
+#   --target runtime  → image de production : le paquet seul, aucune dépendance,
+#                       aucun outillage de test. C'est ce qui serait déployé.
+#   --target dev      → y ajoute make, pytest, ruff et mypy. C'est le seul endroit
+#                       où l'outillage vit. Étage par défaut.
 
-FROM python:3.13-slim
+# ---------------------------------------------------------------- runtime ----
+FROM python:3.13-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app/src:/app/mocks \
-    AVO_IN_CONTAINER=1
+    PYTHONPATH=/app/src
 
 WORKDIR /app
 
-# `make` est installé ICI et non sur l'hôte : la campagne complète s'exécute
-# donc avec Docker pour seul prérequis (§H2.4). AVO_IN_CONTAINER=1 indique au
-# Makefile qu'il est déjà dans le conteneur et ne doit pas en relancer un.
+# Le harnais n'a AUCUNE dépendance d'exécution (§H2.1) : rien à installer ici.
+COPY pyproject.toml ./
+COPY src/ ./src/
+
+CMD ["python", "-m", "avo"]
+
+# -------------------------------------------------------------------- dev ----
+FROM runtime AS dev
+
+# AVO_IN_CONTAINER indique au Makefile qu'il est déjà dans le conteneur et ne doit
+# pas en relancer un ; `make` est installé ICI et non sur l'hôte, de sorte que la
+# campagne complète s'exécute avec Docker pour seul prérequis (§H2.4).
+ENV AVO_IN_CONTAINER=1 \
+    PYTHONPATH=/app/src:/app/mocks
+
 RUN apt-get update \
  && apt-get install -y --no-install-recommends make \
  && rm -rf /var/lib/apt/lists/*
@@ -30,6 +42,6 @@ RUN apt-get update \
 # Outillage de preuve, épinglé par plancher de version (cf. pyproject [dev]).
 RUN pip install --no-cache-dir "pytest>=8" "ruff>=0.6" "mypy>=1.11"
 
-# Le code est monté en volume par le Makefile : l'image ne le copie pas, afin
-# qu'une modification locale soit immédiatement prouvable sans reconstruction.
+# En développement le code est monté en volume par le Makefile et la pile compose :
+# une modification locale est prouvable sans reconstruction.
 CMD ["python", "-m", "avo", "--version"]

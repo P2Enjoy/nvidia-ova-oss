@@ -3,7 +3,7 @@
 @spec docs/BACKLOG.md U4
 @spec docs/SPEC_HARNAIS.md §H4.7
 
-    python -m llm_replay serve  [--cassettes DIR] [--port N]
+    python -m llm_replay serve  [--cassettes DIR] [--port N] [--hote ADRESSE]
     python -m llm_replay record [--cassettes DIR] [--nom NOM]
 
 `record` exige OLLAMA_HOST et OLLAMA_API_KEY dans l'environnement : le conteneur
@@ -33,6 +33,11 @@ def main(argv: list[str] | None = None) -> int:
     servir = sous.add_parser("serve", help="sert les cassettes enregistrées")
     servir.add_argument("--cassettes", type=Path, default=CASSETTES_DEFAUT)
     servir.add_argument("--port", type=int, default=11435)
+    servir.add_argument(
+        "--hote",
+        default="127.0.0.1",
+        help="interface d'écoute ; la pile compose passe 0.0.0.0 (défaut : boucle locale)",
+    )
 
     capturer = sous.add_parser("record", help="enregistre le contrat sur le VRAI endpoint")
     capturer.add_argument("--cassettes", type=Path, default=CASSETTES_DEFAUT)
@@ -41,7 +46,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parseur.parse_args(argv)
 
     if args.commande == "serve":
-        serveur = creer_serveur(args.cassettes, args.port, os.environ.get("OLLAMA_API_KEY"))
+        serveur = creer_serveur(
+            args.cassettes, args.port, os.environ.get("OLLAMA_API_KEY"), args.hote
+        )
         hote, port = serveur.server_address[0], serveur.server_address[1]
         print(
             f"llm-replay écoute sur http://{hote!s}:{port} (cassettes : {args.cassettes})",

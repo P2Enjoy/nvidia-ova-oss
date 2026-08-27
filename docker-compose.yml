@@ -1,0 +1,55 @@
+# Pile de services locale du harnais AVO.
+#
+# @spec docs/BACKLOG.md U5 — Pile compose des services
+# @spec docs/SPEC_HARNAIS.md §H2.4 (pile de services, ports, healthchecks), §H4.7 (rejeu)
+#
+# Autonome par construction : aucun service payant, aucun réseau externe, aucun
+# secret requis. Le service de rejeu ne sert que des échanges ENREGISTRÉS sur le
+# vrai endpoint (docs/SPEC_HARNAIS.md §H4.7) — il ne simule rien.
+
+services:
+  llm-replay:
+    build:
+      context: .
+      target: dev
+    image: avo-dev
+    container_name: avo-llm-replay
+    working_dir: /app
+    # Le dépôt est monté : une cassette réenregistrée est servie sans reconstruire
+    # l'image, et le code du rejoueur reste celui du dépôt.
+    volumes:
+      - .:/app
+    environment:
+      HOME: /tmp
+      PYTHONPATH: /app/src:/app/mocks
+      # OLLAMA_API_KEY n'est volontairement PAS injectée : sans elle, le rejoueur
+      # accepte n'importe quel jeton porteur comme « authentification valide » et
+      # distingue seulement l'absence d'en-tête. La pile démontre donc le refus
+      # sans clé et le succès avec clé, sans qu'aucun secret n'entre dans compose.
+    command:
+      - python
+      - -m
+      - llm_replay
+      - serve
+      - --cassettes
+      - tests/fixtures/llm/cassettes
+      - --port
+      - "11435"
+      # Sans cette interface, le port publié n'atteindrait pas le service : une
+      # écoute sur la boucle locale du conteneur n'est pas joignable de l'hôte.
+      - --hote
+      - 0.0.0.0
+    ports:
+      - "11435:11435"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:11435/_health',timeout=3).status==200 else 1)
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 3s
+
+  # arc-replay rejoindra cette pile en U16 (docs/SPEC_ARCAGI3.md §A3), port 8765.

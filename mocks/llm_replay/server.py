@@ -24,6 +24,11 @@ from llm_replay.cassette import AUTH_ABSENTE, AUTH_INVALIDE, AUTH_VALIDE, Casset
 #: entrer en collision avec une route réelle.
 ROUTE_FAUTE = "/_fault"
 
+#: Point de santé du service, pour le healthcheck de la pile compose (§H2.4).
+#: Hors contrat Ollama, donc préfixé lui aussi : il ne masque aucune route réelle
+#: et ne dépend d'aucune cassette — il répond même sur une cassette vide.
+ROUTE_SANTE = "/_health"
+
 
 @dataclass
 class Faute:
@@ -104,6 +109,12 @@ class GestionnaireRejeu(BaseHTTPRequestHandler):
             return brut.decode(errors="replace")
 
     def do_GET(self) -> None:  # noqa: N802 — nom imposé par BaseHTTPRequestHandler
+        if self.path == ROUTE_SANTE:
+            corps = json.dumps(
+                {"status": "ok", "echanges": len(self.etat.cassette)}, ensure_ascii=False
+            ).encode()
+            self._repondre(200, corps, "application/json")
+            return
         self._servir("GET", None)
 
     def do_POST(self) -> None:  # noqa: N802 — nom imposé par BaseHTTPRequestHandler
@@ -149,10 +160,19 @@ class GestionnaireRejeu(BaseHTTPRequestHandler):
 
 
 def creer_serveur(
-    dossier_cassettes: Path, port: int = 0, cle_attendue: str | None = None
+    dossier_cassettes: Path,
+    port: int = 0,
+    cle_attendue: str | None = None,
+    hote: str = "127.0.0.1",
 ) -> ThreadingHTTPServer:
-    """Crée un serveur de rejeu. `port=0` alloue un port éphémère (tests)."""
+    """Crée un serveur de rejeu. `port=0` alloue un port éphémère (tests).
+
+    `hote` vaut `127.0.0.1` par défaut : rien n'est exposé par accident. La pile
+    compose passe explicitement `0.0.0.0`, sans quoi le port publié n'atteindrait
+    pas le service — une écoute sur la boucle locale DU CONTENEUR n'est pas
+    joignable depuis l'hôte (constaté le 2026-08-28).
+    """
     cassette = Cassette.lire_dossier(dossier_cassettes)
     etat = EtatRejeu(cassette, cle_attendue)
     gestionnaire = type("GestionnaireLie", (GestionnaireRejeu,), {"etat": etat})
-    return ThreadingHTTPServer(("127.0.0.1", port), gestionnaire)
+    return ThreadingHTTPServer((hote, port), gestionnaire)

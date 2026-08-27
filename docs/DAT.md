@@ -71,8 +71,12 @@ projet par le harnais (lignée isolée sous `runs/`).
 
 ## Déploiement et exécution
 
-Pile locale : `make up` (compose : llm-replay, arc-replay), `make seed`, `make check`
-(campagne de preuves complète, hors ligne). Live : `make smoke-live` (manuel),
+Deux images depuis un `Dockerfile` multi-étages : `avo` (production, le paquet seul,
+aucune dépendance d'exécution) et `avo-dev` (y ajoute make, pytest, ruff, mypy — seul
+endroit où l'outillage est installé). Pile locale : `make up` (compose : `llm-replay`
+sur 11435 avec healthcheck sur `/_health` ; `arc-replay` sur 8765 en U16),
+`make smoke-pile`, `make seed`, `make check` (campagne de preuves complète, hors
+ligne, en conteneur). Live : `make smoke-live` (manuel),
 `python -m avo run-arc --mode live` avec garde d'accord explicite. Pas
 d'environnement de production : le « déploiement » est la campagne d'évaluation
 (contrat A7).

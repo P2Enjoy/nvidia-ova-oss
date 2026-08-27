@@ -36,6 +36,14 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U5 : pile de services locale
+
+- `Dockerfile` multi-étages : image de **production** `avo` (176 Mo — le paquet seul, aucune dépendance d'exécution) séparée de l'image de développement `avo-dev` (320 Mo — seul endroit où vivent make, pytest, ruff et mypy).
+- `docker-compose.yml` : service `llm-replay` sur le port 11435, dépôt monté, healthcheck HTTP sur un nouveau point `/_health` indépendant des cassettes. **Aucun secret n'entre dans la pile** : sans clé fournie, le rejoueur accepte tout jeton porteur et ne distingue que l'absence d'en-tête, ce qui suffit à démontrer refus et succès.
+- Cibles `build`, `up`, `down`, `ps`, `logs` et `smoke-pile`, refusées depuis l'intérieur d'un conteneur avec un message expliquant qu'elles pilotent Docker depuis l'hôte.
+- Correction d'un défaut trouvé à l'exécution : le rejeu écoutait sur la boucle locale du conteneur, inatteignable par le port publié. L'interface d'écoute devient explicite — boucle locale par défaut, `0.0.0.0` passé par la pile.
+- Preuves : image de production construite, service `healthy`, fumée de 6 contrôles verts depuis l'hôte par le port publié, cycle `up → down → up` rejoué, campagne complète verte (32 tests, lint, format, mypy strict).
+
 ### 2026-08-27 — U4 : `llm-replay`, contrat de l'endpoint enregistré et rejoué
 
 - Format de cassette JSONL : échanges HTTP réels, appariés sur méthode, chemin, nature d'authentification et empreinte du corps canonisé. Ni clé ni hôte n'atteignent le disque — seule la nature de l'authentification est notée, les en-têtes de réponse passent par une liste blanche, et l'expurgation est vérifiée par un test qui cherche un secret dans le fichier écrit.

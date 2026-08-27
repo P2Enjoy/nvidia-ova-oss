@@ -14,6 +14,7 @@
 
 SHELL := /bin/bash
 IMAGE ?= avo-dev
+IMAGE_PROD ?= avo
 PY ?= python3
 PYTEST_ARGS ?=
 
@@ -54,7 +55,7 @@ RUN := $(DOCKER) run --rm -v "$(CURDIR)":/app -w /app $(USER_FLAG) \
 endif
 
 .DEFAULT_GOAL := aide
-.PHONY: aide image install lint typecheck test-unit test-int test-e2e check build up down seed smoke-live run-arc record-llm test-int-live _exige-env docker-check
+.PHONY: aide image install lint typecheck test-unit test-int test-e2e check build up down ps logs smoke-pile seed smoke-live run-arc record-llm test-int-live _exige-env _hote-seulement docker-check
 
 aide:
 	@echo "Cibles du dépôt (contrat : docs/SPEC_HARNAIS.md §H2.3) — tout tourne dans Docker"
@@ -66,8 +67,10 @@ aide:
 	@echo "  make test-int    tests d'intégration"
 	@echo "  make test-e2e    tests de bout en bout"
 	@echo "  make check       CAMPAGNE COMPLÈTE (hors ligne, sans secret)"
-	@echo "  make build       image de production               [à venir : U5]"
-	@echo "  make up / down   pile locale (rejeu)               [à venir : U5]"
+	@echo "  make build       image de production '$(IMAGE_PROD)'"
+	@echo "  make up / down   pile locale de rejeu (hôte)"
+	@echo "  make ps / logs   état et journaux de la pile (hôte)"
+	@echo "  make smoke-pile  fumée de la pile par le port composé (hôte)"
 	@echo "  make seed        données de démonstration          [à venir : U4/U16]"
 	@echo "  make smoke-live  fumée contre l'endpoint réel      [à venir : U8]"
 	@echo "  make record-llm     [LIVE] enregistre les cassettes sur le VRAI endpoint"
@@ -163,18 +166,39 @@ ifdef AVO_NO_DOCKER
 	@echo "MODE     : DÉGRADÉ (hors Docker) — lint réduit, typecheck NON exécuté"
 endif
 	@echo "hors campagne ([LIVE], exigent .env) : record-llm, test-int-live, smoke-live"
-	@echo "sans objet à ce stade : build (U5), up/down (U5), seed arc (U16), run-arc (U23)"
+	@echo "hors campagne (pilotent Docker, hôte) : build, up, down, smoke-pile"
+	@echo "sans objet à ce stade : seed arc (U16), run-arc (U23)"
 	@echo "─────────────────────────────────────"
 
-build:
-	@echo "make build : l'image de production n'existe pas encore — à venir en U5" >&2
-	@echo "  (l'image de développement, elle, se construit avec 'make image')" >&2
-	@exit 2
+# Image de PRODUCTION : le paquet seul, sans outillage de test (§H2.4).
+build: docker-check
+	$(DOCKER) build --target runtime -t $(IMAGE_PROD) .
 
-up down:
-	@echo "make $@ : la pile compose n'existe pas encore — à venir en U5" >&2
-	@echo "  (docs/BACKLOG.md U5, docs/SPEC_HARNAIS.md §H2.4)" >&2
+# Pile de services. Cibles d'HÔTE : elles pilotent Docker, qui n'est pas
+# disponible depuis l'intérieur d'un conteneur.
+up: _hote-seulement docker-check
+	$(DOCKER) compose up -d --build
+	@$(MAKE) --no-print-directory ps
+
+down: _hote-seulement docker-check
+	$(DOCKER) compose down
+
+ps: _hote-seulement docker-check
+	@$(DOCKER) compose ps --format 'table {{.Service}}\t{{.Status}}\t{{.Ports}}'
+
+logs: _hote-seulement docker-check
+	@$(DOCKER) compose logs --tail=50
+
+# Fumée de la pile : le rejeu répond-il réellement par le port composé ?
+smoke-pile: _hote-seulement docker-check
+	@sh scripts/smoke_pile.sh
+
+_hote-seulement:
+ifdef AVO_IN_CONTAINER
+	@echo "ERREUR : « make $(MAKECMDGOALS) » pilote Docker : à lancer depuis l'HÔTE," >&2
+	@echo "  pas depuis le conteneur (docs/SPEC_HARNAIS.md §H2.4)." >&2
 	@exit 2
+endif
 
 # Contrat de données de démonstration (CLAUDE.md §8, docs/SPEC_ARCAGI3.md §A3.4).
 # La fixture llm n'est pas GÉNÉRÉE : elle est ENREGISTRÉE sur le vrai endpoint

@@ -27,7 +27,8 @@ Les éléments constitutifs, tirés des sources exportées dans [`knowledge/`](k
 ## Stack
 
 - **Python ≥ 3.11, zéro dépendance d'exécution** (bibliothèque standard uniquement) ; outillage de développement : pytest, ruff, mypy (`docs/SPEC_HARNAIS.md` §H2, motifs inclus).
-- Pile locale conteneurisée (Docker Compose) : `llm-replay` (rejeu d'échanges **enregistrés sur le vrai endpoint** — aucun faux serveur) et `arc-replay` (contrat ARC-AGI-3 + jeu synthétique, car chaque appel réel publie un scorecard). Les tests tournent ainsi hors ligne sans jamais inventer un contrat.
+- Pile locale conteneurisée (Docker Compose) : **`llm-replay`** sur le port `11435` (rejeu d'échanges **enregistrés sur le vrai endpoint** — aucun faux serveur) et `arc-replay` sur `8765` (contrat ARC-AGI-3 + jeu synthétique, car chaque appel réel publie un scorecard ; à venir en U16). Les tests tournent hors ligne sans jamais inventer un contrat.
+- Deux images depuis un `Dockerfile` multi-étages : **`avo`** (production, 176 Mo, le paquet seul sans dépendance) et **`avo-dev`** (320 Mo, y ajoute make, pytest, ruff, mypy). L'outillage ne vit que dans l'image de développement.
 
 ## Prérequis
 
@@ -49,9 +50,23 @@ Contrat : `docs/SPEC_HARNAIS.md` §H2.3. Chaque cible lance un **conteneur jetab
 | `make lint` / `make typecheck` | ruff / mypy, dans le conteneur |
 | `make test-unit` / `make test-int` / `make test-e2e` | preuves par classe |
 | `make check` | **campagne complète**, hors ligne et sans secret |
-| `make up` / `make down` / `make seed` / `make build` | pile de services et données de démonstration |
+| `make build` | image de **production** `avo` (le paquet seul, sans outillage) |
+| `make up` / `make down` / `make ps` / `make logs` | pile de services locale (cibles d'hôte) |
+| `make smoke-pile` | fumée de la pile par le port publié (cible d'hôte) |
+| `make seed` | contrôle des fixtures (n'en fabrique aucune) |
+| `make record-llm` / `make test-int-live` | **[LIVE]** enregistrement et détection de dérive (exigent `.env`) |
 | `make smoke-live` | fumée manuelle contre l'endpoint réel (exige `.env`, hors campagne) |
 | `make run-arc` | campagne ARC (replay par défaut ; live sous garde d'accord explicite) |
+
+**Lancer la pile locale** (aucun secret requis) :
+
+```sh
+make up            # construit et démarre llm-replay, puis affiche son état
+make smoke-pile    # vérifie le rejeu par le port 11435 : /_health, 401 sans clé, 200 avec
+make down          # arrête la pile
+```
+
+Sans `OLLAMA_API_KEY` dans l'environnement, le rejoueur accepte n'importe quel jeton porteur comme authentification valide et ne distingue que l'absence d'en-tête : la pile démontre donc le refus sans clé et le succès avec clé sans qu'aucun secret n'y entre.
 
 **Sans `make` sur l'hôte** — campagne complète avec Docker pour seul prérequis :
 
@@ -85,7 +100,9 @@ Le plafond réellement applicable n'est pas cette variable seule : le proxy d'au
 ├── CLAUDE_PROJECT.md    # règles propres à ce dépôt
 ├── README.md
 ├── CHANGELOG.md
-├── Dockerfile           # image de développement et de preuves (outillage)
+├── Dockerfile           # multi-étages : avo (production) et avo-dev (outillage)
+├── docker-compose.yml   # pile locale de rejeu (llm-replay, port 11435)
+├── scripts/             # fumée de la pile (exécutée sur l'hôte)
 ├── Makefile             # contrat des commandes, tout en conteneur
 ├── pyproject.toml       # paquet avo, zéro dépendance d'exécution
 ├── src/avo/             # paquet applicatif (cli, llm, context, memory, tools, loop, arc)

@@ -134,6 +134,13 @@ class TestRejeu(unittest.TestCase):
         self.assertEqual(statut, 200)
         self.assertEqual(corps["message"]["content"], "OK-AVO")
 
+    def test_le_point_de_sante_repond_sans_authentification(self) -> None:
+        """Le healthcheck de la pile compose s'appuie dessus (§H2.4)."""
+        statut, corps = self._appeler("GET", "/_health", cle=None)
+        self.assertEqual(statut, 200)
+        self.assertEqual(corps["status"], "ok")
+        self.assertEqual(corps["echanges"], 3)
+
     def test_requete_non_enregistree_rend_une_erreur_explicite(self) -> None:
         statut, corps = self._appeler("POST", "/api/chat", {"model": "m", "messages": []})
         self.assertEqual(statut, 599)

@@ -225,3 +225,21 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Observation utile pour la suite.** Le rejeu live des mêmes scénarios a pris 3,3 s contre 17 s à l'enregistrement : le cache de préfixe d'Ollama a servi les conversations identiques quasi instantanément. C'est la confirmation empirique du choix d'historique append-only (H1.3.1).
 
 **Où reprendre.** U5 — pile compose des services (`llm-replay` en service, healthcheck, image de production, `make up/down/build`).
+
+---
+
+## 2026-08-28 — Session planifiée n° 3 : U5 livré, pile de services debout et éprouvée
+
+**Unité.** U5 — pile compose des services, désignée par le journal et première `[ ]`. Spécification existante (H2.4) : lue, puis code directement.
+
+**Livré.** `Dockerfile` **multi-étages** séparant deux objets qui n'ont pas la même vocation : `avo` (production, 176 Mo — le paquet seul, aucune dépendance d'exécution, aucun outillage de test) et `avo-dev` (320 Mo — y ajoute `make`, `pytest`, `ruff`, `mypy`, seul endroit où l'outillage est installé). `docker-compose.yml` : service `llm-replay` sur le port 11435, dépôt monté en volume, healthcheck HTTP sur un nouveau point `/_health` (hors contrat Ollama, préfixé comme `/_fault`, indépendant des cassettes). Cibles `build`, `up`, `down`, `ps`, `logs`, `smoke-pile`, refusées depuis l'intérieur d'un conteneur avec un message qui explique pourquoi (elles pilotent Docker). Script de fumée `scripts/smoke_pile.sh`.
+
+**Décision : aucun secret dans la pile.** `OLLAMA_API_KEY` n'est délibérément pas injectée dans compose. Sans elle, le rejoueur accepte n'importe quel jeton porteur comme authentification valide et ne distingue que l'absence d'en-tête — ce qui suffit à démontrer le refus sans clé et le succès avec clé. La pile se lance donc sur une machine vierge, sans `.env`.
+
+**Défaut trouvé et corrigé pendant l'unité.** Le healthcheck passait (exécuté dans le conteneur) alors que l'hôte n'obtenait rien : le rejoueur écoutait sur `127.0.0.1` **du conteneur**, adresse que le port publié n'atteint pas — Docker redirige vers l'interface du conteneur, pas vers sa boucle locale. L'interface d'écoute est désormais un paramètre explicite : `127.0.0.1` par défaut, pour ne rien exposer par accident, et `0.0.0.0` passé explicitement par la pile, avec le motif écrit dans le code et dans compose. C'est exactement le genre de défaut qu'un healthcheck interne seul n'aurait jamais révélé : seule la fumée depuis l'hôte l'a vu.
+
+**Preuves exécutées.** `make build` (image de production construite). Pile démarrée, service `healthy`. Fumée depuis l'hôte : **6 contrôles verts** — healthcheck `healthy`, `/_health` 200, `/api/version` 401 sans clé et 200 avec, `/api/tags` 200, et le corps rejoué identique à ce que le vrai serveur avait répondu. Cycle `up → down → up` rejoué pour prouver que la pile se relève. Campagne complète en conteneur : ruff, `ruff format`, mypy strict (24 fichiers), **32 tests verts** (19 unitaires, 13 d'intégration dont le nouveau contrôle du point de santé).
+
+**Un attendu faux, corrigé.** La fumée a d'abord échoué sur la comparaison du corps rejoué : le rejoueur re-sérialise en JSON canonique, sans espace après le deux-points, alors que mon attendu en portait un. C'est l'attendu qui était faux, pas le produit — corrigé avec la raison écrite dans le script.
+
+**Où reprendre.** U6 — configuration `avo.config` (lecture d'environnement et de `.env`, validation nommée, modes replay/live, budget de contexte dérivé du plafond par clé).
