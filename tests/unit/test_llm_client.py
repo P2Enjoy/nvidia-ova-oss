@@ -18,8 +18,6 @@ from typing import Any
 
 from avo.config import Config, Mode, charger
 from avo.llm.client import (
-    ATTENTES_RETRY,
-    JITTER,
     AuthError,
     ChatResult,
     ContextOverflow,
@@ -31,6 +29,7 @@ from avo.llm.client import (
     analyser_reponse,
     construire_corps,
 )
+from avo.transport import ATTENTES_RETRY, JITTER
 
 _MESSAGES = [{"role": "user", "content": "bonjour"}]
 

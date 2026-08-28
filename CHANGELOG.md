@@ -36,6 +36,14 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U17 : client de l'API ARC-AGI-3
+
+- `avo.arc.client` : réponses normalisées, **étiquetage de chaque frame selon son rôle réel** — transitoire, décision, initialisation de reset ou de niveau, terminal gagnant ou perdant. Une frame terminale n'est pas une frame de décision : sans cette distinction, le harnais pourrait rattacher une action à une grille depuis laquelle il était impossible d'agir.
+- Historique typé rattachant chaque action à la frame d'où elle a été choisie, persisté par niveau dans le workspace du run.
+- **Garde anti-publication structurelle** : en mode rejeu, construire un client vers autre chose qu'un hôte local lève à la construction. Jouer via l'API officielle enregistre un scorecard ; un test qui l'atteindrait par accident publierait un résultat. La base ARC pointe désormais la pile locale en mode rejeu.
+- Politique de transport extraite et partagée avec le client d'inférence : la spécification exige « les mêmes règles », et deux implémentations parallèles auraient fini par diverger sans que rien ne le signale.
+- Preuves : 393 tests verts, dont une partie complète menée par le client contre le serveur local — la première rencontre des deux côtés du contrat de fil.
+
 ### 2026-08-28 — U16 : contrat ARC-AGI-3 local et jeu synthétique `cible`
 
 - `mocks/arc_replay` : moteur du jeu `cible` **en forme fermée** — la baseline de chaque niveau se calcule au lieu d'être mesurée, si bien qu'une partie parfaite dépense un nombre d'actions connu à l'avance et que le RHAE attendu sera vérifiable au chiffre près.

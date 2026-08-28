@@ -28,8 +28,9 @@ from typing import Any, Final
 #: `413` donnait 286124 / 248803 = 1,15 (docs/JOURNAL.md).
 MARGE_PROXY: Final = 1.15
 
-#: Endpoint servi par la pile locale de rejeu (docs/SPEC_HARNAIS.md §H2.4).
+#: Endpoints servis par la pile locale de rejeu (docs/SPEC_HARNAIS.md §H2.4).
 HOTE_REJEU: Final = "http://127.0.0.1:11435"
+ARC_REJEU: Final = "http://127.0.0.1:8765"
 
 #: Jeton employé en mode rejeu. Ce n'est PAS un secret : le rejoueur ne distingue
 #: que la présence d'un en-tête d'autorisation lorsqu'aucune clé ne lui est fournie.
@@ -289,8 +290,12 @@ def charger(
         sup_cooldown=source.entier("AVO_SUP_COOLDOWN", 30),
         runs_dir=Path(source.texte("AVO_RUNS_DIR", "runs")),
         arc_api_key=arc,
+        # En mode rejeu, la base ARC pointe la pile locale : le mode ne requiert
+        # aucun secret et ne doit surtout atteindre aucun service qui publierait
+        # (§H3.4, §A2.3).
         arc_base_url=_valider_url(
-            "ARC_BASE_URL", source.texte("ARC_BASE_URL", "https://three.arcprize.org")
+            "ARC_BASE_URL",
+            source.texte("ARC_BASE_URL", "https://three.arcprize.org" if live else ARC_REJEU),
         ),
     )
 

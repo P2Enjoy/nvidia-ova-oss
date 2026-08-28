@@ -463,3 +463,23 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 66 fichiers. **359 tests verts** — 276 unitaires (dont 21 pour le moteur : quatre directions, bordure qui bloque sans cesser de compter l'action, frames transitoire et de décision distinctes, clic exigeant que les coordonnées soient celles du curseur, trois ratés perdant la tentative, RESET initial gratuit puis coûteux, compteur de niveau remis à zéro) et 83 d'intégration (dont 14 nouveaux en HTTP réel : listing avec baselines, cycle de scorecard, **partie gagnée à la main par requêtes** dépensant exactement la somme des baselines, perte, reprise, et rejeu d'épisode dont la déviation est dite explicitement). Fumée de pile étendue : **11 contrôles verts** sur les deux services.
 
 **Où reprendre.** U17 — client API ARC : `ArcClient` typé, historique typé A2.2, garde anti-publication A2.3, éprouvé contre `arc-replay`.
+
+---
+
+## 2026-08-28 (suite 12) — Session planifiée n° 15 : U17 livré, client API ARC
+
+**Unité.** U17 — client API ARC. Pile saine (les deux services), seed vérifié, registre sans entrée ouverte.
+
+**Livré.** `avo.arc.client` : `FrameResult` typé, étiquetage de chaque frame selon son rôle réel, historique rattachant chaque action à la frame de décision d'où elle a été choisie et persisté par niveau dans `runs/<id>/frames/`, erreurs typées, et la garde anti-publication.
+
+**Décision : la politique de transport est extraite et partagée.** A2.1 exige « les **mêmes** règles transport que H4.5/H4.6 ». Deux implémentations parallèles auraient fini par diverger sans que rien ne le signale ; `avo.transport` porte désormais les attentes, le jitter et la boucle de retry, et les deux clients l'emploient. Les 24 tests du client d'inférence sont passés inchangés après l'extraction — c'est ce qui rendait le refactoring sûr.
+
+**Décision : la garde anti-publication est structurelle.** En mode rejeu, construire un client vers autre chose qu'un hôte local **lève**, à la construction. Ce n'est pas une consigne à respecter : c'est une impossibilité. Motif : jouer via l'API officielle enregistre un scorecard sur le compte du responsable, et un test qui l'atteindrait par accident publierait un résultat. Dans le même esprit, `ARC_BASE_URL` pointe maintenant la pile locale en mode rejeu, comme l'endpoint d'inférence depuis U6 — le mode ne peut plus atteindre un service qui publierait, même par défaut.
+
+**Un attendu devenu faux à dessein.** Le test de U6 vérifiait que le défaut du mode rejeu était l'API officielle. Ce défaut a changé, pour la raison ci-dessus. Le test dit désormais la nouvelle règle et un test frère vérifie que le mode live, lui, vise bien l'API officielle. La documentation suit dans le même changement.
+
+**Le typage des frames, et pourquoi il compte.** Une frame terminale n'est pas une frame de décision : `frame_de_decision` rend `None` sur une victoire ou une perte. Sans cette distinction, le harnais pourrait rattacher une action à une grille depuis laquelle il était impossible d'agir, et fabriquer une transition qui n'a jamais eu lieu — exactement ce que la définition 3 de Tycho cherche à empêcher.
+
+**Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 70 fichiers. **393 tests verts** — 299 unitaires (dont 22 pour cette unité) et 94 d'intégration (dont 11 nouveaux). Le plus important : **une partie complète menée par le client contre le serveur de U16**, en HTTP, dépensant exactement la somme des baselines. C'est la première fois que les deux côtés du contrat de fil se rencontrent ; s'ils divergeaient, ce test rougirait.
+
+**Où reprendre.** U18 — rendu texte, inspection et mémoire de frames : rendu canonique 64×64, coordonnées (row, col), `inspect`, `read_pixels`, `diff`.

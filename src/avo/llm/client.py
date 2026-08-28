@@ -23,15 +23,13 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from avo.config import Config
+from avo.transport import attente, avec_retries
 
 _journal = logging.getLogger("avo.llm")
 
-#: Attentes entre deux tentatives, en secondes (§H4.5). Trois nouvelles tentatives
-#: suivent l'échec initial, soit quatre requêtes au plus.
-ATTENTES_RETRY: tuple[float, ...] = (1.0, 4.0, 16.0)
-
-#: Amplitude du jitter appliqué à chaque attente (§H4.5).
-JITTER = 0.25
+# La politique de retry (attentes, jitter) vit dans `avo.transport` : elle est
+# partagée avec le client ARC (§A2.1), afin que « mêmes règles » reste vrai dans le
+# temps et pas seulement le jour où on l'écrit.
 
 
 class LLMError(Exception):
@@ -308,8 +306,7 @@ class LLMClient:
 
     def _attente(self, tentative: int) -> float:
         """Attente avec jitter borné à ±25 % (§H4.5)."""
-        base = ATTENTES_RETRY[tentative]
-        return base * (1.0 + (self._alea() * 2.0 - 1.0) * JITTER)
+        return attente(tentative, self._alea)
 
     def _classer(self, reponse: ReponseHTTP) -> ChatResult:
         if reponse.status in (401, 403):
@@ -398,36 +395,24 @@ class LLMClient:
             )
         ).encode()
         entetes = self._entetes()
-        derniere: LLMError | None = None
 
-        for tentative in range(len(ATTENTES_RETRY) + 1):
+        def tenter() -> ChatResult:
             debut = time.monotonic()
-            try:
-                reponse = self._transport(self.url_chat, corps, entetes, self.config.timeout_s)
-                resultat = self._classer(reponse)
-            except (ServerError, TransportError) as erreur:
-                derniere = erreur
-                if tentative == len(ATTENTES_RETRY):
-                    break
-                attente = self._attente(tentative)
-                _journal.info(
-                    "nouvelle tentative d'inférence",
-                    extra={
-                        "tentative": tentative + 1,
-                        "attente_s": round(attente, 2),
-                        "motif": type(erreur).__name__,
-                    },
-                )
-                self._dormir(attente)
-                continue
+            reponse = self._transport(self.url_chat, corps, entetes, self.config.timeout_s)
+            resultat = self._classer(reponse)
             _journal.info(
                 "inférence aboutie",
                 extra={"duree_s": round(time.monotonic() - debut, 3), **resultat.resume()},
             )
             return resultat
 
-        assert derniere is not None  # noqa: S101 — la boucle ne sort ainsi qu'après un échec
-        raise derniere
+        return avec_retries(
+            tenter,
+            (ServerError, TransportError),
+            dormir=self._dormir,
+            alea=self._alea,
+            journal=_journal,
+        )
 
 
 def _entier_ou_none(valeur: Any) -> int | None:

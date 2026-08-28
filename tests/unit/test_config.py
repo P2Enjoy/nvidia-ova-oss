@@ -13,6 +13,7 @@ import unittest
 from pathlib import Path
 
 from avo.config import (
+    ARC_REJEU,
     CONTEXTE_DEFAUT_REJEU,
     HOTE_REJEU,
     JETON_REJEU,
@@ -81,11 +82,17 @@ class TestModeRejeu(unittest.TestCase):
         self.assertEqual(config.timeout_s, 900)
         self.assertEqual(config.ratio_continuation, 0.85)
         self.assertEqual(config.runs_dir, Path("runs"))
-        self.assertEqual(config.arc_base_url, "https://three.arcprize.org")
+        # En rejeu, la base ARC pointe la pile locale : le mode ne doit atteindre
+        # aucun service qui publierait un scorecard (§H3.4, §A2.3).
+        self.assertEqual(config.arc_base_url, ARC_REJEU)
 
 
 class TestModeLive(unittest.TestCase):
     """En live, un secret manquant est une erreur nommée (§H3.3)."""
+
+    def test_la_base_arc_officielle_est_le_defaut_en_live(self) -> None:
+        config = charger(Mode.LIVE, env=_LIVE_MINIMAL, racine=Path("/inexistant"))
+        self.assertEqual(config.arc_base_url, "https://three.arcprize.org")
 
     def test_configuration_live_complete(self) -> None:
         config = charger(Mode.LIVE, env=_LIVE_MINIMAL, racine=Path("/inexistant"))

@@ -139,7 +139,7 @@ aucune installation sur la machine hôte.
 | `AVO_SUP_COOLDOWN` | actions minimales entre deux interventions (H10.3) | `30` |
 | `AVO_RUNS_DIR` | racine des artefacts | `runs/` |
 | `ARC_API_KEY` | API ARC Prize (SPEC_ARCAGI3) | requis pour le live uniquement |
-| `ARC_BASE_URL` | base API ARC | `https://three.arcprize.org` |
+| `ARC_BASE_URL` | base API ARC | officielle en live, pile locale en rejeu |
 
 **H3.2 — Budget utile.** `budget_prompt = floor(OLLAMA_CONTEXT_LENGTH / 1.15) −
 AVO_NUM_PREDICT`. La marge 1,15 reproduit celle du proxy (mesurée) ; si un `413`

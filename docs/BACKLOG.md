@@ -355,7 +355,7 @@ fermée, frame transitoire), mode épisodes (A3.3), intégration compose + healt
 - Le format de fil est désormais **écrit** en A1.4 et implémenté des deux côtés ; il
   reste à confirmer par la sonde U22, qui corrigera client et rejeu ensemble.
 
-## U17 — Client API ARC `[ ]`
+## U17 — Client API ARC `[x]`
 
 `@spec` A2 (+ A1.3–A1.5). `ArcClient` typé, `FrameResult`, historique typé A2.2
 persisté, garde anti-publication A2.3, transport H4.5/H4.6.
@@ -363,6 +363,19 @@ persisté, garde anti-publication A2.3, transport H4.5/H4.6.
 - Preuves : unitaires (typage des frames, étiquetage, garde : hôte non-replay en
   mode replay → erreur) ; intégration contre arc-replay : partie complète, RESET,
   game over, épisode dévié → erreur explicite.
+- **Livré et intégralement vérifié le 2026-08-28.** `avo.arc.client` : `FrameResult`
+  typé, étiquetage des frames selon leur rôle réel (transitoire, décision, init de
+  reset, init de niveau, terminal gagnant ou perdant), historique rattachant chaque
+  action à la frame de décision d'où elle vient et persisté par niveau sous
+  `runs/<id>/frames/`, erreurs typées, et **garde anti-publication structurelle**.
+  Preuves : 22 tests unitaires et 11 d'intégration, dont **une partie complète menée
+  par le client contre le serveur de U16** — la première rencontre des deux côtés du
+  contrat de fil. Campagne : **393 tests**, lint, format, mypy strict (70 fichiers).
+- Politique de transport **extraite dans `avo.transport`** et partagée avec le client
+  d'inférence : A2.1 exige « les mêmes règles que H4.5/H4.6 », et deux
+  implémentations parallèles auraient fini par diverger sans que rien ne le signale.
+- `ARC_BASE_URL` pointe désormais la pile locale en mode rejeu, comme l'endpoint
+  d'inférence (H3.4) : le mode ne peut plus atteindre un service qui publierait.
 
 ## U18 — Rendu texte, inspection, mémoire de frames `[ ]`
 
