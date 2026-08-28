@@ -114,6 +114,25 @@ class RegistreOutils:
             raise ValueError(f"outil « {outil.nom} » déjà enregistré")
         self._outils[outil.nom] = outil
 
+    def synchroniser(self, etiquette: str, outils: Iterable[Outil]) -> None:
+        """Remplace le groupe d'outils portant `etiquette` par ceux fournis (§H7.1).
+
+        Certains outils dépendent de l'état de l'environnement : les commandes
+        offertes changent d'un tour à l'autre, et c'est l'environnement qui en
+        décide. `enregistrer` refuse les doublons, donc les réenregistrer est
+        impossible ; et laisser un outil périmé exposé donnerait au modèle une
+        action que l'environnement n'offre plus.
+
+        Le remplacement est atomique du point de vue du groupe : tout ce qui portait
+        l'étiquette disparaît, puis les nouveaux outils sont enregistrés. Les outils
+        des autres groupes ne sont pas touchés.
+        """
+        for nom, outil in list(self._outils.items()):
+            if etiquette in outil.etiquettes:
+                del self._outils[nom]
+        for outil in outils:
+            self.enregistrer(outil)
+
     def __contains__(self, nom: object) -> bool:
         return nom in self._outils
 

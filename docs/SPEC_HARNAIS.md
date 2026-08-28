@@ -272,6 +272,13 @@ fonction. Le registre produit le tableau `tools` de l'appel LLM et route les
 ARC + inspection + notes ; les outils d'action ne sont exposés qu'à l'état où agir
 est permis).
 
+Un groupe d'outils peut dépendre de l'état de l'environnement, et non seulement de
+celui de la boucle : `synchroniser(étiquette, outils)` remplace en bloc les outils
+portant une étiquette, sans toucher aux autres groupes. C'est ce qui permet à une
+surface d'action de suivre ce que l'environnement déclare (SPEC_ARCAGI3 A5.2) ;
+enregistrer un outil déjà présent reste une erreur, précisément pour qu'un
+remplacement soit toujours explicite.
+
 **H7.2 — Exécution.** Chaque `tool_call` est exécuté séquentiellement ; le résultat
 (ou l'erreur) revient comme message `role: tool` append-only. Limite de garde :
 `AVO_TOOL_STEPS_MAX` (défaut 40, valeur Tycho) appels d'outils par tour ; au-delà, le

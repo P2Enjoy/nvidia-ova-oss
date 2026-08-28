@@ -69,6 +69,11 @@ class Workspace:
     def transcripts(self) -> Path:
         return self.chemin / "transcripts"
 
+    @property
+    def frames(self) -> Path:
+        """Où l'historique typé de la partie est persisté (§A2.2)."""
+        return self.chemin / "frames"
+
     def chemin_segment(self, numero: int) -> Path:
         return self.transcripts / f"segment_{numero:03d}.jsonl"
 

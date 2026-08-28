@@ -226,5 +226,41 @@ class TestExecutionEtGarde(unittest.TestCase):
         self.assertEqual(resultat.executes, 1)
 
 
+class TestSynchronisationDUnGroupe(unittest.TestCase):
+    """§H7.1 : le groupe d'outils d'un état peut suivre l'environnement."""
+
+    def setUp(self) -> None:
+        self.registre = RegistreOutils(
+            [
+                _outil_echo(nom="note", etiquettes=frozenset({"notes"})),
+                _outil_echo(nom="a1", etiquettes=frozenset({"action"})),
+                _outil_echo(nom="a2", etiquettes=frozenset({"action"})),
+            ]
+        )
+
+    def test_le_groupe_est_remplace_pas_complete(self) -> None:
+        self.registre.synchroniser(
+            "action", [_outil_echo(nom="a3", etiquettes=frozenset({"action"}))]
+        )
+        self.assertEqual(
+            [schema["function"]["name"] for schema in self.registre.schemas(("action",))], ["a3"]
+        )
+
+    def test_les_autres_groupes_ne_sont_pas_touches(self) -> None:
+        self.registre.synchroniser("action", [])
+        self.assertEqual(
+            [schema["function"]["name"] for schema in self.registre.schemas(("notes",))], ["note"]
+        )
+        self.assertEqual(self.registre.schemas(("action",)), [])
+
+    def test_reposer_le_meme_outil_ne_leve_pas_de_doublon(self) -> None:
+        """Sans remplacement, `enregistrer` refuserait le second tour."""
+        for _ in range(3):
+            self.registre.synchroniser(
+                "action", [_outil_echo(nom="a1", etiquettes=frozenset({"action"}))]
+            )
+        self.assertEqual(self.registre.noms, ("a1", "note"))
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

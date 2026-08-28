@@ -36,6 +36,15 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U19 : interface de tâche direct-interaction
+
+- `avo.arc.interface` : l'interface qui relie le client ARC, le rendu, la mémoire de frames et la boucle. Un outil par commande que la frame courante déclare — le filtrage vient de la frame, pas d'une liste figée : quand l'environnement cesse d'offrir une commande, l'agent cesse de la voir, et il l'apprend en observant plutôt qu'en heurtant une erreur.
+- **Descriptions muettes sur les effets** : « Joue la commande ACTION1. Coûte une action. » Ce module est le seul endroit où un indice de jeu pourrait se glisser ; dire ce qu'une action *fait* donnerait à l'agent ce qu'il doit inférer et fausserait l'évaluation sans que rien ne l'indique dans les scores.
+- Comptage officiel tenu localement et **réconcilié avec celui du serveur** : le compte du serveur fait foi, mais tout écart est journalisé, conservé et remonté — jamais absorbé en silence.
+- `RegistreOutils.synchroniser` : un groupe d'outils peut désormais suivre l'environnement et non seulement l'état de la boucle. Sans lui, le registre construit une fois pour le run aurait continué d'exposer des commandes que la frame n'offre plus.
+- Revue « zéro indice de jeu » consignée au journal et **rendue exécutable** : un balayage statique des constantes de tous les modules dont un texte atteint le modèle, et un balayage des corps de requête réellement émis pendant un run.
+- Preuves : 476 tests verts, dont une partie parfaite dépensant exactement la baseline sans un seul écart de comptage, une perte qui réduit les commandes offertes au modèle jusque dans le tableau `tools` émis, et un niveau complété par l'agent scripté dont le bilan alimente réellement le scorer de lignée.
+
 ### 2026-08-28 — U18 : rendu texte et mémoire de frames sans perte
 
 - `avo.arc.rendu` : rendu canonique d'une grille 64×64 précédé d'une ligne d'état, et analyse inverse. **Aucune interprétation ajoutée** — pas de nom d'objet, pas de mise en évidence : souffler « voici la cible » reviendrait à donner la réponse que l'agent doit inférer, et fausserait l'évaluation sans que rien ne l'indique dans les scores.

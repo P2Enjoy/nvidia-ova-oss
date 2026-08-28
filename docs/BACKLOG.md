@@ -395,7 +395,7 @@ mémoire de frames sans perte, `inspect`, `read_pixels`, `diff`.
   les **deux** cellules que déplace le curseur. Campagne : **435 tests**, lint,
   format, mypy strict (74 fichiers).
 
-## U19 — Interface de tâche direct-interaction `[ ]`
+## U19 — Interface de tâche direct-interaction `[x]`
 
 `@spec` A5 (+ A1.2). Prompt de tâche minimal calqué VISTA (aucune règle de jeu nulle
 part), outils `action1..6`/`reset` filtrés par la frame, comptage officiel + 
@@ -405,6 +405,15 @@ réconciliation A5.3, branchement complet sur la boucle U13 et le scorer U14.
   comptage RESET conforme A1.2) ; intégration : l'agent (llm-replay scripté) joue des
   actions sur arc-replay via l'interface, l'historique typé et les compteurs sont
   exacts ; revue explicite « zéro indice de jeu » consignée.
+- Fait : `avo.arc.interface` (`InterfaceArc`), `RegistreOutils.synchroniser` pour que
+  le filtrage par frame atteigne la surface d'outils du modèle, `Workspace.frames`.
+  Preuves : `tests/unit/test_interface_arc.py`, `tests/unit/test_registre_outils.py`
+  (synchronisation d'un groupe), `tests/integration/test_interface_sur_arc_replay.py`
+  (partie parfaite comptée à la baseline, perte réduisant les commandes offertes,
+  niveau complété alimentant `ScorerARC`). Revue « zéro indice de jeu » : consignée
+  dans `docs/JOURNAL.md` (2026-08-28, session n° 17) et rendue exécutable — le
+  balayage porte sur les constantes de tous les modules dont un texte atteint le
+  modèle, et sur les corps de requête réellement émis pendant un run.
 
 ## U20 — RHAE `[ ]`
 

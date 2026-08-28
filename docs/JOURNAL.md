@@ -505,3 +505,39 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 74 fichiers. **435 tests verts** — 334 unitaires (dont 35 pour cette unité, avec la propriété **rendu ∘ analyse = identité** sur les grilles de chaque niveau et sur les seize couleurs) et 101 d'intégration (dont 7 nouveaux sur les frames que le serveur envoie réellement : le `diff` d'un déplacement voit exactement les deux cellules concernées, celle qu'on quitte et celle où l'on arrive, et `inspect` retrouve une frame cinq tours en arrière).
 
 **Où reprendre.** U19 — interface de tâche direct-interaction : prompt de tâche minimal calqué sur VISTA, outils d'action filtrés par la frame, comptage officiel réconcilié, branchement complet sur la boucle et le scorer.
+
+---
+
+## 2026-08-28 (suite 14) — Session planifiée n° 17 : U19 livré, interface de tâche direct-interaction
+
+**Unité.** U19 — interface de tâche direct-interaction. Pile saine (les deux services), seed vérifié (7 échanges dans la cassette, jeu cible à 3 niveaux, baselines [39, 19, 18]), registre d'incohérences sans entrée ouverte.
+
+**Livré.** `avo.arc.interface` : `InterfaceArc` implémente le contrat `Environnement` de la boucle et relie enfin les quatre briques ARC déjà livrées — client, rendu, mémoire de frames, machine d'états. Un outil par commande **que la frame courante déclare**, `action6` validant (row, col) dans [0, 63], comptage officiel tenu localement et réconcilié, observation rendue depuis la seule frame de décision avec mention des transitoires conservées.
+
+**Décision : le filtrage doit atteindre la surface réellement exposée.** Le registre d'outils de la boucle est construit une fois pour le run, alors que les commandes déclarées changent à chaque frame. Filtrer côté interface sans toucher au registre aurait laissé le modèle voir des commandes que l'environnement n'offre plus : il l'aurait appris par un message d'erreur, c'est-à-dire par un canal qui n'existe pas dans le jeu. `RegistreOutils.synchroniser` remplace en bloc les outils d'une étiquette ; l'interface l'appelle après chaque frame absorbée. `enregistrer` continue de refuser les doublons — un remplacement doit rester explicite. Preuve : après trois clics manqués, le tableau `tools` réellement émis à l'implémentation ne contient plus que `reset`.
+
+**Décision : les descriptions d'outils sont muettes sur les effets.** « Joue la commande ACTION1. Coûte une action. » — le nom de la commande et son coût selon le protocole, rien de plus. Ce module est le dernier endroit où un indice pouvait entrer, et il aurait été le plus discret : une description utile (« déplace vers le haut ») aurait amélioré les scores sans qu'aucune ligne du rapport ne le signale. Ce qui est dit reste vrai du protocole, jamais du jeu.
+
+**Décision : le serveur fait foi sur le comptage, l'écart reste visible.** C'est le compteur du serveur qui produit le score officiel ; le compteur local ne peut donc pas le contredire. Mais un écart signale soit un défaut de notre comptage, soit un protocole mal compris : il est journalisé, conservé dans le comptage et destiné au rapport. Aligner en silence aurait effacé la seule trace d'un bug de comptabilité.
+
+**Revue explicite « zéro indice de jeu » — consignée.** Surfaces par lesquelles un texte atteint le modèle, et verdict de chacune :
+
+1. `prompts.SYSTEME` — pose un jeu inconnu sur une grille de cellules colorées, dit explicitement que les objets, mécaniques et but ne sont pas donnés. La seule consigne d'objectif (« terminer chaque niveau en aussi peu d'actions que possible ») énonce la règle de score du protocole, pas une règle de jeu. **Conforme.**
+2. `prompts.PLANNING`, `IMPLEMENTATION`, `EVALUATION`, `BUG_FIXING`, `BORNE_PROCHE` — méthode d'enquête et bornes de budget ; aucun contenu de jeu. **Conforme.**
+3. `INVITATION_CONTINUATION` — reprise de contexte, aucun contenu de jeu. **Conforme.**
+4. Noms d'outils `action1`…`action6`, `reset` — ce sont les noms du protocole. Les renommer en termes parlants serait précisément la fuite. **Conforme.**
+5. `DESCRIPTIONS` — commande nommée, coût annoncé ; pour `action6`, les paramètres que le protocole exige. **Conforme.**
+6. Rendu de l'observation — ligne d'état (niveau, score, actions, commandes déclarées) puis la grille d'entiers. Aucune étiquette, aucune mise en évidence, aucun résumé. Les couleurs du jeu de rejeu n'atteignent le modèle que comme des entiers. **Conforme.**
+7. Mention des frames intermédiaires — un fait sur la mémoire, pas sur le jeu. **Conforme.**
+8. Schémas `inspect`, `read_pixels`, `diff` — décrivent l'outil et sa gratuité au score. **Conforme.**
+9. `note_read` / `note_write` — deux noms de notes, aucun contenu préchargé : ce que l'agent y lit, c'est ce qu'il y a écrit. **Conforme.**
+10. Message du superviseur — parle de stagnation, de répétition et de budget ; jamais du jeu. **Conforme.**
+11. Messages d'erreur d'outil — `ActionIndisponible` liste les commandes déclarées (des noms), `CoordonneesInvalides` rappelle les bornes de la grille, qui relèvent du protocole. **Conforme.**
+
+Deux gardes exécutables remplacent la promesse : un balayage statique des constantes de tous ces modules, et un balayage du corps JSON de **toutes** les requêtes réellement émises pendant un run de quatre tours. Limite assumée : ce sont des listes de termes interdits, donc une preuve d'absence de *ces* indices, pas d'absence de tout indice ; la revue ci-dessus reste la garantie principale, et elle est à refaire à chaque texte ajouté.
+
+**Une commodité manquante, ajoutée.** `HistoriqueFrames.ecrire` promettait `runs/<id>/frames/` depuis U17, mais le workspace n'exposait pas ce chemin. `Workspace.frames` complète la série `notes`/`transcripts` ; la promesse est désormais atteignable sans fabriquer la chaîne.
+
+**Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 77 fichiers. **476 tests verts** — 365 unitaires (dont 31 pour cette unité) et 111 d'intégration (dont 10 nouveaux, contre les deux rejeux en HTTP réel). Les plus significatifs : une partie parfaite conduite par l'interface dépensant exactement la somme des baselines **sans un seul écart de comptage** ; la perte de tentative qui réduit les commandes offertes jusque dans le tableau `tools` émis ; et un niveau complété par l'agent scripté, dont le bilan alimente réellement `ScorerARC` — le branchement va donc de la frame jusqu'au score de lignée.
+
+**Où reprendre.** U20 — RHAE : `eₗ = min(115, 100·(hₗ/aₗ)²)`, poids `wₗ = ℓ`, plafond par complétion pondérée, baselines servies par `/api/games`, vérifié en forme fermée sur le jeu cible.

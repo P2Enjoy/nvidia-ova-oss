@@ -149,6 +149,12 @@ incrémente le compteur officiel (A1.2 : RESET en cours de partie compte), retou
 rendu A4.1 de la nouvelle frame de décision (+ mention des frames transitoires
 disponibles via `inspect`).
 
+Le filtrage doit atteindre la **surface réellement exposée** : le registre d'outils de
+la boucle est construit une fois, alors que les commandes déclarées changent à chaque
+frame. L'interface synchronise donc le groupe « action » du registre après chaque
+frame absorbée (H7.1). Sans cela, le modèle continuerait de voir une commande que
+l'environnement n'offre plus, et l'apprendrait par une erreur au lieu de l'observer.
+
 **A5.3 — Comptage.** Le compteur d'actions par niveau/jeu est tenu localement ET
 réconcilié avec ce que renvoie l'API ; divergence → journalisée et remontée dans le
 rapport (jamais masquée).
