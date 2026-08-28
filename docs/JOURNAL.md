@@ -421,3 +421,27 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 57 fichiers. **297 tests verts** — 232 unitaires (dont 19 pour cette unité : amélioration, égalité et régression, refus d'une version incorrecte même très bien scorée, meilleur score non déplacé par un refus, isolation par chemin absolu du `--git-dir`, score exact dans le message) et 65 d'intégration (dont 7 nouveaux : la lignée ouverte là où elle vivra réellement, trois progressions donnant trois versions aux scores exacts, une régression intercalée refusée, un run sans progression ne committant rien, et le dépôt du projet vérifié intact).
 
 **Où reprendre.** U15 — superviseur : détection de stagnation et de cycles improductifs, appel LLM séparé, injection `[SUPERVISEUR]` append-only, cooldown. Ce sera la dernière unité du lot D.
+
+---
+
+## 2026-08-28 (suite 10) — Session planifiée n° 13 : U15 livré, superviseur ; lot D terminé
+
+**Unité.** U15 — superviseur. Pile saine, seed vérifié, registre sans entrée ouverte.
+
+**Livré.** `avo.supervisor` : trois détecteurs et une intervention conditionnelle. Stagnation (actions sans complétion de niveau **ni** nouvelle entrée de lignée), cycle improductif (une même action répétée **et** frame inchangée sur une fenêtre de douze), rafale de Bug-Fixing. L'intervention est un **appel LLM séparé** dont le résultat est injecté en append dans l'historique de l'acteur sous la balise `[SUPERVISEUR]`, avec cooldown et journalisation du motif.
+
+**Décision : les déclencheurs sont mesurés, jamais interprétés.** Des compteurs et des empreintes de frames, aucune appréciation portée sur du texte libre. Un déclencheur qui dépendrait de ce que le modèle raconte de lui-même serait précisément aveugle au moment où il tourne en rond — c'est-à-dire quand on en a besoin.
+
+**Décision : la double condition du cycle.** Répéter une action qui produit des effets différents est une exploration légitime ; la répéter sans que rien ne bouge ne l'est pas. Les deux tests négatifs le fixent : une action répétée aux effets variés ne déclenche pas, et des actions variées sur une frame figée non plus.
+
+**Décision : le superviseur ne reçoit pas l'historique de l'acteur.** Il en obtient un résumé factuel — dernières actions, empreintes de frames, notes, observation courante. Hériter du contexte, ce serait hériter de l'ornière dont il doit sortir l'acteur. Un test vérifie qu'une chaîne présente dans l'historique de l'acteur n'atteint jamais l'appel du superviseur.
+
+**Décision : il n'a aucun outil.** Son seul pouvoir est d'écrire un message que l'acteur reste libre d'ignorer. Un superviseur qui agirait doublerait la politique et rendrait le score inattribuable — c'est la séparation reprise de Tycho, où seul l'acteur commet des actions.
+
+**Défaut d'échafaudage, le même que la session précédente.** Ma passe de capture employait un motif littéral là où la passe réelle emploie le motif calculé : les corps différaient, aucun échange ne s'appariait. Les deux passes exécutent désormais **le même scénario**, décrit une seule fois. La leçon se répète : dès qu'un test rejoue des échanges enregistrés, tout ce qui entre dans le corps doit être produit par le même chemin dans les deux passes.
+
+**Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 60 fichiers. **324 tests verts** — 255 unitaires (dont 23 pour cette unité, avec un cas négatif pour chaque détecteur) et 69 d'intégration (dont 4 nouveaux passant par le vrai client et le vrai rejeu HTTP : intervention réelle, cooldown respecté, motif dans `metrics.jsonl` sans que la directive y figure).
+
+**Lot D terminé** (U12 à U15). Le harnais possède désormais sa boucle complète : outils, machine d'états, lignée scorée, supervision.
+
+**Où reprendre.** U16 — serveur de rejeu `arc-replay` et jeu synthétique `cible`, qui ouvre le lot E : l'interface ARC-AGI-3 proprement dite.

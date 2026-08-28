@@ -166,6 +166,8 @@ class Config:
     tool_steps_max: int
     actions_max_niveau: int
     actions_max_jeu: int
+    sup_stall_actions: int
+    sup_cooldown: int
     runs_dir: Path
     arc_api_key: str | None
     arc_base_url: str
@@ -211,6 +213,8 @@ class Config:
             "tool_steps_max": self.tool_steps_max,
             "actions_max_niveau": self.actions_max_niveau,
             "actions_max_jeu": self.actions_max_jeu,
+            "sup_stall_actions": self.sup_stall_actions,
+            "sup_cooldown": self.sup_cooldown,
             "runs_dir": str(self.runs_dir),
             "arc_base_url": self.arc_base_url,
             "ollama_api_key": "<masquée>",
@@ -281,6 +285,8 @@ def charger(
         tool_steps_max=source.entier("AVO_TOOL_STEPS_MAX", 40),
         actions_max_niveau=source.entier("AVO_ACTIONS_MAX_NIVEAU", 1000),
         actions_max_jeu=source.entier("AVO_ACTIONS_MAX_JEU", 5000),
+        sup_stall_actions=source.entier("AVO_SUP_STALL_ACTIONS", 60),
+        sup_cooldown=source.entier("AVO_SUP_COOLDOWN", 30),
         runs_dir=Path(source.texte("AVO_RUNS_DIR", "runs")),
         arc_api_key=arc,
         arc_base_url=_valider_url(

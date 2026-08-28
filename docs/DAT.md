@@ -22,7 +22,7 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 | `avo.tools` | H7 | registre d'outils, exposition filtrée par état, routage, garde par tour |
 | `avo.loop` | H8, H12 | machine d'états P→I→E→B close, prompts de phase versionnés, contrat `Environnement`, bornes d'actions |
 | `avo.lineage` | H9 | lignée git jetable et isolée par run, politique correct ∧ ≥ meilleur, `Scorer` branchable |
-| `avo.supervisor` | H10 | détection de stagnation, intervention conditionnelle |
+| `avo.supervisor` | H10 | détecteurs mesurés, intervention par appel LLM séparé, cooldown ; n'agit jamais |
 | `avo.runlog` | H11 | logs JSON corrélés, filtre de masquage des secrets |
 | `avo.arc` | A2, A4–A7 | client API ARC, rendu texte, interface de tâche, RHAE, campagne |
 | `mocks/llm_replay` | H4.7 | rejeu d'échanges enregistrés sur le vrai endpoint, injection de fautes |

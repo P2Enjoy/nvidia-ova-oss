@@ -36,6 +36,15 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U15 : superviseur anti-stagnation
+
+- `avo.supervisor` : trois détecteurs **mesurés, jamais interprétés** — stagnation, cycle improductif, rafale de corrections. Un déclencheur qui dépendrait de ce que le modèle raconte de lui-même serait aveugle au moment précis où il tourne en rond.
+- Le cycle improductif exige une **double condition** : la même action répétée **et** la frame inchangée. Répéter une action qui produit des effets différents est une exploration légitime.
+- L'intervention est un appel séparé sur **contexte propre** : le superviseur reçoit un résumé factuel et les notes, jamais l'historique de l'acteur — hériter du contexte, ce serait hériter de l'ornière dont il doit le sortir. Son résultat est injecté en append sous une balise, avec cooldown et journalisation du motif.
+- **Il n'a aucun outil et ne joue jamais d'action** : son seul pouvoir est d'écrire un message que l'acteur reste libre d'ignorer. Un superviseur qui agirait rendrait le score inattribuable.
+- Les variables qui règlent le seuil et le cooldown, nommées par la spécification, manquaient à la configuration.
+- Preuves : 324 tests verts, avec un cas négatif pour chaque détecteur et quatre tests d'intégration passant par le vrai client et le vrai rejeu.
+
 ### 2026-08-28 — U14 : lignée de solutions et fonction de score
 
 - `avo.lineage` : dépôt git jetable et dédié par run, portant la suite des versions validées selon la politique du papier AVO — une version n'entre dans la lignée que si elle est correcte **et** au moins aussi bonne que la meilleure déjà committée. Une régression reste dans la trajectoire interne de recherche.

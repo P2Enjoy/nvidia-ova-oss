@@ -135,6 +135,8 @@ aucune installation sur la machine hôte.
 | `AVO_TOOL_STEPS_MAX` | garde du nombre d'appels d'outils par tour (H7.2) | `40` |
 | `AVO_ACTIONS_MAX_NIVEAU` | borne d'actions d'environnement par niveau (H8.3) | `1000` |
 | `AVO_ACTIONS_MAX_JEU` | borne d'actions d'environnement par jeu (H8.3) | `5000` |
+| `AVO_SUP_STALL_ACTIONS` | actions sans progrès avant intervention du superviseur (H10.2) | `60` |
+| `AVO_SUP_COOLDOWN` | actions minimales entre deux interventions (H10.3) | `30` |
 | `AVO_RUNS_DIR` | racine des artefacts | `runs/` |
 | `ARC_API_KEY` | API ARC Prize (SPEC_ARCAGI3) | requis pour le live uniquement |
 | `ARC_BASE_URL` | base API ARC | `https://three.arcprize.org` |

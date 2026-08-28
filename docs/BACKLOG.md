@@ -311,7 +311,7 @@ message de commit.
 - `git` devient la seule dépendance système du harnais, ajoutée aux deux images ;
   le principe « zéro dépendance Python d'exécution » reste tenu (H2.1).
 
-## U15 — Superviseur `[ ]`
+## U15 — Superviseur `[x]`
 
 `@spec` H10. Déclencheurs mesurables (stall, cycles, bug-fixing en rafale), appel LLM
 séparé, injection `[SUPERVISEUR]` append-only, cooldown, journalisation des motifs.
@@ -319,6 +319,18 @@ séparé, injection `[SUPERVISEUR]` append-only, cooldown, journalisation des mo
 - Preuves : unitaires des détecteurs sur trajectoires synthétiques (positifs ET
   négatifs) ; intégration : scénario llm-replay en stagnation → une intervention,
   cooldown respecté, motif dans `metrics.jsonl`.
+- **Livré et intégralement vérifié le 2026-08-28.** `avo.supervisor` : trois
+  détecteurs **mesurés, jamais interprétés** — stagnation (actions sans complétion
+  **ni** entrée de lignée), cycle improductif (action répétée **et** frame inchangée
+  sur une fenêtre), rafale de Bug-Fixing — puis intervention par **appel LLM séparé
+  sur contexte propre**, injectée en append dans l'historique de l'acteur sous la
+  balise `[SUPERVISEUR]`, avec cooldown et journalisation des motifs.
+  Preuves : 23 tests unitaires (positifs **et** négatifs pour chaque détecteur : une
+  action répétée aux effets différents ne déclenche pas, des actions variées sur
+  frame figée non plus) et 4 d'intégration passant par le vrai client et le vrai
+  rejeu HTTP. Campagne : **324 tests**, lint, format, mypy strict (60 fichiers).
+- Variables `AVO_SUP_STALL_ACTIONS` et `AVO_SUP_COOLDOWN`, nommées par H10 mais
+  absentes de la configuration et du tableau H3.1, ajoutées aux trois endroits.
 
 ## Lot E — ARC-AGI-3
 
