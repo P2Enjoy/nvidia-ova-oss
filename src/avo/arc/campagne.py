@@ -466,7 +466,7 @@ def executer_campagne(
 
     fabriquer().close_scorecard(etat.card_id)
     jeux_joues = tuple(etat.resultats)
-    return ResultatCampagne(
+    resultat = ResultatCampagne(
         run_id=etat.run_id,
         mode=etat.mode,
         card_id=etat.card_id,
@@ -474,6 +474,13 @@ def executer_campagne(
         jeux=jeux_joues,
         score_global=rhae_global([jeu.rhae.valeur for jeu in jeux_joues]),
     )
+    # Import local : le rapport lit les structures de ce module, l'importer en tête
+    # ferait un cycle. « Campagne terminée ⇒ rapport écrit » est un invariant du
+    # runner, pas un devoir de l'appelant (§A7.3).
+    from avo.arc import rapport
+
+    rapport.ecrire(workspace, resultat)
+    return resultat
 
 
 def reprendre_campagne(

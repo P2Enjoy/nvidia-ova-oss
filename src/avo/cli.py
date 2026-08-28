@@ -92,7 +92,6 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _executer_campagne(args: argparse.Namespace) -> int:
     """Monte la campagne depuis les arguments et écrit son rapport (§A7.1, §A7.3)."""
-    from avo.arc import rapport
     from avo.arc.campagne import CampagneInvalide, Plafonds, executer_campagne
     from avo.config import charger
     from avo.memory.workspace import Workspace
@@ -121,13 +120,11 @@ def _executer_campagne(args: argparse.Namespace) -> int:
     except CampagneInvalide as erreur:
         print(f"avo: campagne refusée — {erreur}", file=sys.stderr)
         return 2
-    rapport.ecrire(espace, resultat)
     return _annoncer(resultat, espace.rapport)
 
 
 def _reprendre(args: argparse.Namespace) -> int:
     """Reprend un run : les jeux terminés ne sont pas rejoués (§H13.2, §A7.4)."""
-    from avo.arc import rapport
     from avo.arc.campagne import CampagneInvalide, reprendre_campagne
     from avo.config import charger
     from avo.memory.workspace import Workspace
@@ -141,7 +138,6 @@ def _reprendre(args: argparse.Namespace) -> int:
         print(f"avo: reprise impossible — {erreur}", file=sys.stderr)
         return 2
     espace = Workspace(config.runs_dir, args.run_id)
-    rapport.ecrire(espace, resultat)
     return _annoncer(resultat, espace.rapport)
 
 
