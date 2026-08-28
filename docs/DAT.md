@@ -17,7 +17,7 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 |---|---|---|
 | `avo.config` | H3 | configuration (env puis `.env`), validation nommée, modes rejeu/live, budget dérivé du plafond par clé |
 | `avo.llm` | H4 | client d'inférence (Ollama natif `/api/chat`), erreurs typées, retries bornés, transport injectable |
-| `avo.context` | H5 | comptabilité des tokens (calibrée) ; transcript append-only et continuation en U9-U10 |
+| `avo.context` | H5 | transcript append-only (empreinte de préfixe), comptabilité calibrée ; continuation en U10 |
 | `avo.memory` | H6 | workspace de run (manifeste, métriques, transcripts, rapport) ; notes GUIDE/WORKING en U11 |
 | `avo.tools` | H7 | registre d'outils, dispatch des tool_calls, garde |
 | `avo.loop` | H8, H12 | machine d'états P→I→E→B, prompts de phase, politique de raisonnement |

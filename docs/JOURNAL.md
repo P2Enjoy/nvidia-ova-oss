@@ -305,3 +305,19 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Observation : un modèle est apparu sur le serveur.** La fumée liste désormais `qwen3.8:27b`, `all-minilm:latest` et `qwen3.6:35b` ; les sessions précédentes n'en voyaient que deux. Le harnais n'est pas affecté — la configuration nomme explicitement son modèle et vaut toujours `qwen3.6:35b` — mais le fait mérite d'être su : un modèle plus récent est disponible, et le choix de celui que la campagne emploiera appartient au responsable. Aucune décision prise à sa place ; le seul effet mesurable serait sur les résultats d'évaluation, pas sur le code.
 
 **Où reprendre.** U9 — transcript append-only : structure immuable en tête, empreinte de préfixe vérifiée par test, estimation corrigée par le compte réel.
+
+---
+
+## 2026-08-28 (suite 4) — Session planifiée n° 7 : U9 livré, transcript append-only
+
+**Unité.** U9 — transcript append-only. Pile saine, seed vérifié, registre sans entrée ouverte.
+
+**Livré.** `avo.context.transcript` : `Message` et `Transcript` gelés (`frozen`, `slots`), message système figé à l'ouverture du segment, empreintes `empreinte()` et `empreinte_prefixe(n)`, gardes `prolonge()` et `verifier_prolonge()` qui lève `PrefixeRompu`, sérialisation vers la forme attendue par le client, et résumé journalisable sans contenu.
+
+**Décision : structure fonctionnelle plutôt qu'append-only par convention.** `ajouter` rend un **nouveau** transcript partageant le préfixe ; l'instance existante n'est jamais modifiée. Motif : la spécification demande que « toute API qui muterait la tête n'existe pas ». Une classe mutable dont on promet de n'appeler qu'`append` repose sur la discipline des appelants ; une structure gelée rend la garantie vérifiable — et le test de surface, qui échoue si l'une des méthodes de mutation listées apparaît un jour sur le type, transforme cette garantie en filet permanent contre une régression future.
+
+**Pourquoi cet invariant compte, en une mesure.** Le préremplissage domine le coût : 493 tokens/s mesurés le 2026-08-27. Le 2026-08-28, le rejeu live des mêmes scénarios a pris 3,3 s contre 17 s à l'enregistrement, le serveur ayant servi les préfixes identiques depuis son cache. Un historique dont la tête change invalide ce cache et fait repayer le contexte entier à chaque tour. `PrefixeRompu` est donc levée plutôt qu'absorbée : un préfixe rompu ne se voit pas dans les résultats, seulement dans la facture de temps — le signaler tôt est la seule protection.
+
+**Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 40 fichiers : aucune anomalie. **164 tests verts** — 131 unitaires (dont 22 pour cette unité : dix tours enchaînés avec vérification de chaque préfixe, détection d'une tête réécrite, d'un message inséré au milieu, d'un système modifié, gel des champs, et le test de surface du module) et 33 d'intégration (dont 5 nouveaux qui tiennent l'invariant sur l'échange réellement enregistré et vérifient qu'après calibration l'estimation colle au compte rendu par le serveur, à un token près).
+
+**Où reprendre.** U10 — budget et continuation en contexte frais : déclenchement au seuil, état de continuation écrit par l'agent, nouveau segment, `413` absorbé en cas nominal et double-413 fatal.

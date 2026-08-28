@@ -36,6 +36,12 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U9 : transcript append-only
+
+- `avo.context.transcript` : structure **fonctionnelle** — ajouter un message rend un nouveau transcript partageant le préfixe, l'instance existante n'étant jamais modifiée. Message système figé à l'ouverture du segment, types gelés, aucune méthode d'insertion, de retrait ou de remplacement.
+- Empreintes de préfixe et gardes associées : un historique dont la tête aurait changé est détecté et signalé par une erreur explicite, au lieu d'être accepté en silence. Motif mesuré : le préremplissage domine le coût, et une tête modifiée invalide le cache de préfixe du serveur — ce qui ne se voit pas dans les résultats, seulement dans la facture de temps.
+- Preuves : 164 tests verts, dont dix tours enchaînés vérifiant la stabilité de chaque préfixe, la détection d'une tête réécrite ou d'un message inséré, un test de surface garantissant qu'aucune API de mutation n'existe sur le type, et cinq tests tenant l'invariant sur l'échange réellement enregistré.
+
 ### 2026-08-28 — U8 : journalisation, workspace de run et comptabilité des tokens
 
 - `avo.runlog` : journalisation JSON d'une ligne, niveaux, identifiant de run corrélant toutes les lignes, et **filtre qui masque les valeurs sensibles** dans le message comme dans les champs imbriqués — la garantie « aucun secret » ne repose donc pas sur la discipline des appelants.

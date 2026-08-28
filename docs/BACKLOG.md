@@ -173,7 +173,7 @@ opérationnels, README/DAT mis à jour (lancement, ports).
 
 ## Lot C — Contexte et mémoire
 
-## U9 — Transcript append-only `[ ]`
+## U9 — Transcript append-only `[x]`
 
 `@spec` H5.1–H5.2. Structure immuable en tête, hash de préfixe, sérialisation,
 estimation calibrée corrigée par `prompt_eval_count`.
@@ -181,6 +181,18 @@ estimation calibrée corrigée par `prompt_eval_count`.
 - Preuves : unitaires — l'invariant : après N tours simulés, le hash du préfixe
   envoyé au tour k est préfixe de celui du tour k+1 ; toute API qui muterait la tête
   n'existe pas (test de surface du module).
+- **Livré et intégralement vérifié le 2026-08-28.** `avo.context.transcript` :
+  structure **fonctionnelle** — `ajouter` rend un nouveau transcript partageant le
+  préfixe, l'instance existante n'est jamais modifiée ; `Message` et `Transcript`
+  gelés avec `slots` ; message système figé à l'ouverture du segment ; empreintes
+  `empreinte()` / `empreinte_prefixe(n)` et gardes `prolonge()` /
+  `verifier_prolonge()` levant `PrefixeRompu`. Preuves : 22 tests unitaires — dont
+  dix tours enchaînés où chaque préfixe reste stable, la détection d'une tête
+  réécrite, d'un message inséré au milieu et d'un système modifié, et le **test de
+  surface** vérifiant qu'aucune des méthodes de mutation listées n'existe sur le
+  type — et 5 tests d'intégration sur l'échange réel enregistré, y compris la
+  calibration de l'estimation par le `prompt_eval_count` du serveur.
+  Campagne : **164 tests**, lint, format, mypy strict (40 fichiers).
 
 ## U10 — Budget et continuation en contexte frais `[ ]`
 
