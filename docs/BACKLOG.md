@@ -194,7 +194,7 @@ estimation calibrée corrigée par `prompt_eval_count`.
   calibration de l'estimation par le `prompt_eval_count` du serveur.
   Campagne : **164 tests**, lint, format, mypy strict (40 fichiers).
 
-## U10 — Budget et continuation en contexte frais `[ ]`
+## U10 — Budget et continuation en contexte frais `[x]`
 
 `@spec` H5.3–H5.4, H3.2. Déclenchement au seuil, état de continuation écrit par
 l'agent, nouveau segment (système + continuation + notes + observation), `413` →
@@ -203,6 +203,16 @@ continuation immédiate + budget appris, double-413 → erreur fatale explicite.
 - Preuves : unitaires (seuils, recalcul du budget) ; intégration contre llm-replay
   avec petit budget forcé : la continuation se produit, le contenu du segment frais
   est exactement celui spécifié, un 413 simulé est absorbé, deux → erreur.
+- **Livré et intégralement vérifié le 2026-08-28.** `avo.context.contexte` : seuil
+  dérivé du budget (`ratio × budget_prompt`), estimation qui suit la calibration,
+  `continuer()` composant le segment frais **exactement** système + continuation +
+  notes + observation et archivant l'ancien sans l'effacer, `absorber_depassement()`
+  qui apprend le plafond réel et compte les dépassements **consécutifs**,
+  `BudgetIncoherent` au second. L'historique reprend fidèlement les appels d'outils
+  demandés par le modèle. Preuves : 21 tests unitaires et 6 d'intégration — ces
+  derniers n'emploient **aucun 413 simulé** : ils rejouent celui que le vrai serveur
+  a rendu, avec son corps de quota authentique. Campagne : **191 tests**, lint,
+  format, mypy strict (43 fichiers).
 
 ## U11 — Notes persistantes `[ ]`
 

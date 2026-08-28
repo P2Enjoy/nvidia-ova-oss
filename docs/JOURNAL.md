@@ -321,3 +321,21 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 40 fichiers : aucune anomalie. **164 tests verts** — 131 unitaires (dont 22 pour cette unité : dix tours enchaînés avec vérification de chaque préfixe, détection d'une tête réécrite, d'un message inséré au milieu, d'un système modifié, gel des champs, et le test de surface du module) et 33 d'intégration (dont 5 nouveaux qui tiennent l'invariant sur l'échange réellement enregistré et vérifient qu'après calibration l'estimation colle au compte rendu par le serveur, à un token près).
 
 **Où reprendre.** U10 — budget et continuation en contexte frais : déclenchement au seuil, état de continuation écrit par l'agent, nouveau segment, `413` absorbé en cas nominal et double-413 fatal.
+
+---
+
+## 2026-08-28 (suite 5) — Session planifiée n° 8 : U10 livré, budget et continuation
+
+**Unité.** U10 — budget et continuation en contexte frais. Pile saine, seed vérifié, registre sans entrée ouverte.
+
+**Livré.** `avo.context.contexte` réunit les deux mécanismes que la spécification distingue. Le **préventif** : le seuil dérive du budget (`ratio × budget_prompt`), l'estimation suit la calibration du registre, et `continuer()` ouvre un segment frais composé **exactement** de système + état de continuation + notes + observation, l'ancien segment étant archivé et non effacé. Le **curatif** : `absorber_depassement()` traite le `413` en cas nominal, apprend le plafond réel que le serveur annonce, et compte les dépassements **consécutifs** ; au second, `BudgetIncoherent` est levée avec les valeurs en cause et les variables à vérifier.
+
+**Décision : ce sont les dépassements consécutifs qui condamnent, pas leur nombre total.** Un échange abouti remet la série à zéro. Motif : un premier `413` déclenche une continuation, qui peut parfaitement suffire ; c'est le second, survenant sur le segment frais que cette continuation vient de créer, qui prouve qu'aucune continuation ne peut plus aider. Compter les dépassements absolus ferait abandonner un run parfaitement viable après deux incidents espacés d'une heure.
+
+**Décision : l'historique reprend les appels d'outils demandés.** `enregistrer_reponse` réécrit les `tool_calls` dans le message assistant. Sans cela, un tour suivant présenterait au modèle une conversation dont il ne reconnaîtrait pas ses propres actes.
+
+**Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 43 fichiers. **191 tests verts** — 152 unitaires (dont 21 pour cette unité : valeur exacte du budget et du seuil, franchissement, effet de la calibration sur le seuil, composition et ordre du segment frais, archivage, progression du numéro de segment, absorption, apprentissage du plafond, remise à zéro par un échange abouti, fatalité au second consécutif) et 39 d'intégration (dont 6 nouveaux). Ces derniers n'emploient **aucun `413` simulé** : ils rejouent celui que le vrai serveur a rendu, avec son corps de quota authentique — le cycle complet « petit budget forcé → seuil franchi → continuation → segment frais utilisable » est éprouvé de bout en bout.
+
+**Un attendu faux, corrigé.** J'attendais six messages dans le segment frais après un échange ; il y en a cinq. Le client n'écrit pas dans le transcript — c'est la boucle agent qui reliera les deux en U13. L'attendu est corrigé et commenté ; le produit était juste.
+
+**Où reprendre.** U11 — notes persistantes : `GUIDE.md` et `WORKING.md` dans le workspace, outils de lecture et d'écriture limités à ces deux noms, et injection en tête de segment frais.

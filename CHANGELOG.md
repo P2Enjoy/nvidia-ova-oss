@@ -36,6 +36,13 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U10 : budget de contexte et continuation en contexte frais
+
+- `avo.context.contexte` : seuil de continuation dérivé du budget utile, estimation suivant la calibration, ouverture d'un segment frais composé exactement du message système, de l'état de continuation, des notes et de l'observation courante, l'ancien segment étant archivé et non effacé.
+- Le refus pour contexte trop grand est traité en **cas nominal** : il apprend le plafond réel annoncé par le serveur et déclenche la même continuation, sans jamais rejouer sur le segment plein. Deux refus **consécutifs** — le second survenant sur le segment frais que la continuation vient de créer — lèvent une erreur explicite nommant les valeurs en cause : aucune continuation ne peut plus aider. Un échange abouti remet la série à zéro.
+- L'historique reprend fidèlement les appels d'outils demandés par le modèle, sans quoi un tour suivant lui présenterait une conversation dont il ne reconnaîtrait pas ses propres actes.
+- Preuves : 191 tests verts. Les tests d'intégration n'emploient aucun refus simulé : ils rejouent celui que le vrai serveur a rendu, avec son corps de quota authentique.
+
 ### 2026-08-28 — U9 : transcript append-only
 
 - `avo.context.transcript` : structure **fonctionnelle** — ajouter un message rend un nouveau transcript partageant le préfixe, l'instance existante n'étant jamais modifiée. Message système figé à l'ouverture du segment, types gelés, aucune méthode d'insertion, de retrait ou de remplacement.
