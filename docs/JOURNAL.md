@@ -541,3 +541,21 @@ Deux gardes exécutables remplacent la promesse : un balayage statique des const
 **Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 77 fichiers. **476 tests verts** — 365 unitaires (dont 31 pour cette unité) et 111 d'intégration (dont 10 nouveaux, contre les deux rejeux en HTTP réel). Les plus significatifs : une partie parfaite conduite par l'interface dépensant exactement la somme des baselines **sans un seul écart de comptage** ; la perte de tentative qui réduit les commandes offertes jusque dans le tableau `tools` émis ; et un niveau complété par l'agent scripté, dont le bilan alimente réellement `ScorerARC` — le branchement va donc de la frame jusqu'au score de lignée.
 
 **Où reprendre.** U20 — RHAE : `eₗ = min(115, 100·(hₗ/aₗ)²)`, poids `wₗ = ℓ`, plafond par complétion pondérée, baselines servies par `/api/games`, vérifié en forme fermée sur le jeu cible.
+
+---
+
+## 2026-08-28 (suite 15) — Session planifiée n° 18 : U20, contrat d'implémentation du RHAE
+
+**Unité.** U20 — RHAE. Pile saine, seed vérifié (7 échanges, jeu cible 3 niveaux, baselines [39, 19, 18]), registre sans entrée ouverte.
+
+**Pourquoi une spécification avant le code.** A6 fixait la formule et les vecteurs de test, pas le contrat d'implémentation : ni les refus, ni les cas limites, ni la manière de passer d'une partie réellement jouée aux entrées (hₗ, aₗ, cₗ). A6.4 les écrit, et deux points ont été tranchés avant d'écrire une ligne.
+
+**Décision : la somme porte sur TOUS les niveaux du jeu, pas sur ceux atteints.** C'est la seule lecture qui donne un sens au second terme du `min`. Sur les seuls niveaux atteints, un agent qui termine le premier niveau d'un jeu qui en compte trois obtiendrait 100, à égalité avec un agent ayant tout fini : le plafond ne plafonnerait plus rien. Avec l'ensemble complet des niveaux — c'est-à-dire `len(baseline_actions)` — ce même agent obtient au mieux 100·(1/6) = 16,67.
+
+**Décision : une action compte pour le niveau DEPUIS lequel elle a été jouée.** L'API renvoie l'action qui complète le niveau 1 avec `level = 2`. L'imputer au niveau 2 volerait une action au niveau 1 et en ajouterait une au suivant — les deux RHAE seraient faux, et de façon compensée, donc invisible sur le total des actions. Le niveau d'origine est celui de l'entrée précédente de l'historique typé. La première entrée est le `RESET` de création : gratuite (A1.2), elle n'est comptée nulle part.
+
+**Décision : la complétion vient du score du serveur.** cₗ = 1 si et seulement si le score rendu par l'API atteint ℓ à un moment de la partie. Déduire la complétion de notre lecture des frames rendrait le score dépendant de notre interprétation ; c'est le serveur qui fait autorité, comme pour le comptage d'actions (A5.3).
+
+**Décision : refuser plutôt que rendre zéro.** Une baseline nulle ou négative, un numéro de niveau hors bornes, un trou dans la suite des niveaux, une moyenne demandée sur zéro jeu : tous lèvent. Rendre 0 ferait passer un défaut de protocole pour une mauvaise performance de l'agent, et le rapport serait faux sans que rien ne le signale.
+
+**Où reprendre.** U20 — RHAE : le contrat est écrit (A6.4) ; reste à livrer le module `avo.arc.rhae`, le pont `niveaux_joues` et les preuves A6.3.

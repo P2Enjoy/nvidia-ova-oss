@@ -167,14 +167,74 @@ baseline hₗ, complétion cₗ, actions aₗ :
 `RHAE_jeu = min( Σwₗeₗ/Σwₗ , 100·Σwₗcₗ/Σwₗ )` ;
 score global = moyenne arithmétique des RHAE de jeu sur les jeux du périmètre.
 
+**A6.1 bis — Sur quels niveaux la somme porte (décision).** ℓ parcourt **tous les
+niveaux du jeu**, c'est-à-dire `1..len(baseline_actions)`, et non les seuls niveaux
+que l'agent a atteints. Un niveau jamais atteint a aₗ = 0, cₗ = 0 et donc eₗ = 0, mais
+il pèse `wₗ = ℓ` au dénominateur des deux termes.
+
+Motif : c'est la seule lecture qui donne un sens au plafond. Sommer sur les seuls
+niveaux atteints ferait qu'un agent complétant le premier niveau d'un jeu qui en
+compte trois obtiendrait 100, à égalité avec un agent ayant tout terminé — le second
+terme du `min` ne plafonnerait plus rien. Avec l'ensemble complet, ce même agent
+obtient au mieux 100·(1/6) = 16,67.
+
 **A6.2 — Baselines.** hₗ = `baseline_actions[ℓ-1]` servi par `/api/games` (source de
 vérité, vérifiée le 2026-08-27 contre l'export VISTA sur sc25). En rejeu local :
-baselines synthétiques du jeu `cible` (A3.2).
+baselines synthétiques du jeu `cible` (A3.2), servies par le même point d'entrée.
 
 **A6.3 — Tests.** Vecteurs travaillés à la main dans les tests unitaires : niveau non
 complété (0), agent plus efficace que l'humain (plafond 115), plafonnement par la
 complétion (jeu partiellement complété), pondération croissante, cas aₗ=hₗ (=100),
 reproduction d'un RHAE=100.00 de bout en bout sur `cible`.
+
+**A6.4 — Contrat d'implémentation** (`avo.arc.rhae`). Module pur : aucune entrée-sortie,
+aucun accès réseau, aucune dépendance à l'état d'un run. Il reçoit des nombres et rend
+des nombres, ce qui le rend éprouvable exactement.
+
+*Structures.*
+- `NiveauJoue` (gelée) : `niveau` (1-indexé), `baseline` (hₗ), `actions` (aₗ),
+  `complete` (cₗ).
+- `ResultatRhae` (gelée) : `valeur` (RHAE du jeu), `efficacite_ponderee` (Σwₗeₗ/Σwₗ),
+  `plafond_completion` (100·Σwₗcₗ/Σwₗ), `plafonne` (le plafond a-t-il mordu),
+  `niveaux` (le détail par niveau, dans l'ordre, pour le rapport A7.3).
+
+*Fonctions.*
+- `efficacite_niveau(niveau: NiveauJoue) -> float` : eₗ selon A6.1.
+- `rhae_jeu(niveaux: Sequence[NiveauJoue]) -> ResultatRhae`.
+- `rhae_global(valeurs: Sequence[float]) -> float` : moyenne arithmétique.
+- `niveaux_joues(historique, baselines) -> list[NiveauJoue]` : le pont entre une
+  partie réellement jouée (historique typé A2.2) et les entrées de la formule.
+
+*Refus explicites* — `RhaeInvalide` est levée, jamais un zéro silencieux :
+- baseline nulle ou négative (hₗ ≤ 0) : le rapport hₗ/aₗ n'a pas de sens, et rendre 0
+  ferait passer un défaut de protocole pour une mauvaise performance ;
+- actions négatives, ou numéro de niveau hors de `1..len(baselines)` ;
+- doublon ou trou dans la suite des niveaux fournie à `rhae_jeu` ;
+- liste de jeux vide passée à `rhae_global` : une moyenne sur rien n'est pas 0, elle
+  n'existe pas ;
+- historique dont la première entrée n'est pas le `RESET` de création.
+
+*Cas limites tranchés.*
+- aₗ = 0 avec cₗ = 1 : eₗ = 0 par la définition elle-même (« si cₗ=1 **et aₗ>0** »).
+  Le cas n'est pas atteignable par le protocole — compléter coûte au moins une
+  action — mais la garde est écrite plutôt que supposée.
+- Aucun arrondi n'est appliqué dans le calcul : `valeur` est un flottant de pleine
+  précision. La mise en forme à deux décimales appartient au rapport (A7.3).
+
+*Attribution des actions aux niveaux dans `niveaux_joues`* — c'est le seul point
+délicat, et il est tranché ici :
+- **une entrée d'historique compte pour le niveau depuis lequel elle a été jouée**,
+  pas pour celui qu'elle produit. L'action qui complète le niveau 1 est renvoyée par
+  l'API avec `level = 2` ; l'imputer au niveau 2 volerait une action au niveau 1 et en
+  ajouterait une au suivant. Le niveau d'origine est celui de l'entrée précédente ;
+- la **première** entrée est le `RESET` de création : elle est gratuite (A1.2) et
+  n'est comptée nulle part ; toutes les suivantes coûtent exactement une action,
+  `RESET` en cours de partie compris ;
+- cₗ = 1 si et seulement si le score rendu par le serveur atteint ℓ à un moment de la
+  partie. C'est le serveur qui fait autorité sur la complétion, jamais notre lecture
+  des frames (même principe qu'en A5.3) ;
+- les niveaux du jeu que l'historique ne mentionne pas existent quand même dans le
+  résultat, avec aₗ = 0 et cₗ = 0 (A6.1 bis).
 
 ## A7. Campagne et rapport
 

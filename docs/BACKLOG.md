@@ -415,12 +415,16 @@ réconciliation A5.3, branchement complet sur la boucle U13 et le scorer U14.
   balayage porte sur les constantes de tous les modules dont un texte atteint le
   modèle, et sur les corps de requête réellement émis pendant un run.
 
-## U20 — RHAE `[ ]`
+## U20 — RHAE `[~]`
 
 `@spec` A6. Implémentation de la définition Tycho §3.1, baselines depuis
 `/api/games` (live) ou `cible` (replay).
 
 - Preuves : unitaires — tous les vecteurs A6.3, valeurs exactes en forme fermée.
+- Contrat d'implémentation écrit et committé avant le code (A6.4) : module pur
+  `avo.arc.rhae`, refus explicites, et l'attribution des actions aux niveaux tranchée
+  — une entrée d'historique compte pour le niveau **depuis lequel** elle a été jouée.
+  Reste à livrer : le module, le pont `niveaux_joues` et les preuves A6.3.
 
 ## U21 — E2E : partie complète sur rejeu local `[ ]`
 
