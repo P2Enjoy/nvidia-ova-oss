@@ -322,6 +322,30 @@ exigées (SPEC_ARCAGI3 §A7.1). Dépassement → arrêt propre du jeu, la borne 
 étant nommée dans le rapport. Aucune temporisation arbitraire : on borne des actions,
 jamais du temps d'horloge.
 
+**H8.4 — Ce que la boucle porte en plus des phases.** Trois mécanismes livrés
+ailleurs n'existent pour un run que si la boucle les appelle ; sans cela ils sont du
+code mort et le rapport de campagne (SPEC_ARCAGI3 §A7.3) annonce structurellement
+zéro sur des lignes qu'il est censé mesurer.
+
+1. **Continuation** (H5.3, H5.4). Avant chaque appel, si le seuil est atteint, la
+   boucle ouvre un segment frais ; si l'appel revient en `ContextOverflow`, elle
+   absorbe le dépassement, ouvre un segment frais et **rejoue l'appel une fois** sur
+   ce segment — jamais sur le segment plein. Le segment clos est archivé dans
+   `transcripts/`. Deux dépassements consécutifs lèvent (H5.4).
+2. **Supervision** (H10). La boucle tient la trajectoire — action jouée, empreinte de
+   frame, complétion, passage en Bug-Fixing — et, à la fin de chaque tour, demande au
+   superviseur s'il doit intervenir. L'intervention est un appel LLM **séparé** dont
+   le résultat est ajouté en fin d'historique. La boucle n'interprète pas le
+   diagnostic : elle l'ajoute, et le tour suivant s'y confronte.
+3. **Métriques** (H11.2). Quand un workspace est fourni, la boucle écrit une ligne par
+   appel LLM (phase, tokens de prompt et de génération, durées, troncature), une par
+   action jouée (jeu, niveau, index, événement) et une par événement (continuation,
+   dépassement absorbé, intervention du superviseur, borne franchie).
+
+Ces trois branchements sont **optionnels par construction** : sans workspace ni
+superviseur, la boucle se comporte exactement comme avant, ce qui préserve les preuves
+qui l'éprouvent sur un environnement factice.
+
 ## H9. Lignée et fonction de score
 
 **H9.1 — Formalisme** (papier AVO §3.1) : `Vary(Pₜ) = Agent(Pₜ, K, f)` ; lignée

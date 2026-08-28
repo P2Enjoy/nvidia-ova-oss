@@ -249,6 +249,68 @@ exige `--j-autorise-la-publication` explicite ; le périmètre exact (jeux, plaf
 est écrit dans le journal avant lancement et l'accord du responsable est acquis pour
 la première campagne (CLAUDE_PROJECT.md).
 
+**A7.4 — Contrat d'implémentation du runner** (`avo.arc.campagne`, `avo.arc.rapport`).
+
+*Surface CLI.*
+
+```
+python -m avo run-arc --mode replay|live [--games a,b,c]
+                      [--actions-max-niveau N] [--actions-max-jeu N]
+                      [--budget-secondes-jeu S] [--budget-tokens-jeu N]
+                      [--tours-max N] [--run-id ID]
+                      [--j-autorise-la-publication]
+python -m avo resume <run_id>
+```
+
+- `--games` absent : tous les jeux que `/api/games` déclare. Un identifiant inconnu du
+  serveur est un refus nommé, jamais un jeu silencieusement sauté.
+- **En `--mode live`, les quatre plafonds sont obligatoires** (A7.1) et leur absence
+  est un refus qui les nomme. En rejeu ils sont facultatifs : les bornes d'actions
+  retombent sur la configuration (H8.3), les budgets de temps et de tokens sur
+  « aucune limite ».
+- **Garde d'accord** (A7.2) : `--mode live` sans `--j-autorise-la-publication` est un
+  refus. Le drapeau est explicite parce que la conséquence l'est : jouer publie un
+  scorecard au nom du responsable.
+
+*Budgets et bornes — comment ils cohabitent avec H8.3.* H8.3 interdit de borner du
+temps d'horloge **à l'intérieur** de la boucle : aucune temporisation n'interrompt une
+opération en vol. Les budgets de temps et de tokens de A7.1 sont d'une autre nature —
+ce sont des conditions d'arrêt **de campagne**, évaluées entre deux tours, qui closent
+le jeu proprement et nomment leur motif dans le rapport. Les deux règles sont donc
+compatibles, et c'est la seule lecture qui permet à une campagne live de ne pas
+dépenser sans fin.
+
+*Déroulé d'un jeu.* Workspace du run (H6.1) → un scorecard pour la campagne, ouvert
+avant le premier jeu et fermé après le dernier → pour chaque jeu : interface (A5),
+registre (outils d'action, d'inspection et de notes), boucle (H8), superviseur (H10),
+lignée (H9) → à la fin du jeu : historique typé persisté (A2.2), RHAE calculé (A6) à
+partir des baselines de `/api/games`, résultat enregistré. Le même chemin de code sert
+en rejeu et en live : seul l'hôte change, ce qui évite une branche live jamais éprouvée.
+
+*Reprise* (H13.2, A7.1). L'état de campagne vit dans `runs/<id>/campagne.json` :
+plafonds, scorecard, et pour chaque jeu son statut et son résultat. Il est réécrit
+**après chaque jeu**, de sorte qu'une interruption ne coûte au plus qu'un jeu.
+`resume <run_id>` relit ce fichier, saute les jeux terminés et reprend à la suite ; les
+notes du run (`GUIDE.md`) ne sont pas réinitialisées, donc la connaissance acquise
+survit.
+
+**Décision : la reprise est de granularité JEU, pas action.** Un jeu interrompu est
+rejoué depuis le début, dans une partie neuve. Motif : reprendre une partie en cours
+supposerait de retrouver la frame courante, qu'aucune requête ne rend gratuitement —
+la redemander coûterait une action, et le score mêlerait deux tentatives, ce qui
+priverait le RHAE de sens. Ce qui coûte cher, ce sont les jeux déjà terminés : ils ne
+sont jamais rejoués.
+
+*Structures.* `Plafonds` (gelée) ; `ResultatJeu` (gelée : `game_id`, `guid`, `niveaux`,
+`rhae`, `tours`, `arret`, `actions`, `tokens`, `secondes`, `evenements`) ;
+`ResultatCampagne` (gelée : `run_id`, `mode`, `card_id`, `plafonds`, `jeux`,
+`score_global`). Le rapport est une **fonction pure** de `ResultatCampagne` et des
+métriques lues : il ne rejoue rien et ne devine rien.
+
+*Refus explicites* — `CampagneInvalide`, jamais un repli silencieux : mode live sans
+accord, mode live sans plafond, jeu inconnu du serveur, `--games` vide, reprise d'un
+run inexistant ou dont le `campagne.json` est absent.
+
 **A7.3 — Rapport.** `report.md` par campagne : tableau par jeu (niveaux, actions,
 RHAE, baseline), score global, coûts (tokens, durées, actions), événements
 (continuations, interventions superviseur, 413), comparaison aux références des

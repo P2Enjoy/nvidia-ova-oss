@@ -459,17 +459,27 @@ responsable du 2026-08-27 pour l'usage de l'API ; périmètre minimal).
 
 ## Lot F — Campagne
 
-## U23 — Runner de campagne et rapport `[ ]`
+## U23 — Runner de campagne et rapport `[~]`
 
 > **Ordre : à prendre AVANT U21** (décidé le 2026-08-28, journal). U21 éprouve par la
 > CLI ce que cette unité livre.
 
-`@spec` A7 (+ H13.2). `run-arc` multi-jeux, plafonds obligatoires en live, garde
+`@spec` A7 (+ H13.2, H8.4). `run-arc` multi-jeux, plafonds obligatoires en live, garde
 d'accord A7.2, reprise sans rejouer les jeux terminés, `report.md` complet A7.3.
 
 - Preuves : unitaires (config, plafonds, garde : live sans drapeau → refus) ;
   intégration/E2E : mini-campagne replay sur `cible`, rapport conforme, reprise
   après interruption simulée.
+- **Trois branchements manquants sont dans le périmètre**, parce que A7.3 exige que le
+  rapport porte les coûts et les événements : rien n'émettait de métrique, le
+  superviseur n'était appelé nulle part, et la boucle n'appelait jamais la
+  continuation. Sans eux le rapport annoncerait structurellement zéro sur des lignes
+  qu'il est censé mesurer. Contrat écrit en H8.4 (mesuré le 2026-08-28).
+- Contrat d'implémentation écrit et committé avant le code (A7.4) : surface CLI,
+  cohabitation des budgets de campagne avec H8.3, reprise de granularité **jeu** et son
+  motif, structures et refus explicites.
+- Reste à livrer : les trois branchements de H8.4, `avo.arc.campagne`,
+  `avo.arc.rapport`, la sous-commande `run-arc`, `resume`, et les preuves.
 
 ## U24 — Campagne pilote `[ ]` **[LIVE]**
 

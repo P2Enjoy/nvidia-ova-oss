@@ -569,3 +569,19 @@ Deux gardes exécutables remplacent la promesse : un balayage statique des const
 **Décision : U23 passe avant U21.** A8.3 définit la preuve de U21 comme « depuis la CLI réelle […] l'agent complet joue le jeu `cible` de bout en bout […] `report.md` et la lignée existent ». La seule commande qui joue une partie est `run-arc`, et c'est U23 qui la livre : prise dans l'ordre des numéros, U21 n'aurait rien à exécuter. L'ordre du plan est donc inversé sur ces deux unités — le point est écrit ici et dans les deux unités du backlog, pour qu'une session qui ne lit que le backlog ne s'y reprenne pas. Aucun autre couple n'est concerné : U22, U24 et U25 sont [LIVE].
 
 **Où reprendre.** U23 — runner de campagne et rapport : `run-arc` multi-jeux, plafonds obligatoires en live, garde d'accord A7.2, reprise sans rejouer les jeux terminés, `report.md` complet A7.3. U21 (E2E) suit immédiatement et s'appuie sur cette commande.
+
+---
+
+## 2026-08-28 (suite 16) — Session planifiée n° 19 : U23, contrat du runner de campagne
+
+**Unité.** U23 — runner de campagne et rapport, désignée par l'entrée précédente. Pile saine, seed vérifié, registre sans entrée ouverte.
+
+**Trois manques mesurés en lisant les spécifications.** A7.3 exige que `report.md` porte les coûts (tokens, durées, actions) et les événements (continuations, interventions du superviseur, 413). Or : `Workspace.metrique` n'est appelé par aucun producteur, `Superviseur` n'est référencé nulle part dans la boucle, et `Contexte.continuer` / `absorber_depassement` non plus. Les trois mécanismes existent, sont testés isolément, et ne servent à rien dans un run réel. Un rapport écrit par-dessus annoncerait « 0 continuation, 0 intervention » — ce qui est vrai et trompeur à la fois, puisque aucune ne *peut* survenir.
+
+**Décision : ces trois branchements sont dans le périmètre de U23**, et non des corrections au passage. Ils ne sont pas des défauts étrangers rencontrés en chemin : ce sont les producteurs des chiffres que le livrable de l'unité doit contenir. Le contrat correspondant est écrit en H8.4, et les branchements y sont **optionnels par construction** — sans workspace ni superviseur, la boucle se comporte exactement comme avant, ce qui préserve les preuves existantes.
+
+**Décision : la reprise est de granularité JEU.** Un jeu interrompu est rejoué depuis le début dans une partie neuve ; les jeux déjà terminés ne le sont jamais. Motif : reprendre une partie en cours supposerait de retrouver la frame courante, qu'aucune requête ne rend gratuitement — la redemander coûterait une action, et le score mêlerait deux tentatives, ce qui priverait le RHAE de sens. Les notes du run survivent, donc la connaissance acquise n'est pas perdue.
+
+**Décision : les budgets de campagne ne contredisent pas H8.3.** H8.3 interdit de borner du temps d'horloge *dans* la boucle ; les budgets de temps et de tokens de A7.1 sont des conditions d'arrêt *de campagne*, évaluées entre deux tours, qui closent le jeu proprement et nomment leur motif. Le point est écrit en A7.4 pour qu'il ne soit pas relu comme une contradiction.
+
+**Où reprendre.** U23 : le contrat est écrit (A7.4, H8.4) ; restent les trois branchements de la boucle, `avo.arc.campagne`, `avo.arc.rapport`, les sous-commandes `run-arc` et `resume`, et les preuves.
