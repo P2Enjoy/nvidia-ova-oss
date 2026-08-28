@@ -161,10 +161,16 @@ class Transport(Protocol):
 
 
 def transport_urllib(
-    url: str, corps: bytes, entetes: Mapping[str, str], timeout: float
+    url: str,
+    corps: bytes,
+    entetes: Mapping[str, str],
+    timeout: float,
+    methode: str = "POST",
 ) -> ReponseHTTP:
     """Transport par défaut, bibliothèque standard (§H2.1)."""
-    requete = urllib.request.Request(url, data=corps, method="POST")  # noqa: S310
+    requete = urllib.request.Request(  # noqa: S310
+        url, data=corps or None, method=methode
+    )
     for nom, valeur in entetes.items():
         requete.add_header(nom, valeur)
     try:
@@ -340,6 +346,33 @@ class LLMClient:
                 return {}
             raise ProtocolError(f"réponse HTTP {reponse.status} : objet JSON attendu")
         return charge
+
+    def _lire(self, chemin: str) -> dict[str, Any]:
+        """GET authentifié sur une route de lecture (§H4.8).
+
+        Sert la fumée manuelle : version du serveur et modèles servis. Ne passe pas
+        par la politique de retry, une fumée devant échouer vite et clairement.
+        """
+        reponse = transport_urllib(
+            f"{self.config.ollama_host}{chemin}", b"", self._entetes(), self.config.timeout_s, "GET"
+        )
+        if reponse.status in (401, 403):
+            raise AuthError(f"authentification refusée sur {chemin} (HTTP {reponse.status})")
+        if reponse.status >= 400:
+            raise ProtocolError(f"{chemin} : HTTP {reponse.status}")
+        return self._corps_json(reponse, tolerant=False)
+
+    def version(self) -> str:
+        """Version du serveur d'inférence (§H4.8)."""
+        return str(self._lire("/api/version").get("version", ""))
+
+    def modeles(self) -> list[str]:
+        """Noms des modèles servis (§H4.8)."""
+        charge = self._lire("/api/tags")
+        modeles = charge.get("models")
+        if not isinstance(modeles, list):
+            return []
+        return [str(entree.get("name", "")) for entree in modeles if isinstance(entree, dict)]
 
     def chat(
         self,

@@ -149,7 +149,7 @@ opérationnels, README/DAT mis à jour (lancement, ports).
   arrive avec `done_reason: "stop"` et non `"tool_calls"` — la détection se fait sur
   la présence de `message.tool_calls` (§H4.3, propriété `demande_outil`).
 
-## U8 — Comptabilité, journalisation, workspace de run `[ ]`
+## U8 — Comptabilité, journalisation, workspace de run `[x]`
 
 `@spec` H4.6, H6.1, H11 ; H4.8. `runlog` (logs JSON sans secret, id de run),
 `manifest.json`, `metrics.jsonl`, transcripts JSONL par segment ; `TokenLedger`
@@ -158,6 +158,18 @@ opérationnels, README/DAT mis à jour (lancement, ports).
 - Preuves : unitaires (aucune fuite de secret dans les sorties — test qui greppe la
   clé dans les logs produits ; métriques cumulées correctes) ; intégration : un
   échange complet contre llm-replay produit un workspace conforme H6.1.
+- **Livré et intégralement vérifié le 2026-08-28.** `avo.runlog` (JSON une ligne,
+  run_id corrélant, **filtre qui masque les secrets dans le message comme dans les
+  champs imbriqués** — la garantie ne repose donc pas sur la discipline des
+  appelants), `avo.memory.workspace` (arborescence H6.1, manifeste sans secret,
+  `metrics.jsonl`, transcripts par segment, `report.md`),
+  `avo.context.tokens` (estimation calibrée par le compte réel du serveur),
+  lectures `version()`/`modeles()` du client et **`make smoke-live` réelle**.
+  Preuves : 35 tests unitaires, 8 d'intégration dont la recherche de la clé dans
+  **tous** les fichiers produits par un run. Campagne : **137 tests**, lint, format,
+  mypy strict (37 fichiers). Fumée live verte contre le serveur réel.
+- Sous-commande `resume` ré-attribuée de U8 à U13 : elle reconstruit l'état ET repart
+  sur un segment frais, ce qui suppose la boucle agent, pas le seul workspace.
 
 ## Lot C — Contexte et mémoire
 

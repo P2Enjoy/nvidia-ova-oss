@@ -72,7 +72,7 @@ aide:
 	@echo "  make ps / logs   état et journaux de la pile (hôte)"
 	@echo "  make smoke-pile  fumée de la pile par le port composé (hôte)"
 	@echo "  make seed        données de démonstration          [à venir : U4/U16]"
-	@echo "  make smoke-live  fumée contre l'endpoint réel      [à venir : U8]"
+	@echo "  make smoke-live     [LIVE] fumée contre le VRAI endpoint"
 	@echo "  make record-llm     [LIVE] enregistre les cassettes sur le VRAI endpoint"
 	@echo "  make test-int-live  [LIVE] détecte la dérive du contrat réel"
 	@echo "  make run-arc     campagne ARC-AGI-3                [à venir : U23]"
@@ -213,10 +213,9 @@ seed:
 	fi
 	@echo "→ fixtures arc (jeu synthétique cible, épisodes) : à venir en U16"
 
-smoke-live:
-	@echo "make smoke-live : à venir en U8 — exige .env, jamais dans 'make check'" >&2
-	@echo "  (docs/SPEC_HARNAIS.md §H4.8)" >&2
-	@exit 2
+# Fumée manuelle contre le VRAI endpoint (§H4.8). Exige .env, jamais dans check.
+smoke-live: _exige-env
+	$(RUN_LIVE) python -m avo smoke-live
 
 # Le contrat de l'endpoint n'est jamais inventé : il est enregistré sur le vrai
 # serveur, puis rejoué. Ces deux cibles exigent .env et ne sont JAMAIS dans

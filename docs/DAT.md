@@ -17,13 +17,13 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 |---|---|---|
 | `avo.config` | H3 | configuration (env puis `.env`), validation nommée, modes rejeu/live, budget dérivé du plafond par clé |
 | `avo.llm` | H4 | client d'inférence (Ollama natif `/api/chat`), erreurs typées, retries bornés, transport injectable |
-| `avo.context` | H5 | transcript append-only, budget de contexte, continuation en contexte frais |
-| `avo.memory` | H6 | workspace de run, notes persistantes GUIDE/WORKING |
+| `avo.context` | H5 | comptabilité des tokens (calibrée) ; transcript append-only et continuation en U9-U10 |
+| `avo.memory` | H6 | workspace de run (manifeste, métriques, transcripts, rapport) ; notes GUIDE/WORKING en U11 |
 | `avo.tools` | H7 | registre d'outils, dispatch des tool_calls, garde |
 | `avo.loop` | H8, H12 | machine d'états P→I→E→B, prompts de phase, politique de raisonnement |
 | `avo.lineage` | H9 | lignée git jetable par run, politique correct ∧ ≥ meilleur, `Scorer` |
 | `avo.supervisor` | H10 | détection de stagnation, intervention conditionnelle |
-| `avo.runlog` | H11 | logs JSON sans secret, métriques, transcripts |
+| `avo.runlog` | H11 | logs JSON corrélés, filtre de masquage des secrets |
 | `avo.arc` | A2, A4–A7 | client API ARC, rendu texte, interface de tâche, RHAE, campagne |
 | `mocks/llm_replay` | H4.7 | rejeu d'échanges enregistrés sur le vrai endpoint, injection de fautes |
 | `mocks/arc_replay` | A3 | contrat ARC local, jeu synthétique `cible`, rejeu d'épisodes |

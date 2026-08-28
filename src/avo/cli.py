@@ -24,7 +24,10 @@ from avo import __version__
 #: Une entrée disparaît de cette table le jour où son unité la livre réellement.
 _A_VENIR: dict[str, tuple[str, str]] = {
     "run-arc": ("U23", "campagne d'évaluation ARC-AGI-3 (docs/SPEC_ARCAGI3.md §A7)"),
-    "resume": ("U8", "reprise d'un run existant (docs/SPEC_HARNAIS.md §H13.2)"),
+    # La reprise reconstruit l'état depuis le workspace ET repart sur un segment
+    # frais : elle suppose donc la boucle agent, livrée par U13, et non le seul
+    # workspace livré par U8.
+    "resume": ("U13", "reprise d'un run existant (docs/SPEC_HARNAIS.md §H13.2)"),
 }
 
 
@@ -44,6 +47,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="affiche la version du harnais et quitte",
     )
     sub = parser.add_subparsers(dest="commande")
+    sub.add_parser(
+        "smoke-live",
+        help="fumée contre le VRAI endpoint : version, modèles, complétion, appel d'outil",
+        add_help=False,
+    )
     for nom, (unite, objet) in _A_VENIR.items():
         sub.add_parser(nom, help=f"[{unite}] {objet}", add_help=False)
     return parser
@@ -57,6 +65,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.commande is None:
         parser.print_help()
         return 0
+
+    if args.commande == "smoke-live":
+        from avo.smoke import executer
+
+        return executer()
 
     if args.commande in _A_VENIR:
         unite, objet = _A_VENIR[args.commande]

@@ -285,3 +285,23 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Preuves exécutées, toutes en conteneur.** ruff `check` et `format`, mypy **strict** sur 29 fichiers : aucune anomalie. **94 tests verts** — 74 unitaires (dont 27 pour le client : construction du corps, normalisation, arguments d'outil invalides qui ne lèvent pas d'exception, classification de chaque statut, non-retry sur 4xx, épuisement des tentatives, bornes du jitter, absence de secret dans les journaux) et 20 d'intégration (dont 7 du client contre le rejeu du contrat réel, y compris la chaîne complète `413` réel → plafond appris → budget réduit). `make test-int-live` : vert, **aucune dérive**. Vérification opérateur à travers la pile : le client obtient le vrai appel d'outil `run_shell {"command": "ls /tmp"}`.
 
 **Où reprendre.** U8 — comptabilité, journalisation et workspace de run : logs JSON sans secret, `manifest.json`, `metrics.jsonl`, transcripts par segment, `TokenLedger`, et la cible `make smoke-live`.
+
+---
+
+## 2026-08-28 (suite 3) — Session planifiée n° 6 : U8 livré, journalisation, workspace et comptabilité
+
+**Unité.** U8 — comptabilité, journalisation, workspace de run. Pile démarrée et saine, seed vérifié, registre sans entrée ouverte.
+
+**Livré.** `avo.runlog` : journalisation JSON d'une ligne, niveaux, `run_id` corrélant toutes les lignes. `avo.memory.workspace` : arborescence H6.1 complète, manifeste portant la configuration résolue **sans secret** et la version du harnais, `metrics.jsonl`, transcripts numérotés par segment, `report.md`. `avo.context.tokens` : estimation locale et `TokenLedger` qui se recalibre sur le compte réel du serveur. Le client gagne les deux lectures `version()` et `modeles()` dont la fumée a besoin, et `make smoke-live` devient réelle.
+
+**Décision : la garantie « aucun secret » ne repose pas sur la discipline des appelants.** Un filtre installé sur le journal remplace toute valeur sensible — dans le message, dans les arguments de formatage et dans les champs supplémentaires, y compris imbriqués dans des dictionnaires ou des listes — juste avant écriture. Même un `logger.info(cle)` maladroit ne peut donc pas faire fuiter la clé. Les valeurs de moins de huit caractères sont exclues du masquage : masquer « ok » rendrait les journaux illisibles sans rien protéger d'utile.
+
+**Décision : la calibration ne se fait que sur des compteurs exploitables.** Un serveur qui ne rendrait pas `prompt_eval_count` ne doit pas dérégler l'estimation ; l'échange est alors compté sans recalibrer. L'estimation sert aux seuils, le réel fait foi dans les métriques (§H5.2).
+
+**Correction d'attribution.** La sous-commande `resume`, que U3 avait rattachée à U8, revient à U13 : elle reconstruit l'état depuis le workspace **et** repart sur un segment frais, ce qui suppose la boucle agent et pas seulement le workspace. L'aide de la CLI le dit désormais correctement.
+
+**Preuves exécutées, toutes en conteneur.** ruff `check` et `format`, mypy **strict** sur 37 fichiers : aucune anomalie. **137 tests verts** — 109 unitaires (dont 35 pour cette unité) et 28 d'intégration. La preuve qui compte : un échange complet contre le rejeu du contrat réel produit un workspace conforme, et la clé est cherchée dans **tous** les fichiers que le run a produits, pas seulement dans ceux qu'on soupçonne. `make smoke-live` : **tout vert** contre le serveur réel — version 0.32.14, complétion `'OK-AVO'`, appel d'outil `run_shell({'command': 'ls /tmp'})`.
+
+**Observation : un modèle est apparu sur le serveur.** La fumée liste désormais `qwen3.8:27b`, `all-minilm:latest` et `qwen3.6:35b` ; les sessions précédentes n'en voyaient que deux. Le harnais n'est pas affecté — la configuration nomme explicitement son modèle et vaut toujours `qwen3.6:35b` — mais le fait mérite d'être su : un modèle plus récent est disponible, et le choix de celui que la campagne emploiera appartient au responsable. Aucune décision prise à sa place ; le seul effet mesurable serait sur les résultats d'évaluation, pas sur le code.
+
+**Où reprendre.** U9 — transcript append-only : structure immuable en tête, empreinte de préfixe vérifiée par test, estimation corrigée par le compte réel.

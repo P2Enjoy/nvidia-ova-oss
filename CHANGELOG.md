@@ -36,6 +36,14 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U8 : journalisation, workspace de run et comptabilité des tokens
+
+- `avo.runlog` : journalisation JSON d'une ligne, niveaux, identifiant de run corrélant toutes les lignes, et **filtre qui masque les valeurs sensibles** dans le message comme dans les champs imbriqués — la garantie « aucun secret » ne repose donc pas sur la discipline des appelants.
+- `avo.memory.workspace` : arborescence complète du run, manifeste portant la configuration résolue sans secret et la version du harnais, métriques en JSONL, transcripts numérotés par segment, rapport. Un run s'audite sans le dépôt.
+- `avo.context.tokens` : estimation locale des tokens et registre qui se recalibre sur le compte réel rendu par le serveur, sans se dérégler si celui-ci ne rend pas ses compteurs.
+- `make smoke-live` devient réelle : version du serveur, modèles servis, complétion courte et appel d'outil contre le VRAI endpoint. Hors campagne, exige `.env`.
+- Preuves : 137 tests verts, dont un run complet contre le rejeu du contrat réel qui cherche la clé dans **tous** les fichiers produits. Fumée live verte.
+
 ### 2026-08-28 — U7 : client d'inférence
 
 - `avo.llm.client` : construction du corps `/api/chat`, réponse normalisée (contenu, raisonnement, appels d'outils, compteurs, durées), erreurs typées — refus d'authentification **fatal**, dépassement de contexte portant les champs réels du quota, erreur serveur et erreur de transport **retentées**, erreur de protocole. Retries bornés à trois nouvelles tentatives avec attentes de 1, 4 et 16 secondes affectées d'un jitter de ±25 %, jamais sur un refus 4xx.
