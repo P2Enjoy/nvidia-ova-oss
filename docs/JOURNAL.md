@@ -361,3 +361,23 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Lot C terminé** (U9, U10, U11). Le harnais dispose désormais d'un historique inviolable, d'un budget qui se défend, et d'une mémoire qui survit.
 
 **Où reprendre.** U12 — registre d'outils et dispatch : déclaration, rendu vers le tableau `tools`, routage des `tool_calls`, messages `role: tool` append-only, erreurs rendues au modèle, garde `AVO_TOOL_STEPS_MAX`.
+
+---
+
+## 2026-08-28 (suite 7) — Session planifiée n° 10 : U12 livré, registre d'outils
+
+**Unité.** U12 — registre d'outils et dispatch. Pile saine, seed vérifié, registre d'incohérences sans entrée ouverte.
+
+**Défaut corrigé en préalable.** `AVO_TOOL_STEPS_MAX`, que H7.2 nomme explicitement comme garde du nombre d'appels par tour, était absente du tableau des variables H3.1 et de `avo.config`. Défaut du chapitre même que cette unité implémente, donc traité directement plutôt que consigné : variable ajoutée à la configuration, au tableau H3.1 et au README.
+
+**Livré.** `avo.tools.registre` : un outil se déclare par un nom, une description, un schéma de paramètres, une fonction et des étiquettes. `schemas()` filtre par étiquette — c'est ainsi que les outils d'action resteront invisibles hors de l'état où agir est permis (§H7.1). Le routage exécute et rend le résultat ; l'exécution séquentielle ajoute un message `role: tool` par appel, en append-only ; la garde clôt le tour par un message explicite au lieu de tronquer en silence, et son compteur est cumulable entre deux lots puisqu'elle vaut pour le tour et non pour un lot.
+
+**Décision : rien de ce que fait un outil n'interrompt le run.** Nom inconnu, argument obligatoire absent, type incorrect, énumération non respectée, argument inconnu, arguments JSON invalides, fonction qui lève — tout revient au modèle sous la forme `error: <type>: <détail>`, pour qu'il se corrige au tour suivant. Les seules exceptions sont celles que la spécification nomme, et aucune ne concerne les outils.
+
+**Décision : validation minimale, mais réelle.** Champs requis, types, énumérations. Pas de validateur JSON Schema complet, qui exigerait une dépendance d'exécution que le harnais s'interdit (§H2.1). Ce niveau suffit à rendre au modèle un diagnostic exploitable plutôt qu'une trace Python.
+
+**Un test qui a rattrapé une divergence naissante.** Le test vérifiant que le registre expose au modèle exactement le schéma enregistré a rougi : j'avais retapé la description de l'outil au lieu de réutiliser celle de la cassette, et un fragment manquait. Le correctif ne consiste pas à recopier la bonne chaîne mais à **construire l'outil depuis le schéma enregistré** via `outil_depuis_schema` — la duplication qui a causé la dérive disparaît. C'est le même raisonnement qu'en U7, où l'enregistreur avait été rebranché sur le constructeur de corps du client.
+
+**Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 49 fichiers. **245 tests verts** — 195 unitaires (dont 23 pour cette unité) et 50 d'intégration (dont 5 nouveaux). Ces derniers routent **l'appel d'outil réellement demandé par le vrai modèle**, rejoué depuis la cassette, jusqu'à un vrai outil de notes ; un appel fautif inséré au milieu d'une série n'empêche pas les suivants d'aboutir, et la garde configurée s'applique bien à l'exécution.
+
+**Où reprendre.** U13 — boucle agent P→I→E→B : machine d'états événementielle, prompts par phase, exposition conditionnelle des outils d'action, bornes d'actions, `think:false` par défaut.

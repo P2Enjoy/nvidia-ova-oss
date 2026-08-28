@@ -36,6 +36,14 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U12 : registre d'outils et dispatch
+
+- `avo.tools.registre` : un outil se déclare par un nom, une description, un schéma de paramètres, une fonction et des étiquettes. L'exposition au modèle est filtrée par étiquette, ce qui permettra de n'offrir les outils d'action qu'à l'état où agir est permis.
+- **Rien de ce que fait un outil n'interrompt le run** : nom inconnu accompagné de la liste des outils disponibles, argument obligatoire absent, type incorrect, énumération non respectée, argument inconnu, arguments JSON invalides, fonction qui lève — tout revient au modèle sous forme de texte diagnostiquable pour qu'il se corrige.
+- Exécution séquentielle produisant un message `role: tool` par appel, en append-only ; garde du nombre d'appels par tour qui clôt le tour par un message explicite plutôt que de tronquer en silence, avec un compteur cumulable entre lots.
+- Défaut corrigé : la variable de garde, nommée par la spécification, était absente du tableau des variables et de la configuration. Ajoutée aux trois endroits.
+- Preuves : 245 tests verts, dont cinq d'intégration routant l'appel d'outil réellement demandé par le modèle jusqu'à un vrai outil de notes.
+
 ### 2026-08-28 — U11 : notes persistantes
 
 - `avo.memory.notes` : `GUIDE.md` et `WORKING.md` dans le workspace du run, aux rôles distincts — compréhension durable d'un côté, brouillon du niveau courant de l'autre. Deux noms et pas trois : un espace de notes libre se transformerait en système de fichiers parallèle dont plus rien ne garantirait la relecture.

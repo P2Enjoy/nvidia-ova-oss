@@ -130,6 +130,7 @@ aucune installation sur la machine hôte.
 | `AVO_TEMPERATURE` | température | `0.7` |
 | `AVO_TIMEOUT_S` | timeout par appel LLM | `900` |
 | `AVO_CONTEXT_SOFT_RATIO` | seuil de continuation (H5.3) | `0.85` |
+| `AVO_TOOL_STEPS_MAX` | garde du nombre d'appels d'outils par tour (H7.2) | `40` |
 | `AVO_RUNS_DIR` | racine des artefacts | `runs/` |
 | `ARC_API_KEY` | API ARC Prize (SPEC_ARCAGI3) | requis pour le live uniquement |
 | `ARC_BASE_URL` | base API ARC | `https://three.arcprize.org` |

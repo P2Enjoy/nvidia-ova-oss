@@ -239,7 +239,7 @@ frais.
 
 ## Lot D — Outils et boucle
 
-## U12 — Registre d'outils et dispatch `[ ]`
+## U12 — Registre d'outils et dispatch `[x]`
 
 `@spec` H7. Déclaration (nom, description, schéma), rendu vers `tools` API, routage
 des `tool_calls`, messages `role: tool` append-only, erreurs d'outil renvoyées au
@@ -247,6 +247,20 @@ modèle, garde `AVO_TOOL_STEPS_MAX`.
 
 - Preuves : unitaires (dispatch, arguments invalides → erreur textuelle, garde) ;
   intégration : scénario llm-replay à tool_calls multiples, transcript conforme.
+- **Livré et intégralement vérifié le 2026-08-28.** `avo.tools.registre` :
+  déclaration (nom, description, schéma, fonction, étiquettes), `schemas()` filtrant
+  par étiquette pour n'exposer les outils d'action qu'à l'état où agir est permis,
+  routage rendant **tout** incident au modèle sous forme de texte diagnostiquable
+  (nom inconnu avec la liste des outils, argument obligatoire absent, type
+  incorrect, énumération non respectée, argument inconnu, arguments JSON invalides,
+  fonction qui lève), validation minimale sans dépendance, exécution séquentielle
+  produisant des messages `role: tool` append-only, et garde `AVO_TOOL_STEPS_MAX`
+  cumulable entre lots qui clôt le tour par un message explicite.
+  Preuves : 23 tests unitaires et 5 d'intégration, ces derniers routant **l'appel
+  d'outil réellement demandé par le modèle** jusqu'à un vrai outil de notes.
+  Campagne : **245 tests**, lint, format, mypy strict (49 fichiers).
+- Défaut corrigé : `AVO_TOOL_STEPS_MAX`, nommée par H7.2, était absente du tableau
+  des variables H3.1 et de la configuration. Ajoutée aux trois endroits.
 
 ## U13 — Boucle agent P→I→E→B `[ ]`
 

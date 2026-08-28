@@ -163,6 +163,7 @@ class Config:
     temperature: float
     timeout_s: int
     ratio_continuation: float
+    tool_steps_max: int
     runs_dir: Path
     arc_api_key: str | None
     arc_base_url: str
@@ -205,6 +206,7 @@ class Config:
             "temperature": self.temperature,
             "timeout_s": self.timeout_s,
             "ratio_continuation": self.ratio_continuation,
+            "tool_steps_max": self.tool_steps_max,
             "runs_dir": str(self.runs_dir),
             "arc_base_url": self.arc_base_url,
             "ollama_api_key": "<masquée>",
@@ -272,6 +274,7 @@ def charger(
         temperature=source.reel("AVO_TEMPERATURE", 0.7, 0.0, 2.0),
         timeout_s=source.entier("AVO_TIMEOUT_S", 900),
         ratio_continuation=source.reel("AVO_CONTEXT_SOFT_RATIO", 0.85, 0.05, 1.0),
+        tool_steps_max=source.entier("AVO_TOOL_STEPS_MAX", 40),
         runs_dir=Path(source.texte("AVO_RUNS_DIR", "runs")),
         arc_api_key=arc,
         arc_base_url=_valider_url(

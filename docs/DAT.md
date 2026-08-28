@@ -19,7 +19,7 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 | `avo.llm` | H4 | client d'inférence (Ollama natif `/api/chat`), erreurs typées, retries bornés, transport injectable |
 | `avo.context` | H5 | transcript append-only, comptabilité calibrée, budget et continuation en contexte frais |
 | `avo.memory` | H6 | workspace de run (manifeste, métriques, transcripts, rapport) et notes persistantes GUIDE/WORKING |
-| `avo.tools` | H7 | registre d'outils, dispatch des tool_calls, garde |
+| `avo.tools` | H7 | registre d'outils, exposition filtrée par état, routage, garde par tour |
 | `avo.loop` | H8, H12 | machine d'états P→I→E→B, prompts de phase, politique de raisonnement |
 | `avo.lineage` | H9 | lignée git jetable par run, politique correct ∧ ≥ meilleur, `Scorer` |
 | `avo.supervisor` | H10 | détection de stagnation, intervention conditionnelle |
