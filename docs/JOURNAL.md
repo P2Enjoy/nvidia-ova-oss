@@ -339,3 +339,25 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Un attendu faux, corrigé.** J'attendais six messages dans le segment frais après un échange ; il y en a cinq. Le client n'écrit pas dans le transcript — c'est la boucle agent qui reliera les deux en U13. L'attendu est corrigé et commenté ; le produit était juste.
 
 **Où reprendre.** U11 — notes persistantes : `GUIDE.md` et `WORKING.md` dans le workspace, outils de lecture et d'écriture limités à ces deux noms, et injection en tête de segment frais.
+
+---
+
+## 2026-08-28 (suite 6) — Session planifiée n° 9 : U11 livré, notes persistantes ; lot C terminé
+
+**Unité.** U11 — notes persistantes. Pile saine, seed vérifié, registre sans entrée ouverte.
+
+**Livré.** `avo.memory.notes` : `GUIDE.md` et `WORKING.md` dans `runs/<id>/notes/`, aux rôles distincts repris de VISTA — compréhension durable transverse aux niveaux d'un côté, brouillon du niveau courant de l'autre. Validation stricte des deux seuls noms, avec tolérance de casse et d'extension mais refus de tout chemin d'évasion. Bloc `pour_segment_frais()` injecté par la continuation. Surface d'outil `note_read` / `note_write` et leurs schémas.
+
+**Décision : deux noms, pas trois.** La contrainte est délibérée et écrite dans le module. Un espace de notes libre se transforme en système de fichiers parallèle dont plus rien ne garantit la relecture ; deux emplacements aux rôles nommés obligent l'agent à trancher ce qui est durable et ce qui est jetable.
+
+**Décision : une note vide est annoncée, pas omise.** Le bloc injecté écrit « (vide) » sous le titre d'une note jamais renseignée. Son absence est une information : l'agent saura qu'il n'a rien consigné, là où une omission lui laisserait croire que la section n'existe pas.
+
+**Décision : le domaine lève, la surface d'outil convertit.** `Notes.lire` lève sur un nom invalide ; `note_read` rend `error: …` en texte. C'est la séparation qu'impose §H7.4 : une erreur d'outil doit revenir au modèle pour qu'il se corrige, jamais interrompre le run.
+
+**Deux défauts trouvés et corrigés.** `H6.2` renvoyait à un chapitre `H7.5` qui n'existe pas — H7 s'arrête à H7.4 ; le renvoi pointe désormais vers H7.3 et H5.3. Et `Workspace.metrique` acceptait qu'un champ de métrique remplisse son horodatage par accident : le paramètre est réservé aux mots-clés, et l'appelant imbrique désormais ses compteurs sous une clé plutôt que de les éparpiller. Le second défaut a été révélé par le typage strict, pas par un test — il n'aurait produit qu'une métrique silencieusement fausse.
+
+**Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 46 fichiers. **217 tests verts** — 172 unitaires (dont 20 pour cette unité : deux noms seulement, refus des chemins d'évasion, révision intégrale, note vide annoncée, surface d'outil qui ne lève pas) et 45 d'intégration (dont 6 nouveaux). La promesse centrale est vérifiée sur la chaîne réelle : après continuation, le contenu noté réapparaît dans le segment frais **et** l'ancienne observation en a disparu ; une note révisée est bien celle qui revient ; et aucun contenu de note n'atterrit dans les métriques.
+
+**Lot C terminé** (U9, U10, U11). Le harnais dispose désormais d'un historique inviolable, d'un budget qui se défend, et d'une mémoire qui survit.
+
+**Où reprendre.** U12 — registre d'outils et dispatch : déclaration, rendu vers le tableau `tools`, routage des `tool_calls`, messages `role: tool` append-only, erreurs rendues au modèle, garde `AVO_TOOL_STEPS_MAX`.

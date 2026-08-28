@@ -87,9 +87,13 @@ class Workspace:
         )
 
     def metrique(
-        self, type_evenement: str, horodatage: datetime | None = None, **champs: Any
+        self, type_evenement: str, *, horodatage: datetime | None = None, **champs: Any
     ) -> None:
-        """Ajoute une ligne à `metrics.jsonl` (§H11.2)."""
+        """Ajoute une ligne à `metrics.jsonl` (§H11.2).
+
+        `horodatage` est réservé aux mots-clés : sans cela, un champ de métrique
+        passé en `**champs` pourrait le remplir par accident.
+        """
         instant = horodatage or datetime.now(UTC)
         ligne = {
             "horodatage": instant.isoformat(timespec="milliseconds"),

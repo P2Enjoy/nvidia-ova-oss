@@ -214,7 +214,7 @@ continuation immédiate + budget appris, double-413 → erreur fatale explicite.
   a rendu, avec son corps de quota authentique. Campagne : **191 tests**, lint,
   format, mypy strict (43 fichiers).
 
-## U11 — Notes persistantes `[ ]`
+## U11 — Notes persistantes `[x]`
 
 `@spec` H6.2, H7.3. `GUIDE.md`/`WORKING.md` dans le workspace, outils
 `note_read`/`note_write` (limités à ces deux noms), injection en tête de segment
@@ -222,6 +222,20 @@ frais.
 
 - Preuves : unitaires (lecture/écriture/refus d'un autre nom) ; intégration :
   après continuation (U10), les notes réapparaissent dans le prompt du segment frais.
+- **Livré et intégralement vérifié le 2026-08-28.** `avo.memory.notes` :
+  `GUIDE.md` et `WORKING.md` dans `runs/<id>/notes/`, validation stricte des deux
+  seuls noms (casse et extension tolérées, tout chemin d'évasion refusé), lecture
+  d'une note jamais écrite rendant une chaîne vide et non une absence, révision
+  intégrale d'une note, `vider()` pour un changement de niveau, bloc
+  `pour_segment_frais()` annonçant les notes vides plutôt que de les omettre, et
+  surface d'outil `note_read` / `note_write` avec leurs schémas — le domaine lève,
+  la surface convertit en texte rendu au modèle (§H7.4). Preuves : 20 tests
+  unitaires et 6 d'intégration, dont la promesse centrale vérifiée sur la chaîne
+  réelle : après continuation le contenu noté réapparaît et l'ancienne observation a
+  bien disparu. Campagne : **217 tests**, lint, format, mypy strict (46 fichiers).
+- Deux défauts corrigés au passage : `H6.2` renvoyait à un chapitre `H7.5` inexistant
+  (H7 s'arrête à H7.4), et `Workspace.metrique` acceptait qu'un champ de métrique
+  remplisse son horodatage par accident.
 
 ## Lot D — Outils et boucle
 

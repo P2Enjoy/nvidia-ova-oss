@@ -254,7 +254,8 @@ s'audite sans le dépôt.
 
 **H6.2 — Notes (mécanisme VISTA, repris tel quel).** `GUIDE.md` : compréhension
 durable, transverse aux niveaux. `WORKING.md` : brouillon du niveau courant.
-Lisibles/inscriptibles par outils (H7.5). Injectées en tête de chaque segment frais.
+Lisibles et inscriptibles par les outils `note_read` / `note_write` (H7.3).
+Injectées en tête de chaque segment frais (H5.3).
 
 ## H7. Outils
 

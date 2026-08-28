@@ -36,6 +36,14 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U11 : notes persistantes
+
+- `avo.memory.notes` : `GUIDE.md` et `WORKING.md` dans le workspace du run, aux rôles distincts — compréhension durable d'un côté, brouillon du niveau courant de l'autre. Deux noms et pas trois : un espace de notes libre se transformerait en système de fichiers parallèle dont plus rien ne garantirait la relecture.
+- Validation stricte des noms, avec tolérance de casse et d'extension mais refus de tout chemin d'évasion. Une note jamais écrite est vide, pas absente ; une note vide est annoncée dans le bloc injecté plutôt qu'omise, car son absence est une information pour l'agent.
+- Outils `note_read` et `note_write` avec leurs schémas : le domaine lève, la surface d'outil convertit en texte rendu au modèle pour qu'il se corrige, sans jamais interrompre le run.
+- Deux défauts corrigés : un renvoi de spécification vers un chapitre inexistant, et une signature de métrique où un champ pouvait remplir l'horodatage par accident — révélé par le typage strict, il n'aurait produit qu'une métrique silencieusement fausse.
+- Preuves : 217 tests verts, dont la promesse centrale vérifiée sur la chaîne réelle — après renouvellement du contexte, le contenu noté réapparaît et l'ancienne observation a disparu.
+
 ### 2026-08-28 — U10 : budget de contexte et continuation en contexte frais
 
 - `avo.context.contexte` : seuil de continuation dérivé du budget utile, estimation suivant la calibration, ouverture d'un segment frais composé exactement du message système, de l'état de continuation, des notes et de l'observation courante, l'ancien segment étant archivé et non effacé.
