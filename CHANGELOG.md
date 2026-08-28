@@ -36,6 +36,15 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U16 : contrat ARC-AGI-3 local et jeu synthétique `cible`
+
+- `mocks/arc_replay` : moteur du jeu `cible` **en forme fermée** — la baseline de chaque niveau se calcule au lieu d'être mesurée, si bien qu'une partie parfaite dépense un nombre d'actions connu à l'avance et que le RHAE attendu sera vérifiable au chiffre près.
+- Serveur stdlib exposant le contrat officiel : listing avec baselines, cycle de scorecard, commandes de jeu rendant frames, état, score et actions disponibles. Mode rejeu d'épisodes dont toute déviation est dite explicitement plutôt qu'absorbée.
+- Le format de fil, jusqu'ici seulement annoncé « à confirmer », est désormais **écrit** dans la spécification et implémenté des deux côtés. Sans contrat écrit, client et rejeu auraient divergé silencieusement.
+- Service ajouté à la pile compose avec healthcheck, partie arc du seed, fumée de pile étendue aux deux services.
+- Assumé et écrit : contrairement au rejeu du serveur d'inférence, celui-ci simule un contrat non mesuré — chaque partie réelle publierait un scorecard. La sonde à venir produira l'épisode authentique qui fera référence.
+- Preuves : 359 tests verts, dont une partie gagnée à la main par requêtes HTTP dépensant exactement la somme des baselines.
+
 ### 2026-08-28 — U15 : superviseur anti-stagnation
 
 - `avo.supervisor` : trois détecteurs **mesurés, jamais interprétés** — stagnation, cycle improductif, rafale de corrections. Un déclencheur qui dépendrait de ce que le modèle raconte de lui-même serait aveugle au moment précis où il tourne en rond.

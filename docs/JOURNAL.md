@@ -445,3 +445,21 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Lot D terminé** (U12 à U15). Le harnais possède désormais sa boucle complète : outils, machine d'états, lignée scorée, supervision.
 
 **Où reprendre.** U16 — serveur de rejeu `arc-replay` et jeu synthétique `cible`, qui ouvre le lot E : l'interface ARC-AGI-3 proprement dite.
+
+---
+
+## 2026-08-28 (suite 11) — Session planifiée n° 14 : U16 livré, contrat ARC local et jeu `cible`
+
+**Unité.** U16 — serveur de rejeu `arc-replay` et jeu synthétique `cible`, première du lot E. Pile saine, seed vérifié, registre sans entrée ouverte.
+
+**Livré.** `mocks/arc_replay` : le moteur du jeu `cible` (grilles 64×64 bordées, cible 2×2 mobile par niveau, curseur, frames transitoires, RESET conforme au protocole, trois clics ratés perdant la tentative), un serveur stdlib exposant le contrat A1.3, le mode rejeu d'épisodes, le service compose sur 8765 avec healthcheck, la partie arc de `make seed` et l'extension de la fumée de pile.
+
+**Décision : le format de fil est fixé et écrit.** A1.4 ne disait que « à confirmer par U22 ». Il décrit désormais précisément les routes, les corps et la réponse commune — c'est ce qu'implémentent le rejeu d'aujourd'hui et le client de U17. Sans contrat écrit, les deux côtés auraient divergé silencieusement ; avec lui, la sonde U22 aura quelque chose de précis à confirmer ou à corriger, des deux côtés dans le même changement.
+
+**Ce que la forme fermée apporte.** La baseline d'un niveau vaut la distance de Manhattan initiale plus le clic : `[39, 19, 18]` pour les trois niveaux, calculées et non mesurées. Un test vérifie qu'une partie parfaite dépense **exactement** cette baseline — ce qui rendra le RHAE attendu vérifiable au chiffre près en U20, sans jouer.
+
+**Assumé et écrit : ici, on simule.** Contrairement à `llm-replay`, ce service reproduit un contrat qui n'a pas été mesuré. C'est le cas prévu par CLAUDE.md §15 — chaque partie réelle publierait un scorecard — et le module le dit en tête. Le contrat reste ancré : la sonde U22 produira un épisode authentique qui fera référence, et le jeu `cible` n'imite aucun jeu officiel.
+
+**Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 66 fichiers. **359 tests verts** — 276 unitaires (dont 21 pour le moteur : quatre directions, bordure qui bloque sans cesser de compter l'action, frames transitoire et de décision distinctes, clic exigeant que les coordonnées soient celles du curseur, trois ratés perdant la tentative, RESET initial gratuit puis coûteux, compteur de niveau remis à zéro) et 83 d'intégration (dont 14 nouveaux en HTTP réel : listing avec baselines, cycle de scorecard, **partie gagnée à la main par requêtes** dépensant exactement la somme des baselines, perte, reprise, et rejeu d'épisode dont la déviation est dite explicitement). Fumée de pile étendue : **11 contrôles verts** sur les deux services.
+
+**Où reprendre.** U17 — client API ARC : `ArcClient` typé, historique typé A2.2, garde anti-publication A2.3, éprouvé contre `arc-replay`.

@@ -26,7 +26,7 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 | `avo.runlog` | H11 | logs JSON corrélés, filtre de masquage des secrets |
 | `avo.arc` | A2, A4–A7 | client API ARC, rendu texte, interface de tâche, RHAE, campagne |
 | `mocks/llm_replay` | H4.7 | rejeu d'échanges enregistrés sur le vrai endpoint, injection de fautes |
-| `mocks/arc_replay` | A3 | contrat ARC local, jeu synthétique `cible`, rejeu d'épisodes |
+| `mocks/arc_replay` | A3 | contrat ARC local (port 8765), jeu `cible` en forme fermée, rejeu d'épisodes |
 
 ## Flux principaux
 

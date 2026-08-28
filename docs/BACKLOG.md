@@ -334,7 +334,7 @@ séparé, injection `[SUPERVISEUR]` append-only, cooldown, journalisation des mo
 
 ## Lot E — ARC-AGI-3
 
-## U16 — Serveur de rejeu `arc-replay` et jeu `cible` `[ ]`
+## U16 — Serveur de rejeu `arc-replay` et jeu `cible` `[x]`
 
 `@spec` A3 (+ A1 pour le contrat). Serveur stdlib au contrat A1.3/A2.1, moteur du jeu
 `cible` (A3.2 : transitions, bordures, 3 clics → game over, RESET, baselines en forme
@@ -344,6 +344,16 @@ fermée, frame transitoire), mode épisodes (A3.3), intégration compose + healt
 - Preuves : unitaires du moteur (déplacements, bordure, clics, game over, RESET,
   baseline par niveau) ; intégration HTTP réelle (partie gagnée à la main par
   requêtes, protocole A1.2 respecté action par action).
+- **Livré et intégralement vérifié le 2026-08-28.** `mocks/arc_replay` : moteur du
+  jeu `cible` en forme fermée (baselines `[39, 19, 18]` pour trois niveaux, calculées
+  et non mesurées), serveur stdlib au contrat A1.3/A1.4, mode épisodes avec déviation
+  explicite, service compose sur 8765 avec healthcheck, `make seed` (partie arc), et
+  fumée de pile étendue. Preuves : 21 tests unitaires (10 sous-tests) et 14
+  d'intégration HTTP, dont **une partie gagnée à la main par requêtes** dépensant
+  exactement la somme des baselines. Campagne : **359 tests**, lint, format, mypy
+  strict (66 fichiers).
+- Le format de fil est désormais **écrit** en A1.4 et implémenté des deux côtés ; il
+  reste à confirmer par la sonde U22, qui corrigera client et rejeu ensemble.
 
 ## U17 — Client API ARC `[ ]`
 

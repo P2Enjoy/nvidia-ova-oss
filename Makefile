@@ -68,7 +68,7 @@ aide:
 	@echo "  make test-e2e    tests de bout en bout"
 	@echo "  make check       CAMPAGNE COMPLÈTE (hors ligne, sans secret)"
 	@echo "  make build       image de production '$(IMAGE_PROD)'"
-	@echo "  make up / down   pile locale de rejeu (hôte)"
+	@echo "  make up / down   pile locale de rejeu : llm-replay et arc-replay (hôte)"
 	@echo "  make ps / logs   état et journaux de la pile (hôte)"
 	@echo "  make smoke-pile  fumée de la pile par le port composé (hôte)"
 	@echo "  make seed        données de démonstration          [à venir : U4/U16]"
@@ -167,7 +167,7 @@ ifdef AVO_NO_DOCKER
 endif
 	@echo "hors campagne ([LIVE], exigent .env) : record-llm, test-int-live, smoke-live"
 	@echo "hors campagne (pilotent Docker, hôte) : build, up, down, smoke-pile"
-	@echo "sans objet à ce stade : seed arc (U16), run-arc (U23)"
+	@echo "sans objet à ce stade : run-arc (U23)"
 	@echo "─────────────────────────────────────"
 
 # Image de PRODUCTION : le paquet seul, sans outillage de test (§H2.4).
@@ -211,7 +211,14 @@ seed:
 	else \
 	  echo "  ABSENTE — lancez « make record-llm » ([LIVE], exige .env)"; \
 	fi
-	@echo "→ fixtures arc (jeu synthétique cible, épisodes) : à venir en U16"
+	@echo "→ fixtures arc (jeu synthétique cible, épisodes)"
+	@$(RUN) python -c "from arc_replay.jeu_cible import JeuCible, baseline_humaine; \
+	  j=JeuCible(); print('  jeu cible :', j.niveaux, 'niveaux, baselines', j.baselines())"
+	@if [ -n "$$(find tests/fixtures/arc/episodes -name '*.jsonl' -print -quit 2>/dev/null)" ]; then \
+	  echo "  épisodes enregistrés : $$(ls tests/fixtures/arc/episodes/*.jsonl | wc -l)"; \
+	else \
+	  echo "  aucun épisode réel — le premier vient de la sonde U22 ([LIVE])"; \
+	fi
 
 # Fumée manuelle contre le VRAI endpoint (§H4.8). Exige .env, jamais dans check.
 smoke-live: _exige-env

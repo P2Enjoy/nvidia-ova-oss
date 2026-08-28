@@ -35,11 +35,22 @@ lecture seule sont gratuits.
   Tycho (annexe A : `take_action(action, row?, col?)` contraint à RESET + contrôles
   déclarés par la frame courante).
 
-**A1.4 — Statut du contrat détaillé.** Le format de fil exact (chemins, corps,
-`guid`, forme des frames multiples) n'a **pas** été sondé — jouer via l'API publie un
-scorecard (règle « évaluer, c'est publier », `CLAUDE_PROJECT.md`). Le contrat est
-donc écrit d'après les sources et **confirmé par l'unité U22** (sonde live minimale) ;
-tout écart constaté corrige le client ET le serveur de rejeu dans le même chunk.
+**A1.4 — Format de fil retenu, et son statut.** Le format exact n'a **pas** été
+sondé — jouer via l'API publie un scorecard (règle « évaluer, c'est publier »,
+`CLAUDE_PROJECT.md`). Celui qui suit est écrit d'après l'export Tycho, implémenté des
+deux côtés (client U17, rejeu U16), et **confirmé ou corrigé par l'unité U22** ; tout
+écart constaté corrige le client ET le serveur de rejeu dans le même changement.
+
+- `POST /api/scorecard/open` `{tags}` → `{card_id}` ; `POST /api/scorecard/close`
+  `{card_id}` → résumé ; `GET /api/scorecard/<card_id>` → résumé.
+- `POST /api/cmd/RESET` `{game_id?, card_id?, guid?}` : sans `guid`, crée la partie
+  et rend le sien ; avec, relance la tentative courante.
+- `POST /api/cmd/ACTION1`–`ACTION6` `{guid, card_id?}`, plus `{row, col}` pour
+  `ACTION6`.
+- Réponse commune : `{guid, game_id, frames, state, score, level, actions_level,
+  available_actions}`, où `frames` est la liste des grilles 64×64 émises par la
+  commande — transitoires d'abord, frame de décision en dernier — et `state` vaut
+  `NOT_PLAYED`, `NOT_FINISHED`, `WIN` ou `GAME_OVER`.
 
 **A1.5 — Étiquettes de modalité.** `/api/games` porte `tags` ∈ {`click`, `keyboard`,
 `keyboard_click`, absent}. Elles n'ajoutent aucune règle : la vérité des actions

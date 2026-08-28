@@ -43,6 +43,27 @@ version="$(curl -s -H 'Authorization: Bearer peu-importe' "$BASE/api/version")"
 # c'est la même donnée que celle enregistrée, écrite sans espace superflu.
 verifier "corps rejoué du vrai serveur"       '{"version":"0.32.14"}' "$version"
 
+# --- arc-replay (U16) ---------------------------------------------------------
+PORT_ARC="${AVO_PORT_ARC_REPLAY:-8765}"
+BASE_ARC="http://127.0.0.1:${PORT_ARC}"
+
+printf 'attente du healthcheck du service arc-replay...\n'
+i=0
+while [ "$i" -lt 30 ]; do
+  etat_arc="$(docker compose ps --format '{{.Health}}' arc-replay 2>/dev/null || true)"
+  [ "$etat_arc" = "healthy" ] && break
+  i=$((i + 1))
+  sleep 1
+done
+verifier "healthcheck du service arc-replay" "healthy" "${etat_arc:-<aucun>}"
+verifier "GET /_health (arc)"                "200" "$(code "$BASE_ARC/_health")"
+verifier "GET /api/games (arc)"              "200" "$(code "$BASE_ARC/api/games")"
+
+# Une vraie partie commence : RESET crée la partie et rend une grille jouable.
+etat_jeu="$(curl -s -X POST -H 'Content-Type: application/json' -d '{}' \
+  "$BASE_ARC/api/cmd/RESET" | sed -n 's/.*"state": *"\([A-Z_]*\)".*/\1/p')"
+verifier "POST /api/cmd/RESET rend une partie" "NOT_FINISHED" "${etat_jeu:-<vide>}"
+
 if [ "$echec" -eq 0 ]; then
   printf 'fumée de la pile : TOUT VERT\n'
 else

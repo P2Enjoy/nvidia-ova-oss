@@ -52,4 +52,39 @@ services:
       retries: 5
       start_period: 3s
 
-  # arc-replay rejoindra cette pile en U16 (docs/SPEC_ARCAGI3.md §A3), port 8765.
+  arc-replay:
+    build:
+      context: .
+      target: dev
+    image: avo-dev
+    container_name: avo-arc-replay
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      HOME: /tmp
+      PYTHONPATH: /app/src:/app/mocks
+    command:
+      - python
+      - -m
+      - arc_replay
+      - serve
+      - --port
+      - "8765"
+      # Même mesure qu'en U5 : sans interface complète, le port publié n'atteindrait
+      # pas le service, une écoute sur la boucle locale du conteneur n'étant pas
+      # joignable depuis l'hôte.
+      - --hote
+      - 0.0.0.0
+    ports:
+      - "8765:8765"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8765/_health',timeout=3).status==200 else 1)
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 3s
