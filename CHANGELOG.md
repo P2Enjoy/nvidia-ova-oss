@@ -36,6 +36,15 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U7 : client d'inférence
+
+- `avo.llm.client` : construction du corps `/api/chat`, réponse normalisée (contenu, raisonnement, appels d'outils, compteurs, durées), erreurs typées — refus d'authentification **fatal**, dépassement de contexte portant les champs réels du quota, erreur serveur et erreur de transport **retentées**, erreur de protocole. Retries bornés à trois nouvelles tentatives avec attentes de 1, 4 et 16 secondes affectées d'un jitter de ±25 %, jamais sur un refus 4xx.
+- **L'enregistreur construit désormais ses corps avec le client**, et le contrat a été réenregistré sur cette base : la cassette porte exactement ce que le client émet. Sans cela, une simple différence de sérialisation aurait suffi à ce qu'aucun échange enregistré ne s'apparie jamais.
+- Détail du contrat découvert et spécifié : sur la surface native, un appel d'outil arrive avec `done_reason: "stop"` et non `"tool_calls"`. La détection se fait sur la présence de `message.tool_calls` — sans quoi la boucle agent aurait ignoré tous les appels d'outils.
+- Correction d'un défaut consigné au registre : la configuration n'imposait pas le plancher de budget de sortie lorsque le raisonnement natif est actif, alors que la spécification l'exige. Règle implémentée et testée.
+- Clarification de la politique de retry, dont la formulation était ambiguë.
+- Preuves : 94 tests verts dont 27 pour le client et 7 contre le rejeu du contrat réel, détection de dérive verte contre le serveur réel, lint, format et mypy strict.
+
 ### 2026-08-28 — U6 : configuration du harnais
 
 - `avo.config` : lecture de l'environnement puis d'un `.env` minimal, avec précédence de l'environnement. Une ligne de fichier ininterprétable est une erreur qui nomme son numéro de ligne, jamais une ligne ignorée en silence.

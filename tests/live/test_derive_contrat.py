@@ -14,6 +14,7 @@ import os
 import unittest
 from pathlib import Path
 
+from avo.config import Config, Mode, charger
 from llm_replay.cassette import Cassette
 from llm_replay.record import SCENARIOS, enregistrer_scenario
 
@@ -36,16 +37,14 @@ CHAMPS_VOLATILS = {
 
 
 class TestDeriveDuContrat(unittest.TestCase):
-    hote: str
-    cle: str
+    config: Config
     enregistre: Cassette
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.hote = os.environ.get("OLLAMA_HOST", "")
-        cls.cle = os.environ.get("OLLAMA_API_KEY", "")
-        if not cls.hote or not cls.cle:
+        if not os.environ.get("OLLAMA_HOST") or not os.environ.get("OLLAMA_API_KEY"):
             raise unittest.SkipTest("OLLAMA_HOST/OLLAMA_API_KEY absents : test [LIVE] ignoré")
+        cls.config = charger(Mode.LIVE)
         if not CASSETTE.exists():
             raise unittest.SkipTest(f"cassette absente ({CASSETTE}) : lancer « make record-llm »")
         cls.enregistre = Cassette.lire(CASSETTE)
@@ -54,9 +53,9 @@ class TestDeriveDuContrat(unittest.TestCase):
         for scenario in SCENARIOS:
             with self.subTest(scenario=scenario.nom):
                 attendu = self.enregistre.apparier(
-                    scenario.method, scenario.path, scenario.auth, scenario.construire()
+                    scenario.method, scenario.path, scenario.auth, scenario.construire(self.config)
                 )
-                obtenu = enregistrer_scenario(scenario, self.hote, self.cle)
+                obtenu = enregistrer_scenario(scenario, self.config)
                 self.assertEqual(
                     obtenu.response.status,
                     attendu.response.status,

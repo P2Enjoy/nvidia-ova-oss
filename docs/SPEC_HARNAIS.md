@@ -164,13 +164,22 @@ raisonnement (`think`), `options.num_ctx`, champ `reasoning` séparé, compteurs
 `prompt_eval_count`, `eval_count`, durées. Arguments d'outil non-JSON → erreur d'outil
 renvoyée au modèle (H7.4), pas une exception fatale.
 
+**Détail du contrat, mesuré le 2026-08-28 et contre-intuitif** : sur la surface
+native, un appel d'outil arrive avec `done_reason: "stop"`, et non `"tool_calls"` —
+cette dernière valeur appartient à la surface compatible OpenAI. La demande d'outil se
+détecte donc sur la **présence de `message.tool_calls`**, jamais sur `done_reason`
+(propriété `ChatResult.demande_outil`). Les arguments y sont déjà décodés en objet ;
+la forme « chaîne JSON » reste gérée, les deux étant admises par l'API.
+
 **H4.4 — Erreurs typées.** `AuthError` (401/403 — fatale, jamais retentée),
 `ContextOverflow` (413 — porte `tokens_estimated` et `max_context_tokens` du corps ;
 déclenche H5.4), `ServerError` (5xx), `TransportError` (réseau, timeout).
 
-**H4.5 — Retries.** Uniquement `ServerError` et `TransportError` : 3 tentatives,
-backoff exponentiel avec jitter (1 s, 4 s, 16 s ±25 %). Jamais sur 4xx. Chaque retry
-est journalisé.
+**H4.5 — Retries.** Uniquement `ServerError` et `TransportError` : **jusqu'à trois
+nouvelles tentatives après l'échec initial**, soit quatre requêtes au plus, avec des
+attentes de 1 s, 4 s et 16 s affectées d'un jitter de ±25 %. Jamais sur 4xx — un refus
+d'authentification ou un dépassement de contexte se retenteraient à l'identique.
+Chaque nouvelle tentative est journalisée (numéro, attente, motif).
 
 **H4.6 — Journalisation sans secret.** Ni clé, ni en-tête d'autorisation, ni URL avec
 credentials dans les logs. Au niveau INFO : compteurs et durées ; le contenu complet

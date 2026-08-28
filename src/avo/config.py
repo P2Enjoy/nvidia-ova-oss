@@ -35,6 +35,12 @@ HOTE_REJEU: Final = "http://127.0.0.1:11435"
 #: que la présence d'un en-tête d'autorisation lorsqu'aucune clé ne lui est fournie.
 JETON_REJEU: Final = "rejeu-sans-secret"
 
+#: Plancher de budget de sortie imposé lorsque le raisonnement natif est actif
+#: (§H12.1) : le raisonnement consomme `num_predict` AVANT tout contenu, si bien
+#: qu'un budget court rend une réponse vide avec `finish_reason: length` — mesuré
+#: le 2026-08-27 avec 64 tokens.
+NUM_PREDICT_MIN_AVEC_THINK: Final = 8192
+
 #: Fenêtre de contexte demandée par défaut en mode rejeu, où aucun serveur réel
 #: n'impose de plafond. En mode live la variable est requise, sans valeur implicite.
 CONTEXTE_DEFAUT_REJEU: Final = 131072
@@ -272,6 +278,14 @@ def charger(
             "ARC_BASE_URL", source.texte("ARC_BASE_URL", "https://three.arcprize.org")
         ),
     )
+
+    if config.think and config.num_predict < NUM_PREDICT_MIN_AVEC_THINK:
+        raise ConfigInvalide(
+            f"AVO_NUM_PREDICT : avec AVO_THINK=true, un budget de sortie d'au moins "
+            f"{NUM_PREDICT_MIN_AVEC_THINK} tokens est imposé (docs/SPEC_HARNAIS.md §H12.1) — "
+            f"reçu {config.num_predict}. Le raisonnement natif consomme ce budget avant "
+            "tout contenu : une valeur plus courte rend une réponse vide."
+        )
 
     if config.budget_prompt <= 0:
         raise ConfigInvalide(

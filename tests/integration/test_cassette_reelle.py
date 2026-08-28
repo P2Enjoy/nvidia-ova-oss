@@ -19,11 +19,16 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from avo.config import Mode, charger
 from llm_replay.cassette import AUTH_ABSENTE, AUTH_INVALIDE, AUTH_VALIDE, Cassette
 from llm_replay.record import CLE_INVALIDE, SCENARIOS
 from llm_replay.server import creer_serveur
 
 CASSETTE = Path("tests/fixtures/llm/cassettes/contrat_endpoint.jsonl")
+
+#: Configuration reproduisant celle employée à l'enregistrement : modèle et
+#: raisonnement par défaut, options portées par chaque scénario.
+_CONFIG_SCENARIOS = charger(Mode.REJEU, env={}, racine=Path("/inexistant"))
 CLE = "cle-de-rejeu"
 
 
@@ -70,10 +75,16 @@ class TestCassetteReelle(unittest.TestCase):
         for scenario in SCENARIOS:
             with self.subTest(scenario=scenario.nom):
                 attendu = self.enregistre.apparier(
-                    scenario.method, scenario.path, scenario.auth, scenario.construire()
+                    scenario.method,
+                    scenario.path,
+                    scenario.auth,
+                    scenario.construire(_CONFIG_SCENARIOS),
                 )
                 statut, corps = self._jouer(
-                    scenario.method, scenario.path, scenario.auth, scenario.construire()
+                    scenario.method,
+                    scenario.path,
+                    scenario.auth,
+                    scenario.construire(_CONFIG_SCENARIOS),
                 )
                 self.assertEqual(statut, attendu.response.status)
                 self.assertEqual(corps, attendu.response.body)
@@ -95,7 +106,7 @@ class TestCassetteReelle(unittest.TestCase):
     def test_la_conversation_avec_outils_a_bien_produit_un_appel_d_outil(self) -> None:
         """Prérequis dur de la boucle agent (H8) : le contrat doit le montrer."""
         avec_outils = self.enregistre.apparier(
-            "POST", "/api/chat", AUTH_VALIDE, SCENARIOS[4].construire()
+            "POST", "/api/chat", AUTH_VALIDE, SCENARIOS[4].construire(_CONFIG_SCENARIOS)
         )
         corps = avec_outils.response.body
         assert isinstance(corps, dict)

@@ -18,6 +18,7 @@ import os
 import sys
 from pathlib import Path
 
+from avo.config import Mode, charger
 from llm_replay.record import enregistrer_tout
 from llm_replay.server import creer_serveur
 
@@ -57,12 +58,12 @@ def main(argv: list[str] | None = None) -> int:
         serveur.serve_forever()
         return 0
 
-    hote = os.environ.get("OLLAMA_HOST", "")
-    cle = os.environ.get("OLLAMA_API_KEY", "")
-    if not hote or not cle:
+    try:
+        config = charger(Mode.LIVE)
+    except Exception as erreur:  # noqa: BLE001 — le message de la config suffit
         print(
-            "llm_replay record : OLLAMA_HOST et OLLAMA_API_KEY sont requis.\n"
-            "  Ils ne sont jamais lus depuis le dépôt : passez-les au conteneur\n"
+            f"llm_replay record : configuration live inutilisable — {erreur}\n"
+            "  Les secrets ne sont jamais lus depuis le dépôt : passez-les au conteneur\n"
             "  avec « --env-file .env » (cf. cible make record-llm).",
             file=sys.stderr,
         )
@@ -70,7 +71,7 @@ def main(argv: list[str] | None = None) -> int:
 
     destination = args.cassettes / f"{args.nom}.jsonl"
     print(f"enregistrement du contrat sur le VRAI endpoint → {destination}", flush=True)
-    cassette = enregistrer_tout(hote, cle, destination)
+    cassette = enregistrer_tout(config, destination)
     print(f"{len(cassette)} échanges enregistrés.", flush=True)
     return 0
 

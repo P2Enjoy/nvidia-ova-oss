@@ -17,6 +17,7 @@ from avo.config import (
     HOTE_REJEU,
     JETON_REJEU,
     MARGE_PROXY,
+    NUM_PREDICT_MIN_AVEC_THINK,
     Config,
     ConfigInvalide,
     Mode,
@@ -141,8 +142,11 @@ class TestValidation(unittest.TestCase):
         self.assertIn("AVO_THINK", str(capture.exception))
 
     def test_booleen_accepte_les_formes_usuelles(self) -> None:
+        # Activer le raisonnement impose un budget de sortie plancher (§H12.1) :
+        # les formes vraies sont donc éprouvées avec un budget conforme.
+        budget = str(NUM_PREDICT_MIN_AVEC_THINK)
         for valeur in ("true", "1", "oui", "ON"):
-            self.assertTrue(self._charger(AVO_THINK=valeur).think, valeur)
+            self.assertTrue(self._charger(AVO_THINK=valeur, AVO_NUM_PREDICT=budget).think, valeur)
         for valeur in ("false", "0", "non", "OFF"):
             self.assertFalse(self._charger(AVO_THINK=valeur).think, valeur)
 
@@ -162,6 +166,35 @@ class TestValidation(unittest.TestCase):
         with self.assertRaises(ConfigInvalide) as capture:
             self._charger(AVO_CONTEXT_SOFT_RATIO="1.5")
         self.assertIn("AVO_CONTEXT_SOFT_RATIO", str(capture.exception))
+
+
+class TestPlancherDeSortieAvecRaisonnement(unittest.TestCase):
+    """§H12.1 : le raisonnement natif consomme le budget de sortie avant le contenu."""
+
+    def test_think_actif_avec_budget_court_est_refuse(self) -> None:
+        with self.assertRaises(ConfigInvalide) as capture:
+            charger(
+                Mode.REJEU,
+                env={"AVO_THINK": "true", "AVO_NUM_PREDICT": "64"},
+                racine=Path("/inexistant"),
+            )
+        message = str(capture.exception)
+        self.assertIn("AVO_NUM_PREDICT", message)
+        self.assertIn(str(NUM_PREDICT_MIN_AVEC_THINK), message)
+
+    def test_think_actif_avec_budget_suffisant_accepte(self) -> None:
+        config = charger(
+            Mode.REJEU,
+            env={"AVO_THINK": "true", "AVO_NUM_PREDICT": str(NUM_PREDICT_MIN_AVEC_THINK)},
+            racine=Path("/inexistant"),
+        )
+        self.assertTrue(config.think)
+        self.assertEqual(config.num_predict, NUM_PREDICT_MIN_AVEC_THINK)
+
+    def test_le_plancher_ne_s_applique_pas_sans_raisonnement(self) -> None:
+        config = charger(Mode.REJEU, env={"AVO_NUM_PREDICT": "64"}, racine=Path("/inexistant"))
+        self.assertFalse(config.think)
+        self.assertEqual(config.num_predict, 64)
 
 
 class TestBudget(unittest.TestCase):

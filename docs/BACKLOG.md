@@ -125,7 +125,7 @@ opérationnels, README/DAT mis à jour (lancement, ports).
   sur les deux modes, la clé réelle n'apparaissant ni dans le résumé ni dans la
   représentation. Campagne complète verte : 60 tests, lint, format, mypy strict.
 
-## U7 — Client d'inférence `[ ]`
+## U7 — Client d'inférence `[x]`
 
 `@spec` H4.1–H4.5. `LLMClient.chat` sur `/api/chat` (think, options, tools), parsing
 `ChatResult`, erreurs typées, retries bornés avec jitter.
@@ -135,6 +135,19 @@ opérationnels, README/DAT mis à jour (lancement, ports).
   nominal, tool_call, 401 fatal, 413 → `ContextOverflow` avec ses champs réels,
   500 → retries puis échec, latence < timeout. `make test-int-live` rejoue les mêmes
   scénarios contre l'endpoint réel pour détecter toute dérive du contrat.
+- **Livré et intégralement vérifié le 2026-08-28.** `src/avo/llm/client.py` :
+  construction du corps (§H4.2) avec surcharges typées, `ChatResult` normalisé,
+  erreurs typées (`AuthError` fatale, `ContextOverflow` portant les champs réels,
+  `ServerError`, `TransportError`, `ProtocolError`), retries bornés avec jitter,
+  transport et attente injectables. **L'enregistreur construit désormais ses corps
+  avec le client** (§H4.7) : la cassette porte exactement ce que le client émet, et
+  le contrat a été réenregistré sur cette base. Preuves : 27 tests unitaires,
+  7 tests d'intégration du client contre le rejeu du contrat réel, `make
+  test-int-live` vert — aucune dérive. Campagne complète : **94 tests**, lint,
+  format, mypy strict (29 fichiers).
+- Détail du contrat découvert et spécifié : sur la surface native, un appel d'outil
+  arrive avec `done_reason: "stop"` et non `"tool_calls"` — la détection se fait sur
+  la présence de `message.tool_calls` (§H4.3, propriété `demande_outil`).
 
 ## U8 — Comptabilité, journalisation, workspace de run `[ ]`
 

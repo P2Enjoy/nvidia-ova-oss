@@ -265,3 +265,23 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Un test qui a pris mon propre calcul en défaut.** Le littéral attendu du budget était faux — j'avais écrit 195407 là où `floor(229376 / 1,15) − 4096` vaut 195361. L'assertion par formule passait, l'assertion en clair a rougi. Le littéral est corrigé et commenté, pour que le contrat reste lisible sans recalcul.
 
 **Où reprendre.** U7 — client d'inférence : `LLMClient.chat` sur `/api/chat`, erreurs typées, retries bornés, éprouvé contre les cassettes enregistrées.
+
+---
+
+## 2026-08-28 (suite 2) — Session planifiée n° 5 : U7 livré, client d'inférence éprouvé sur le contrat réel
+
+**Unité.** U7 — client d'inférence. Pile démarrée et saine, seed vérifié avant le travail.
+
+**Préalable traité dans la session.** En relisant H12.1 pour écrire le client, j'ai constaté que la configuration livrée par U6 n'imposait pas le plancher `AVO_NUM_PREDICT ≥ 8192` lorsque `AVO_THINK=true`, alors que la spécification l'exige explicitement. Défaut étranger à l'unité, donc **consigné dans `docs/INCONSISTENCY_REPORT.md`** ; mais traité en préalable dans la même session (§4.2, second cas), le client consommant précisément ces deux réglages : livrer un client qui les honore par-dessus une configuration qui ne les contraint pas aurait laissé le défaut se manifester à l'exécution. Règle implémentée, testée, et entrée du registre refermée.
+
+**Livré.** `src/avo/llm/client.py` : construction du corps `/api/chat` avec surcharges typées, `ChatResult` normalisé (contenu, raisonnement, appels d'outils, compteurs, durées converties en millisecondes), erreurs typées — `AuthError` fatale, `ContextOverflow` portant `tokens_estimated` et `max_context_tokens` du corps réel, `ServerError`, `TransportError`, `ProtocolError` — et retries bornés avec jitter. Transport, attente et aléa sont injectables : la politique de retry s'éprouve sans réseau ni attente réelle.
+
+**Décision structurante : l'enregistreur construit ses corps avec le client.** U4 avait écrit ses corps à la main, faute de client à ce moment. C'était une divergence en germe : une simple différence de sérialisation — `0` contre `0.0` sur la température — aurait suffi à ce qu'aucune cassette ne s'apparie jamais au client. H4.7 prévoyait d'ailleurs que « le client H4 appelle le vrai endpoint ». L'enregistreur passe donc par `construire_corps`, et le contrat a été **réenregistré** sur cette base. La cassette porte désormais exactement ce que le client émet, ce que le test d'intégration prouve : s'il y avait divergence, l'appariement échouerait au lieu de l'absorber.
+
+**Détail du contrat découvert, contre-intuitif, et désormais spécifié.** Sur la surface **native**, un appel d'outil revient avec `done_reason: "stop"` — et non `"tool_calls"`, qui est une convention de la surface compatible OpenAI. Mon test attendait la seconde valeur et a rougi ; c'est l'attendu qui était faux. La détection se fait sur la **présence de `message.tool_calls`**, encodée dans la propriété `demande_outil` et inscrite en H4.3. Sans cela, la boucle agent de U13 aurait ignoré tous les appels d'outils. Les arguments arrivent par ailleurs déjà décodés en objet ; la forme « chaîne JSON » reste gérée, les deux étant admises.
+
+**Spécification clarifiée.** H4.5 disait « 3 tentatives » tout en listant trois délais : formulation ambiguë. Elle énonce désormais « jusqu'à trois nouvelles tentatives après l'échec initial, soit quatre requêtes au plus », ce que le code implémente et qu'un test vérifie en comptant les appels.
+
+**Preuves exécutées, toutes en conteneur.** ruff `check` et `format`, mypy **strict** sur 29 fichiers : aucune anomalie. **94 tests verts** — 74 unitaires (dont 27 pour le client : construction du corps, normalisation, arguments d'outil invalides qui ne lèvent pas d'exception, classification de chaque statut, non-retry sur 4xx, épuisement des tentatives, bornes du jitter, absence de secret dans les journaux) et 20 d'intégration (dont 7 du client contre le rejeu du contrat réel, y compris la chaîne complète `413` réel → plafond appris → budget réduit). `make test-int-live` : vert, **aucune dérive**. Vérification opérateur à travers la pile : le client obtient le vrai appel d'outil `run_shell {"command": "ls /tmp"}`.
+
+**Où reprendre.** U8 — comptabilité, journalisation et workspace de run : logs JSON sans secret, `manifest.json`, `metrics.jsonl`, transcripts par segment, `TokenLedger`, et la cible `make smoke-live`.
