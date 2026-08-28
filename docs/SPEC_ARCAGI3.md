@@ -301,6 +301,14 @@ la redemander coûterait une action, et le score mêlerait deux tentatives, ce q
 priverait le RHAE de sens. Ce qui coûte cher, ce sont les jeux déjà terminés : ils ne
 sont jamais rejoués.
 
+**Décision : une lignée par JEU, sous `runs/<id>/lineage/<game_id>/`.** La politique
+H9.1 est « correct ∧ ≥ meilleur » ; or le score H9.2 est
+`(niveaux complétés, −actions)` **du jeu courant**. Une lignée unique pour toute la
+campagne refuserait toute version du deuxième jeu, qui repart à zéro niveau — la
+progression du premier bloquerait définitivement l'enregistrement de la seconde. La
+monotonie n'a de sens qu'à l'intérieur d'un jeu, et c'est bien ce que décrit H9.2
+(« chaque complétion de niveau produit un commit de lignée avec son score »).
+
 *Structures.* `Plafonds` (gelée) ; `ResultatJeu` (gelée : `game_id`, `guid`, `niveaux`,
 `rhae`, `tours`, `arret`, `actions`, `tokens`, `secondes`, `evenements`) ;
 `ResultatCampagne` (gelée : `run_id`, `mode`, `card_id`, `plafonds`, `jeux`,
