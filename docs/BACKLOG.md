@@ -262,7 +262,7 @@ modèle, garde `AVO_TOOL_STEPS_MAX`.
 - Défaut corrigé : `AVO_TOOL_STEPS_MAX`, nommée par H7.2, était absente du tableau
   des variables H3.1 et de la configuration. Ajoutée aux trois endroits.
 
-## U13 — Boucle agent P→I→E→B `[ ]`
+## U13 — Boucle agent P→I→E→B `[x]`
 
 `@spec` H8, H12. Machine d'états événementielle, prompts par phase versionnés
 (prédiction avant action, bilan après — contrat A5.1), exposition conditionnelle des
@@ -272,6 +272,22 @@ outils d'action, bornes d'actions, `think:false` par défaut (H12).
   complété, game over, contradiction) ; intégration : boucle complète contre
   llm-replay scripté sur un environnement factice en mémoire (sans ARC), bornes
   respectées, transcript append-only préservé.
+- **Livré et intégralement vérifié le 2026-08-28.** `avo.loop.etats` (table de
+  transitions close, `TransitionInterdite` nommant les événements admis),
+  `avo.loop.prompts` (versionnés, courts, **sans aucune règle de jeu** — vérifié par
+  un test qui cherche une liste de termes interdits), `avo.loop.boucle`
+  (contrat `Environnement` minimal, outils filtrés par phase, action jouée **par
+  l'outil**, bornes par niveau et par jeu). Preuves : 18 tests unitaires (94
+  sous-tests) et 8 d'intégration faisant tourner la boucle **en HTTP réel** contre
+  le rejeu, sur un environnement factice. Campagne : **271 tests**, lint, format,
+  mypy strict (54 fichiers).
+- Défaut de conception corrigé par la preuve : la boucle appelait l'environnement
+  directement, court-circuitant le registre — l'outil d'action n'était jamais
+  exécuté alors que §H8.1 exige d'agir « via l'outil d'action ». L'action passe
+  désormais par le registre, et l'environnement conserve l'issue que la boucle relit.
+- Défaut corrigé : `AVO_ACTIONS_MAX`, nommée par H8.3, était absente de la
+  configuration ; H8.3 décrivait par ailleurs une borne « par niveau et par jeu »
+  sans les distinguer. Deux variables désormais, documentées aux trois endroits.
 
 ## U14 — Lignée et fonction de score `[ ]`
 

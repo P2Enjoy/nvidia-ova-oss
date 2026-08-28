@@ -36,6 +36,16 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U13 : boucle agent Planning → Implementation → Evaluation → Bug-Fixing
+
+- `avo.loop` : machine d'états **close** — tout événement impossible dans l'état courant lève en nommant les événements admis, plutôt que de rester sur place et de produire un run qui tourne sans avancer. La machine est du code, le contenu des phases est du prompt : une transition qui dépendrait de l'interprétation d'un texte libre serait irreproductible.
+- L'environnement prime sur le discours du modèle : niveau complété et partie perdue sont des faits qu'il rend, seule la contradiction est déclarée par le modèle. Sans cela, le score serait manipulable par le texte.
+- Les outils d'action ne sont exposés qu'à la phase où agir est permis : ailleurs, le modèle ne peut pas dépenser une action par mégarde.
+- Prompts versionnés, courts, et **sans aucune règle de jeu** — vérifié par un test qui cherche une liste de termes interdits. Un indice glissé là invaliderait toute l'évaluation sans que rien ne le signale dans les scores.
+- Bornes d'actions distinctes par niveau et par jeu, dépassement menant à un arrêt propre qui nomme la borne franchie. Les variables correspondantes, nommées par la spécification, manquaient à la configuration.
+- Défaut de conception corrigé par la preuve : la boucle appelait l'environnement directement, si bien que l'outil d'action n'était jamais exécuté. L'action passe désormais par le registre.
+- Preuves : 271 tests verts, dont huit faisant tourner la boucle en HTTP réel contre le rejeu, sur un environnement factice.
+
 ### 2026-08-28 — U12 : registre d'outils et dispatch
 
 - `avo.tools.registre` : un outil se déclare par un nom, une description, un schéma de paramètres, une fonction et des étiquettes. L'exposition au modèle est filtrée par étiquette, ce qui permettra de n'offrir les outils d'action qu'à l'état où agir est permis.

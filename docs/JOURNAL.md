@@ -381,3 +381,25 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 49 fichiers. **245 tests verts** — 195 unitaires (dont 23 pour cette unité) et 50 d'intégration (dont 5 nouveaux). Ces derniers routent **l'appel d'outil réellement demandé par le vrai modèle**, rejoué depuis la cassette, jusqu'à un vrai outil de notes ; un appel fautif inséré au milieu d'une série n'empêche pas les suivants d'aboutir, et la garde configurée s'applique bien à l'exécution.
 
 **Où reprendre.** U13 — boucle agent P→I→E→B : machine d'états événementielle, prompts par phase, exposition conditionnelle des outils d'action, bornes d'actions, `think:false` par défaut.
+
+---
+
+## 2026-08-28 (suite 8) — Session planifiée n° 11 : U13 livré, la boucle agent tourne
+
+**Unité.** U13 — boucle agent P→I→E→B. Pile saine, seed vérifié, registre sans entrée ouverte.
+
+**Livré.** `avo.loop.etats` : table de transitions **close**, tout couple absent levant `TransitionInterdite` en nommant les événements admis — un état de repli silencieux produirait un run qui tourne sans avancer. `avo.loop.prompts` : textes versionnés et courts, puisqu'ils sont réémis à chaque tour. `avo.loop.boucle` : contrat `Environnement` minimal, outils filtrés par phase, bornes par niveau et par jeu.
+
+**Décision : la machine est du code, le contenu des phases est du prompt.** Une transition qui dépendrait de l'interprétation d'un texte libre serait irreproductible, et un run ne pourrait plus être rejoué. Seule la contradiction est déclarée par le modèle ; niveau complété et partie perdue sont des faits rendus par l'environnement — les faire dépendre de ce que le modèle en dit rendrait le score manipulable par le texte.
+
+**Décision : les outils d'action ne sont exposés qu'à la phase Implementation.** Hors de cet état, le modèle ne peut pas dépenser une action par mégarde. C'est exactement l'usage prévu par le filtrage par étiquettes livré en U12.
+
+**Défaut de conception trouvé par la preuve.** Le test d'intégration a montré que le compteur d'actions montait sans que la fonction de l'outil ne s'exécute : la boucle appelait l'environnement **directement**, court-circuitant le registre, alors que §H8.1 exige d'agir « via l'outil d'action ». L'outil d'action n'était donc qu'une déclaration décorative. L'action passe désormais par le registre — son résultat devient un message `role: tool` comme pour tout autre outil — et l'environnement conserve l'issue typée que la boucle relit, restant l'autorité sur ce qui s'est produit. Sans ce test, le défaut n'aurait été visible qu'en campagne, sous forme d'actions qui ne se produisent pas.
+
+**Défaut de spécification corrigé.** `AVO_ACTIONS_MAX`, nommée par H8.3, était absente de la configuration ; et H8.3 décrivait une borne « par niveau et par jeu » sans les distinguer. Elles sont désormais deux, car un niveau qui s'enlise et un jeu qui s'éternise ne se diagnostiquent pas pareil.
+
+**Deux défauts de mon propre échafaudage de test.** Les deux passes du montage — capture des corps émis, puis service par le rejeu — employaient des `tours_max` différents, et le motif de réponses figeait la dernière au lieu de cycler, si bien qu'aucune action n'était plus jouée et que la borne n'était jamais atteinte. Corrigés tous deux ; c'est le prix d'un test qui fait réellement tourner la boucle en HTTP plutôt que de simuler ses appels.
+
+**Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 54 fichiers. **271 tests verts** — 213 unitaires (dont 18 pour cette unité, 94 sous-tests : cycle nominal, embranchements, table close et exhaustive, absence de cul-de-sac, et surtout **aucune règle de jeu dans les prompts**, vérifiée contre une liste de termes interdits) et 58 d'intégration (dont 8 nouveaux faisant tourner la boucle en HTTP réel contre le rejeu, sur un environnement factice en mémoire).
+
+**Où reprendre.** U14 — lignée et fonction de score : dépôt git jetable sous `runs/<id>/lineage/`, politique « correct ∧ ≥ meilleur », `Scorer` branchable.

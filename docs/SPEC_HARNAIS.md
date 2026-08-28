@@ -131,6 +131,8 @@ aucune installation sur la machine hôte.
 | `AVO_TIMEOUT_S` | timeout par appel LLM | `900` |
 | `AVO_CONTEXT_SOFT_RATIO` | seuil de continuation (H5.3) | `0.85` |
 | `AVO_TOOL_STEPS_MAX` | garde du nombre d'appels d'outils par tour (H7.2) | `40` |
+| `AVO_ACTIONS_MAX_NIVEAU` | borne d'actions d'environnement par niveau (H8.3) | `1000` |
+| `AVO_ACTIONS_MAX_JEU` | borne d'actions d'environnement par jeu (H8.3) | `5000` |
 | `AVO_RUNS_DIR` | racine des artefacts | `runs/` |
 | `ARC_API_KEY` | API ARC Prize (SPEC_ARCAGI3) | requis pour le live uniquement |
 | `ARC_BASE_URL` | base API ARC | `https://three.arcprize.org` |
@@ -302,9 +304,12 @@ courts, sans description des règles du jeu (contrainte direct-interaction).
 P→I→E (B conditionnelle) → le dernier frame retourné devient l'observation suivante.
 Toute frame retournée entre dans la mémoire de frames (SPEC_ARCAGI3 §A4).
 
-**H8.3 — Bornes.** `AVO_ACTIONS_MAX` par niveau et par jeu (configurables, requis en
-campagne) ; dépassement → arrêt propre du jeu avec raison dans le rapport. Aucune
-temporisation arbitraire.
+**H8.3 — Bornes.** Deux bornes distinctes, car un niveau qui s'enlise et un jeu qui
+s'éternise ne se diagnostiquent pas pareil : `AVO_ACTIONS_MAX_NIVEAU` et
+`AVO_ACTIONS_MAX_JEU`. Généreuses par défaut, resserrées en campagne où elles sont
+exigées (SPEC_ARCAGI3 §A7.1). Dépassement → arrêt propre du jeu, la borne franchie
+étant nommée dans le rapport. Aucune temporisation arbitraire : on borne des actions,
+jamais du temps d'horloge.
 
 ## H9. Lignée et fonction de score
 
