@@ -9,6 +9,17 @@ _Aucune entrée ouverte._
 
 ## Traitées dans la session qui les a rencontrées
 
+### 2026-08-28 — Le README annonçait `arc-replay` comme « à venir »
+
+- **Constat.** Le `README.md` décrivait le service `arc-replay` du port 8765 avec la
+  mention « à venir en U16 ». U16 est close depuis le 2026-08-28 et le service tourne.
+- **Mesure.** Relevé le 2026-08-28 : `docker compose ps` rend `arc-replay` *healthy*
+  depuis plus de deux heures, et `GET http://127.0.0.1:8765/api/games` rend `200` avec
+  le jeu `cible-synthetique` et ses baselines.
+- **Traitement.** Défaut étranger à l'unité U23, consigné ici. Corrigé dans un commit
+  dédié : la mention d'attente est retirée et le service est décrit tel qu'il est.
+  Aucun comportement n'est modifié.
+
 ### 2026-08-28 — `python -m avo --help` renvoyait la reprise à une unité déjà close
 
 - **Constat.** La table `_A_VENIR` de `avo.cli` attribuait la sous-commande `resume`

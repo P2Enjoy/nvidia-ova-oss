@@ -27,7 +27,7 @@ Les éléments constitutifs, tirés des sources exportées dans [`knowledge/`](k
 ## Stack
 
 - **Python ≥ 3.11, zéro dépendance d'exécution** (bibliothèque standard uniquement) ; outillage de développement : pytest, ruff, mypy (`docs/SPEC_HARNAIS.md` §H2, motifs inclus).
-- Pile locale conteneurisée (Docker Compose) : **`llm-replay`** sur le port `11435` (rejeu d'échanges **enregistrés sur le vrai endpoint** — aucun faux serveur) et `arc-replay` sur `8765` (contrat ARC-AGI-3 + jeu synthétique, car chaque appel réel publie un scorecard ; à venir en U16). Les tests tournent hors ligne sans jamais inventer un contrat.
+- Pile locale conteneurisée (Docker Compose) : **`llm-replay`** sur le port `11435` (rejeu d'échanges **enregistrés sur le vrai endpoint** — aucun faux serveur) et `arc-replay` sur `8765` (contrat ARC-AGI-3 + jeu synthétique `cible`, car chaque appel réel publie un scorecard). Les tests tournent hors ligne sans jamais inventer un contrat.
 - Deux images depuis un `Dockerfile` multi-étages : **`avo`** (production, 176 Mo, le paquet seul sans dépendance) et **`avo-dev`** (320 Mo, y ajoute make, pytest, ruff, mypy). L'outillage ne vit que dans l'image de développement.
 
 ## Prérequis
