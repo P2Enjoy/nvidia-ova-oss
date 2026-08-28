@@ -327,11 +327,19 @@ ailleurs n'existent pour un run que si la boucle les appelle ; sans cela ils son
 code mort et le rapport de campagne (SPEC_ARCAGI3 §A7.3) annonce structurellement
 zéro sur des lignes qu'il est censé mesurer.
 
-1. **Continuation** (H5.3, H5.4). Avant chaque appel, si le seuil est atteint, la
-   boucle ouvre un segment frais ; si l'appel revient en `ContextOverflow`, elle
-   absorbe le dépassement, ouvre un segment frais et **rejoue l'appel une fois** sur
-   ce segment — jamais sur le segment plein. Le segment clos est archivé dans
-   `transcripts/`. Deux dépassements consécutifs lèvent (H5.4).
+1. **Continuation** (H5.3, H5.4), par deux chemins qu'il ne faut pas confondre :
+   - *préventif*, quand le seuil est atteint et que le segment répond encore : la
+     boucle demande à l'agent d'écrire son état de continuation
+     (`INVITATION_CONTINUATION`), et c'est **sa** réponse qui ouvre le segment frais.
+     C'est le mécanisme VISTA, et le seul qui préserve ce que l'agent juge digne
+     d'être retenu ;
+   - *réactif*, sur `ContextOverflow` : le segment plein ne répond plus, donc **aucun
+     appel n'y est fait** (H5.4). L'état de continuation est alors écrit par le
+     harnais — phase, compteurs, dernière observation —, factuel et sans appel. La
+     boucle rejoue ensuite l'appel une seule fois, sur le segment frais.
+
+   Le segment clos est archivé dans `transcripts/`. Deux dépassements consécutifs
+   lèvent (H5.4).
 2. **Supervision** (H10). La boucle tient la trajectoire — action jouée, empreinte de
    frame, complétion, passage en Bug-Fixing — et, à la fin de chaque tour, demande au
    superviseur s'il doit intervenir. L'intervention est un appel LLM **séparé** dont
@@ -342,9 +350,16 @@ zéro sur des lignes qu'il est censé mesurer.
    action jouée (jeu, niveau, index, événement) et une par événement (continuation,
    dépassement absorbé, intervention du superviseur, borne franchie).
 
-Ces trois branchements sont **optionnels par construction** : sans workspace ni
-superviseur, la boucle se comporte exactement comme avant, ce qui préserve les preuves
-qui l'éprouvent sur un environnement factice.
+4. **Lignée** (H9.2). Chaque complétion de niveau propose une version à la lignée :
+   évidence = le bilan courant, notes = `GUIDE.md` et `WORKING.md`. La politique
+   « correct ∧ ≥ meilleur » décide seule ; une version refusée n'est pas un incident.
+   Une version committée est signalée au superviseur, dont le détecteur de stagnation
+   compte les actions écoulées « sans complétion **ni** entrée de lignée » (H10.2) —
+   sans ce branchement, la seconde moitié de sa condition serait toujours vraie.
+
+Ces quatre branchements sont **optionnels par construction** : sans workspace, sans
+superviseur et sans lignée, la boucle se comporte exactement comme avant, ce qui
+préserve les preuves qui l'éprouvent sur un environnement factice.
 
 ## H9. Lignée et fonction de score
 
