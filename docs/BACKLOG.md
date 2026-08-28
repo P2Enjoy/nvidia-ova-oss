@@ -289,7 +289,7 @@ outils d'action, bornes d'actions, `think:false` par défaut (H12).
   configuration ; H8.3 décrivait par ailleurs une borne « par niveau et par jeu »
   sans les distinguer. Deux variables désormais, documentées aux trois endroits.
 
-## U14 — Lignée et fonction de score `[ ]`
+## U14 — Lignée et fonction de score `[x]`
 
 `@spec` H9. Dépôt git jetable sous `runs/<id>/lineage/`, politique « correct ∧ ≥
 meilleur », `Scorer` branchable (scorer de test + scorer ARC H9.2), score dans le
@@ -299,6 +299,17 @@ message de commit.
   refusée, égalité committée ; isolation — le `.git` de lignée n'est pas celui du
   projet, test qui le vérifie par chemin) ; intégration : trois progressions
   simulées → trois commits de lignée avec scores exacts.
+- **Livré et intégralement vérifié le 2026-08-28.** `avo.lineage` : dépôt git jetable
+  par run, **`--git-dir` et `--work-tree` explicites** pour que git ne remonte jamais
+  l'arborescence, garde `LigneeNonIsolee` vérifiée **avant toute écriture**, politique
+  « correct ∧ ≥ meilleur » (amélioration et égalité committées, régression refusée
+  sans déplacer le meilleur score), `ScorerARC` lexicographique
+  `(niveaux, −actions)` et `ScorerConstant` pour les tests. Preuves : 19 tests
+  unitaires et 7 d'intégration, dont un qui compare le `git status` du **dépôt du
+  projet** avant et après trois propositions. Campagne : **297 tests**, lint, format,
+  mypy strict (57 fichiers).
+- `git` devient la seule dépendance système du harnais, ajoutée aux deux images ;
+  le principe « zéro dépendance Python d'exécution » reste tenu (H2.1).
 
 ## U15 — Superviseur `[ ]`
 

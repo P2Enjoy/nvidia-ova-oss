@@ -403,3 +403,21 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 54 fichiers. **271 tests verts** — 213 unitaires (dont 18 pour cette unité, 94 sous-tests : cycle nominal, embranchements, table close et exhaustive, absence de cul-de-sac, et surtout **aucune règle de jeu dans les prompts**, vérifiée contre une liste de termes interdits) et 58 d'intégration (dont 8 nouveaux faisant tourner la boucle en HTTP réel contre le rejeu, sur un environnement factice en mémoire).
 
 **Où reprendre.** U14 — lignée et fonction de score : dépôt git jetable sous `runs/<id>/lineage/`, politique « correct ∧ ≥ meilleur », `Scorer` branchable.
+
+---
+
+## 2026-08-28 (suite 9) — Session planifiée n° 12 : U14 livré, lignée de solutions isolée
+
+**Unité.** U14 — lignée et fonction de score. Pile saine, seed vérifié, registre sans entrée ouverte.
+
+**Livré.** `avo.lineage` : dépôt git **jetable et dédié** par run sous `runs/<id>/lineage/`, politique « correct ∧ ≥ meilleur » du papier AVO, `ScorerARC` lexicographique `(niveaux complétés, −actions cumulées)` et `ScorerConstant` déterministe pour éprouver la boucle. Chaque version validée est committée avec son score dans le message, et l'état de connaissance du moment — notes et méta — est ce qui est versionné.
+
+**Décision : l'isolation ne repose pas sur le répertoire courant.** Toute commande git est lancée avec `--git-dir` et `--work-tree` explicites, si bien que git ne remonte jamais l'arborescence. Sans cela, un `git init` raté ferait committer dans le **dépôt du projet** : c'est le seul défaut de ce module qui serait vraiment grave, et c'est celui qui est éprouvé le plus directement — un test compare le `git status` du dépôt du projet avant et après trois propositions.
+
+**Défaut trouvé par la preuve d'isolation.** Le test « sans dépôt dédié, toute commande est refusée » a rougi sur une `FileNotFoundError` au lieu de la garde attendue : j'écrivais les notes **avant** de vérifier l'isolation. Sur une lignée non isolée, rien ne doit être écrit nulle part, pas même un fichier de notes. La garde est désormais la première instruction de `proposer`.
+
+**Une dépendance système assumée.** `git` est ajouté aux deux images. C'est la seule, et elle ne contredit pas le principe « zéro dépendance d'exécution » de H2.1, qui porte sur les paquets Python : le harnais reste installable sans rien compiler. H2.1 le dit désormais explicitement.
+
+**Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 57 fichiers. **297 tests verts** — 232 unitaires (dont 19 pour cette unité : amélioration, égalité et régression, refus d'une version incorrecte même très bien scorée, meilleur score non déplacé par un refus, isolation par chemin absolu du `--git-dir`, score exact dans le message) et 65 d'intégration (dont 7 nouveaux : la lignée ouverte là où elle vivra réellement, trois progressions donnant trois versions aux scores exacts, une régression intercalée refusée, un run sans progression ne committant rien, et le dépôt du projet vérifié intact).
+
+**Où reprendre.** U15 — superviseur : détection de stagnation et de cycles improductifs, appel LLM séparé, injection `[SUPERVISEUR]` append-only, cooldown. Ce sera la dernière unité du lot D.

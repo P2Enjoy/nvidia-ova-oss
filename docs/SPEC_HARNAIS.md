@@ -42,6 +42,8 @@ que la bibliothèque standard (`urllib`, `http.server`, `json`, `subprocess`, `h
 `logging`). Motif : CLAUDE.md §19 (une fonction native suffit — HTTP/JSON sans
 streaming), surface d'audit minimale, image Docker triviale.
 
+**Une seule dépendance système** : `git`, employé par la lignée de solutions (§H9.3) qui crée un dépôt jetable par run. Ce n'est pas une dépendance Python : le harnais reste installable sans rien compiler, et les deux images l'embarquent.
+
 **Outillage de développement : dans Docker, jamais sur l'hôte** (règle du responsable,
 2026-08-27). `pytest`, `ruff` et `mypy` sont installés dans l'image de développement
 (`Dockerfile`) et nulle part ailleurs ; aucune commande du dépôt n'installe quoi que ce

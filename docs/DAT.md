@@ -21,7 +21,7 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 | `avo.memory` | H6 | workspace de run (manifeste, métriques, transcripts, rapport) et notes persistantes GUIDE/WORKING |
 | `avo.tools` | H7 | registre d'outils, exposition filtrée par état, routage, garde par tour |
 | `avo.loop` | H8, H12 | machine d'états P→I→E→B close, prompts de phase versionnés, contrat `Environnement`, bornes d'actions |
-| `avo.lineage` | H9 | lignée git jetable par run, politique correct ∧ ≥ meilleur, `Scorer` |
+| `avo.lineage` | H9 | lignée git jetable et isolée par run, politique correct ∧ ≥ meilleur, `Scorer` branchable |
 | `avo.supervisor` | H10 | détection de stagnation, intervention conditionnelle |
 | `avo.runlog` | H11 | logs JSON corrélés, filtre de masquage des secrets |
 | `avo.arc` | A2, A4–A7 | client API ARC, rendu texte, interface de tâche, RHAE, campagne |

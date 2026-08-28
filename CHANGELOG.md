@@ -36,6 +36,15 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U14 : lignée de solutions et fonction de score
+
+- `avo.lineage` : dépôt git jetable et dédié par run, portant la suite des versions validées selon la politique du papier AVO — une version n'entre dans la lignée que si elle est correcte **et** au moins aussi bonne que la meilleure déjà committée. Une régression reste dans la trajectoire interne de recherche.
+- **Isolation absolue du dépôt du projet** : toute commande git emploie un répertoire de dépôt et un arbre de travail explicites, si bien que git ne remonte jamais l'arborescence. Un test compare le statut du dépôt du projet avant et après plusieurs propositions.
+- Défaut corrigé par la preuve : la garde d'isolation s'exécutait après l'écriture des notes. Sur une lignée non isolée, rien ne doit être écrit nulle part.
+- Fonction de score branchable : score lexicographique `(niveaux complétés, −actions)` pour ARC, où progresser prime et où, à progression égale, moins d'actions vaut mieux ; scorer déterministe pour éprouver la boucle.
+- `git` devient la seule dépendance système, ajoutée aux deux images. Le principe « zéro dépendance Python d'exécution » reste tenu.
+- Preuves : 297 tests verts, dont trois progressions donnant trois versions aux scores exacts et une régression intercalée refusée.
+
 ### 2026-08-28 — U13 : boucle agent Planning → Implementation → Evaluation → Bug-Fixing
 
 - `avo.loop` : machine d'états **close** — tout événement impossible dans l'état courant lève en nommant les événements admis, plutôt que de rester sur place et de produire un run qui tourne sans avancer. La machine est du code, le contenu des phases est du prompt : une transition qui dépendrait de l'interprétation d'un texte libre serait irreproductible.

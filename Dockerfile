@@ -20,7 +20,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Le harnais n'a AUCUNE dépendance d'exécution (§H2.1) : rien à installer ici.
+# `git` est la SEULE dépendance système du harnais : la lignée de solutions est un
+# dépôt git jetable créé par chaque run (§H9.3). Ce n'est pas une dépendance Python,
+# le principe « zéro dépendance d'exécution » (§H2.1) reste tenu.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends git \
+ && rm -rf /var/lib/apt/lists/*
+
 COPY pyproject.toml ./
 COPY src/ ./src/
 
