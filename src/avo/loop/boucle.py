@@ -2,7 +2,10 @@
 
 @spec docs/BACKLOG.md U13 — Boucle agent P→I→E→B
 @spec docs/SPEC_HARNAIS.md §H8.1 (états), §H8.2 (un tour), §H8.3 (bornes),
+      §H8.4 (continuation, supervision, métriques, lignée branchées sur la boucle),
       §H7.1 (outils exposés selon l'état), §H5.1 (historique append-only),
+      §H5.3 et §H5.4 (continuation préventive et réactive), §H9.2 (lignée),
+      §H10.3 (intervention du superviseur), §H11.2 (métriques),
       §H12 (politique de raisonnement portée par la configuration)
 @spec docs/SPEC_ARCAGI3.md §A5.1 (direct-interaction : aucune règle de jeu fournie)
 
@@ -15,16 +18,19 @@ s'y glisser.
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from avo.config import Config
-from avo.context.contexte import Contexte
-from avo.llm.client import LLMClient
+from avo.context.contexte import INVITATION_CONTINUATION, Contexte
+from avo.lineage import Lignee
+from avo.llm.client import ChatResult, ContextOverflow, LLMClient
 from avo.loop import prompts
 from avo.loop.etats import Evenement, Phase, suivant
 from avo.memory.notes import Notes
+from avo.memory.workspace import Workspace
+from avo.supervisor import Superviseur
 from avo.tools.registre import RegistreOutils
 
 _journal = logging.getLogger("avo.boucle")
@@ -95,6 +101,13 @@ class Bilan:
     niveaux_completes: int = 0
     game_overs: int = 0
     arret: str = "tours_epuises"
+    #: Événements de run, exigés par le rapport de campagne (§A7.3).
+    continuations: int = 0
+    depassements: int = 0
+    interventions: int = 0
+    versions_committees: int = 0
+    tokens_prompt: int = 0
+    tokens_generes: int = 0
 
     def resume(self) -> dict[str, Any]:
         return {
@@ -104,6 +117,12 @@ class Bilan:
             "niveaux_completes": self.niveaux_completes,
             "game_overs": self.game_overs,
             "arret": self.arret,
+            "continuations": self.continuations,
+            "depassements": self.depassements,
+            "interventions": self.interventions,
+            "versions_committees": self.versions_committees,
+            "tokens_prompt": self.tokens_prompt,
+            "tokens_generes": self.tokens_generes,
             "prompts_version": prompts.VERSION,
         }
 
@@ -119,13 +138,27 @@ class BoucleAgent:
         environnement: Environnement,
         notes: Notes,
         contexte: Contexte | None = None,
+        workspace: Workspace | None = None,
+        superviseur: Superviseur | None = None,
+        lignee: Lignee | None = None,
+        jeu: str = "",
     ) -> None:
+        """Les quatre derniers paramètres sont les branchements de §H8.4.
+
+        Ils sont optionnels **par construction** : sans eux, la boucle se comporte
+        exactement comme avant, ce qui préserve les preuves qui l'éprouvent sur un
+        environnement factice, sans workspace ni services.
+        """
         self.config = config
         self.client = client
         self.registre = registre
         self.environnement = environnement
         self.notes = notes
         self.contexte = contexte or Contexte(config=config, systeme=prompts.SYSTEME)
+        self.workspace = workspace
+        self.superviseur = superviseur
+        self.lignee = lignee
+        self.jeu = jeu
         self.phase = Phase.PLANNING
         self.bilan = Bilan()
 
@@ -144,14 +177,144 @@ class BoucleAgent:
 
     # -------------------------------------------------------------------- phases
     def _interroger(self, phase: Phase, invite: str) -> Any:
-        """Un échange avec le modèle pour une phase, outils filtrés par l'état."""
+        """Un échange avec le modèle pour une phase, outils filtrés par l'état (§H8.4).
+
+        La continuation encadre l'appel des deux côtés : préventive si le seuil est
+        déjà franchi, réactive si le serveur refuse le contexte. Dans le second cas
+        aucun appel n'est refait sur le segment plein (§H5.4) : on n'y retourne jamais.
+        """
+        if self.contexte.seuil_atteint():
+            self._continuer(preventive=True)
         self.contexte.ajouter_observation(invite)
+        try:
+            resultat = self._appeler(phase)
+        except ContextOverflow as erreur:
+            self.contexte.absorber_depassement(erreur)
+            self.bilan.depassements += 1
+            self._metrique("depassement", phase=phase.value, plafond=erreur.max_context_tokens)
+            self._continuer(preventive=False)
+            self.contexte.ajouter_observation(invite)
+            resultat = self._appeler(phase)
+        self.contexte.enregistrer_reponse(resultat)
+        return resultat
+
+    def _appeler(self, phase: Phase) -> ChatResult:
+        """Un appel au modèle, mesuré (§H11.2). Les compteurs viennent du serveur."""
         resultat = self.client.chat(
             self.contexte.transcript.pour_api(),
             self.registre.schemas(OUTILS_PAR_PHASE[phase]),
         )
-        self.contexte.enregistrer_reponse(resultat)
+        self.bilan.tokens_prompt += resultat.prompt_eval_count
+        self.bilan.tokens_generes += resultat.eval_count
+        self._metrique(
+            "llm",
+            phase=phase.value,
+            tokens_prompt=resultat.prompt_eval_count,
+            tokens_generes=resultat.eval_count,
+            duree_ms=resultat.total_duration_ms,
+            tronquee=resultat.tronquee,
+            segment=self.contexte.segment,
+        )
         return resultat
+
+    # --------------------------------------------------------------- H8.4
+    def _metrique(self, type_evenement: str, **champs: Any) -> None:
+        """Écrit une métrique si un workspace est branché (§H11.2)."""
+        if self.workspace is not None:
+            self.workspace.metrique(type_evenement, jeu=self.jeu, **champs)
+
+    def _etat_de_continuation(self) -> str:
+        """État écrit PAR LE HARNAIS, pour le chemin réactif (§H5.4, §H8.4).
+
+        Le segment vient d'être refusé : lui demander quoi que ce soit le referait
+        refuser. Ce résumé est donc factuel — ce que la boucle sait d'elle-même — et
+        ne coûte aucun appel.
+        """
+        return (
+            "Reprise après un refus de contexte : l'historique de conversation a été "
+            "archivé sans pouvoir être résumé par toi. Ce que le harnais sait : "
+            f"phase {self.phase.value}, tour {len(self.bilan.tours) + 1}, "
+            f"{self.bilan.actions_jeu} actions jouées dont "
+            f"{self.bilan.actions_niveau} sur le niveau courant, "
+            f"{self.bilan.niveaux_completes} niveau(x) complété(s). "
+            "Tes notes ci-dessous sont intactes : elles sont ta mémoire."
+        )
+
+    def _continuer(self, preventive: bool) -> None:
+        """Ouvre un segment frais et archive celui qui se ferme (§H5.3, §H8.4)."""
+        if preventive:
+            self.contexte.ajouter_observation(INVITATION_CONTINUATION)
+            etat = self._appeler(self.phase).content.strip()
+            self.contexte.transcript = self.contexte.transcript.assistant(etat)
+        else:
+            etat = self._etat_de_continuation()
+        self.contexte.continuer(
+            etat, self.notes.pour_segment_frais(), self.environnement.observation()
+        )
+        self.bilan.continuations += 1
+        self._archiver(self.contexte.segments_archives[-1])
+        self._metrique(
+            "continuation",
+            preventive=preventive,
+            segment=self.contexte.segment,
+            caracteres_etat=len(etat),
+        )
+
+    def _archiver(self, transcript: Any) -> None:
+        """Écrit un segment intégral dans `transcripts/` (§H11.3)."""
+        if self.workspace is None:
+            return
+        numero = self.workspace.nouveau_segment()
+        for message in transcript.pour_api():
+            self.workspace.ajouter_au_transcript(numero, message)
+
+    def _superviser(self, tour: Tour, observation: str) -> None:
+        """Tient la trajectoire et laisse le superviseur décider (§H10.3, §H8.4).
+
+        La boucle n'interprète pas le diagnostic : elle l'ajoute en fin d'historique,
+        et le tour suivant s'y confronte. Le superviseur ne joue jamais d'action.
+        """
+        if self.superviseur is None or tour.action is None:
+            return
+        self.superviseur.trajectoire.enregistrer(
+            action=tour.action,
+            observation=observation,
+            niveau_complete=tour.evenement is Evenement.NIVEAU_COMPLETE,
+            bug_fixing=tour.evenement in (Evenement.CONTRADICTION, Evenement.GAME_OVER),
+        )
+        motif = self.superviseur.doit_intervenir()
+        if motif is None:
+            return
+        self.contexte.transcript, intervention = self.superviseur.intervenir(
+            self.contexte.transcript,
+            motif,
+            self.notes.pour_segment_frais(),
+            observation,
+        )
+        self.bilan.interventions += 1
+        self._metrique("superviseur", motif=motif, action=intervention.action_declencheuse)
+
+    def _proposer_a_la_lignee(self) -> None:
+        """Une complétion de niveau propose une version (§H9.2, §H8.4).
+
+        La politique « correct ∧ ≥ meilleur » décide seule : un refus n'est pas un
+        incident, c'est le mécanisme qui fonctionne.
+        """
+        if self.lignee is None:
+            return
+        decision = self.lignee.proposer(
+            self.bilan,
+            self.notes.toutes(),
+            {"jeu": self.jeu, "tours": len(self.bilan.tours)},
+        )
+        self._metrique(
+            "lignee", acceptee=decision.acceptee, motif=decision.motif, score=decision.score
+        )
+        if not decision.acceptee:
+            return
+        self.bilan.versions_committees += 1
+        if self.superviseur is not None:
+            self.superviseur.trajectoire.signaler_version_committee()
 
     def _executer_outils(self, resultat: Any, tour: Tour) -> None:
         if not resultat.tool_calls:
@@ -214,19 +377,39 @@ class BoucleAgent:
             self._executer_outils(correction, tour)
             self.phase = suivant(self.phase, Evenement.REVISION_FAITE)
 
+        # --- Branchements de §H8.4, dans cet ordre : une version committée est un
+        # progrès que le superviseur doit connaître avant de juger la trajectoire.
+        if evenement is Evenement.NIVEAU_COMPLETE:
+            self._proposer_a_la_lignee()
+        self._superviser(tour, issue.observation)
+
         tour.phase_finale = self.phase
         return tour
 
-    def executer(self, tours_max: int) -> Bilan:
-        """Enchaîne les tours jusqu'à une borne ou l'épuisement du quota (§H8.3)."""
+    def executer(
+        self, tours_max: int, arret_anticipe: Callable[[], str | None] | None = None
+    ) -> Bilan:
+        """Enchaîne les tours jusqu'à une borne ou l'épuisement du quota (§H8.3).
+
+        `arret_anticipe` est consulté **entre deux tours** : c'est ainsi que la
+        campagne fait respecter ses budgets de temps et de tokens sans jamais
+        interrompre une opération en vol (§A7.4, qui concilie ce besoin avec §H8.3).
+        """
         for numero in range(1, tours_max + 1):
             motif = self._borne_franchie()
+            if motif is None and arret_anticipe is not None:
+                motif = arret_anticipe()
             if motif is not None:
-                self.bilan.arret = motif
-                _journal.info("arrêt sur borne", extra={"motif": motif, "tour": numero})
-                return self.bilan
+                return self._clore(motif, numero)
             self.bilan.tours.append(self.jouer_tour(numero))
-        self.bilan.arret = "tours_epuises"
+        return self._clore("tours_epuises", tours_max)
+
+    def _clore(self, motif: str, tour: int) -> Bilan:
+        """Arrête proprement : le motif est nommé, le dernier segment archivé."""
+        self.bilan.arret = motif
+        _journal.info("fin d'exécution", extra={"motif": motif, "tour": tour})
+        self._metrique("arret", motif=motif, tour=tour, **self.bilan.resume())
+        self._archiver(self.contexte.transcript)
         return self.bilan
 
     # ----------------------------------------------------------------- internes
@@ -271,6 +454,14 @@ class BoucleAgent:
             return None
         self.bilan.actions_niveau += 1
         self.bilan.actions_jeu += 1
+        self._metrique(
+            "action",
+            action=appel.nom,
+            tour=tour.numero,
+            actions_jeu=self.bilan.actions_jeu,
+            actions_niveau=self.bilan.actions_niveau,
+            evenement=issue.evenement.value,
+        )
         return issue
 
     def _evenement_apres_evaluation(self, issue: Issue, evaluation: Any) -> Evenement:
