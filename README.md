@@ -57,6 +57,22 @@ Contrat : `docs/SPEC_HARNAIS.md` §H2.3. Chaque cible lance un **conteneur jetab
 | `make record-llm` / `make test-int-live` | **[LIVE]** enregistrement et détection de dérive (exigent `.env`) |
 | `make smoke-live` | fumée manuelle contre l'endpoint réel (exige `.env`, hors campagne) |
 | `make run-arc` | campagne ARC (replay par défaut ; live sous garde d'accord explicite) |
+| `make resume RUN_ID=<id>` | reprend un run sans rejouer les jeux déjà terminés |
+
+**Lancer une campagne** (la pile doit être debout) :
+
+```sh
+make up
+make run-arc ARGS="--games cible-synthetique --tours-max 40"
+make resume RUN_ID=<identifiant affiché par la commande précédente>
+```
+
+La commande écrit tout dans `runs/<run_id>/` : `report.md` (score, coûts, événements,
+comparaison aux références publiées et **limites**), `campagne.json` (état de reprise),
+`metrics.jsonl`, les transcripts par segment, les frames typées et un dépôt de lignée
+par jeu. En `--mode live`, quatre plafonds sont obligatoires et l'accord de publication
+doit être donné explicitement par `--j-autorise-la-publication` : jouer via l'API
+officielle enregistre un scorecard sur le compte du responsable.
 
 **Lancer la pile locale** (aucun secret requis) :
 

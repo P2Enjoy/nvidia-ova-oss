@@ -17,6 +17,8 @@ IMAGE ?= avo-dev
 IMAGE_PROD ?= avo
 PY ?= python3
 PYTEST_ARGS ?=
+ARGS ?=
+RUN_ID ?=
 
 DOCKER := $(shell command -v docker 2>/dev/null)
 UIDGID := $(shell id -u):$(shell id -g)
@@ -55,7 +57,7 @@ RUN := $(DOCKER) run --rm -v "$(CURDIR)":/app -w /app $(USER_FLAG) \
 endif
 
 .DEFAULT_GOAL := aide
-.PHONY: aide image install lint typecheck test-unit test-int test-e2e check build up down ps logs smoke-pile seed smoke-live run-arc record-llm test-int-live _exige-env _hote-seulement docker-check
+.PHONY: aide image install lint typecheck test-unit test-int test-e2e check build up down ps logs smoke-pile seed smoke-live run-arc resume record-llm test-int-live _exige-env _hote-seulement docker-check
 
 aide:
 	@echo "Cibles du dépôt (contrat : docs/SPEC_HARNAIS.md §H2.3) — tout tourne dans Docker"
@@ -167,7 +169,7 @@ ifdef AVO_NO_DOCKER
 endif
 	@echo "hors campagne ([LIVE], exigent .env) : record-llm, test-int-live, smoke-live"
 	@echo "hors campagne (pilotent Docker, hôte) : build, up, down, smoke-pile"
-	@echo "sans objet à ce stade : run-arc (U23)"
+	@echo "hors campagne (exigent la pile debout) : run-arc, resume"
 	@echo "─────────────────────────────────────"
 
 # Image de PRODUCTION : le paquet seul, sans outillage de test (§H2.4).
@@ -246,6 +248,17 @@ ifndef AVO_IN_CONTAINER
 	fi
 endif
 
+# `run-arc` et `resume` parlent à la pile compose par ses ports publiés sur
+# l'hôte : le conteneur doit donc partager le réseau de l'hôte, sinon 127.0.0.1
+# désigne le conteneur lui-même et rien ne répond. ARGS passe les options.
+RUN_PILE := $(DOCKER) run --rm --network host -v "$(CURDIR)":/app -w /app $(USER_FLAG) \
+            -e PYTHONPATH=/app/src -e HOME=/tmp -e AVO_RUNS_DIR=/app/runs $(IMAGE)
+
 run-arc:
 	@$(MAKE) --no-print-directory docker-check
-	$(RUN) python -m avo run-arc
+	$(RUN_PILE) python -m avo run-arc $(ARGS)
+
+resume:
+	@if [ -z "$(RUN_ID)" ]; then echo "usage : make resume RUN_ID=<identifiant>"; exit 2; fi
+	@$(MAKE) --no-print-directory docker-check
+	$(RUN_PILE) python -m avo resume $(RUN_ID) $(ARGS)

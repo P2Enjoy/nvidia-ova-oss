@@ -435,9 +435,8 @@ réconciliation A5.3, branchement complet sur la boucle U13 et le scorer U14.
 
 ## U21 — E2E : partie complète sur rejeu local `[ ]`
 
-> **Ordre : à prendre APRÈS U23** (décidé le 2026-08-28, journal). Sa preuve passe par
-> la CLI réelle, et la seule commande qui joue une partie est `run-arc`, livrée par
-> U23 : prise dans l'ordre des numéros, cette unité n'aurait rien à exécuter.
+> **Ordre : à prendre APRÈS U23** (décidé le 2026-08-28, journal) — condition
+> désormais SATISFAITE : `run-arc` est livrée. Cette unité est la prochaine.
 
 `@spec` A8.3 (+ H13.2). Scénarios E2E par la CLI réelle sur pile compose : victoire
 3 niveaux avec RHAE exact attendu, et scénario échec (game over → RESET → victoire) ;
@@ -459,10 +458,7 @@ responsable du 2026-08-27 pour l'usage de l'API ; périmètre minimal).
 
 ## Lot F — Campagne
 
-## U23 — Runner de campagne et rapport `[~]`
-
-> **Ordre : à prendre AVANT U21** (décidé le 2026-08-28, journal). U21 éprouve par la
-> CLI ce que cette unité livre.
+## U23 — Runner de campagne et rapport `[x]`
 
 `@spec` A7 (+ H13.2, H8.4). `run-arc` multi-jeux, plafonds obligatoires en live, garde
 d'accord A7.2, reprise sans rejouer les jeux terminés, `report.md` complet A7.3.
@@ -478,8 +474,17 @@ d'accord A7.2, reprise sans rejouer les jeux terminés, `report.md` complet A7.3
 - Contrat d'implémentation écrit et committé avant le code (A7.4) : surface CLI,
   cohabitation des budgets de campagne avec H8.3, reprise de granularité **jeu** et son
   motif, structures et refus explicites.
-- Reste à livrer : les trois branchements de H8.4, `avo.arc.campagne`,
-  `avo.arc.rapport`, la sous-commande `run-arc`, `resume`, et les preuves.
+- Fait : les quatre branchements de H8.4 sur `avo.loop.boucle` (continuation
+  préventive et réactive, supervision, métriques, lignée), `avo.arc.campagne`
+  (plafonds, garde d'accord, état de reprise, un client ARC et une lignée par jeu),
+  `avo.arc.rapport` (sept sections A7.3), et les sous-commandes `run-arc` et `resume`.
+  Cibles `make run-arc` / `make resume` corrigées : elles partagent le réseau de
+  l'hôte, sans quoi elles ne joignaient pas la pile.
+  Preuves : `tests/unit/test_campagne.py` (16), `tests/unit/test_rapport.py` (15),
+  `tests/integration/test_campagne_sur_rejeu.py` (8, dont deux passant par `main()`).
+  Vérification opérateur MASTER_PLAN §5 exécutée : campagne lancée par la CLI réelle,
+  rapport lu, arborescence du run observée, et les trois refus vus au terminal.
+  Campagne complète verte le 2026-08-28 : 550 tests, mypy strict sur 85 fichiers.
 
 ## U24 — Campagne pilote `[ ]` **[LIVE]**
 

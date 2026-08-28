@@ -584,4 +584,14 @@ Deux gardes exécutables remplacent la promesse : un balayage statique des const
 
 **Décision : les budgets de campagne ne contredisent pas H8.3.** H8.3 interdit de borner du temps d'horloge *dans* la boucle ; les budgets de temps et de tokens de A7.1 sont des conditions d'arrêt *de campagne*, évaluées entre deux tours, qui closent le jeu proprement et nomment leur motif. Le point est écrit en A7.4 pour qu'il ne soit pas relu comme une contradiction.
 
-**Où reprendre.** U23 : le contrat est écrit (A7.4, H8.4) ; restent les trois branchements de la boucle, `avo.arc.campagne`, `avo.arc.rapport`, les sous-commandes `run-arc` et `resume`, et les preuves.
+**Livré.** Les quatre branchements de H8.4 sur la boucle, puis `avo.arc.campagne` (plafonds, garde d'accord, état de reprise réécrit après chaque jeu, un client ARC et une lignée par jeu), `avo.arc.rapport` (les sept sections de A7.3) et les sous-commandes `run-arc` et `resume`. La table des commandes non livrées de la CLI est désormais vide.
+
+**Le rapport est un invariant du runner, pas un devoir de l'appelant.** `executer_campagne` écrit `report.md` avant de rendre son résultat. Laisser cette écriture à la CLI aurait fait qu'une campagne lancée autrement — un test, un futur ordonnanceur — se terminerait sans laisser de compte rendu.
+
+**Deux cibles du Makefile étaient fausses.** `make run-arc` lançait le conteneur sans réseau d'hôte : à l'intérieur, `127.0.0.1:8765` désigne le conteneur lui-même et rien ne répond. Les deux cibles partagent désormais le réseau de l'hôte et acceptent `ARGS`. `make resume RUN_ID=<id>` est ajoutée.
+
+**Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 85 fichiers. **550 tests verts** — 427 unitaires (dont 31 pour cette unité) et 123 d'intégration (dont 8 nouveaux). Les plus significatifs : une mini-campagne réelle contre les deux rejeux en HTTP dont on relit ensuite les artefacts sur disque — rapport, frames typées, dépôt de lignée isolé, transcript archivé, métriques ; deux preuves passant par `main()` ; et la reprise prouvée **par la négative**, avec un client d'inférence qui lève s'il est appelé — donc aucun jeu terminé n'est rejoué.
+
+**Vérification opérateur (MASTER_PLAN §5), exécutée et observée.** Campagne lancée par la CLI réelle sur la pile de rejeu : sortie terminale conforme (`0/3 niveaux, 4 actions, RHAE 0.00`), `report.md` relu en entier — le tableau par niveau donne bien hₗ, aₗ, cₗ et wₗ, les coûts comptent 13 appels au modèle, et la section des limites dit que ce score n'est **pas comparable** aux références publiées. Les trois refus ont été vus au terminal : live sans accord, live sans budgets, reprise d'un run inexistant.
+
+**Où reprendre.** U21 — E2E : partie complète sur rejeu local. Sa condition d'ordre est désormais satisfaite, `run-arc` étant livrée. Deux scénarios par la CLI réelle sur la pile compose : victoire 3 niveaux avec le RHAE exact attendu (100.00), et échec (game over → RESET → victoire) ; artefacts vérifiés. Le décor à monter : une cassette de campagne seedée, puisque `llm-replay` sert un répertoire fixe.

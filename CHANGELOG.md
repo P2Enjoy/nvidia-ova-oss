@@ -36,6 +36,16 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U23 : campagnes ARC-AGI-3, de la commande au rapport
+
+- `python -m avo run-arc` : la commande qui joue réellement. Elle enchaîne les jeux, monte l'agent complet sur chacun — interface, outils d'inspection et de notes, boucle, superviseur, lignée —, mesure le RHAE depuis l'historique typé et les baselines du serveur, et écrit tout dans `runs/<id>/`.
+- **Quatre mécanismes livrés mais jamais appelés sont enfin branchés sur la boucle** : la continuation en contexte frais (préventive, qui demande son état à l'agent ; réactive sur refus de contexte, écrite par le harnais puisque le segment refusé ne répond plus), les interventions du superviseur, les métriques par appel, par action et par événement, et la proposition d'une version de lignée à chaque niveau complété. Sans eux, un rapport aurait annoncé « 0 continuation, 0 intervention » — vrai et trompeur à la fois, puisque aucune ne pouvait survenir.
+- **Garde d'accord** : une campagne live sans `--j-autorise-la-publication` est refusée, et le refus dit pourquoi — jouer enregistre un scorecard sur votre compte. Les quatre plafonds (actions par niveau, actions par jeu, temps par jeu, tokens par jeu) sont obligatoires en live ; leur absence est un refus qui les nomme. L'accord est **persisté avec la campagne**, de sorte qu'une reprise le relit au lieu de se l'accorder toute seule.
+- **Reprise** : `python -m avo resume <run_id>` repart d'un run interrompu sans rejouer les jeux terminés. La reprise est de granularité **jeu** : reprendre une partie en cours supposerait de retrouver la frame courante, qu'aucune requête ne rend gratuitement, et le score mêlerait deux tentatives.
+- **Rapport** `report.md` : tableau par jeu, détail par niveau qui rend le RHAE vérifiable à la main, coûts, événements, comparaison aux références publiées — et une section de **limites** qui dit ce que la campagne n'établit pas, à commencer par le fait qu'un score obtenu en rejeu ne se compare pas à un score ARC-AGI-3.
+- Cibles `make run-arc` et `make resume` corrigées : elles partagent le réseau de l'hôte, sans quoi elles ne joignaient jamais la pile.
+- Preuves : 550 tests verts, dont une mini-campagne réelle dont les artefacts sont relus sur disque, deux preuves passant par le point d'entrée réel, et la reprise démontrée par la négative — elle s'exécute avec un client d'inférence qui lève s'il est appelé.
+
 ### 2026-08-28 — U20 : RHAE, l'efficacité d'action relative à l'humain
 
 - `avo.arc.rhae` : la mesure officielle du benchmark, implémentée d'après la définition Tycho §3.1. Efficacité d'un niveau plafonnée à 115, niveaux tardifs pondérés plus lourd que les premiers, et score de jeu pris comme **minimum** entre l'efficacité pondérée et un plafond par complétion — de sorte qu'aller très vite sur un niveau ne compense jamais les niveaux non terminés.
