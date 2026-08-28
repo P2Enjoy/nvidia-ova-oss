@@ -171,6 +171,10 @@ def niveaux_joues(entrees: Sequence[EntreeJouee], baselines: Sequence[int]) -> l
         origine = entree.niveau
         score_atteint = max(score_atteint, entree.score)
 
+    # Seuls les niveaux qui ont réellement consommé une action sont bornés : après la
+    # victoire du dernier niveau, l'API peut avancer son compteur à L+1 sans qu'aucune
+    # action ne soit jouable depuis là. Refuser ce numéro rendrait une partie gagnée
+    # incalculable ; refuser une ACTION imputée à L+1, en revanche, reste juste.
     for numero in sorted(actions):
         if not 1 <= numero <= len(baselines):
             raise RhaeInvalide(
