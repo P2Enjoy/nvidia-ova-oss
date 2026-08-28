@@ -25,7 +25,7 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 | `avo.supervisor` | H10 | détecteurs mesurés, intervention par appel LLM séparé, cooldown ; n'agit jamais |
 | `avo.transport` | H4.5, A2.1 | politique de retry partagée par les deux clients |
 | `avo.runlog` | H11 | logs JSON corrélés, filtre de masquage des secrets |
-| `avo.arc` | A2, A4–A7 | client API ARC (typage des frames, garde anti-publication) ; rendu, interface, RHAE et campagne à venir |
+| `avo.arc` | A2, A4–A7 | client API ARC, rendu texte canonique et mémoire de frames sans perte ; interface, RHAE et campagne à venir |
 | `mocks/llm_replay` | H4.7 | rejeu d'échanges enregistrés sur le vrai endpoint, injection de fautes |
 | `mocks/arc_replay` | A3 | contrat ARC local (port 8765), jeu `cible` en forme fermée, rejeu d'épisodes |
 

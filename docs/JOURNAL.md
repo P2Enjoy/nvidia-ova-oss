@@ -483,3 +483,25 @@ Le contrat servi en rejeu est donc toujours d'origine mesurée. Le composant est
 **Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 70 fichiers. **393 tests verts** — 299 unitaires (dont 22 pour cette unité) et 94 d'intégration (dont 11 nouveaux). Le plus important : **une partie complète menée par le client contre le serveur de U16**, en HTTP, dépensant exactement la somme des baselines. C'est la première fois que les deux côtés du contrat de fil se rencontrent ; s'ils divergeaient, ce test rougirait.
 
 **Où reprendre.** U18 — rendu texte, inspection et mémoire de frames : rendu canonique 64×64, coordonnées (row, col), `inspect`, `read_pixels`, `diff`.
+
+---
+
+## 2026-08-28 (suite 13) — Session planifiée n° 16 : U18 livré, rendu texte et mémoire de frames
+
+**Unité.** U18 — rendu texte, inspection, mémoire de frames. Pile saine, seed vérifié, registre sans entrée ouverte.
+
+**Livré.** `avo.arc.rendu` : rendu canonique d'une grille 64×64, ligne d'état, et l'analyse inverse. `avo.arc.memoire` : conservation sans perte de toute frame reçue, `inspect` avec marges d'index, `read_pixels`, `diff` borné, et les schémas d'outil correspondants.
+
+**Décision : le rendu n'ajoute aucune interprétation.** Pas de nom d'objet, pas de mise en évidence, pas de résumé — la grille exacte et rien d'autre, conformément à la configuration AVO du billet NVIDIA. Souffler « voici la cible » reviendrait à donner la réponse que l'agent doit inférer, et fausserait l'évaluation sans que rien ne l'indique dans les scores. Un test cherche explicitement les mots interdits dans le rendu d'une vraie grille.
+
+**Décision : les marges d'index sont indispensables aux découpes.** Sans elles, l'agent voit un motif mais ne peut pas le rattacher aux coordonnées qu'il devra employer pour cliquer. Une découpe sans repères serait une information amputée de ce qui la rend actionnable.
+
+**Décision : le `diff` est borné.** Au-delà de soixante-quatre cellules, le compte suffit et le reste est annoncé. Énumérer plusieurs milliers de cellules noierait l'information utile — et le budget de contexte avec, alors même que le préremplissage domine le coût.
+
+**Décision : les outils annoncent leur gratuité.** Leurs descriptions disent qu'ils n'entrent pas dans le compte des actions. C'est vrai selon le protocole, et le taire priverait l'agent d'un levier : inspecter longuement avant d'agir ne coûte rien au score, seule l'action en coûte.
+
+**Un comptage naïf de mon côté.** Le test bornant le `diff` comptait les flèches, en incluant celle de l'en-tête « tours 1 → 2 » : il annonçait 65 pour 64 cellules. Le code était juste ; le test compte désormais les cellules elles-mêmes, et vérifie en outre que le nombre d'omises est annoncé.
+
+**Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 74 fichiers. **435 tests verts** — 334 unitaires (dont 35 pour cette unité, avec la propriété **rendu ∘ analyse = identité** sur les grilles de chaque niveau et sur les seize couleurs) et 101 d'intégration (dont 7 nouveaux sur les frames que le serveur envoie réellement : le `diff` d'un déplacement voit exactement les deux cellules concernées, celle qu'on quitte et celle où l'on arrive, et `inspect` retrouve une frame cinq tours en arrière).
+
+**Où reprendre.** U19 — interface de tâche direct-interaction : prompt de tâche minimal calqué sur VISTA, outils d'action filtrés par la frame, comptage officiel réconcilié, branchement complet sur la boucle et le scorer.

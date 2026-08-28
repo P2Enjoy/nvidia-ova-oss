@@ -377,7 +377,7 @@ persisté, garde anti-publication A2.3, transport H4.5/H4.6.
 - `ARC_BASE_URL` pointe désormais la pile locale en mode rejeu, comme l'endpoint
   d'inférence (H3.4) : le mode ne peut plus atteindre un service qui publierait.
 
-## U18 — Rendu texte, inspection, mémoire de frames `[ ]`
+## U18 — Rendu texte, inspection, mémoire de frames `[x]`
 
 `@spec` A4. Rendu canonique 64×64 + ligne d'état, coordonnées (row,col) 0-basées,
 mémoire de frames sans perte, `inspect`, `read_pixels`, `diff`.
@@ -385,6 +385,15 @@ mémoire de frames sans perte, `inspect`, `read_pixels`, `diff`.
 - Preuves : unitaires à sorties attendues exactes sur fixtures (rendu, découpes avec
   marges d'index, diff borné) ; propriété : rendu ∘ parsing = identité sur toute
   grille fixture.
+- **Livré et intégralement vérifié le 2026-08-28.** `avo.arc.rendu` (rendu canonique
+  64×64, ligne d'état, analyse inverse) et `avo.arc.memoire` (mémoire **sans perte**
+  conservant décision et transitoire, `inspect` avec marges d'index, `read_pixels`,
+  `diff` borné, et leurs schémas d'outil annonçant qu'ils sont **gratuits au score**).
+  Preuves : 35 tests unitaires (6 sous-tests) — dont la propriété aller-retour et un
+  test vérifiant qu'**aucune interprétation** ne se glisse dans le rendu — et 7
+  d'intégration sur les frames que le serveur envoie réellement, où le `diff` voit
+  les **deux** cellules que déplace le curseur. Campagne : **435 tests**, lint,
+  format, mypy strict (74 fichiers).
 
 ## U19 — Interface de tâche direct-interaction `[ ]`
 

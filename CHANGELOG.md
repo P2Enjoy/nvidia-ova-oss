@@ -36,6 +36,13 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U18 : rendu texte et mémoire de frames sans perte
+
+- `avo.arc.rendu` : rendu canonique d'une grille 64×64 précédé d'une ligne d'état, et analyse inverse. **Aucune interprétation ajoutée** — pas de nom d'objet, pas de mise en évidence : souffler « voici la cible » reviendrait à donner la réponse que l'agent doit inférer, et fausserait l'évaluation sans que rien ne l'indique dans les scores.
+- `avo.arc.memoire` : toute frame reçue est conservée, décision comme transitoire, et l'agent décide seul de ce qu'il veut revoir. `inspect` rend les découpes **avec les index en marge**, sans lesquels un motif ne peut pas être rattaché aux coordonnées à cliquer ; `read_pixels` donne les valeurs exactes ; `diff` liste les cellules changées et **borne** cette liste, une énumération de milliers de cellules noyant l'information et le budget de contexte.
+- Les outils annoncent dans leur description qu'ils sont **gratuits au score** : inspecter longuement avant d'agir ne coûte rien, seule l'action en coûte.
+- Preuves : 435 tests verts, dont la propriété rendu ∘ analyse = identité et sept tests sur les frames que le serveur envoie réellement.
+
 ### 2026-08-28 — U17 : client de l'API ARC-AGI-3
 
 - `avo.arc.client` : réponses normalisées, **étiquetage de chaque frame selon son rôle réel** — transitoire, décision, initialisation de reset ou de niveau, terminal gagnant ou perdant. Une frame terminale n'est pas une frame de décision : sans cette distinction, le harnais pourrait rattacher une action à une grille depuis laquelle il était impossible d'agir.
