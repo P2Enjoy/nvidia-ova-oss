@@ -25,9 +25,9 @@ from avo import __version__
 _A_VENIR: dict[str, tuple[str, str]] = {
     "run-arc": ("U23", "campagne d'évaluation ARC-AGI-3 (docs/SPEC_ARCAGI3.md §A7)"),
     # La reprise reconstruit l'état depuis le workspace ET repart sur un segment
-    # frais : elle suppose donc la boucle agent, livrée par U13, et non le seul
-    # workspace livré par U8.
-    "resume": ("U13", "reprise d'un run existant (docs/SPEC_HARNAIS.md §H13.2)"),
+    # frais ; en campagne elle ne rejoue pas les jeux terminés. C'est U23 qui la
+    # livre, avec le reste de §H13.2 — U13 n'apporte que la boucle qu'elle suppose.
+    "resume": ("U23", "reprise d'un run existant (docs/SPEC_HARNAIS.md §H13.2)"),
 }
 
 

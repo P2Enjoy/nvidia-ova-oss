@@ -9,6 +9,20 @@ _Aucune entrée ouverte._
 
 ## Traitées dans la session qui les a rencontrées
 
+### 2026-08-28 — `python -m avo --help` renvoyait la reprise à une unité déjà close
+
+- **Constat.** La table `_A_VENIR` de `avo.cli` attribuait la sous-commande `resume`
+  à l'unité U13. U13 est close depuis le 2026-08-28 et son périmètre (`@spec` H8,
+  H12) ne couvre pas §H13.2 : c'est U23 qui livre la reprise, avec `run-arc`.
+- **Mesure.** `python -m avo --help` affichait « resume [U13] reprise d'un run
+  existant » alors que `docs/BACKLOG.md` porte U13 en `[x]`. Un lecteur cherchant
+  l'unité responsable la trouvait close et la commande refusant toujours de
+  s'exécuter.
+- **Traitement.** Défaut étranger à l'unité U19, consigné ici. Corrigé dans un commit
+  dédié : la table renvoie désormais à U23, seule unité dont le périmètre porte
+  §H13.2. Le comportement de la commande est inchangé — elle refuse toujours en
+  nommant son unité.
+
 ### 2026-08-28 — La configuration n'imposait pas le plancher de `AVO_NUM_PREDICT` quand `AVO_THINK=true`
 
 - **Constat.** `docs/SPEC_HARNAIS.md` §H12.1 énonce : « `AVO_THINK=true` reste
