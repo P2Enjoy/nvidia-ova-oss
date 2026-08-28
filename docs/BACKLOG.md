@@ -415,7 +415,7 @@ réconciliation A5.3, branchement complet sur la boucle U13 et le scorer U14.
   balayage porte sur les constantes de tous les modules dont un texte atteint le
   modèle, et sur les corps de requête réellement émis pendant un run.
 
-## U20 — RHAE `[~]`
+## U20 — RHAE `[x]`
 
 `@spec` A6. Implémentation de la définition Tycho §3.1, baselines depuis
 `/api/games` (live) ou `cible` (replay).
@@ -424,9 +424,20 @@ réconciliation A5.3, branchement complet sur la boucle U13 et le scorer U14.
 - Contrat d'implémentation écrit et committé avant le code (A6.4) : module pur
   `avo.arc.rhae`, refus explicites, et l'attribution des actions aux niveaux tranchée
   — une entrée d'historique compte pour le niveau **depuis lequel** elle a été jouée.
-  Reste à livrer : le module, le pont `niveaux_joues` et les preuves A6.3.
+- Fait : `avo.arc.rhae` (`efficacite_niveau`, `rhae_jeu`, `rhae_global`,
+  `niveaux_joues`, `RhaeInvalide`). Preuves : `tests/unit/test_rhae.py` (31 tests —
+  les six vecteurs A6.3 avec leurs valeurs calculées à la main, la pondération
+  distinguée d'une moyenne simple, tous les refus) et
+  `tests/integration/test_rhae_sur_partie_reelle.py` (4 tests en HTTP réel : partie
+  parfaite à 100.00 avec baselines venues de `/api/games`, total d'actions égal au
+  comptage indépendant de l'interface, partie perdue-relancée-gagnée à 43 actions).
+  Campagne complète verte le 2026-08-28 : 511 tests, mypy strict sur 80 fichiers.
 
 ## U21 — E2E : partie complète sur rejeu local `[ ]`
+
+> **Ordre : à prendre APRÈS U23** (décidé le 2026-08-28, journal). Sa preuve passe par
+> la CLI réelle, et la seule commande qui joue une partie est `run-arc`, livrée par
+> U23 : prise dans l'ordre des numéros, cette unité n'aurait rien à exécuter.
 
 `@spec` A8.3 (+ H13.2). Scénarios E2E par la CLI réelle sur pile compose : victoire
 3 niveaux avec RHAE exact attendu, et scénario échec (game over → RESET → victoire) ;
@@ -449,6 +460,9 @@ responsable du 2026-08-27 pour l'usage de l'API ; périmètre minimal).
 ## Lot F — Campagne
 
 ## U23 — Runner de campagne et rapport `[ ]`
+
+> **Ordre : à prendre AVANT U21** (décidé le 2026-08-28, journal). U21 éprouve par la
+> CLI ce que cette unité livre.
 
 `@spec` A7 (+ H13.2). `run-arc` multi-jeux, plafonds obligatoires en live, garde
 d'accord A7.2, reprise sans rejouer les jeux terminés, `report.md` complet A7.3.

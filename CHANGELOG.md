@@ -36,6 +36,16 @@
 
 - Décision prise par défaut au titre de `CLAUDE.md` §1, « Autonomie de décision » : le benchmark de référence est **ARC-AGI-3, ensemble public**, seul benchmark du périmètre initial. Motif, options écartées et réserve sur le scorecard officiel consignés dans `docs/JOURNAL.md` ; mentions d'attente retirées de `README.md` et `docs/BACKLOG.md`.
 
+### 2026-08-28 — U20 : RHAE, l'efficacité d'action relative à l'humain
+
+- `avo.arc.rhae` : la mesure officielle du benchmark, implémentée d'après la définition Tycho §3.1. Efficacité d'un niveau plafonnée à 115, niveaux tardifs pondérés plus lourd que les premiers, et score de jeu pris comme **minimum** entre l'efficacité pondérée et un plafond par complétion — de sorte qu'aller très vite sur un niveau ne compense jamais les niveaux non terminés.
+- **La somme porte sur tous les niveaux du jeu, pas sur ceux atteints.** C'est la seule lecture qui donne un sens au plafond : sur les seuls niveaux atteints, terminer le premier niveau d'un jeu qui en compte trois vaudrait 100, à égalité avec une partie entièrement gagnée. Avec l'ensemble complet, cette même partie vaut au mieux 16,67.
+- **Une action compte pour le niveau depuis lequel elle a été jouée.** L'API renvoie l'action qui complète le niveau 1 avec le numéro du niveau 2 ; l'imputer au suivant volerait une action au premier et en ajouterait une au second — deux scores faux, et de façon compensée, donc invisible sur le total des actions.
+- **Une donnée impossible lève au lieu de valoir zéro** : baseline nulle ou négative, niveau hors bornes, trou dans la suite des niveaux, moyenne demandée sur zéro jeu. Rendre 0 ferait passer un défaut de protocole pour une mauvaise performance de l'agent, et le rapport serait faux sans que rien ne le signale.
+- Contrat d'implémentation (A6.4) écrit et committé **avant** la première ligne de code, comme l'exige la méthode de travail du dépôt.
+- Preuves : 511 tests verts. Contre le rejeu ARC en HTTP, une partie parfaite rend **exactement 100.00** avec des baselines demandées à `/api/games` et non écrites en dur ; une partie perdue, relancée puis gagnée compte **43 actions** au premier niveau — 44 si le RESET de création avait été facturé.
+- Ordre du plan corrigé : U23 (runner et rapport) passe avant U21 (E2E), dont la preuve passe par la commande que U23 livre.
+
 ### 2026-08-28 — U19 : interface de tâche direct-interaction
 
 - `avo.arc.interface` : l'interface qui relie le client ARC, le rendu, la mémoire de frames et la boucle. Un outil par commande que la frame courante déclare — le filtrage vient de la frame, pas d'une liste figée : quand l'environnement cesse d'offrir une commande, l'agent cesse de la voir, et il l'apprend en observant plutôt qu'en heurtant une erreur.

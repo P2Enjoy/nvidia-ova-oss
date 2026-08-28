@@ -558,4 +558,14 @@ Deux gardes exécutables remplacent la promesse : un balayage statique des const
 
 **Décision : refuser plutôt que rendre zéro.** Une baseline nulle ou négative, un numéro de niveau hors bornes, un trou dans la suite des niveaux, une moyenne demandée sur zéro jeu : tous lèvent. Rendre 0 ferait passer un défaut de protocole pour une mauvaise performance de l'agent, et le rapport serait faux sans que rien ne le signale.
 
-**Où reprendre.** U20 — RHAE : le contrat est écrit (A6.4) ; reste à livrer le module `avo.arc.rhae`, le pont `niveaux_joues` et les preuves A6.3.
+**Livré.** `avo.arc.rhae` : module pur, sans entrée-sortie ni réseau. Efficacité par niveau plafonnée à 115, pondération `wₗ = ℓ`, RHAE de jeu pris comme minimum de l'efficacité pondérée et du plafond par complétion, moyenne arithmétique sur le périmètre, et le pont `niveaux_joues` qui traduit un historique typé en entrées de la formule.
+
+**Une tolérance ajoutée en écrivant les preuves.** Un numéro de niveau au-delà du dernier est accepté tant qu'aucune action ne lui est imputée : après la victoire du dernier niveau, l'API peut avancer son compteur à L+1, et refuser ce numéro rendrait une partie gagnée incalculable. Une ACTION imputée à L+1, en revanche, lève toujours.
+
+**Preuves exécutées, toutes en conteneur.** ruff, `ruff format`, mypy **strict** sur 80 fichiers. **511 tests verts** — 396 unitaires (dont 31 pour cette unité) et 115 d'intégration (dont 4 nouveaux). La preuve centrale : contre le rejeu ARC en HTTP, une partie parfaite rend **exactement 100.00**, les baselines étant demandées à `/api/games` et non écrites en dur ; et une partie perdue, relancée, puis gagnée compte **43 actions** au niveau 1 — 44 si le RESET de création avait été facturé. Le total des actions du RHAE coïncide avec le comptage indépendant de l'interface, deux chemins qui ne partagent aucun compteur.
+
+**Non couvert par cette unité.** Le RHAE n'a pas encore de surface CLI : il sera lu depuis `run-arc` et le rapport (U23). La vérification « dans la peau de l'utilisateur » de MASTER_PLAN §5 arrive donc avec U21 et U23.
+
+**Décision : U23 passe avant U21.** A8.3 définit la preuve de U21 comme « depuis la CLI réelle […] l'agent complet joue le jeu `cible` de bout en bout […] `report.md` et la lignée existent ». La seule commande qui joue une partie est `run-arc`, et c'est U23 qui la livre : prise dans l'ordre des numéros, U21 n'aurait rien à exécuter. L'ordre du plan est donc inversé sur ces deux unités — le point est écrit ici et dans les deux unités du backlog, pour qu'une session qui ne lit que le backlog ne s'y reprenne pas. Aucun autre couple n'est concerné : U22, U24 et U25 sont [LIVE].
+
+**Où reprendre.** U23 — runner de campagne et rapport : `run-arc` multi-jeux, plafonds obligatoires en live, garde d'accord A7.2, reprise sans rejouer les jeux terminés, `report.md` complet A7.3. U21 (E2E) suit immédiatement et s'appuie sur cette commande.
