@@ -28,12 +28,14 @@ Implémentation open source du harnais d'agent **AVO** (papier arXiv:2603.24517)
 ## Accès ARC-AGI-3 (ARC Prize)
 
 - Variable `ARC_API_KEY`, fournie hors dépôt comme les autres, envoyée en en-tête `X-API-Key` sur l'API ARC-AGI-3. Vérifiée le 2026-08-27 en lecture seule : 25 jeux, 183 niveaux, `baseline_actions` humaines par niveau, qui **font foi** pour le calcul du RHAE.
-- **Évaluer, c'est publier.** Toute partie jouée via l'API officielle s'enregistre dans un scorecard rattaché au compte du responsable ; il n'existe pas de mode officiel sans dépôt de résultat. Les tests et les exécutions d'essai passent donc obligatoirement par l'environnement local de rejeu déterministe et **n'appellent jamais l'API**. La première campagne officielle requiert l'accord explicite du responsable.
+- **Évaluer, c'est publier.** Toute partie jouée via l'API officielle s'enregistre dans un scorecard rattaché au compte du responsable ; il n'existe pas de mode officiel sans dépôt de résultat. Les tests et les exécutions d'essai passent donc obligatoirement par l'environnement local de rejeu déterministe et **n'appellent jamais l'API**.
+- **Autorisation du responsable (2026-08-30)** : la routine planifiée qu'il a provisionnée (secrets dans son environnement) est autorisée à jouer ARC Prize via l'API officielle, à ouvrir et clore des scorecards à son nom, à collecter les résultats dans le dépôt et à corriger puis améliorer le fonctionnement **général** du harnais d'après ces résultats. Les plafonds de campagne restent obligatoires.
+- **Interdiction de benchmaxing (règle du responsable, sans exception)** : aucune adaptation à un jeu ou défi particulier — ni règle, ni indice, ni heuristique, ni constante spécifique à un jeu, dans le code comme dans les prompts. Les défis sont aléatoires ; l'objet du harnais est d'être générique, général et valable en tout contexte. Le balayage « zéro indice de jeu » (§A5) est une exigence absolue ; une amélioration n'est recevable que si elle vaut pour tous les jeux.
 
 ## Spécifications et plan
 
 - La spécification du harnais est **écrite et committée** : `docs/SPEC_HARNAIS.md` (§H) et `docs/SPEC_ARCAGI3.md` (§A) ; l'ordre d'exécution et la DoD commune sont dans `docs/MASTER_PLAN.md`. Les commentaires `@spec`/`@verifies` citent l'unité de backlog et ces chapitres (`Hn.m`/`An.m`).
-- Toutes les unités du backlog ont leur spécification : une session prend une unité et **code directement** (cas « spécification existante » du contrat worker). Les unités **[LIVE]** exigent le `.env` local et ne sont jamais prises par le worker planifié (`docs/MASTER_PLAN.md` §3).
+- Toutes les unités du backlog ont leur spécification : une session prend une unité et **code directement** (cas « spécification existante » du contrat worker). Les unités **[LIVE]** exigent les secrets d'environnement ; leur prise obéit à `docs/MASTER_PLAN.md` §3 — la routine planifiée provisionnée par le responsable les prend comme les autres, une session sans secrets ne les prend jamais.
 - Produit CLI sans interface graphique : la vérification « dans la peau de l'utilisateur » est l'exécution réelle des commandes documentées et la lecture des artefacts (`docs/MASTER_PLAN.md` §5) ; CLAUDE.md §16 s'appliquera en entier si une UI apparaît.
 
 ## Conventions locales

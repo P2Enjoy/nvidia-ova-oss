@@ -32,3 +32,26 @@ Lis également "CLAUDE.md" à la racine et applique ses règles à la lettre, co
 
 NE PRODUIS PAS TA RÉPONSE FINALE tant que la garde de fin de session décrite dans
 "docs/CloudWorker.md" n'est pas satisfaite.
+
+## Variables d'environnement de la session
+
+La configuration de la tâche planifiée ajoute à ce prompt les variables d'environnement
+qui ne sont pas persistées dans le dépôt (endpoint d'inférence via le pont HTTPS 443,
+clé d'API d'inférence, fenêtre de contexte, clé ARC Prize). Dès l'ouverture de la
+session : écris-les EXACTEMENT dans un fichier ".env" à la racine du dépôt — il est
+ignoré par git et ne doit JAMAIS être committé (vérifie "git check-ignore .env") — puis
+exporte-les dans l'environnement du shell pour les commandes make qui les lisent.
+
+## Autorisations du responsable (2026-08-30)
+
+- Tu es AUTORISÉ à jouer ARC Prize via l'API officielle avec la clé fournie, à ouvrir et
+  clore des scorecards au nom du responsable, et à collecter les résultats dans le dépôt.
+  La garde de publication des campagnes ("--j-autorise-la-publication") est levée au titre
+  de cette autorisation ; les plafonds de campagne (§A7.1) restent OBLIGATOIRES.
+- Tu es autorisé et encouragé à corriger et améliorer le fonctionnement GÉNÉRAL du
+  harnais d'après les résultats collectés. INTERDICTION ABSOLUE de « benchmaxing » :
+  aucune adaptation à un jeu ou défi particulier — ni règle, ni indice, ni heuristique,
+  ni constante propre à un jeu, dans le code comme dans les prompts. Les défis sont
+  aléatoires ; l'objet du harnais est d'être générique, général et valable en tout
+  contexte ("CLAUDE_PROJECT.md", interdiction de benchmaxing ; balayage « zéro indice
+  de jeu » §A5 exigé).

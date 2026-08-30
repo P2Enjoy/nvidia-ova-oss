@@ -35,13 +35,18 @@ session et produit du code ; aucune unité documentaire ne reste ouverte.
 ## 3. Unités [LIVE] — règle pour le worker
 
 Les unités marquées **[LIVE]** (U22, U24, U25, U28) exigent les secrets locaux
-(`.env` : endpoint d'inférence et/ou clé ARC) et, pour U24/U25/U28, engagent une
-publication de scorecard au nom du responsable. **Le worker planifié ne les prend jamais** : sans
-`.env`, elles sont bloquées par un accès externe (cas 4 de « Demande d'arbitrage »,
-CLAUDE.md §1). Le worker les saute et prend l'unité suivante non-[LIVE] ; quand il ne
-reste que des unités [LIVE], le worker est dans le cas d'arrêt n° 2 de
-`docs/CloudWorker.md` §4.5 : il arrête la tâche planifiée en suivant la procédure, et
-les campagnes se font en session interactive.
+(`.env` : endpoint d'inférence et clé ARC) et, pour U24/U25/U28, engagent une
+publication de scorecard au nom du responsable. **Une session qui ne détient pas les
+secrets ne les prend jamais** : elles lui sont bloquées par un accès externe (cas 4 de
+« Demande d'arbitrage », CLAUDE.md §1), elle les saute et prend l'unité suivante
+non-[LIVE]. **La routine planifiée provisionnée par le responsable** (2026-08-30)
+reçoit les secrets dans son environnement et porte son autorisation explicite de
+jouer ARC Prize et de publier des scorecards : pour elle, les unités [LIVE] sont des
+unités comme les autres — les plafonds de campagne (§A7.1) et la garde d'accord
+(§A7.2, levée au titre de cette autorisation) restent obligatoires, et l'interdiction
+de benchmaxing de `CLAUDE_PROJECT.md` s'applique sans exception. Quand il ne reste
+aucune unité qu'une session puisse prendre, elle est dans le cas d'arrêt n° 2 de
+`docs/CloudWorker.md` §4.5 et arrête la tâche planifiée en suivant la procédure.
 
 ## 4. Preuves du dépôt et campagne complète
 
