@@ -231,6 +231,13 @@
 - Conséquence : les unités [LIVE] deviennent exécutables depuis les sessions interactives ; `OLLAMA_HOST` peut pointer le pont (`.env.example` et `CLAUDE_PROJECT.md` mis à jour ; limite de plate-forme documentée : 40 s avant en-têtes de réponse).
 - Observation consignée : l'endpoint sert désormais aussi `qwen3.8:27b` (absent le 2026-08-27) ; le modèle de travail reste `qwen3.6:35b`.
 
+### 2026-08-30 — U21 : E2E de partie complète, pont de build TLS, routine horaire autorisée sur ARC Prize
+
+- U21 livrée et close : cassettes de scénario seedées et committées (capture en deux passes déterministe, auto-vérifiée), E2E par la CLI réelle sur la pile compose — victoire 3 niveaux à RHAE exactement 100.00 (76 actions, rapport, lignée à 3 commits, reprise sans nouvel appel au modèle) et échec → RESET → victoire à la valeur fermée (43 actions au niveau 1) ; cibles `make seed-e2e` et `test-e2e` par le réseau de l'hôte ; campagne `make check` verte.
+- Construction : support générique d'un CA de proxy TLS interceptant (`certs/`, spécifié en H2.4) — l'image se construit désormais derrière un proxy d'environnement, sans jamais désactiver la vérification TLS.
+- Routine planifiée « CloudWorker AVO (horaire) » provisionnée par le responsable : prompt = `docs/.routine` + variables non persistées (endpoint via le pont HTTPS 443, clés) ; doctrine persistée — unités [LIVE] prenables par la routine munie des secrets et de l'autorisation de publication, interdiction de benchmaxing sans exception (MASTER_PLAN §3, CLAUDE_PROJECT).
+- Registre : la boucle ne s'arrête pas sur l'état terminal du jeu (44 tours d'inférence à vide mesurés) — issue retenue : préalable de U24 ; MASTER_PLAN §4 aligné sur le réel (`build` s'exécute en sus de `make check`).
+
 ## [Publié]
 
 _Aucune publication pour le moment._
