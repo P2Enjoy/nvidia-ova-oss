@@ -444,6 +444,10 @@ artefacts (report, lignée, métriques) vérifiés ; reprise `resume` couverte.
 
 - Preuves : `make test-e2e` vert avec les deux scénarios ; vérification opérateur
   MASTER_PLAN §5 exécutée et consignée.
+- Contrat d'implémentation écrit et committé avant le code (A8.5) : cassettes de
+  scénario seedées et committées, environnement épinglé (discriminant
+  `AVO_NUM_PREDICT`), `test-e2e` par le réseau de l'hôte, valeurs attendues en
+  forme fermée, reprise par la CLI réelle.
 
 ## U22 — Sonde de contrat API officielle `[ ]` **[LIVE]**
 

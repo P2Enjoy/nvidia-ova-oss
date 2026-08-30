@@ -342,3 +342,53 @@ scénario E2E couvre l'échec : game over, RESET, puis victoire.
 
 **A8.4 — Live (hors campagne de tests)** : U22 (sonde de contrat, 1 scorecard
 étiqueté probe) et campagnes U24/U25 — jamais exécutés par `make check`.
+
+**A8.5 — Contrat d'implémentation des E2E (U21).** Décisions prises avant le code,
+mesures à l'appui (journal du 2026-08-30) :
+
+1. **Cassettes de scénario seedées et committées** sous
+   `tests/fixtures/llm/cassettes/` : `e2e_victoire.jsonl` et `e2e_echec.jsonl`,
+   produites par le générateur déterministe `tests/e2e/generer_cassettes.py`
+   (cible `make seed-e2e`). Procédé : capture en deux passes — la campagne joue
+   d'abord avec un transport injecté qui répond selon la politique scriptée et
+   relève les corps exacts émis ; la cassette apparie ensuite ces corps aux mêmes
+   réponses. L'enveloppe de réponse est le gabarit de la cassette réelle du
+   contrat (aucune forme inventée, §H4.7) ; la politique scriptée rejoue
+   `chemin_optimal()` du moteur `cible` — outil de test de §A3.2, jamais employé
+   par le harnais. Horodatage de cassette fixe : la régénération est identique
+   octet à octet, et le générateur le vérifie lui-même (double génération
+   comparée). Le rejoueur chargeant les cassettes au démarrage, toute
+   (re)génération exige de relancer la pile (`make down && make up`).
+2. **Environnement épinglé**, partagé par le générateur, les tests et la
+   vérification opérateur — la configuration de rejeu lisant l'environnement puis
+   `.env` avant ses défauts, tout champ qui influe sur les corps de requête ou le
+   déroulé est fixé explicitement : `OLLAMA_CONTEXT_LENGTH=229376`,
+   `AVO_MODEL=qwen3.6:35b`, `AVO_THINK=false`, `AVO_TEMPERATURE=0.7`,
+   `AVO_CONTEXT_SOFT_RATIO=0.85`, `AVO_TOOL_STEPS_MAX=40`,
+   `AVO_SUP_STALL_ACTIONS=60`, `AVO_SUP_COOLDOWN=30`, et `AVO_NUM_PREDICT`
+   **discriminant de scénario** : `4096` (victoire) / `4097` (échec) — les deux
+   scénarios partagent leur première observation, ce champ rend leurs corps
+   disjoints dans le dossier de cassettes fusionné.
+3. **Exécution** : `make test-e2e` passe par le réseau de l'hôte (même mesure que
+   `run-arc`, 2026-08-28) et exige la pile compose debout ; à défaut, échec
+   explicite nommant `make up`. La campagne `make check` reste hors ligne : la
+   pile est locale et ne sert que de l'enregistré.
+4. **Scénarios et valeurs attendues, en forme fermée** (jeu `cible`, curseur
+   initial (32,32), baselines [39, 19, 18]) :
+   - *victoire* : politique parfaite, 76 actions (39+19+18), 3/3 niveaux,
+     RHAE exactement **100.00** ;
+   - *échec → RESET → victoire* : trois clics en (32,32) hors cible au niveau 1
+     → `GAME_OVER`, `RESET` compté, puis parfait — niveau 1 à **43** actions,
+     80 au total, RHAE du jeu = min((1·100·(39/43)² + 2·100 + 3·100)/6, 100),
+     recalculé indépendamment dans le test ;
+   - *artefacts* : `report.md` (sections A7.3) cohérent avec les compteurs,
+     frames par niveau, lignée git isolée par jeu portant les complétions,
+     métriques `llm`/`action`/`jeu` présentes ;
+   - *reprise* : `python -m avo resume <run_id>` par la CLI réelle rend le même
+     bilan sans nouvel appel au modèle (compteurs inchangés, aucune métrique
+     `llm` nouvelle).
+5. Au moins un scénario s'exécute par **sous-processus réel** `python -m avo`
+   (CLI réelle, MASTER_PLAN §5) avec l'environnement épinglé ; les assertions
+   fines peuvent passer par `cli.main` en processus. Les workspaces de test vont
+   dans un répertoire temporaire (`AVO_RUNS_DIR`), la commande opérateur
+   documentée écrivant, elle, sous `runs/`.
