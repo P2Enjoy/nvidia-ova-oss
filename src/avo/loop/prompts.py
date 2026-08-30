@@ -3,6 +3,7 @@
 @spec docs/BACKLOG.md U13 — Boucle agent P→I→E→B
 @spec docs/SPEC_HARNAIS.md §H8.1 (contenu des phases), §H12 (raisonnement en clair)
 @spec docs/SPEC_ARCAGI3.md §A5.1 (contrainte direct-interaction : aucune règle de jeu)
+@spec docs/BACKLOG.md U27 — `PROTOCOLE_ETAT` (§H15.1, §H15.8)
 
 **Contrainte fondatrice, vérifiée par test** : aucun de ces textes ne décrit les
 règles, les objets ni le but d'un jeu. L'agent reçoit les actions disponibles et rien
@@ -59,6 +60,21 @@ recommence-la."""
 #: Rappel émis quand une borne d'actions approche (§H8.3).
 BORNE_PROCHE: Final = """[BORNE] Le budget d'actions de ce niveau touche à sa fin.
 Privilégie l'action la plus décisive dont tu disposes."""
+
+#: Invite de protocole du mode `state` (§H15.1, §H15.8) : format de réponse et
+#: schéma de Σ uniquement — générique à toute grille ARC-AGI-3, aucune règle de jeu
+#: (§A5.1). Réémise à chaque tour : le mode `state` ne conserve aucun historique.
+PROTOCOLE_ETAT: Final = """Réponds en terminant TOUJOURS par un unique bloc ```json
+contenant exactement deux clés : « state_patch » (objet, peut être vide {}) et
+« action » (chaîne, le nom de l'action à jouer, éventuellement suivi d'un espace
+et des valeurs requises séparées par des virgules pour une action qui en exige).
+
+« state_patch » modifie Σ, ton état d'exécution structuré à quatre champs
+toujours présents : « position » ({"x": int, "y": int} ou null), « essai »
+(entier ≥ 1), « hypotheses » (liste de chaînes), « objets » (liste d'objets avec
+au moins « id » et « description »). Une clé absente du patch laisse le champ
+inchangé ; une clé présente à null réinitialise le champ à son défaut. N'inclus
+dans le patch que ce qui change réellement."""
 
 
 def prompt_de_phase(phase: str) -> str:

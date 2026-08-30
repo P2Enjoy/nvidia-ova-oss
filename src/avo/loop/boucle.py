@@ -8,6 +8,7 @@
       §H10.3 (intervention du superviseur), §H11.2 (métriques),
       §H12 (politique de raisonnement portée par la configuration)
 @spec docs/SPEC_ARCAGI3.md §A5.1 (direct-interaction : aucune règle de jeu fournie)
+@spec docs/BACKLOG.md U27 — mode `state` de la boucle (§H15.7, §H15.8)
 
 La boucle ne connaît aucun jeu. Elle parle à un `Environnement` par un contrat
 minimal, ce qui permet de l'éprouver sur un environnement factice en mémoire avant
@@ -22,10 +23,13 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
-from avo.config import Config
+from avo.config import Config, ModeContexte
 from avo.context.contexte import INVITATION_CONTINUATION, Contexte
+from avo.context.etat import CompteurRetries, EtatInvalide, PatchMalforme, RetriesEpuises
+from avo.context.etat import Etat as EtatStructure
+from avo.context.etat import appliquer as appliquer_pas
 from avo.lineage import Lignee
-from avo.llm.client import ChatResult, ContextOverflow, LLMClient
+from avo.llm.client import ChatResult, ContextOverflow, LLMClient, ToolCall
 from avo.loop import prompts
 from avo.loop.etats import Evenement, Phase, suivant
 from avo.memory.notes import Notes
@@ -89,6 +93,8 @@ class Tour:
     action: str | None = None
     outils_executes: int = 0
     garde_outils_franchie: bool = False
+    #: Mode `state` seulement (§H15.8) : tentatives de patch refusées pour ce tour.
+    retries_patch: int = 0
 
 
 @dataclass
@@ -108,6 +114,10 @@ class Bilan:
     versions_committees: int = 0
     tokens_prompt: int = 0
     tokens_generes: int = 0
+    #: Mode `state` seulement (§H15.8) : tentatives de patch refusées et somme des
+    #: tailles de prompt (caractères) des appels, pour la moyenne du rapport A/B.
+    retries_patch: int = 0
+    taille_prompt_totale: int = 0
 
     def resume(self) -> dict[str, Any]:
         return {
@@ -123,6 +133,8 @@ class Bilan:
             "versions_committees": self.versions_committees,
             "tokens_prompt": self.tokens_prompt,
             "tokens_generes": self.tokens_generes,
+            "retries_patch": self.retries_patch,
+            "taille_prompt_totale": self.taille_prompt_totale,
             "prompts_version": prompts.VERSION,
         }
 
@@ -161,6 +173,14 @@ class BoucleAgent:
         self.jeu = jeu
         self.phase = Phase.PLANNING
         self.bilan = Bilan()
+        #: Σ du mode `state` (§H15.8) : `None` en mode `transcript`, où il est mort.
+        self.etat: EtatStructure | None = None
+        if config.contexte_mode is ModeContexte.ETAT:
+            recharge = workspace.lire_etat() if workspace is not None else None
+            self.etat = recharge if recharge is not None else EtatStructure.initial()
+        #: Erreur de résolution d'action du tour précédent, à faire lire au modèle
+        #: au tour suivant faute d'historique où l'inscrire (§H15.8).
+        self._erreur_action_precedente: str | None = None
 
     # ------------------------------------------------------------------- bornes
     def _borne_franchie(self) -> str | None:
@@ -331,7 +351,13 @@ class BoucleAgent:
 
     # ---------------------------------------------------------------------- tour
     def jouer_tour(self, numero: int) -> Tour:
-        """Déroule un tour complet : P → I → E, puis B si nécessaire (§H8.2)."""
+        """Déroule un tour complet (§H8.2), ou un pas du mode `state` (§H15.8)."""
+        if self.etat is not None:
+            return self._jouer_tour_etat(numero)
+        return self._jouer_tour_transcript(numero)
+
+    def _jouer_tour_transcript(self, numero: int) -> Tour:
+        """Un tour du mode `transcript` : P → I → E, puis B si nécessaire (§H8.2)."""
         tour = Tour(numero=numero, phase_finale=self.phase)
 
         # --- Planning : hypothèses, choix, prédiction énoncée.
@@ -384,6 +410,156 @@ class BoucleAgent:
         self._superviser(tour, issue.observation)
 
         tour.phase_finale = self.phase
+        return tour
+
+    # --------------------------------------------------------------- mode state
+    def _messages_etat(self, erreur_precedente: str | None) -> list[dict[str, str]]:
+        """Compose le prompt d'un pas : (P, Σₜ, Oₜ) + notes, O(1) par tour (§H15.1)."""
+        assert self.etat is not None
+        contenu = (
+            f"État courant (Σ) :\n{self.etat.vers_json()}\n\n"
+            f"{self.notes.pour_segment_frais()}\n\n"
+            f"{self._avec_observation(prompts.PROTOCOLE_ETAT)}"
+        )
+        if erreur_precedente is not None:
+            contenu = (
+                f"Ta réponse précédente était invalide : {erreur_precedente}\n"
+                f"Corrige et réponds à nouveau selon le protocole ci-dessous.\n\n{contenu}"
+            )
+        return [
+            {"role": "system", "content": prompts.SYSTEME},
+            {"role": "user", "content": contenu},
+        ]
+
+    def _appeler_etat(self, messages: list[dict[str, str]]) -> ChatResult:
+        """Un appel au modèle en mode `state`, sans outils (§H15.1, §H15.8)."""
+        resultat = self.client.chat(messages, tools=None)
+        self.bilan.tokens_prompt += resultat.prompt_eval_count
+        self.bilan.tokens_generes += resultat.eval_count
+        taille = sum(len(message["content"]) for message in messages)
+        self.bilan.taille_prompt_totale += taille
+        self._metrique(
+            "llm",
+            phase="state",
+            tokens_prompt=resultat.prompt_eval_count,
+            tokens_generes=resultat.eval_count,
+            duree_ms=resultat.total_duration_ms,
+            tronquee=resultat.tronquee,
+            taille_prompt=taille,
+        )
+        return resultat
+
+    def _resoudre_action(self, action_texte: str) -> ToolCall:
+        """Traduit le champ `action` du pas en appel d'outil générique (§H15.8).
+
+        Le nom de l'action et le nombre de ses paramètres viennent du schéma de
+        l'outil déjà déclaré par l'environnement — jamais d'une liste ou d'un
+        décompte codés en dur (interdiction de benchmaxing, CLAUDE_PROJECT.md). Une
+        résolution qui échoue rend un `ToolCall` en erreur, diagnosticable par le
+        registre comme n'importe quel outil (§H7.4), jamais fatale.
+        """
+        nom, _, reste = action_texte.strip().partition(" ")
+        nom = nom.strip().lower()
+        schemas = {
+            schema["function"]["name"]: schema["function"]
+            for schema in self.registre.schemas(("action",))
+        }
+        schema = schemas.get(nom)
+        if schema is None:
+            disponibles = ", ".join(sorted(schemas)) or "(aucune)"
+            return ToolCall(
+                nom=nom,
+                erreur_arguments=(
+                    f"outil_inconnu: « {nom} » n'existe pas. Disponibles : {disponibles}."
+                ),
+            )
+        parametres = schema.get("parameters", {})
+        requis: list[str] = list(parametres.get("required", []))
+        proprietes: dict[str, Any] = dict(parametres.get("properties", {}))
+        valeurs = (
+            [valeur.strip() for valeur in reste.split(",") if valeur.strip()]
+            if reste.strip()
+            else []
+        )
+        if len(valeurs) != len(requis):
+            return ToolCall(
+                nom=nom,
+                erreur_arguments=(
+                    f"{len(requis)} valeur(s) attendue(s) ({', '.join(requis) or 'aucune'}), "
+                    f"{len(valeurs)} reçue(s)"
+                ),
+            )
+        arguments: dict[str, Any] = {}
+        for cle, brut in zip(requis, valeurs, strict=True):
+            type_attendu = proprietes.get(cle, {}).get("type")
+            try:
+                if type_attendu == "integer":
+                    arguments[cle] = int(brut)
+                elif type_attendu == "number":
+                    arguments[cle] = float(brut)
+                else:
+                    arguments[cle] = brut
+            except ValueError:
+                return ToolCall(
+                    nom=nom, erreur_arguments=f"« {cle} » : {type_attendu} attendu, reçu {brut!r}"
+                )
+        return ToolCall(nom=nom, arguments=arguments)
+
+    def _jouer_tour_etat(self, numero: int) -> Tour:
+        """Un pas du mode `state` : un seul appel LLM, Σ mis à jour, action jouée (§H15.8)."""
+        assert self.etat is not None
+        tour = Tour(numero=numero, phase_finale=Phase.IMPLEMENTATION)
+        compteur = CompteurRetries()
+        erreur_precedente = self._erreur_action_precedente
+        self._erreur_action_precedente = None
+        try:
+            while True:
+                resultat = self._appeler_etat(self._messages_etat(erreur_precedente))
+                try:
+                    nouvel_etat, action_texte = appliquer_pas(self.etat, resultat.content)
+                    break
+                except (PatchMalforme, EtatInvalide) as erreur:
+                    if compteur.epuise:
+                        raise RetriesEpuises(
+                            f"tour {numero} : budget de tentatives de patch épuisé "
+                            f"({compteur.plafond}) sans état valide : {erreur}"
+                        ) from erreur
+                    compteur = compteur.echec()
+                    erreur_precedente = str(erreur)
+                    tour.retries_patch += 1
+                    self.bilan.retries_patch += 1
+                    self._metrique("retry_patch", tentative=compteur.consommees, erreur=str(erreur))
+        except ContextOverflow as erreur:
+            self.bilan.depassements += 1
+            self._metrique("depassement", phase="state", plafond=erreur.max_context_tokens)
+            raise
+
+        self.etat = nouvel_etat
+        if self.workspace is not None:
+            self.workspace.ecrire_etat(self.etat)
+
+        appel = self._resoudre_action(action_texte)
+        actions_valides = {
+            schema["function"]["name"] for schema in self.registre.schemas(("action",))
+        }
+        if not appel.valide or appel.nom not in actions_valides:
+            self._erreur_action_precedente = (
+                appel.erreur_arguments or f"« {appel.nom} » n'est pas une action disponible"
+            )
+            self._metrique("action_invalide", nom=appel.nom, erreur=self._erreur_action_precedente)
+            tour.phase_finale = Phase.PLANNING
+            return tour
+
+        issue = self._jouer_action(appel, tour)
+        if issue is None:
+            tour.phase_finale = Phase.PLANNING
+            return tour
+        tour.action = appel.nom
+        evenement = self._evenement_apres_evaluation(issue, resultat)
+        tour.evenement = evenement
+        if evenement is Evenement.NIVEAU_COMPLETE:
+            self._proposer_a_la_lignee()
+        self._superviser(tour, issue.observation)
         return tour
 
     def executer(

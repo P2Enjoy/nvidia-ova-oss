@@ -117,6 +117,7 @@ Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors d
 | `ARC_API_KEY` | Clé d'accès à l'API ARC Prize (ARC-AGI-3), envoyée en en-tête `X-API-Key` ; donne accès aux environnements officiels et à l'ouverture des scorecards | UUID | oui pour l'évaluation ARC-AGI-3, inutile pour le reste du harnais | `00000000-0000-0000-0000-000000000000` |
 | `ARC_BASE_URL` | Base de l'API ARC-AGI-3. En mode rejeu, elle pointe la pile locale et le client **refuse** tout autre hôte : les tests ne peuvent pas publier de scorecard par accident | URL `https://hôte[:port]` | non (défaut selon le mode) | `http://127.0.0.1:8765` |
 | `AVO_RUNS_DIR` | Racine des workspaces de run (artefacts) | chemin | non (défaut `runs/`) | `runs/` |
+| `AVO_CONTEXT_MODE` | Mode de contexte de la boucle : `transcript` (historique complet, H5) ou `state` (état structuré Σ borné en O(1) par tour, H15) | `transcript` \| `state` | non (défaut `transcript`) | `transcript` |
 
 Trois variables d'**outillage** sont lues dans l'environnement du shell par `make` et les scripts — pas dans `.env` (`make` ne le lit pas) : `AVO_NO_DOCKER` (mode dégradé sans Docker, stdlib seule), `AVO_PORT_LLM_REPLAY` (défaut `11435`) et `AVO_PORT_ARC_REPLAY` (défaut `8765`), ports publiés de la pile locale.
 

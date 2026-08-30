@@ -3,6 +3,7 @@
 @spec docs/BACKLOG.md U8 — Comptabilité, journalisation, workspace de run
 @spec docs/SPEC_HARNAIS.md §H6.1 (arborescence du run), §H11.2 (métriques),
       §H11.3 (transcripts), §H4.6 (aucun secret persisté)
+@spec docs/BACKLOG.md U27 — persistance de Σ (§H15.5, §H15.8)
 
 Un run doit pouvoir être audité sans le dépôt : le manifeste porte la configuration
 résolue (sans secret) et la version du code, les transcripts portent les échanges
@@ -19,6 +20,7 @@ from typing import Any
 
 import avo
 from avo.config import Config
+from avo.context.etat import Etat
 
 #: Sous-répertoires créés à l'ouverture d'un run (§H6.1).
 SOUS_DOSSIERS = ("transcripts", "notes", "frames", "lineage")
@@ -74,6 +76,11 @@ class Workspace:
         """Où l'historique typé de la partie est persisté (§A2.2)."""
         return self.chemin / "frames"
 
+    @property
+    def etat_json(self) -> Path:
+        """Σ persisté du mode `state` (§H15.5, §H15.8)."""
+        return self.chemin / "state" / "etat.json"
+
     def chemin_segment(self, numero: int) -> Path:
         return self.transcripts / f"segment_{numero:03d}.jsonl"
 
@@ -107,6 +114,17 @@ class Workspace:
         }
         with self.metriques.open("a", encoding="utf-8") as flux:
             flux.write(json.dumps(ligne, ensure_ascii=False, default=str) + "\n")
+
+    def ecrire_etat(self, etat: Etat) -> None:
+        """Persiste Σ après un pas validé, aller-retour exact (§H15.5, §H15.8)."""
+        self.etat_json.parent.mkdir(parents=True, exist_ok=True)
+        self.etat_json.write_text(etat.vers_json() + "\n", encoding="utf-8")
+
+    def lire_etat(self) -> Etat | None:
+        """Relit Σ s'il existe déjà — reprise au niveau où U27 la supporte (§H15.5)."""
+        if not self.etat_json.exists():
+            return None
+        return Etat.depuis_json(self.etat_json.read_text(encoding="utf-8"))
 
     def nouveau_segment(self) -> int:
         """Ouvre un segment de transcript et rend son numéro (§H11.3)."""

@@ -2,6 +2,31 @@
 
 ## [Non publié]
 
+### 2026-08-30 (suite) — U27 (partiel) : branchement du mode `state` dans la boucle
+
+- `docs/SPEC_HARNAIS.md` §H15.8 : précise qu'un pas du mode `state` correspond à un
+  tour entier (pas à une phase P/I/E/B), et les conséquences d'implémentation qui en
+  découlent (un seul appel LLM par tour, rollback-retry par tour, résolution
+  générique de l'action depuis le schéma de l'outil, Bug-Fixing implicite,
+  persistance de Σ par tour, `413` compté puis fatal).
+- `AVO_CONTEXT_MODE` (`transcript`/`state`, défaut `transcript`) dans `avo.config`.
+- `avo.loop.boucle.BoucleAgent` : un chemin d'exécution dédié au mode `state`
+  (`_jouer_tour_etat`) — prompt `(P, Σₜ, Oₜ)` + notes composé à neuf à chaque tour,
+  résolution générique de l'action (nom + paramètres requis lus depuis le schéma de
+  l'outil, jamais codés en dur), rollback-retry borné sur patch invalide.
+- `avo.memory.workspace.Workspace.ecrire_etat`/`lire_etat` : persistance de Σ dans
+  `runs/<run_id>/state/etat.json`, aller-retour exact ; un `BoucleAgent` construit
+  sur un workspace qui en porte déjà un le recharge.
+- Preuves : tests unitaires (`AVO_CONTEXT_MODE`, persistance de Σ) et 9 tests
+  d'intégration contre le vrai rejoueur HTTP (patch valide, rollback-retry,
+  budget épuisé, action inconnue, événement porté par l'environnement, persistance
+  et reprise de Σ). `make check` (lint, typecheck, test-unit, test-int) vert, sans
+  régression sur les 458 preuves préexistantes.
+- **Reste à livrer pour clore U27** : l'A/B sur rejeu (deux mini-campagnes sur le
+  jeu `cible`, une par mode, et le rapport comparatif RHAE/actions/tokens/taille de
+  prompt/retries committé sous `docs/rapports/`) et son test E2E — unité laissée
+  `[~]`, voir `docs/BACKLOG.md`.
+
 ### 2026-08-30 — U26 : état d'exécution structuré (SKILL.state), mode `state`
 
 - `docs/SPEC_HARNAIS.md` §H15 : contrat d'exécution `(P, Σₜ, Oₜ)` → `(Rₜ, ΔΣₜ, aₜ)`, opérateur de fusion `⊕` à suppression par `null`, schéma possédé et validé par le runtime, rollback-retry borné, persistance/reprise de Σ, schéma ARC v1 à quatre champs (`position`, `essai`, `hypotheses`, `objets`).

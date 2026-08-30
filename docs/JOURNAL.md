@@ -738,3 +738,68 @@ persistance de Σ dans le workspace, A/B sur rejeu (`cible`) avec rapport compar
 committé sous `docs/rapports/`. Ensuite, les [LIVE] restent prenables par la routine
 dans l'ordre déjà consigné : U22 → (registre : arrêt sur état terminal, préalable de
 U24) → U24 → U25/U28.
+
+---
+
+## 2026-08-30 (suite 6) — Session planifiée (routine CloudWorker) : U27 branchement livré, A/B restant
+
+**Unité.** U27 — désignée par l'entrée précédente. Git rattaché à `main` (le
+checkout de départ était sur une branche temporaire fournie par l'infrastructure,
+mais `origin/main` portait déjà exactement le même HEAD — aucun commit à
+récupérer, §1.3). Docker démarré manuellement, CA du proxy déposé dans `certs/`
+pour reconstruire l'image de développement.
+
+**Un point de spécification tranché avant le code.** H15.1-H15.7 ne disaient pas
+si « un pas » du mode `state` correspond à un tour entier de la boucle P→I→E→B ou
+à chacun de ses appels. Tranché et écrit dans un nouveau §H15.8, committé et
+poussé seul (`4189c02`) avant d'ouvrir le module : un pas = un tour. Motif : forcer
+`(state_patch, action)` à chaque appel des phases qui ne jouent aucune action
+(Evaluation, Bug-Fixing) ne peut pas se représenter proprement dans le contrat à
+deux clés. Conséquences précisées dans le même chapitre : un appel LLM par tour,
+rollback-retry par tour, résolution générique de l'action depuis le schéma de
+l'outil (jamais un nom codé en dur — interdiction de benchmaxing), Bug-Fixing
+implicite (porté par le ΔΣ du pas suivant), persistance de Σ par tour, `413` compté
+puis fatal faute d'historique à raccourcir.
+
+**Livré.** `AVO_CONTEXT_MODE` (`transcript`/`state`, défaut `transcript`, validé et
+nommé sur valeur inconnue) dans `avo.config`. `BoucleAgent._jouer_tour_etat` :
+compose `(P, Σₜ, Oₜ)` + notes à neuf à chaque tour (aucun outil déclaré à l'appel,
+le contrat passe par le texte) ; décode et applique le patch via `avo.context.etat`
+(module U26, inchangé) ; rollback-retry borné avec le message d'erreur renvoyé au
+modèle ; résout l'action générique par le schéma de l'outil (nom + paramètres requis
+dans l'ordre, coercés selon leur type JSON déclaré) ; exécute par le même registre
+que le mode `transcript` (§H8.1 tenu dans les deux modes) ; les événements niveau
+complété / game over restent décidés par l'environnement, jamais par le texte.
+`Workspace.ecrire_etat`/`lire_etat` : persistance de Σ dans
+`runs/<run_id>/state/etat.json`, aller-retour exact ; un `BoucleAgent` construit
+sur un workspace qui en porte déjà un le recharge plutôt que de repartir de
+`Etat.initial()`.
+
+**Preuves exécutées, toutes en conteneur, image de dev reconstruite avec le CA du
+proxy.** Unitaires : `AVO_CONTEXT_MODE` (défaut, reconnaissance, refus nommé,
+résumé journalisable), persistance de Σ (aller-retour, réécriture, chemin). 9 tests
+d'intégration nouveaux contre le VRAI rejoueur HTTP (même principe à deux passes
+que `test_boucle_complete.py`, cassette bâtie sur les corps réellement émis) :
+patch valide qui joue l'action et met à jour Σ, un seul appel LLM par tour (compté
+via les métriques du workspace), clé absente du patch qui survit (§H15.2), patch
+malformé retenté puis réussi, budget de retries épuisé qui lève `RetriesEpuises`
+plutôt que de boucler, action inconnue qui ne joue rien et se signale au tour
+suivant (jamais un crash), événement porté par l'environnement qui prime,
+persistance ET reprise de Σ depuis un workspace existant. `make check` partiel
+(lint, typecheck, test-unit, test-int) intégralement vert : **466 tests unitaires**
+(+8 sur les 458 préexistants), **132 d'intégration** (+9), zéro régression sur le
+mode `transcript`. `make test-e2e` et la campagne complète n'ont pas été rejoués
+dans cette session (budget de temps consommé par le branchement lui-même) —
+prochaine session ou fin de session à compléter.
+
+**Ce qui reste explicitement pour clore U27, nommé au backlog.** L'A/B sur rejeu
+proprement dit : deux mini-campagnes `run-arc --mode replay` sur le jeu `cible`,
+une par mode, et le rapport comparatif (RHAE, actions, tokens cumulés, taille
+moyenne de prompt, retries) committé sous `docs/rapports/`, plus le test E2E qui
+les rejoue et relit le rapport. Rien ne bloque ce travail — ni accès externe, ni
+arbitrage — c'est une suite directe de ce qui est déjà branché et prouvé.
+
+**Où reprendre.** U27 reste `[~]` : reprendre par l'A/B sur rejeu (le jeu `cible`
+et ses baselines existent déjà, U16/U21/U23). Une fois U27 close, les [LIVE]
+U22 → (registre : arrêt sur état terminal, préalable de U24) → U24 → U25/U28 restent
+prenables par la routine, dans l'ordre déjà consigné.

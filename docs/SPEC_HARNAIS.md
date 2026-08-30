@@ -149,6 +149,7 @@ TLS.
 | `AVO_SUP_STALL_ACTIONS` | actions sans progrès avant intervention du superviseur (H10.2) | `60` |
 | `AVO_SUP_COOLDOWN` | actions minimales entre deux interventions (H10.3) | `30` |
 | `AVO_RUNS_DIR` | racine des artefacts | `runs/` |
+| `AVO_CONTEXT_MODE` | mode de contexte, `transcript` ou `state` (§H15.7) | `transcript` |
 | `ARC_API_KEY` | API ARC Prize (SPEC_ARCAGI3) | requis pour le live uniquement |
 | `ARC_BASE_URL` | base API ARC | officielle en live, pile locale en rejeu |
 

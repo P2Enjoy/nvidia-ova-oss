@@ -583,23 +583,38 @@ fautif, erreurs typées, compteur de retries, sérialisation.
   périmètre de U27 (« branchement dans la boucle »), seule unité qui consomme
   réellement un Σ persisté.
 
-## U27 — Mode d'exécution `state` de la boucle et A/B sur rejeu `[ ]`
+## U27 — Mode d'exécution `state` de la boucle et A/B sur rejeu `[~]`
 
-`@spec` H15 (+ H8.4, H3.1). Variable `AVO_CONTEXT_MODE` ∈ {`transcript`, `state`},
-défaut `transcript` — **aucun comportement existant ne change**, les preuves
-U13/U23 restent valides telles quelles. En mode `state` : le prompt de chaque tour
-est composé de `(P, Σₜ, Oₜ)` + notes, le patch validé est appliqué avant l'action,
-l'échange complet reste archivé dans le workspace (H11) mais n'est pas renvoyé au
-modèle ; la continuation H5.3–H5.4 est sans objet (un `413` y est un incident,
-compté) ; métriques par tour ajoutées : taille de prompt, retries de patch. A/B :
-deux mini-campagnes `run-arc --mode replay` sur le jeu `cible`, une par mode, et un
-rapport comparatif (RHAE, actions, tokens cumulés, taille moyenne de prompt,
-retries) committé sous `docs/rapports/`.
+`@spec` H15 (+ H15.8, H8.4, H3.1). Variable `AVO_CONTEXT_MODE` ∈ {`transcript`,
+`state`}, défaut `transcript` — **aucun comportement existant ne change**, les
+preuves U13/U23 restent valides telles quelles. En mode `state` : un pas = un tour
+entier (§H15.8, précision d'implémentation écrite et committée avant le code) ; le
+prompt de chaque tour est composé à neuf de `(P, Σₜ, Oₜ)` + notes, sans historique
+accumulé ; le patch validé est appliqué avant l'action, dont le nom et les
+paramètres sont résolus génériquement depuis le schéma de l'outil (jamais codés en
+dur) ; la continuation H5.3–H5.4 est sans objet (un `413` y est compté puis fatal,
+faute d'historique à raccourcir) ; métriques par tour ajoutées : taille de prompt,
+retries de patch.
 
-- Preuves : unitaires (composition exacte du prompt de pas ; patch appliqué/refusé au
-  bon moment ; défaut `transcript` vérifié par un test de non-régression) ;
-  intégration : boucle complète en mode `state` contre les deux rejeux en HTTP
-  réel ; E2E : les deux mini-campagnes et le rapport comparatif relu.
+- **Livré et vérifié le 2026-08-30 :** `AVO_CONTEXT_MODE` dans `avo.config` ;
+  `BoucleAgent._jouer_tour_etat` (un appel LLM par tour, rollback-retry borné sur
+  `PatchMalforme`/`EtatInvalide`, résolution générique de l'action, événements
+  toujours décidés par l'environnement) ; persistance/reprise de Σ dans le
+  workspace (`Workspace.ecrire_etat`/`lire_etat`, `runs/<run_id>/state/etat.json`).
+  Preuves : unitaires (`AVO_CONTEXT_MODE`, persistance de Σ) et 9 tests
+  d'intégration contre le vrai rejoueur HTTP (§H4.7) — patch valide, clé absente du
+  patch qui survit (§H15.2), rollback-retry puis succès, budget de retries épuisé
+  qui lève une erreur fatale (§H15.4), action inconnue qui ne joue rien et se
+  signale au tour suivant, événement porté par l'environnement qui prime,
+  persistance ET reprise de Σ depuis un workspace existant. `make check`
+  (lint, typecheck, test-unit, test-int) vert, zéro régression sur les 458 preuves
+  préexistantes du mode `transcript`.
+- **Reste à livrer, nommé précisément :** l'A/B sur rejeu proprement dit — deux
+  mini-campagnes `run-arc --mode replay` sur le jeu `cible`, une par mode, et le
+  rapport comparatif (RHAE, actions, tokens cumulés, taille moyenne de prompt,
+  retries) committé sous `docs/rapports/` — et son test E2E qui les rejoue et relit
+  le rapport. Bloqué par aucun accès externe ni arbitrage : c'est du temps de
+  session, pas une décision en attente.
 
 ## U28 — A/B des deux modes en conditions réelles `[ ]` **[LIVE]**
 

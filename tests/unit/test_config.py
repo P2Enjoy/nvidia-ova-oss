@@ -3,6 +3,7 @@
 @verifies docs/BACKLOG.md U6 — Configuration `avo.config`
 @verifies docs/SPEC_HARNAIS.md §H3.1 (env puis .env), §H3.2 (budget utile),
           §H3.3 (validation nommée), §H3.4 (modes), §H4.6 (aucun secret journalisé)
+@verifies docs/BACKLOG.md U27 — `AVO_CONTEXT_MODE` (§H15.7)
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from avo.config import (
     Config,
     ConfigInvalide,
     Mode,
+    ModeContexte,
     charger,
     lire_fichier_env,
 )
@@ -247,6 +249,29 @@ class TestBudget(unittest.TestCase):
         config = charger(Mode.REJEU, env={}, racine=Path("/inexistant"))
         with self.assertRaises(ConfigInvalide):
             config.avec_plafond_appris(0)
+
+
+class TestModeContexteVariable(unittest.TestCase):
+    """§H15.7 : `AVO_CONTEXT_MODE`, défaut `transcript`, jamais une valeur devinée."""
+
+    def test_defaut_est_transcript(self) -> None:
+        config = charger(Mode.REJEU, env={}, racine=Path("/inexistant"))
+        self.assertIs(config.contexte_mode, ModeContexte.TRANSCRIPT)
+
+    def test_state_est_reconnu(self) -> None:
+        config = charger(Mode.REJEU, env={"AVO_CONTEXT_MODE": "state"}, racine=Path("/inexistant"))
+        self.assertIs(config.contexte_mode, ModeContexte.ETAT)
+
+    def test_valeur_inconnue_refusee_en_nommant_la_variable(self) -> None:
+        with self.assertRaises(ConfigInvalide) as capture:
+            charger(
+                Mode.REJEU, env={"AVO_CONTEXT_MODE": "conversation"}, racine=Path("/inexistant")
+            )
+        self.assertIn("AVO_CONTEXT_MODE", str(capture.exception))
+
+    def test_le_resume_porte_le_mode(self) -> None:
+        config = charger(Mode.REJEU, env={"AVO_CONTEXT_MODE": "state"}, racine=Path("/inexistant"))
+        self.assertEqual(config.resume()["contexte_mode"], "state")
 
 
 class TestAucunSecretJournalise(unittest.TestCase):

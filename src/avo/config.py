@@ -4,6 +4,7 @@
 @spec docs/SPEC_HARNAIS.md §H3.1 (variables), §H3.2 (budget utile), §H3.3 (validation),
       §H3.4 (modes replay/live)
 @spec docs/SPEC_HARNAIS.md §H4.6 (aucun secret journalisé)
+@spec docs/BACKLOG.md U27 — `AVO_CONTEXT_MODE` (§H15.7, §H15.8)
 
 Deux principes gouvernent ce module :
 
@@ -55,6 +56,17 @@ class Mode(StrEnum):
 
     REJEU = "replay"
     LIVE = "live"
+
+
+class ModeContexte(StrEnum):
+    """Mode de composition du contexte (§H15.7, §H15.8). Exclusif par segment/run.
+
+    `TRANSCRIPT` (défaut) : historique append-only (§H5). `ETAT` : état structuré Σ,
+    prompt borné en O(1) par tour (§H15).
+    """
+
+    TRANSCRIPT = "transcript"
+    ETAT = "state"
 
 
 class ConfigInvalide(ValueError):
@@ -150,6 +162,17 @@ def _valider_url(nom: str, valeur: str) -> str:
     return valeur.rstrip("/")
 
 
+def _valider_contexte_mode(valeur: str) -> ModeContexte:
+    """Valide `AVO_CONTEXT_MODE` (§H3.1, §H15.7) : jamais une valeur devinée."""
+    try:
+        return ModeContexte(valeur)
+    except ValueError as erreur:
+        valeurs = ", ".join(mode.value for mode in ModeContexte)
+        raise ConfigInvalide(
+            f"AVO_CONTEXT_MODE : une valeur parmi {valeurs} attendue, reçue « {valeur} »."
+        ) from erreur
+
+
 @dataclass(frozen=True)
 class Config:
     """Configuration résolue et validée du harnais (§H3)."""
@@ -172,6 +195,7 @@ class Config:
     runs_dir: Path
     arc_api_key: str | None
     arc_base_url: str
+    contexte_mode: ModeContexte
 
     @property
     def budget_prompt(self) -> int:
@@ -218,6 +242,7 @@ class Config:
             "sup_cooldown": self.sup_cooldown,
             "runs_dir": str(self.runs_dir),
             "arc_base_url": self.arc_base_url,
+            "contexte_mode": self.contexte_mode.value,
             "ollama_api_key": "<masquée>",
             "arc_api_key": "<masquée>" if self.arc_api_key else None,
         }
@@ -296,6 +321,9 @@ def charger(
         arc_base_url=_valider_url(
             "ARC_BASE_URL",
             source.texte("ARC_BASE_URL", "https://three.arcprize.org" if live else ARC_REJEU),
+        ),
+        contexte_mode=_valider_contexte_mode(
+            source.texte("AVO_CONTEXT_MODE", ModeContexte.TRANSCRIPT.value)
         ),
     )
 

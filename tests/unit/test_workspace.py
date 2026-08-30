@@ -3,6 +3,7 @@
 @verifies docs/BACKLOG.md U8 — Comptabilité, journalisation, workspace de run
 @verifies docs/SPEC_HARNAIS.md §H6.1 (arborescence), §H11.2 (métriques),
           §H11.3 (transcripts), §H4.6 (aucun secret persisté)
+@verifies docs/BACKLOG.md U27 — persistance de Σ (§H15.5)
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from pathlib import Path
 
 import avo
 from avo.config import Config, Mode, charger
+from avo.context.etat import Etat
 from avo.memory.workspace import SOUS_DOSSIERS, Workspace
 
 _SECRET = "sk-ollama-secret-de-test-du-workspace"
@@ -117,6 +119,36 @@ class TestTranscripts(unittest.TestCase):
         self.espace.ajouter_au_transcript(b, {"x": 2})
         self.assertIn('"x": 1', self.espace.chemin_segment(a).read_text(encoding="utf-8"))
         self.assertNotIn('"x": 1', self.espace.chemin_segment(b).read_text(encoding="utf-8"))
+
+
+class TestEtatPersiste(unittest.TestCase):
+    """§H15.5 : Σ survit à une écriture puis une relecture, aller-retour exact."""
+
+    def setUp(self) -> None:
+        self._dossier = tempfile.TemporaryDirectory()
+        self.espace = Workspace.ouvrir(_config(), "run-etat", racine=Path(self._dossier.name))
+
+    def tearDown(self) -> None:
+        self._dossier.cleanup()
+
+    def test_aucun_etat_avant_la_premiere_ecriture(self) -> None:
+        self.assertIsNone(self.espace.lire_etat())
+
+    def test_ecrire_puis_lire_rend_un_etat_egal(self) -> None:
+        etat = Etat.initial().fusionner({"essai": 2, "hypotheses": ["h1"]})
+        self.espace.ecrire_etat(etat)
+        self.assertEqual(self.espace.lire_etat(), etat)
+
+    def test_une_reecriture_remplace_la_precedente(self) -> None:
+        self.espace.ecrire_etat(Etat.initial())
+        etat = Etat.initial().fusionner({"essai": 3})
+        self.espace.ecrire_etat(etat)
+        self.assertEqual(self.espace.lire_etat(), etat)
+
+    def test_le_fichier_vit_sous_state(self) -> None:
+        self.espace.ecrire_etat(Etat.initial())
+        self.assertEqual(self.espace.etat_json, self.espace.chemin / "state" / "etat.json")
+        self.assertTrue(self.espace.etat_json.is_file())
 
 
 class TestRapport(unittest.TestCase):

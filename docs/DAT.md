@@ -89,8 +89,9 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
   compteurs) derrière une interface remplaçable (H4.1).
 - `think:false` par défaut, raisonnement en clair dans le contenu (H12).
 - Historique append-only + continuation en contexte frais à la VISTA (H5), défaut
-  toujours actif ; alternative à état structuré (SKILL.state, H15) livrée en primitives
-  (U26) et départagée par mesure, pas par principe (U27/U28).
+  toujours actif ; alternative à état structuré (SKILL.state, H15, `AVO_CONTEXT_MODE`)
+  branchée dans la boucle (U26 primitives, U27 branchement — un pas = un tour, H15.8)
+  et départagée par mesure, pas par principe (A/B de U27 encore à livrer, puis U28).
 - Lignée = git jetable par run, jamais le dépôt projet (H9.3).
 - Instanciation ARC du couple (xᵢ, f) : connaissance validée / (niveaux, −actions)
   — décision documentée H9.2, les sources ne publiant pas ce détail.
