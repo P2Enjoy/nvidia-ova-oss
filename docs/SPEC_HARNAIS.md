@@ -1,11 +1,11 @@
 # Spécification du harnais AVO — noyau agent
 
 Référence stable pour les commentaires `@spec` : `docs/SPEC_HARNAIS.md §Hn`.
-Unités de backlog couvertes : U3–U15 (voir `docs/BACKLOG.md`).
+Unités de backlog couvertes : U3–U15, U26–U27 (voir `docs/BACKLOG.md`).
 Sources faisant foi : exports de `knowledge/` (papier AVO arXiv:2603.24517, billet NVIDIA
-2026-08-21, page VISTA, papier Tycho arXiv:2607.28287). En cas d'écart entre cette
-spécification et une source, la source fait foi et l'écart se consigne dans
-`docs/INCONSISTENCY_REPORT.md`.
+2026-08-21, page VISTA, papier Tycho arXiv:2607.28287, papier SKILL.state
+arXiv:2608.26263 pour §H15). En cas d'écart entre cette spécification et une source, la
+source fait foi et l'écart se consigne dans `docs/INCONSISTENCY_REPORT.md`.
 
 Chaque exigence porte un identifiant stable `Hn.m` cité par les `@spec` du code.
 
@@ -469,3 +469,122 @@ la CLI réelle, artefacts vérifiés).
 peau de l'opérateur (terminal, `make …`), l'observation des sorties, et la lecture
 des artefacts produits (`report.md`, rendus de grilles). Documenté aussi dans
 `docs/MASTER_PLAN.md` ; s'il gagne un jour une UI, §16 s'applique en entier.
+
+## H15. État d'exécution structuré (SKILL.state) — mode `state`
+
+Chapitre couvrant U26 (runtime `avo.context.etat`) et U27 (branchement dans la
+boucle). Source : papier SKILL.state, arXiv:2608.26263, §3 (contrat), §5.7
+(taxonomie d'erreurs), §7 (limites) — export intégral dans
+`knowledge/arxiv-2608.26263-skill-state-long-horizon-agent-skills.md`.
+
+**H15.0 — Statut : alternative configurable, pas un remplacement.** H5 (transcript
+append-only) reste le mode par défaut et le seul livré avant cette unité ; la
+décision de le retenir tient à une contrainte mesurée sur l'endpoint (préremplissage
+dominant, cache de préfixe — journal du 2026-08-27 suite 2), que le mode `state`
+n'élimine pas nécessairement puisqu'il représmplit `(P, Σₜ, Oₜ)` à chaque tour. Le
+départage se fait par la mesure (U27 : A/B sur rejeu ; U28 : A/B en réel), jamais sur
+le papier. H15 spécifie le mode comme une alternative activable, exclusive avec H5
+pour un même segment (H15.7).
+
+**H15.1 — Contrat d'exécution d'un pas.** En mode `state`, chaque pas est défini par
+`(P, Σₜ, Oₜ)` (papier §3, éq. 2) : la spécification procédurale (le prompt système,
+fixe), l'état d'exécution structuré courant, et la dernière observation reçue de
+l'environnement — jamais l'historique des observations, actions ou raisonnements
+passés. Le modèle produit `(Rₜ, ΔΣₜ, aₜ)` (éq. 3) : un raisonnement en texte libre
+`Rₜ`, un patch d'état `ΔΣₜ` et une action `aₜ`, sous la forme d'un bloc ```` ```json
+```` unique portant exactement deux clés, `state_patch` (objet) et `action`
+(chaîne) — le format de l'annexe A.4 du papier, repris tel quel. `Rₜ` n'est **jamais**
+réinjecté dans un prompt suivant : une fois le patch validé et appliqué, il est
+définitivement jeté (§H15.1, papier §3.2). C'est ce qui borne la taille de prompt en
+`O(1)` par tour et la consommation cumulée en `O(T)` plutôt qu'en `O(T²)` (papier §3.3) —
+propriété que H5 n'a pas : son budget croît avec le nombre de segments.
+
+**H15.2 — Opérateur `⊕` : fusion avec suppression par `null`.**
+`Σₜ₊₁ = Σₜ ⊕ ΔΣₜ` (éq. 4). Une clé absente du patch **laisse le champ correspondant
+inchangé** — c'est la propriété qui évite l'écrasement accidentel, mode d'erreur
+dominant mesuré par le papier (68 %, §5.7, « premature state overwrite/deletion »).
+Une clé présente avec une valeur non nulle **remplace** le champ. Une clé présente
+avec la valeur `null` réinitialise le champ à son défaut du schéma plutôt que de le
+retirer de Σ : le schéma ARC v1 (H15.6) déclare quatre champs **toujours présents**,
+donc Σ reste en permanence conforme à son schéma — aucun état intermédiaire
+partiellement peuplé n'existe. C'est un raffinement assumé de la sémantique générale
+du papier (qui autorise la disparition d'une clé) pour un schéma à champs fixes ; le
+point est écrit ici pour qu'un lecteur du papier ne s'attende pas à une clé absente
+de Σ après un `null`.
+
+**H15.3 — Propriété du schéma et de la validation : au runtime, jamais au modèle.**
+Le schéma de Σ est possédé et fait autorité côté runtime (papier §7, dernier
+paragraphe : « schema ownership and validation reside in the deterministic runtime
+rather than the model »). Chaque champ du patch est validé structurellement — type,
+forme, valeurs admissibles — avant fusion ; un patch qui échoue à la validation
+**n'atteint jamais Σ**, qui reste donc toujours dans un état valide. L'erreur nomme
+le champ fautif, jamais un rejet générique (CLAUDE.md §18) : c'est la classe
+« Schema Comprehension / Type Coercion » de la taxonomie (20 %, §5.7).
+
+**H15.4 — Rollback-retry borné.** Deux façons dont un pas peut échouer avant
+d'atteindre Σ, chacune couverte par la taxonomie du papier (§5.7) :
+
+- le texte du modèle ne contient pas de bloc JSON à deux clés interprétable (bloc
+  absent, JSON syntaxiquement invalide, clés manquantes ou en trop, types incorrects
+  au niveau du bloc) — classe « JSON Syntax/Formatting Slips » (12 %) ;
+- le bloc est syntaxiquement valide mais `state_patch` échoue à la validation du
+  schéma (H15.3) — classes 68 % et 20 % ci-dessus.
+
+Dans les deux cas, Σ n'est pas modifié et l'échec est compté sur un budget borné de
+tentatives pour le pas courant (`RETRIES_MAX = 3`, valeur du module — même principe
+que les deux `413` consécutifs de H5.4 : jamais une boucle infinie). Le budget épuisé
+sans patch valide est une erreur fatale explicite qui arrête le run proprement
+(H13.1), jamais un `try/except` silencieux ni un état par défaut trompeur. Chaque
+tentative refusée est comptée en événement (H11.2, au même titre qu'une continuation
+ou un `413` absorbé) et lue par les détecteurs du superviseur (H15.7).
+
+**H15.5 — Persistance et reprise.** Σ est sérialisé dans le workspace du run
+(`runs/<run_id>/state/etat.json`, aux côtés de `notes/` et `transcripts/` — H6.1) après
+chaque pas validé. La sérialisation est un aller-retour à l'identique : relire Σ
+sérialisé rend un état égal à celui qui l'a produit, structure imbriquée comprise.
+La reprise d'un run en mode `state` (H13.2) recharge Σ depuis ce fichier plutôt que
+de le réinitialiser — contrairement au transcript, qui repart sur un segment frais,
+Σ n'a pas de notion de segment à rouvrir.
+
+**H15.6 — Schéma ARC v1 de Σ.** Quatre champs, tous obligatoires et toujours
+présents (H15.2), fixés par cette unité :
+
+| Champ | Type | Rôle |
+|---|---|---|
+| `position` | `{"x": int, "y": int}` ou `null` | Position courante crue de l'agent dans la grille, si identifiée. |
+| `essai` | entier ≥ 1 | Numéro de la tentative courante sur le niveau (incrémenté par le modèle à chaque `RESET` volontaire qu'il décide). |
+| `hypotheses` | liste de chaînes | Hypothèses testées, formulées librement, qui survivent à un pas qui ne les mentionne pas. |
+| `objets` | liste de `{"id": str, "description": str, …}` | Objets identifiés dans la grille ; clés au-delà de `id`/`description` libres et non validées. |
+
+Le schéma est volontairement minimal — quatre champs génériques à toute grille
+ARC-AGI-3, pas un par jeu (une constante ou une heuristique propre à un jeu
+violerait l'interdiction de benchmaxing, `CLAUDE_PROJECT.md`). Une clé de patch hors
+de ces quatre est refusée (H15.3) : le schéma n'est pas extensible à la volée par le
+modèle, seul le runtime le fait évoluer (schéma v2 hypothétique, hors périmètre).
+
+**H15.7 — Articulation avec les autres chapitres.**
+
+- **H5 (mode exclusif par segment).** Un segment est soit en mode `transcript`
+  (H5, historique complet renvoyé), soit en mode `state` (Σ + observation courante
+  seuls) — jamais les deux à la fois. `AVO_CONTEXT_MODE` (U27) fixe le mode pour tout
+  le run, défaut `transcript` : aucun comportement existant ne change tant que U27
+  n'est pas prise.
+- **H6.2 (notes).** `GUIDE.md`/`WORKING.md` restent la mémoire durable **trans-niveaux** ;
+  Σ est l'état opérationnel du niveau courant. Les notes ne sont pas remplacées par
+  Σ : un `RESET` de niveau réinitialise Σ (H15.6) mais pas les notes.
+- **H10 (superviseur).** Les détecteurs de stagnation (H10.2) lisent aussi les
+  tentatives de patch refusées (H15.4) comme un signal d'enlisement, au même titre
+  que les actions répétées ou le volume de Bug-Fixing anormal.
+- **H12 (raisonnement).** `Rₜ` jeté après projection (H15.1) est la même politique
+  que H12.1 pour le raisonnement natif désactivé (`think: false`) : dans les deux
+  cas, un texte de raisonnement existe le temps du tour et n'est jamais réinjecté.
+  Le mode `state` généralise ce principe à la réponse entière, pas seulement au
+  raisonnement natif.
+- **Limite « statistique suffisante » (papier §7).** Le mode `state` suppose que
+  tout ce qui compte pour la suite peut être projeté dans Σ au moment où c'est
+  observé ; ce n'est pas toujours vrai (le papier cite explicitement l'information
+  dont la pertinence n'est reconnue qu'après coup). Décision : l'archivage sans
+  perte des frames (SPEC_ARCAGI3 §A4, `inspect`/`read_pixels`, gratuit au score)
+  reste inchangé et disponible dans les deux modes — c'est le filet qui permet de
+  retrouver une information non projetée dans Σ au moment où sa pertinence apparaît,
+  sans dépendre de l'historique conversationnel pour cela.
