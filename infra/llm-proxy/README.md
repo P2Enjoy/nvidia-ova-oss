@@ -22,4 +22,12 @@ Usage côté harnais : faire pointer `OLLAMA_HOST` sur l'URL du site Netlify
 (fournie hors dépôt), le reste de la configuration est inchangé.
 
 Déploiement : site Netlify du responsable, variable `LLM_ORIGIN_URL` posée sur
-le site, contenu publié = ce dossier (`public/` + `netlify/edge-functions/`).
+le site (hors dépôt), fonctions edge servies depuis `netlify/edge-functions/`
+via le `netlify.toml` racine. La fonction interceptant tous les chemins,
+`public/` n'est qu'un dossier de publication requis, jamais servi en pratique.
+
+**Déployé et recetté le 2026-08-30** depuis un environnement limité au port
+443 : `404` hors `/api`/`/v1`, `401` de l'origine sans clé, `200` avec
+(version, tags), complétion réelle `/api/chat` en 15,5 s à froid (dont 14,6 s
+de chargement du modèle ; préremplissage 0,23 s), streaming NDJSON transmis
+fragment par fragment. Mesures : `docs/JOURNAL.md`, entrée du 2026-08-30.

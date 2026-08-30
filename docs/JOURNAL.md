@@ -642,3 +642,26 @@ Deux gardes exécutables remplacent la promesse : un balayage statique des const
 **`.env.example` ajouté à la racine, suivi par git** (`!.env.example` ajouté sous `.env.*` dans `.gitignore`, `git check-ignore` revérifié dans les deux sens). Il documente **les 20 variables** — les 17 de `avo.config`/H3.1 (endpoint, ARC, modèle et inférence, budgets de contexte/outils/actions, superviseur, artefacts) et les 3 d'outillage lues par make et les scripts (`AVO_NO_DOCKER`, `AVO_PORT_LLM_REPLAY`, `AVO_PORT_ARC_REPLAY`), chacune avec rôle, format, caractère requis/facultatif, défaut et exemple non sensible ; les requises en clair avec valeur factice, les facultatives commentées à leur défaut. Exhaustivité prouvée par script : extraction des noms depuis `config.py` + Makefile/scripts, différence vide dans les deux sens (20/20). Table du README complétée des sept variables applicatives qui y manquaient (`AVO_MODEL`, `AVO_THINK`, `AVO_NUM_PREDICT`, `AVO_TEMPERATURE`, `AVO_TIMEOUT_S`, `AVO_CONTEXT_SOFT_RATIO`, `AVO_RUNS_DIR`), de la note d'outillage et du renvoi vers `.env.example`.
 
 **Où reprendre.** Inchangé : U21, puis U26–U27. [LIVE] : voir la contrainte d'environnement ci-dessus.
+
+---
+
+## 2026-08-30 (suite 3) — Pont HTTPS 443 déployé devant l'endpoint d'inférence, recetté de bout en bout
+
+**Demande du responsable.** Déployer sur son compte Netlify un proxy HTTPS pour atteindre l'endpoint LLM sur le port 443, avec transmission des credentials par le client — aucun credential en dur.
+
+**Livré.** `infra/llm-proxy/` : fonction edge Netlify (TypeScript, Deno) qui relaie les seules surfaces `/api/*` et `/v1/*` vers l'origine et répond `404` partout ailleurs, `502` explicite si l'origine est injoignable, `503` si la variable de site manque. Propriétés voulues : l'URL d'origine vit dans la variable de site Netlify `LLM_ORIGIN_URL` (posée via l'API, jamais committée) ; l'en-tête `Authorization` du client traverse tel quel (passthrough) — le pont ne détient aucun secret et n'élargit pas la surface d'accès, l'origine restant seule à exiger sa clé. `netlify.toml` racine : seul `infra/llm-proxy` est servi. Site créé sur le compte du responsable et déployé via l'outillage Netlify officiel (build vert du premier coup).
+
+**Recette exécutée depuis CETTE session (sortie limitée au 443 — le cas d'usage exact) :**
+
+- chemin hors API → `404` en 0,32 s (l'origine n'est pas touchée) ;
+- `/api/version` sans clé → `401` de l'origine (« clé API manquante ») en 1,05 s — preuve du passthrough d'authentification ;
+- `/api/version` avec clé → `200`, serveur Ollama `0.32.14`, 0,33 s ;
+- `/api/tags` avec clé → `200` ; **fait nouveau : trois modèles servis — `qwen3.6:35b`, `qwen3.8:27b` (absent le 2026-08-27) et `all-minilm:latest`** ; le modèle de travail reste `qwen3.6:35b`, tout changement d'`AVO_MODEL` relevant du responsable ;
+- `/api/chat` non-streamé (`qwen3.6:35b`, `think:false`, température 0) → `200`, réponse exacte attendue, 15,5 s dont 14,65 s de **chargement du modèle à froid** (préremplissage 0,23 s pour 25 tokens, génération 0,24 s) — les appels à chaud sont sub-secondes ;
+- `/api/chat` streamé → fragments NDJSON reçus un à un à travers le pont.
+
+**Limite de plate-forme documentée** (contexte officiel Netlify) : 40 s maximum avant les premiers en-têtes de réponse de l'origine. Avec le cache de préfixe du serveur (mesure du 2026-08-27 : préremplissage ~493 tok/s), elle n'est atteinte que sur un préremplissage à froid dépassant ~20 000 tokens sans cache — cas rare en campagne (segments frais courts) ; si elle survient, l'appel échoue au pont et le retry H4.5 s'applique.
+
+**Documentation mise en accord dans le même chunk** : `CLAUDE_PROJECT.md` (section endpoint : le pont, son contrat, la liste des modèles observés), `README.md` (structure : `infra/`), `.env.example` (`OLLAMA_HOST` peut pointer le pont), `infra/llm-proxy/README.md` (recette), doublon `!.env.example` retiré du `.gitignore`. Le `.env` local de cette session pointe désormais le pont — les unités **[LIVE] deviennent exécutables depuis les sessions interactives**.
+
+**Où reprendre.** U21 (E2E rejeu), puis U26–U27 ; les [LIVE] (U22 sonde, U24/U25 campagnes, U28 A/B) sont désormais accessibles d'ici, chacune sous ses gardes propres (accord de publication pour les scorecards).

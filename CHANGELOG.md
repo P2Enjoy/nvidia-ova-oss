@@ -225,6 +225,12 @@
 - Ajout de `.env.example` (suivi par git, `!.env.example` dans `.gitignore`) : les 20 variables du projet — 17 applicatives (H3.1) et 3 d'outillage — avec rôle, format, caractère requis, défaut et exemple non sensible ; exhaustivité contrôlée par script contre `config.py`, le Makefile et les scripts.
 - Table des variables du `README.md` complétée (sept variables applicatives manquantes, note d'outillage, renvoi vers `.env.example`).
 
+### 2026-08-30 — Pont HTTPS 443 vers l'endpoint d'inférence (Netlify)
+
+- Ajout de `infra/llm-proxy/` (fonction edge Netlify) et du `netlify.toml` racine : relais des surfaces `/api/*` et `/v1/*` vers l'endpoint, authentification en passthrough (aucun secret ni adresse en dur — l'URL d'origine vit dans la variable de site `LLM_ORIGIN_URL`), `404` hors API, erreurs explicites. Site déployé sur le compte Netlify du responsable et recetté de bout en bout depuis un environnement limité au port 443 : `401` sans clé, version, tags, complétion réelle et streaming NDJSON à travers le pont (mesures au journal).
+- Conséquence : les unités [LIVE] deviennent exécutables depuis les sessions interactives ; `OLLAMA_HOST` peut pointer le pont (`.env.example` et `CLAUDE_PROJECT.md` mis à jour ; limite de plate-forme documentée : 40 s avant en-têtes de réponse).
+- Observation consignée : l'endpoint sert désormais aussi `qwen3.8:27b` (absent le 2026-08-27) ; le modèle de travail reste `qwen3.6:35b`.
+
 ## [Publié]
 
 _Aucune publication pour le moment._

@@ -138,6 +138,7 @@ Le plafond réellement applicable n'est pas cette variable seule : le proxy d'au
 ├── Makefile             # contrat des commandes, tout en conteneur
 ├── pyproject.toml       # paquet avo, zéro dépendance d'exécution
 ├── src/avo/             # paquet applicatif (cli, llm, context, memory, tools, loop, arc)
+├── infra/               # llm-proxy : pont HTTPS 443 vers l'endpoint (fonction edge Netlify)
 ├── mocks/               # serveurs locaux : llm-replay (U4), arc-replay (U16)
 ├── tests/               # unit, integration, e2e, fixtures
 ├── docs/
