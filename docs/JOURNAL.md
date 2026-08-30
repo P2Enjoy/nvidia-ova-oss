@@ -803,3 +803,13 @@ arbitrage — c'est une suite directe de ce qui est déjà branché et prouvé.
 et ses baselines existent déjà, U16/U21/U23). Une fois U27 close, les [LIVE]
 U22 → (registre : arrêt sur état terminal, préalable de U24) → U24 → U25/U28 restent
 prenables par la routine, dans l'ordre déjà consigné.
+
+**Précision sur `test-e2e`/`make build` non rejoués (correction de l'entrée
+ci-dessus).** La cause réelle n'est pas le budget de temps mais un aléa
+d'environnement mesuré : `make up` et `make build` échouent tous deux sur
+`429 Too Many Requests` de Docker Hub à la résolution de `python:3.13-slim`
+(trois tentatives, toutes identiques) — même limitation de registre que celle déjà
+notée les 2026-08-30 (sessions U21 et U26), transitoire et étrangère au produit.
+`lint`, `typecheck`, `test-unit` et `test-int` n'en dépendent pas (image `avo-dev`
+déjà construite en début de session) et sont tous verts, comme détaillé ci-dessus.
+Non consigné au registre d'incohérences : ce n'est pas une incohérence du dépôt.
