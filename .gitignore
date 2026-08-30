@@ -254,3 +254,6 @@ runs/
 
 # Netlify (dossier local de l outil, jamais du code)
 .netlify/
+
+# Certificats d environnement déposés pour la construction (jamais committés)
+certs/*.crt

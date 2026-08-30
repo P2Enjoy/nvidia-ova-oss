@@ -116,6 +116,17 @@ aucune installation sur la machine hôte.
 **Prérequis hôte, et eux seuls** : `git`, `docker` (démon joignable par l'utilisateur),
 `make`. Python n'est requis sur l'hôte que pour le mode dégradé `AVO_NO_DOCKER=1`.
 
+**Environnements à proxy TLS interceptant.** La construction de l'image de
+développement installe l'outillage depuis PyPI en TLS ; derrière un proxy qui
+intercepte le TLS avec sa propre autorité, cette étape échoue en
+`CERTIFICATE_VERIFY_FAILED`. Mécanisme générique : tout certificat `*.crt` déposé
+dans `certs/` (dossier du contexte de build, vide et versionné avec son seul
+`README.md` ; les `*.crt` sont ignorés par git) est installé dans le magasin de
+l'image de développement avant l'installation de l'outillage, et `pip` lit le
+magasin système (`PIP_CERT`). L'image de production n'en reçoit aucun : elle ne
+fait aucun appel TLS à la construction. Jamais de désactivation de vérification
+TLS.
+
 ## H3. Configuration
 
 **H3.1 — Variables.** Lues depuis l'environnement puis, à défaut, depuis `./.env`

@@ -45,6 +45,14 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends make \
  && rm -rf /var/lib/apt/lists/*
 
+# Autorités de certification supplémentaires (§H2.4) : tout `*.crt` déposé dans
+# certs/ (vide par défaut, cf. certs/README.md) entre au magasin système, et pip
+# lit ce magasin — nécessaire derrière un proxy TLS interceptant, sans effet
+# sinon (le magasin système reste le jeu d'autorités standard).
+COPY certs/ /usr/local/share/ca-certificates/extra/
+RUN update-ca-certificates
+ENV PIP_CERT=/etc/ssl/certs/ca-certificates.crt
+
 # Outillage de preuve, épinglé par plancher de version (cf. pyproject [dev]).
 RUN pip install --no-cache-dir "pytest>=8" "ruff>=0.6" "mypy>=1.11"
 
