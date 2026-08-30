@@ -57,7 +57,7 @@ RUN := $(DOCKER) run --rm -v "$(CURDIR)":/app -w /app $(USER_FLAG) \
 endif
 
 .DEFAULT_GOAL := aide
-.PHONY: aide image install lint typecheck test-unit test-int test-e2e check build up down ps logs smoke-pile seed smoke-live run-arc resume record-llm test-int-live _exige-env _hote-seulement docker-check
+.PHONY: aide image install lint typecheck test-unit test-int test-e2e check build up down ps logs smoke-pile seed seed-e2e smoke-live run-arc resume record-llm test-int-live _exige-env _hote-seulement docker-check
 
 aide:
 	@echo "Cibles du dépôt (contrat : docs/SPEC_HARNAIS.md §H2.3) — tout tourne dans Docker"
@@ -73,11 +73,13 @@ aide:
 	@echo "  make up / down   pile locale de rejeu : llm-replay et arc-replay (hôte)"
 	@echo "  make ps / logs   état et journaux de la pile (hôte)"
 	@echo "  make smoke-pile  fumée de la pile par le port composé (hôte)"
-	@echo "  make seed        données de démonstration          [à venir : U4/U16]"
+	@echo "  make seed        contrôle des fixtures (n'en fabrique aucune)"
+	@echo "  make seed-e2e    régénère les cassettes de scénario E2E (déterministe)"
 	@echo "  make smoke-live     [LIVE] fumée contre le VRAI endpoint"
 	@echo "  make record-llm     [LIVE] enregistre les cassettes sur le VRAI endpoint"
 	@echo "  make test-int-live  [LIVE] détecte la dérive du contrat réel"
-	@echo "  make run-arc     campagne ARC-AGI-3                [à venir : U23]"
+	@echo "  make run-arc     campagne ARC-AGI-3 (replay par défaut, live sous garde)"
+	@echo "  make resume RUN_ID=<id>  reprend un run sans rejouer les jeux terminés"
 	@echo ""
 	@echo "  AVO_NO_DOCKER=1 make test-unit   mode dégradé sur l'hôte (stdlib seule)"
 	@echo ""
@@ -154,7 +156,7 @@ test-e2e:
 	elif [ -n "$(AVO_NO_DOCKER)" ]; then \
 	  PYTHONPATH=src:mocks $(PY) -m unittest discover -s tests/e2e -t . -v; \
 	else \
-	  $(MAKE) --no-print-directory docker-check && $(RUN) pytest tests/e2e $(PYTEST_ARGS); \
+	  $(MAKE) --no-print-directory docker-check && $(RUN_PILE) pytest tests/e2e $(PYTEST_ARGS); \
 	fi
 
 # Campagne complète : tout ce qui EXISTE, hors ligne et sans secret.
@@ -221,6 +223,22 @@ seed:
 	else \
 	  echo "  aucun épisode réel — le premier vient de la sonde U22 ([LIVE])"; \
 	fi
+	@echo "→ cassettes de scénario E2E (U21, générées : make seed-e2e)"
+	@for f in e2e_victoire.jsonl e2e_echec.jsonl; do \
+	  if [ -s tests/fixtures/llm/cassettes/$$f ]; then \
+	    echo "  $$f : $$(wc -l < tests/fixtures/llm/cassettes/$$f) échanges"; \
+	  else \
+	    echo "  $$f ABSENTE — lancez « make seed-e2e » puis relancez la pile"; \
+	  fi; \
+	done
+
+# Cassettes de scénario E2E (§A8.5) : génération DÉTERMINISTE par capture en deux
+# passes, auto-vérifiée (double génération comparée). Le rejoueur charge ses
+# cassettes au démarrage : après régénération, relancer la pile.
+seed-e2e:
+	@$(MAKE) --no-print-directory docker-check
+	$(RUN) python -m tests.e2e.generer_cassettes
+	@echo "cassettes E2E écrites — relancez la pile pour qu'elle les serve : make down && make up"
 
 # Fumée manuelle contre le VRAI endpoint (§H4.8). Exige .env, jamais dans check.
 smoke-live: _exige-env
