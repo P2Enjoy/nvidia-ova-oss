@@ -22,8 +22,8 @@ Les éléments constitutifs, tirés des sources exportées dans [`knowledge/`](k
 - Fait : endpoint d'inférence fourni par le responsable, **testé et validé de bout en bout** le 2026-08-27 (authentification, tool calling, contexte long réellement exploité) ; le modèle de travail est `qwen3.6:35b`, seul modèle de complétion servi par cet endpoint. Mesures et contraintes qui en découlent : `docs/JOURNAL.md`, entrée du 2026-08-27 (suite 2).
 - Décidé : le benchmark de référence est **ARC-AGI-3, ensemble public** (décision prise par défaut le 2026-08-27 au titre de `CLAUDE.md` §1, « Autonomie de décision » ; motif et options écartées dans `docs/JOURNAL.md`). Aucun autre benchmark n'entre dans le périmètre initial ; les benchmarks interactifs du papier SKILL.state sont consignés comme extension possible, en attente d'arbitrage (`docs/BACKLOG.md`, U29).
 - Fait : **spécification complète écrite et committée** — `docs/SPEC_HARNAIS.md` (noyau agent, H1–H14), `docs/SPEC_ARCAGI3.md` (interface et évaluation, A1–A8), `docs/MASTER_PLAN.md` (ordre d'exécution, DoD commune), backlog en unités d'une session, chacune portant ses références de spécification et ses preuves.
-- Fait : **unités U3 à U20 et U23 livrées et vérifiées** (socle conteneurisé, client d'inférence sur cassettes réelles, contexte et notes, outils et boucle P→I→E→B, lignée et superviseur, rejeu ARC local et jeu `cible`, client API ARC, rendu et mémoire de frames, interface direct-interaction, RHAE, runner de campagne `run-arc`/`resume` avec rapport). Campagne de preuves : 550 tests verts, lint, format, mypy strict.
-- Prochaine étape : U21 (E2E sur rejeu local), puis lot G (mode d'exécution à état structuré, U26–U27). Les unités marquées [LIVE] (U22 sonde d'API, U24/U25 campagnes, U28 A/B réel) se font en session interactive uniquement.
+- Fait : **unités U3 à U21 et U23 à U27 livrées et vérifiées** (socle conteneurisé, client d'inférence sur cassettes réelles, contexte et notes, outils et boucle P→I→E→B, lignée et superviseur, rejeu ARC local et jeu `cible`, client API ARC, rendu et mémoire de frames, interface direct-interaction, RHAE, runner de campagne `run-arc`/`resume` avec rapport, E2E de partie complète sur rejeu, mode d'exécution `state` de la boucle H15 et son A/B contre `transcript` — `docs/rapports/ab_mode_contexte.md`). Campagne de preuves : 599 tests verts (467 unitaires, 132 d'intégration, 4 E2E), lint, format, mypy strict.
+- Prochaine étape : unités [LIVE] dans l'ordre du plan — U22 (sonde d'API ARC), le préalable consigné au registre (arrêt sur état terminal), puis U24, puis U25/U28. Le responsable a autorisé la routine planifiée à jouer ARC Prize via l'API officielle et à collecter les résultats (2026-08-30, `CLAUDE_PROJECT.md`) ; les sessions interactives restent possibles pour les mêmes unités.
 
 ## Stack
 
@@ -59,6 +59,7 @@ Contrat : `docs/SPEC_HARNAIS.md` §H2.3. Chaque cible lance un **conteneur jetab
 | `make smoke-live` | fumée manuelle contre l'endpoint réel (exige `.env`, hors campagne) |
 | `make run-arc` | campagne ARC (replay par défaut ; live sous garde d'accord explicite) |
 | `make resume RUN_ID=<id>` | reprend un run sans rejouer les jeux déjà terminés |
+| `make rapport-ab` | A/B des deux modes de contexte sur rejeu (U27) — écrit `docs/rapports/ab_mode_contexte.md` |
 
 **Lancer une campagne** (la pile doit être debout) :
 

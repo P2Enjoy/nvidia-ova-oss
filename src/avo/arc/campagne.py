@@ -6,6 +6,8 @@
       §A6 (RHAE), §A5 (interface de tâche), §A2.2 (historique typé persisté)
 @spec docs/SPEC_HARNAIS.md §H6.1 (workspace du run), §H8.3 (bornes d'actions),
       §H8.4 (branchements de la boucle), §H9.3 (lignée jetable), §H13.2 (reprise)
+@spec docs/BACKLOG.md U27 — `retries_patch` sur `ResultatJeu` (§H15.4, §H15.8),
+      nécessaire au rapport comparatif A/B des deux modes de contexte
 
 Le même chemin de code sert en rejeu et en live : seul l'hôte change. Une branche
 live jamais éprouvée serait une branche fausse le jour où elle compte.
@@ -111,6 +113,9 @@ class ResultatJeu:
     depassements: int
     interventions: int
     versions_committees: int
+    #: Tentatives de patch refusées, mode `state` seulement (§H15.4, §H15.8). Absent
+    #: (0) en mode `transcript`, où aucun patch n'est jamais décodé.
+    retries_patch: int = 0
 
     @property
     def tokens(self) -> int:
@@ -145,6 +150,7 @@ class ResultatJeu:
             "depassements": self.depassements,
             "interventions": self.interventions,
             "versions_committees": self.versions_committees,
+            "retries_patch": self.retries_patch,
         }
 
     @classmethod
@@ -175,6 +181,7 @@ class ResultatJeu:
             depassements=int(donnees["depassements"]),
             interventions=int(donnees["interventions"]),
             versions_committees=int(donnees["versions_committees"]),
+            retries_patch=int(donnees.get("retries_patch", 0)),
         )
 
 
@@ -397,6 +404,7 @@ def jouer_un_jeu(
         depassements=bilan.depassements,
         interventions=bilan.interventions,
         versions_committees=bilan.versions_committees,
+        retries_patch=bilan.retries_patch,
     )
     _journal.info("jeu terminé", extra={"jeu": game_id, "rhae": resultat.rhae.valeur})
     workspace.metrique("jeu", **resultat.en_json())

@@ -80,6 +80,7 @@ aide:
 	@echo "  make test-int-live  [LIVE] détecte la dérive du contrat réel"
 	@echo "  make run-arc     campagne ARC-AGI-3 (replay par défaut, live sous garde)"
 	@echo "  make resume RUN_ID=<id>  reprend un run sans rejouer les jeux terminés"
+	@echo "  make rapport-ab  A/B des deux modes de contexte, sur rejeu (U27)"
 	@echo ""
 	@echo "  AVO_NO_DOCKER=1 make test-unit   mode dégradé sur l'hôte (stdlib seule)"
 	@echo ""
@@ -231,6 +232,12 @@ seed:
 	    echo "  $$f ABSENTE — lancez « make seed-e2e » puis relancez la pile"; \
 	  fi; \
 	done
+	@echo "→ cassette de scénario E2E, mode state (U27, générée : make seed-e2e)"
+	@if [ -s tests/fixtures/llm/cassettes/e2e_etat_victoire.jsonl ]; then \
+	  echo "  e2e_etat_victoire.jsonl : $$(wc -l < tests/fixtures/llm/cassettes/e2e_etat_victoire.jsonl) échanges"; \
+	else \
+	  echo "  e2e_etat_victoire.jsonl ABSENTE — lancez « make seed-e2e » puis relancez la pile"; \
+	fi
 
 # Cassettes de scénario E2E (§A8.5) : génération DÉTERMINISTE par capture en deux
 # passes, auto-vérifiée (double génération comparée). Le rejoueur charge ses
@@ -238,6 +245,7 @@ seed:
 seed-e2e:
 	@$(MAKE) --no-print-directory docker-check
 	$(RUN) python -m tests.e2e.generer_cassettes
+	$(RUN) python -m tests.e2e.generer_cassette_etat
 	@echo "cassettes E2E écrites — relancez la pile pour qu'elle les serve : make down && make up"
 
 # Fumée manuelle contre le VRAI endpoint (§H4.8). Exige .env, jamais dans check.
@@ -280,3 +288,9 @@ resume:
 	@if [ -z "$(RUN_ID)" ]; then echo "usage : make resume RUN_ID=<identifiant>"; exit 2; fi
 	@$(MAKE) --no-print-directory docker-check
 	$(RUN_PILE) python -m avo resume $(RUN_ID) $(ARGS)
+
+# A/B des deux modes de contexte, sur rejeu (U27) : rejoue deux mini-campagnes par
+# la CLI réelle (une par AVO_CONTEXT_MODE) et écrit docs/rapports/ab_mode_contexte.md.
+rapport-ab:
+	@$(MAKE) --no-print-directory docker-check
+	$(RUN_PILE) python scripts/generer_rapport_ab.py

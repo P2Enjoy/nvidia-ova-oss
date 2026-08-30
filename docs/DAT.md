@@ -91,7 +91,9 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
 - Historique append-only + continuation en contexte frais à la VISTA (H5), défaut
   toujours actif ; alternative à état structuré (SKILL.state, H15, `AVO_CONTEXT_MODE`)
   branchée dans la boucle (U26 primitives, U27 branchement — un pas = un tour, H15.8)
-  et départagée par mesure, pas par principe (A/B de U27 encore à livrer, puis U28).
+  et départagée par mesure, pas par principe (A/B sur rejeu livré par U27,
+  `docs/rapports/ab_mode_contexte.md` ; A/B en conditions réelles restant le
+  périmètre de U28, `[LIVE]`).
 - Lignée = git jetable par run, jamais le dépôt projet (H9.3).
 - Instanciation ARC du couple (xᵢ, f) : connaissance validée / (niveaux, −actions)
   — décision documentée H9.2, les sources ne publiant pas ce détail.

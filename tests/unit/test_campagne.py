@@ -118,6 +118,13 @@ class TestSerialisation(unittest.TestCase):
         relu = ResultatJeu.depuis_json(json.loads(json.dumps(resultat.en_json())))
         self.assertEqual(relu, resultat)
 
+    def test_retries_patch_par_defaut_a_zero_et_fait_un_aller_retour(self) -> None:
+        """§H15.4/§H15.8 : absent en mode `transcript`, réel en mode `state` (U27)."""
+        self.assertEqual(_resultat().retries_patch, 0)
+        avec_retries = ResultatJeu(**{**_resultat().__dict__, "retries_patch": 3})
+        relu = ResultatJeu.depuis_json(json.loads(json.dumps(avec_retries.en_json())))
+        self.assertEqual(relu.retries_patch, 3)
+
     def test_le_rhae_relu_est_RECALCULÉ_depuis_les_niveaux(self) -> None:
         """La valeur stockée est redondante : c'est le détail qui fait foi."""
         donnees = _resultat().en_json()

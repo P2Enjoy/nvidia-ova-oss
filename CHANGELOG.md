@@ -2,7 +2,7 @@
 
 ## [Non publié]
 
-### 2026-08-30 (suite) — U27 (partiel) : branchement du mode `state` dans la boucle
+### 2026-08-30 (suite 6 à 7) — U27 (clos) : mode `state` de la boucle et A/B sur rejeu
 
 - `docs/SPEC_HARNAIS.md` §H15.8 : précise qu'un pas du mode `state` correspond à un
   tour entier (pas à une phase P/I/E/B), et les conséquences d'implémentation qui en
@@ -17,15 +17,31 @@
 - `avo.memory.workspace.Workspace.ecrire_etat`/`lire_etat` : persistance de Σ dans
   `runs/<run_id>/state/etat.json`, aller-retour exact ; un `BoucleAgent` construit
   sur un workspace qui en porte déjà un le recharge.
-- Preuves : tests unitaires (`AVO_CONTEXT_MODE`, persistance de Σ) et 9 tests
-  d'intégration contre le vrai rejoueur HTTP (patch valide, rollback-retry,
-  budget épuisé, action inconnue, événement porté par l'environnement, persistance
-  et reprise de Σ). `make check` (lint, typecheck, test-unit, test-int) vert, sans
-  régression sur les 458 preuves préexistantes.
-- **Reste à livrer pour clore U27** : l'A/B sur rejeu (deux mini-campagnes sur le
-  jeu `cible`, une par mode, et le rapport comparatif RHAE/actions/tokens/taille de
-  prompt/retries committé sous `docs/rapports/`) et son test E2E — unité laissée
-  `[~]`, voir `docs/BACKLOG.md`.
+- `avo.arc.campagne.ResultatJeu.retries_patch` (défaut `0`, mode `state` seulement,
+  §H15.4/§H15.8) : alimenté par `bilan.retries_patch`, nécessaire au rapport A/B.
+- `avo.arc.rapport_ab` (fonction pure) : `MesureMode` (RHAE moyen, actions, appels
+  au modèle, tokens cumulés, taille moyenne de prompt, retries de patch) et
+  `rapport()`, le markdown comparatif `transcript` vs `state`.
+- `tests/e2e/generer_cassette_etat.py` : cassette de scénario `state` dédiée
+  (`e2e_etat_victoire.jsonl`, 120 échanges, capture en deux passes, régénération
+  identique vérifiée) — chemin parfait du jeu `cible-synthetique` traduit en textes
+  d'action du contrat `state`.
+- `scripts/generer_rapport_ab.py` (`make rapport-ab`) : rejoue deux mini-campagnes
+  `python -m avo run-arc --mode replay`, une par `AVO_CONTEXT_MODE`, et écrit
+  `docs/rapports/ab_mode_contexte.md` — RHAE 100.00 et 76 actions identiques dans
+  les deux modes, 120 appels au modèle en `state` contre 316 en `transcript`.
+- Préventif : le sous-processus de `scripts/generer_rapport_ab.py` épingle
+  `OLLAMA_HOST`/`ARC_BASE_URL`/le jeton de rejeu pour neutraliser tout `.env` local
+  (§A8.5), après qu'une première version en a manqué et a réellement interrogé
+  l'endpoint live avant d'être interrompue — aucune donnée n'est restée sur le
+  disque, aucun scorecard ARC n'a été ouvert.
+- Preuves : tests unitaires (`AVO_CONTEXT_MODE`, persistance de Σ, aller-retour de
+  `retries_patch`), 9 tests d'intégration contre le vrai rejoueur HTTP (patch
+  valide, rollback-retry, budget épuisé, action inconnue, événement porté par
+  l'environnement, persistance et reprise de Σ), `tests/e2e/test_ab_mode_contexte.py`
+  (le rapport comparatif committé est rejouable à l'octet près depuis la CLI
+  réelle). `make check` intégralement vert (467 unitaires, 132 d'intégration, 4
+  E2E), zéro régression.
 
 ### 2026-08-30 — U26 : état d'exécution structuré (SKILL.state), mode `state`
 

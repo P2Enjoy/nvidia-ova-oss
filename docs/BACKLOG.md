@@ -583,7 +583,7 @@ fautif, erreurs typées, compteur de retries, sérialisation.
   périmètre de U27 (« branchement dans la boucle »), seule unité qui consomme
   réellement un Σ persisté.
 
-## U27 — Mode d'exécution `state` de la boucle et A/B sur rejeu `[~]`
+## U27 — Mode d'exécution `state` de la boucle et A/B sur rejeu `[x]`
 
 `@spec` H15 (+ H15.8, H8.4, H3.1). Variable `AVO_CONTEXT_MODE` ∈ {`transcript`,
 `state`}, défaut `transcript` — **aucun comportement existant ne change**, les
@@ -609,12 +609,46 @@ retries de patch.
   persistance ET reprise de Σ depuis un workspace existant. `make check`
   (lint, typecheck, test-unit, test-int) vert, zéro régression sur les 458 preuves
   préexistantes du mode `transcript`.
-- **Reste à livrer, nommé précisément :** l'A/B sur rejeu proprement dit — deux
-  mini-campagnes `run-arc --mode replay` sur le jeu `cible`, une par mode, et le
-  rapport comparatif (RHAE, actions, tokens cumulés, taille moyenne de prompt,
-  retries) committé sous `docs/rapports/` — et son test E2E qui les rejoue et relit
-  le rapport. Bloqué par aucun accès externe ni arbitrage : c'est du temps de
-  session, pas une décision en attente.
+- **A/B sur rejeu, livré et vérifié le 2026-08-30 (session planifiée).**
+  `ResultatJeu.retries_patch` (défaut `0`, aller-retour JSON, alimenté par
+  `bilan.retries_patch`) pour que le rapport comparatif dispose du compte de
+  retries par jeu. Cassette de scénario `state` dédiée
+  (`tests/fixtures/llm/cassettes/e2e_etat_victoire.jsonl`, 120 échanges, générée
+  par `tests/e2e/generer_cassette_etat.py` — même principe de capture en deux
+  passes que le générateur `transcript`, régénération identique octet à octet
+  vérifiée) : chemin parfait du jeu `cible-synthetique` traduit en textes d'action
+  du contrat `state` (§H15.8), sur les mêmes plafonds que le scénario `transcript`
+  (`--tours-max 120 --actions-max-niveau 100 --actions-max-jeu 200`) — la boucle
+  n'arrête pas sur l'état terminal (défaut déjà consigné au registre, préalable de
+  U24, non modifié ici), d'où 120 appels dont 76 jouent réellement une action.
+  `avo.arc.rapport_ab` (fonction pure, même principe que `avo.arc.rapport`) :
+  `MesureMode` (RHAE moyen, actions, appels au modèle, tokens cumulés, taille
+  moyenne de prompt, retries de patch) et `rapport()` qui compose le markdown
+  comparatif. `scripts/generer_rapport_ab.py` rejoue les deux mini-campagnes par
+  la CLI réelle (`python -m avo run-arc --mode replay`, sous-processus,
+  MASTER_PLAN §5) sur `cible-synthetique`, une par `AVO_CONTEXT_MODE`, et écrit
+  `docs/rapports/ab_mode_contexte.md` (`make rapport-ab`, cible Makefile
+  documentée). **Garde-fou ajouté après un incident mesuré en session** : la
+  première version du script ne fixait pas `OLLAMA_HOST`/`ARC_BASE_URL` dans
+  l'environnement du sous-processus, et le `.env` local (réel, présent en session
+  planifiée) a été lu en repli par `avo.config` — la première exécution a bien
+  interrogé le VRAI endpoint (`qwen3.6:35b`, latences de 20 à 45 s observées dans
+  les journaux) avant d'être interrompue. Corrigé en épinglant `OLLAMA_HOST`,
+  `ARC_BASE_URL` et un jeton non secret dans l'environnement du sous-processus
+  (même principe que `tests/e2e/scenarios.ENV_EPINGLE`, §A8.5) ; aucune donnée
+  n'a été écrite dans le dépôt pendant l'incident (répertoire de runs temporaire),
+  aucun scorecard ARC n'a été ouvert. Le rapport committé nomme explicitement la
+  limite du rejeu sur la « taille moyenne de prompt » (valeur rejouée identique
+  par construction du rejoueur HTTP, §H4.7 — le signal `O(1)` par tour se lit sur
+  le nombre d'appels, 316 en `transcript` contre 120 en `state`, pas sur la taille
+  par appel).
+  Preuves : `tests/unit/test_campagne.py` (aller-retour de `retries_patch`),
+  `tests/e2e/test_ab_mode_contexte.py` — le rapport committé est rejouable à
+  l'octet près depuis la CLI réelle, et nomme les cinq mesures du contrat. `make
+  check` (lint, typecheck, test-unit — 467 tests —, test-int — 132 tests —,
+  test-e2e — 4 tests) intégralement vert, zéro régression. RHAE 100.00 et 76
+  actions identiques dans les deux modes ; `state` : 120 appels contre 316 en
+  `transcript` (le mode ne dégrade pas la partie jouée).
 
 ## U28 — A/B des deux modes en conditions réelles `[ ]` **[LIVE]**
 

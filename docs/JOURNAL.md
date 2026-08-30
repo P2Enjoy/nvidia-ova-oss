@@ -813,3 +813,92 @@ notée les 2026-08-30 (sessions U21 et U26), transitoire et étrangère au produ
 `lint`, `typecheck`, `test-unit` et `test-int` n'en dépendent pas (image `avo-dev`
 déjà construite en début de session) et sont tous verts, comme détaillé ci-dessus.
 Non consigné au registre d'incohérences : ce n'est pas une incohérence du dépôt.
+
+---
+
+## 2026-08-30 (suite 7) — Session planifiée (routine CloudWorker) : U27 close, A/B sur rejeu livré
+
+**Unité.** U27 — désignée par l'entrée précédente (« reprendre par l'A/B sur rejeu »).
+Git rattaché à `main` depuis la branche temporaire fournie par l'infrastructure
+(aucun commit local à sauver, §1.3). Docker démarré manuellement (`dockerd`
+direct), CA du proxy déposé dans `certs/` pour reconstruire l'image de
+développement (même procédure que les sessions précédentes, désormais mesurée).
+
+**Livré.** `avo.arc.campagne.ResultatJeu.retries_patch` (défaut `0`, alimenté par
+`bilan.retries_patch`), nécessaire au rapport A/B puisque `transcript` ne décode
+aucun patch. `tests/e2e/generer_cassette_etat.py` : cassette de scénario `state`
+dédiée (`e2e_etat_victoire.jsonl`), même principe de capture en deux passes que le
+générateur `transcript`, régénération identique octet à octet vérifiée — 120
+échanges (76 actions réellement jouées, 44 tours à vide après la victoire : la
+boucle ne s'arrête pas sur l'état terminal, défaut déjà consigné au registre le
+2026-08-30 comme préalable de U24, comportement inchangé ici, mêmes plafonds que
+le scénario `transcript`). `avo.arc.rapport_ab` (fonction pure, même principe que
+`avo.arc.rapport`) : `MesureMode` et `rapport()`, le markdown comparatif nommant
+les cinq mesures du backlog (RHAE moyen, actions, tokens cumulés, taille moyenne
+de prompt, retries de patch). `scripts/generer_rapport_ab.py` (`make rapport-ab`) :
+rejoue deux mini-campagnes par la CLI réelle (sous-processus, MASTER_PLAN §5), une
+par `AVO_CONTEXT_MODE`, et écrit `docs/rapports/ab_mode_contexte.md`.
+
+**Incident mesuré et corrigé en session, avant tout commit.** La première version
+de `scripts/generer_rapport_ab.py` ne fixait pas `OLLAMA_HOST`/`ARC_BASE_URL` dans
+l'environnement du sous-processus. Le `.env` local de cette session planifiée
+porte les vraies variables (endpoint via le pont 443, clé d'inférence) : en leur
+absence de l'environnement du sous-processus, `avo.config` les a lues en repli
+depuis ce `.env` — exactement le risque que `tests/e2e/scenarios.ENV_EPINGLE`
+documente déjà pour les E2E `transcript`/`échec` (« neutraliser tout `.env`
+local »), auquel mon script n'avait pas été soumis. La première exécution a donc
+réellement interrogé l'endpoint live : latences de 20 à 45 s par appel dans les
+journaux (`qwen3.6:35b`), 8 appels environ avant interruption manuelle au bout de
+~8 minutes en constatant l'anomalie (une campagne sur rejeu devait durer quelques
+secondes). Aucune conséquence durable : `AVO_RUNS_DIR` pointait un répertoire
+temporaire (jamais le dépôt), aucun fichier écrit sous `runs/`, `ARC_BASE_URL`
+n'a jamais été touché (le client ARC reste sur `arc-replay` local par défaut en
+mode rejeu) donc aucun scorecard n'a été ouvert — seul un coût d'inférence réel,
+non chiffrable précisément d'ici, a été consommé sur la clé du responsable.
+Corrigé en épinglant `OLLAMA_HOST`, `ARC_BASE_URL` et un jeton non secret dans
+l'environnement du sous-processus (`HOTE_LLM_REJEU`/`BASE_ARC_REJEU`/
+`JETON_REJEU`, mêmes valeurs que la pile locale), avec un commentaire nommant
+l'incident pour qu'il ne se reproduise pas à la prochaine lecture du fichier.
+Reconduit ensuite avec succès : campagne « transcript » et campagne « state »
+toutes deux contre la pile locale, quelques secondes chacune.
+
+**Une limite de mesure nommée explicitement dans le rapport lui-même.** Le
+rejoueur HTTP répond verbatim les `prompt_eval_count`/`eval_count` enregistrés une
+seule fois à la capture (§H4.7) : la « taille moyenne de prompt » est donc
+identique par construction pour les deux modes sur ce rejeu (24 tokens), et ne
+porte aucun signal sur la croissance réelle du prompt en `transcript` face au
+`O(1)` de `state` (§H15.1). Le rapport le dit en toutes lettres dans sa section
+« Limite » plutôt que de laisser un chiffre plat se lire comme une mesure : c'est
+le nombre d'appels au modèle (316 contre 120) qui porte ce signal sur ce rejeu.
+
+**Preuves exécutées, toutes en conteneur, pile compose debout et seedée (nouvelle
+cassette incluse après `make down && make up`).** `tests/unit/test_campagne.py` :
+aller-retour de `retries_patch`, valeur par défaut. `tests/e2e/test_ab_mode_contexte.py` :
+le rapport comparatif committé est rejouable **à l'octet près** depuis la CLI
+réelle (preuve la plus forte disponible — pas seulement « le script tourne », mais
+« le fichier committé est exactement ce que produit le code aujourd'hui ») et nomme
+les cinq mesures du backlog. Campagne complète `make check` verte : lint, `ruff
+format`, mypy strict, **467 tests unitaires** (+1 sur les 466 préexistants), **132
+d'intégration** (inchangé), **4 E2E** (+2 sur les 2 préexistants — le nouveau
+scénario A/B rejoint `test_partie_complete.py`). `make build` non rejoué cette
+session (déjà vert le 2026-08-30, aucun changement à `Dockerfile`/`pyproject.toml`).
+
+**Un défaut étranger revu, pas retraité.** L'arrêt trompeur sur état terminal
+(tours_epuises au lieu d'un arrêt réel à la victoire), déjà consigné le 2026-08-30
+comme préalable de U24, se manifeste identiquement en mode `state` (120 tours
+joués pour 76 actions utiles). Comportement laissé inchangé ici : U27 ne porte pas
+cette correction, et la mesure du jour (120 vs 316 appels) reste valide puisque les
+deux campagnes A/B partagent exactement le même plafond et donc le même artefact.
+
+**U27 close : DoD satisfaite** (`docs/BACKLOG.md`, statut `[x]`) — livré et
+intégralement vérifié, code et documentation en accord dans le même changement.
+
+**Où reprendre.** Ordre du plan (`docs/MASTER_PLAN.md`, `CLAUDE_PROJECT.md`) : les
+unités `[LIVE]` deviennent l'unité de la prochaine session — U22 (sonde d'API ARC,
+25 jeux/183 niveaux lus en lecture seule) en premier, puis le préalable consigné
+au registre (arrêt sur état terminal, préalable de U24) traité sur le chemin de
+U24, puis U24, puis U25/U28. La routine dispose désormais de l'autorisation du
+responsable pour jouer via l'API officielle et publier des scorecards en son nom
+(2026-08-30, `CLAUDE_PROJECT.md`) ; les plafonds de campagne (`SPEC_ARCAGI3.md`
+§A7.1) restent obligatoires et l'interdiction de benchmaxing s'applique sans
+exception à toute correction du harnais qui suivrait ces mesures.
