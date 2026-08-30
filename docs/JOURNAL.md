@@ -63,3 +63,29 @@ Pour référence si un filtrage IP apparaissait ensuite : IP de sortie observée
 **Vérifications réalisées.** Toutes les mesures ci-dessus exécutées ce jour depuis l'environnement (curl, openssl s_client via proxy, check-host.net) ; rapport externe permanent : check-host.net/check-report/49080edck800.
 
 **Où reprendre.** Dès que l'endpoint est joignable en 443 : rejouer le test (version serveur, liste des modèles `/v1/models` et `/api/tags`, complétion `/v1/chat/completions`, `/api/show` pour la fenêtre de contexte), consigner les résultats ici, puis enchaîner sur U2 (spécification du harnais).
+
+---
+
+## 2026-08-30 — Ajout de la source SKILL.state et backlog détaillé
+
+**Contexte.** Le responsable a fourni le PDF du papier arXiv:2608.26263v1 « SKILL.state: Scalable Long-Horizon Agent Skills » (Google LLC / Purdue, 26 août 2026) avec pour consigne de l'ajouter aux autres sources et de détailler le backlog.
+
+**Observations (étude de la source).**
+
+- SKILL.state remplace l'historique conversationnel append-only par un **état d'exécution structuré mutable** : à chaque pas, le modèle ne reçoit que (spécification immuable P, état Σₜ, dernière observation Oₜ) ; il produit (raisonnement Rₜ, patch d'état ΔΣₜ, action aₜ) ; Rₜ est jeté après validation, Σₜ₊₁ = Σₜ ⊕ ΔΣₜ (fusion de dictionnaires, suppression par null). Empreinte de prompt O(1), coût cumulé O(T) contre O(T²).
+- Résultats : à budget de tokens égal, l'état structuré écrase les compresseurs (0,94 contre 0,18–0,52 sur Warehouse T=100) ; récupération immédiate (0 pas) après dérive externe de l'état ; robustesse au bruit d'observation ; meilleurs scores sur InterCode CTF (54,2 % pass@1) et τ-Bench en réduisant fortement les tokens.
+- **Taxonomie d'erreurs des modèles open-weight** (Gemma-4-31B, Qwen-3-8B) : 68 % d'écrasements/omissions de clés d'état, 20 % d'incohérences de schéma, 12 % de JSON malformé → la dégradation vient de l'adhérence au format structuré, pas du raisonnement. Le runtime doit posséder le schéma et la validation (patch invalide → rollback-retry) ; le décodage contraint est recommandé.
+- Limites explicites : l'état comme statistique suffisante échoue si le schéma doit être découvert en cours d'exécution, si la pertinence d'une observation n'apparaît qu'après coup, ou si l'objectif porte sur l'historique lui-même.
+
+**Décisions.**
+
+1. Export complet ajouté à `knowledge/` (texte intégral, figure d'architecture recadrée pleine largeur et inspectée, dix tableaux transcrits, prompts exacts des quatre runtimes en annexe, PDF sous `knowledge/pdf/`), index et synthèse mis à jour (commit dc1a4a5).
+2. Orientation de conception pour la spécification U2.1 (à ratifier dans la spec) : gestion de contexte du harnais AVO par état d'exécution structuré borné adapté de SKILL.state, articulé avec les notes durables (VISTA) et la lignée git (AVO) ; validation JSON stricte avec rollback-retry côté runtime, dictée par la taxonomie d'erreurs — nous servirons des modèles open-weight via Ollama sous fenêtre `OLLAMA_CONTEXT_LENGTH`.
+3. InterCode CTF et Sierra τ-Bench ajoutés comme benchmarks complémentaires candidats (arbitrage du responsable requis, blocage B3 du backlog).
+4. **Backlog détaillé réécrit** : phases 0–5, unités U2.1→U6.3 avec dépendances, DoD spécifiques et blocages externes nommés (B1 endpoint injoignable, B2 modèle non confirmé, B3 périmètre benchmarks).
+
+**Vérifications réalisées.** Liens d'images de tous les exports `knowledge/` vérifiés par script (aucun manquant) ; figure 1 re-recadrée et inspectée visuellement (complète) ; chiffres du résumé recoupés avec les tableaux du papier.
+
+**En attente du responsable.** B1 (exposition de l'endpoint sur 443 ou politique réseau), B2 (nom du modèle), B3 (périmètre des benchmarks : ARC-AGI-3 seul ou + InterCode CTF / τ-Bench / SkillExecBench-like ; accès API ARC Prize).
+
+**Où reprendre.** U2.1 (spécification du cœur du harnais) : rédiger `docs/SPEC_HARNESS.md` d'après les exports AVO + SKILL.state + VISTA, la committer avant toute ligne de code. U2.2–U2.5 à la suite ; U2.5 part en proposition d'arbitrage B3.

@@ -18,7 +18,7 @@ Les éléments constitutifs, tirés des sources exportées dans [`knowledge/`](k
 
 **Phase de préparation — aucun code applicatif n'existe encore.**
 
-- Fait : import des quatre sources de référence dans `knowledge/` (markdown + images + PDF), documentation projet initialisée.
+- Fait : import des cinq sources de référence dans `knowledge/` (markdown + images + PDF), documentation projet initialisée, backlog détaillé (phases et unités U2.1–U6.3 dans `docs/BACKLOG.md`).
 - En attente d'une action humaine : URL de l'endpoint compatible OpenAI, clé API et nom du modèle à utiliser (annoncés par le responsable, non encore fournis), et confirmation de la liste des benchmarks visés.
 - Prochaine étape : spécification complète du harnais (`docs/`) avant toute ligne de code, conformément à `CLAUDE.md`.
 

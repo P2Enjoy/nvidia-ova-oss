@@ -8,7 +8,7 @@ Implémentation open source du harnais d'agent **AVO** (papier arXiv:2603.24517)
 
 ## Sources de référence
 
-- `knowledge/` contient les exports fidèles des quatre sources (papier AVO, blog NVIDIA, page VISTA, papier Tycho) avec images et PDF. **Lire `knowledge/README.md` avant tout travail sur le harnais.**
+- `knowledge/` contient les exports fidèles des cinq sources (papier AVO, blog NVIDIA, page VISTA, papier Tycho, papier SKILL.state) avec images et PDF. **Lire `knowledge/README.md` avant tout travail sur le harnais.**
 - Ces exports sont des instantanés en lecture seule : ne pas les modifier à la main ; en cas de divergence avec la source, re-générer l'export et le consigner dans `docs/JOURNAL.md`.
 - En cas de doute d'interprétation, le PDF sous `knowledge/pdf/` fait foi.
 
@@ -32,3 +32,4 @@ Implémentation open source du harnais d'agent **AVO** (papier arXiv:2603.24517)
 - **VISTA** : harnais visuel MIT dont AVO reprend les principes « direct-interaction » pour ARC-AGI-3.
 - **Tycho** : approche par modèles du monde programmatiques ; source de la formalisation ARC-AGI-3 et de la définition RHAE.
 - **RHAE** : Relative Human Action Efficiency, métrique officielle ARC-AGI-3 (définition exacte dans l'export Tycho, §3.1).
+- **SKILL.state** : runtime à état d'exécution structuré mutable et prompt borné (Google/Purdue) ; référence de conception pour la gestion de contexte du harnais.

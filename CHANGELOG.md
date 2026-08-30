@@ -18,6 +18,12 @@
 - Diagnostic complet de joignabilité de l'endpoint Ollama fourni par le responsable : serveur sain et servi en TLS pour le public (vérifié depuis des points de mesure externes), mais injoignable depuis l'environnement d'exécution dont la sortie réseau est limitée au port 443 ; options de déblocage consignées (`docs/JOURNAL.md`).
 - Documentation du contrat de configuration (`OLLAMA_HOST`, `OLLAMA_API_KEY`, `OLLAMA_CONTEXT_LENGTH`) dans `README.md` et `CLAUDE_PROJECT.md`, sans valeur sensible ; mise à jour du blocage de l'unité U3 dans `docs/BACKLOG.md`.
 
+### 2026-08-30 — Cinquième source (SKILL.state) et backlog détaillé
+
+- Ajout dans `knowledge/` de l'export complet du papier SKILL.state (arXiv:2608.26263, fourni par le responsable) : texte intégral, figure d'architecture, dix tableaux, prompts des quatre runtimes, PDF d'origine ; index et synthèse mis à jour (gestion de contexte à état structuré borné, validation JSON stricte, benchmarks candidats InterCode CTF et τ-Bench).
+- Réécriture de `docs/BACKLOG.md` en backlog détaillé : phases 0–5, unités U2.1 à U6.3 avec dépendances, Definition of Done spécifiques et blocages externes nommés (B1 joignabilité endpoint, B2 nom du modèle, B3 périmètre benchmarks).
+- `docs/JOURNAL.md` : entrée d'étude du 2026-08-30 ; `README.md` et `CLAUDE_PROJECT.md` mis au compte de cinq sources.
+
 ## [Publié]
 
 _Aucune publication pour le moment._
