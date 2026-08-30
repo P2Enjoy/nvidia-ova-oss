@@ -98,18 +98,27 @@ docker run --rm -v "$PWD":/app -w /app -e HOME=/tmp \
 
 ## Variables d'environnement
 
-Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors dépôt (fichier `.env` local ignoré par git, ou environnement du shell). Aucune valeur réelle ni aucun secret n'est jamais committé.
+Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors dépôt (fichier `.env` local ignoré par git, ou environnement du shell). Aucune valeur réelle ni aucun secret n'est jamais committé. **Le modèle complet et commenté est [`.env.example`](.env.example)** (toutes les variables, valeurs d'exemple non sensibles, défauts) : `cp .env.example .env` puis renseigner les valeurs réelles.
 
 | Variable | Rôle | Format attendu | Obligatoire | Exemple non sensible |
 |---|---|---|---|---|
 | `OLLAMA_HOST` | URL de base du serveur Ollama (surface compatible OpenAI sous `/v1`, API native sous `/api`) | URL `https://hôte[:port]` sans slash final | oui | `https://inference.example.com` |
 | `OLLAMA_API_KEY` | Clé d'authentification, envoyée en `Authorization: Bearer …` | chaîne opaque | oui | `sk-ollama-xxxxxxxx` |
 | `OLLAMA_CONTEXT_LENGTH` | Fenêtre de contexte demandée au serveur, en tokens (transmise en `options.num_ctx`) ; borne les budgets de contexte du harnais | entier | oui | `131072` |
+| `AVO_MODEL` | Nom du modèle servi par l'endpoint | chaîne | non (défaut `qwen3.6:35b`) | `qwen3.6:35b` |
+| `AVO_THINK` | Raisonnement natif du modèle (`think` sur `/api/chat`, politique H12) | booléen | non (défaut `false`) | `false` |
+| `AVO_NUM_PREDICT` | Budget de sortie par appel (`options.num_predict`) | entier | non (défaut `4096`) | `4096` |
+| `AVO_TEMPERATURE` | Température d'échantillonnage | réel borné | non (défaut `0.7`) | `0.7` |
+| `AVO_TIMEOUT_S` | Timeout d'un appel LLM, en secondes | entier | non (défaut `900`) | `900` |
+| `AVO_CONTEXT_SOFT_RATIO` | Seuil de continuation en contexte frais, en fraction du budget de prompt (H5.3) | réel dans ]0,1[ | non (défaut `0.85`) | `0.85` |
 | `AVO_TOOL_STEPS_MAX` | Garde : nombre maximal d'appels d'outils par tour d'agent, au-delà duquel le tour est clos avec un message explicite | entier | non (défaut `40`) | `40` |
 | `AVO_ACTIONS_MAX_NIVEAU` / `AVO_ACTIONS_MAX_JEU` | Bornes d'actions d'environnement, par niveau et par jeu ; dépassement = arrêt propre avec la borne nommée | entier | non (défauts `1000` / `5000`) | `1000` |
 | `AVO_SUP_STALL_ACTIONS` / `AVO_SUP_COOLDOWN` | Superviseur : actions sans progrès avant intervention, et actions minimales entre deux interventions | entier | non (défauts `60` / `30`) | `60` |
 | `ARC_API_KEY` | Clé d'accès à l'API ARC Prize (ARC-AGI-3), envoyée en en-tête `X-API-Key` ; donne accès aux environnements officiels et à l'ouverture des scorecards | UUID | oui pour l'évaluation ARC-AGI-3, inutile pour le reste du harnais | `00000000-0000-0000-0000-000000000000` |
 | `ARC_BASE_URL` | Base de l'API ARC-AGI-3. En mode rejeu, elle pointe la pile locale et le client **refuse** tout autre hôte : les tests ne peuvent pas publier de scorecard par accident | URL `https://hôte[:port]` | non (défaut selon le mode) | `http://127.0.0.1:8765` |
+| `AVO_RUNS_DIR` | Racine des workspaces de run (artefacts) | chemin | non (défaut `runs/`) | `runs/` |
+
+Trois variables d'**outillage** sont lues dans l'environnement du shell par `make` et les scripts — pas dans `.env` (`make` ne le lit pas) : `AVO_NO_DOCKER` (mode dégradé sans Docker, stdlib seule), `AVO_PORT_LLM_REPLAY` (défaut `11435`) et `AVO_PORT_ARC_REPLAY` (défaut `8765`), ports publiés de la pile locale.
 
 En **mode rejeu** (le mode par défaut, celui des tests et du worker), aucune de ces variables n'est requise : la configuration pointe la pile locale (`http://127.0.0.1:11435`), emploie un jeton qui n'est pas un secret et une fenêtre de contexte par défaut. En **mode live**, l'absence de `OLLAMA_HOST`, `OLLAMA_API_KEY`, `OLLAMA_CONTEXT_LENGTH` ou `ARC_API_KEY` est une erreur au démarrage qui nomme la variable — jamais une valeur par défaut silencieuse.
 

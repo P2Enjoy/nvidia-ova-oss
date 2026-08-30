@@ -630,3 +630,15 @@ Deux gardes exécutables remplacent la promesse : un balayage statique des const
 **Règle persistée.** `CLAUDE_PROJECT.md`, Conventions locales : toutes les sessions, planifiées comme interactives, travaillent et poussent exclusivement sur `main` ; aucune branche de travail ; conflits résolus sur place. La présente session poursuit sur `main`.
 
 **Où reprendre.** Inchangé : U21 (E2E sur rejeu local), puis U26–U27 (lot G). U22/U24/U25/U28 [LIVE] en session interactive ; arbitrage U29 en attente.
+
+---
+
+## 2026-08-30 (suite 2) — Recette de joignabilité depuis la session interactive ; `.env.example` exhaustif
+
+**Demande du responsable.** Vérifier que la session peut joindre l'endpoint LLM, puis documenter toutes les variables d'environnement dans un `.env` d'exemple.
+
+**Joignabilité — mesures du jour, depuis CETTE session interactive.** Le `.env` local est présent et ignoré par git (revérifié). L'endpoint ne répond pas d'ici : reset TLS à ~6,2 s sur `/api/version`, avec et sans clé, et le proxy de session rapporte « tunnel vers le proxy de sortie fermé avant la fin de l'échange ». Contrôles discriminants rejoués : sortie 443 saine (`arxiv.org` 200 en 0,35 s), TLS vers un port non-443 public de référence (Cloudflare 2053) échoue à l'identique, et le serveur de l'endpoint accepte le TCP depuis 3 nœuds externes en 0,15–0,73 s. **Conclusion inchangée depuis le 2026-08-27 : la sortie réseau de cet environnement interactif n'autorise le TLS que vers le port 443 ; le serveur est sain, et l'environnement du worker planifié le joint (cassettes réelles enregistrées, `make test-int-live` vert).** Conséquence pratique : les unités [LIVE] (U22, U24, U25, U28) ne peuvent pas s'exécuter depuis cette session-ci en l'état ; elles exigent soit un environnement dont la sortie n'est pas limitée au 443 (celui du worker convient), soit l'exposition de l'endpoint sur 443. Aucune clé n'a transité par un service tiers pendant ces contrôles.
+
+**`.env.example` ajouté à la racine, suivi par git** (`!.env.example` ajouté sous `.env.*` dans `.gitignore`, `git check-ignore` revérifié dans les deux sens). Il documente **les 20 variables** — les 17 de `avo.config`/H3.1 (endpoint, ARC, modèle et inférence, budgets de contexte/outils/actions, superviseur, artefacts) et les 3 d'outillage lues par make et les scripts (`AVO_NO_DOCKER`, `AVO_PORT_LLM_REPLAY`, `AVO_PORT_ARC_REPLAY`), chacune avec rôle, format, caractère requis/facultatif, défaut et exemple non sensible ; les requises en clair avec valeur factice, les facultatives commentées à leur défaut. Exhaustivité prouvée par script : extraction des noms depuis `config.py` + Makefile/scripts, différence vide dans les deux sens (20/20). Table du README complétée des sept variables applicatives qui y manquaient (`AVO_MODEL`, `AVO_THINK`, `AVO_NUM_PREDICT`, `AVO_TEMPERATURE`, `AVO_TIMEOUT_S`, `AVO_CONTEXT_SOFT_RATIO`, `AVO_RUNS_DIR`), de la note d'outillage et du renvoi vers `.env.example`.
+
+**Où reprendre.** Inchangé : U21, puis U26–U27. [LIVE] : voir la contrainte d'environnement ci-dessus.

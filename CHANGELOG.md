@@ -219,6 +219,12 @@
 - Mentions périmées corrigées : `README.md` (état actuel remis au réel — U3–U20 et U23 livrées, prochaine unité U21 ; cinq sources), `CLAUDE_PROJECT.md` (plage d'unités, terminologie SKILL.state).
 - Branche de session rattrapée sur `main` par **fusion** (pas de réécriture d'historique) : le redécoupage de backlog committé avant de connaître l'avancement réel est remplacé par les ajouts ci-dessus.
 
+### 2026-08-30 — Recette de joignabilité de la session et `.env.example`
+
+- Vérification de la joignabilité de l'endpoint LLM depuis la session interactive : sortie réseau limitée au port 443 (contrôles discriminants rejoués), serveur sain vu de l'extérieur — conclusion du 2026-08-27 inchangée ; conséquence consignée : les unités [LIVE] s'exécutent depuis un environnement non limité au 443 (celui du worker convient).
+- Ajout de `.env.example` (suivi par git, `!.env.example` dans `.gitignore`) : les 20 variables du projet — 17 applicatives (H3.1) et 3 d'outillage — avec rôle, format, caractère requis, défaut et exemple non sensible ; exhaustivité contrôlée par script contre `config.py`, le Makefile et les scripts.
+- Table des variables du `README.md` complétée (sept variables applicatives manquantes, note d'outillage, renvoi vers `.env.example`).
+
 ## [Publié]
 
 _Aucune publication pour le moment._
