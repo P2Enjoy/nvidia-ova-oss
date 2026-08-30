@@ -2,6 +2,12 @@
 
 ## [Non publié]
 
+### 2026-08-30 — U26 : état d'exécution structuré (SKILL.state), mode `state`
+
+- `docs/SPEC_HARNAIS.md` §H15 : contrat d'exécution `(P, Σₜ, Oₜ)` → `(Rₜ, ΔΣₜ, aₜ)`, opérateur de fusion `⊕` à suppression par `null`, schéma possédé et validé par le runtime, rollback-retry borné, persistance/reprise de Σ, schéma ARC v1 à quatre champs (`position`, `essai`, `hypotheses`, `objets`).
+- `avo.context.etat` : `Etat` (typé, immuable, toujours conforme au schéma), `decoder_pas` (bloc `state_patch`/`action` de l'annexe A.4 SKILL.state), `appliquer`, `CompteurRetries`, sérialisation JSON aller-retour.
+- Module pur, sans branchement dans la boucle agent : le mode `state` lui-même (variable `AVO_CONTEXT_MODE`) est le périmètre de U27, à venir.
+
 ### 2026-08-27 — Import des sources de connaissance et initialisation de la documentation projet
 
 - Ajout de `knowledge/` : export markdown fidèle, avec images locales, des quatre sources de référence du projet :

@@ -538,7 +538,7 @@ append-only du harnais a été choisi sur la contrainte mesurée du cache de pr�
 prompt mais reprémplit `(P, Σₜ, Oₜ)` à chaque tour. Le lot livre donc le mode en
 **alternative configurable, jamais en remplacement**, et le départage par la mesure.
 
-## U26 — Spécification H15 et runtime d'état structuré `[ ]`
+## U26 — Spécification H15 et runtime d'état structuré `[x]`
 
 `@spec` H15 — chapitre à écrire par cette unité et à committer **avant le code**
 (précédent des contrats A6.4/A7.4). H15 spécifie : le contrat d'exécution à état
@@ -561,6 +561,27 @@ fautif, erreurs typées, compteur de retries, sérialisation.
   incohérence de type/structure est refusée en nommant le champ, un JSON malformé
   déclenche le retry borné puis une erreur explicite ; propriété : `Σ ⊕ ΔΣ` ne mute
   jamais son entrée ; sérialisation aller-retour à l'identique.
+- **Livré et intégralement vérifié le 2026-08-30.** §H15 écrit et committé avant le
+  code (commit dédié). `avo.context.etat` : `Etat` (frozen, schéma ARC v1 à quatre
+  champs toujours présents — `position`/`essai`/`hypotheses`/`objets`, `null` = reset
+  au défaut, jamais une suppression de clé), `fusionner` (patch validé champ par
+  champ, jamais appliqué partiellement), `decoder_pas` (bloc ```` ```json ```` à
+  exactement `state_patch`/`action`, annexe A.4 du papier), `appliquer` (décodage +
+  fusion), `CompteurRetries` (budget borné `RETRIES_MAX = 3`, `RetriesEpuises` sur
+  dépassement), `vers_json`/`depuis_json` (aller-retour). Trois erreurs typées
+  (`EtatInvalide`, `PatchMalforme`, `RetriesEpuises`), aucune absorbée en silence.
+  Preuves : `tests/unit/test_etat.py`, 31 tests couvrant nommément les trois classes
+  de la taxonomie §5.7 (écrasement/omission 68 %, type/structure 20 %, JSON malformé
+  12 %), la non-mutation de l'entrée, et l'aller-retour de sérialisation. Preuves de
+  l'unité vertes : lint + `ruff format` + mypy strict sur 91 fichiers, **458 tests
+  unitaires** (dont les 31 de cette unité), aucune régression ; module pur sans
+  surface d'intégration ni E2E propres (aucune E/S). `make check` complet rejoué en
+  fin de session (§4.3) : voir le journal pour son bilan. La persistance de Σ
+  *dans le workspace du run* (`runs/<run_id>/state/etat.json`) et sa reprise
+  (§H15.5) ne sont pas câblées par cette unité : ce module reste pur (aucune E/S) et
+  fournit seulement les primitives ; le câblage dans la boucle et le workspace est le
+  périmètre de U27 (« branchement dans la boucle »), seule unité qui consomme
+  réellement un Σ persisté.
 
 ## U27 — Mode d'exécution `state` de la boucle et A/B sur rejeu `[ ]`
 

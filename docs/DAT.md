@@ -17,7 +17,7 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 |---|---|---|
 | `avo.config` | H3 | configuration (env puis `.env`), validation nommée, modes rejeu/live, budget dérivé du plafond par clé |
 | `avo.llm` | H4 | client d'inférence (Ollama natif `/api/chat`), erreurs typées, retries bornés, transport injectable |
-| `avo.context` | H5 | transcript append-only, comptabilité calibrée, budget et continuation en contexte frais |
+| `avo.context` | H5, H15 | transcript append-only, comptabilité calibrée, budget et continuation en contexte frais ; état d'exécution structuré Σ (mode `state`, U26) — patch validé par le runtime, sérialisation |
 | `avo.memory` | H6 | workspace de run (manifeste, métriques, transcripts, frames, rapport) et notes persistantes GUIDE/WORKING |
 | `avo.tools` | H7 | registre d'outils, exposition filtrée par état, groupe synchronisable sur l'environnement, routage, garde par tour |
 | `avo.loop` | H8, H12 | machine d'états P→I→E→B close, prompts de phase versionnés, contrat `Environnement`, bornes d'actions, et les branchements H8.4 : continuation, supervision, métriques, lignée |
@@ -88,7 +88,9 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
 - Surface Ollama **native** plutôt qu'OpenAI `/v1` (contrôle `think`, `num_ctx`,
   compteurs) derrière une interface remplaçable (H4.1).
 - `think:false` par défaut, raisonnement en clair dans le contenu (H12).
-- Historique append-only + continuation en contexte frais à la VISTA (H5).
+- Historique append-only + continuation en contexte frais à la VISTA (H5), défaut
+  toujours actif ; alternative à état structuré (SKILL.state, H15) livrée en primitives
+  (U26) et départagée par mesure, pas par principe (U27/U28).
 - Lignée = git jetable par run, jamais le dépôt projet (H9.3).
 - Instanciation ARC du couple (xᵢ, f) : connaissance validée / (niveaux, −actions)
   — décision documentée H9.2, les sources ne publiant pas ce détail.
