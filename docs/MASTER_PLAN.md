@@ -55,9 +55,12 @@ l'unité en `[~]` si ses preuves n'ont pas toutes tourné.
 - pendant le travail (preuves de l'unité seule) : `make test-unit`,
   `make test-int` ciblés (`PYTEST_ARGS`), `make lint`, `make typecheck` ;
 - **campagne complète de fin de session** : `make check` = lint + typecheck +
-  test-unit + test-int + test-e2e + build. C'est la « campagne » au sens de
-  `docs/CloudWorker.md` §2.3/§4.3. Elle tourne intégralement hors ligne (rejeu,
-  `mode=replay`), sans `.env` et sans réseau externe.
+  test-unit + test-int + test-e2e, complété de `make build` exécuté depuis
+  l'hôte (la cible check reste exécutable en conteneur, où docker n'existe
+  pas — c'est pourquoi build n'y est pas inclus). C'est la « campagne » au sens
+  de `docs/CloudWorker.md` §2.3/§4.3. Elle tourne intégralement hors ligne
+  (rejeu, `mode=replay`), sans `.env` et sans réseau externe ; test-e2e exige la
+  pile locale debout (§A8.5).
 
 Ce dépôt n'a ni base de données applicative, ni messagerie, ni interface web : les
 classes « tests de base de données », « E2E de messagerie », « E2E d'interface »

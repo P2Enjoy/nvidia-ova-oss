@@ -5,9 +5,38 @@ registre devient vide, le fichier lui-même est supprimé du dépôt (CLAUDE.md 
 
 ## Ouverts
 
-_Aucune entrée ouverte._
+### 2026-08-30 — La boucle ne s'arrête pas sur l'état terminal du jeu (victoire)
+
+- **Constat.** Après la victoire du dernier niveau (état `WIN`), la boucle continue
+  d'appeler le modèle jusqu'à `tours_max` : `GAGNEE` n'est traduit qu'en événement
+  `NIVEAU_COMPLETE` (lignée), et `_borne_franchie()` ne vérifie que les bornes
+  d'actions. Aucune action scorée supplémentaire n'est dépensée (l'environnement
+  n'offre plus que `RESET`), mais l'inférence tourne à vide.
+- **Mesure.** Run opérateur U21 du 2026-08-30 (`runs/e2e-operateur/`) : victoire
+  acquise au tour ~76, `fin d'exécution motif=tours_epuises tour=120` — 44 tours
+  d'appels au modèle après la fin du jeu ; motif d'arrêt rendu « tours_epuises »
+  pour une partie gagnée. En campagne live, ce serait un coût d'inférence réel et
+  un motif de rapport trompeur.
+- **Issue retenue.** La boucle reçoit un arrêt sur état terminal du jeu (motif
+  explicite, par ex. « victoire »), spécifié en H8.3 et prouvé par ses propres
+  tests ; correction à porter AVANT toute campagne consommant de l'inférence
+  réelle (préalable de U24, la sonde U22 étant peu exposée). Hors périmètre de
+  U21 : comportement laissé inchangé ce jour (CLAUDE.md §5), les preuves E2E
+  restant valides (le RHAE et les actions ne sont pas affectés).
 
 ## Traitées dans la session qui les a rencontrées
+
+### 2026-08-30 — MASTER_PLAN §4 annonçait `build` dans `make check`
+
+- **Constat.** MASTER_PLAN §4 décrivait `make check` comme incluant `build` ;
+  la cible réelle (Makefile, U3) ne l'inclut pas — exclusion délibérée pour que
+  la campagne reste exécutable DANS un conteneur, où docker n'existe pas.
+- **Mesure.** `grep '^check:' Makefile` → `check: lint typecheck test-unit
+  test-int test-e2e` ; la documentation « sans make sur l'hôte » exécute bien
+  `make check` en conteneur.
+- **Issue retenue et appliquée.** Le document est aligné sur le réel : `make
+  build` s'exécute en sus depuis l'hôte lors de la campagne de fin de session.
+  MASTER_PLAN §4 corrigé dans cette session.
 
 ### 2026-08-28 — Le README annonçait `arc-replay` comme « à venir »
 

@@ -433,10 +433,7 @@ réconciliation A5.3, branchement complet sur la boucle U13 et le scorer U14.
   comptage indépendant de l'interface, partie perdue-relancée-gagnée à 43 actions).
   Campagne complète verte le 2026-08-28 : 511 tests, mypy strict sur 80 fichiers.
 
-## U21 — E2E : partie complète sur rejeu local `[ ]`
-
-> **Ordre : à prendre APRÈS U23** (décidé le 2026-08-28, journal) — condition
-> désormais SATISFAITE : `run-arc` est livrée. Cette unité est la prochaine.
+## U21 — E2E : partie complète sur rejeu local `[x]`
 
 `@spec` A8.3 (+ H13.2). Scénarios E2E par la CLI réelle sur pile compose : victoire
 3 niveaux avec RHAE exact attendu, et scénario échec (game over → RESET → victoire) ;
@@ -448,6 +445,24 @@ artefacts (report, lignée, métriques) vérifiés ; reprise `resume` couverte.
   scénario seedées et committées, environnement épinglé (discriminant
   `AVO_NUM_PREDICT`), `test-e2e` par le réseau de l'hôte, valeurs attendues en
   forme fermée, reprise par la CLI réelle.
+- **Livré et intégralement vérifié le 2026-08-30.** `tests/e2e/scenarios.py`
+  (décor partagé, suites d'actions rejouant `chemin_optimal()`),
+  `tests/e2e/generer_cassettes.py` (capture en deux passes, auto-contrôle du
+  scénario et double génération comparée), cassettes seedées committées
+  (`e2e_victoire.jsonl` 316 échanges, `e2e_echec.jsonl` 321), Makefile
+  (`seed-e2e`, `test-e2e` par le réseau de l'hôte, aide remise au réel).
+  Preuves : `make seed-e2e` (déterminisme vérifié) ; `make test-e2e` vert —
+  victoire par sous-processus `python -m avo` réel (3/3 niveaux, 76 actions,
+  RHAE **100.00** exact, rapport A7.3, frames par niveau, lignée à 3 commits
+  `[n, −actions]`, 76 métriques d'action, reprise sans nouvel appel au modèle),
+  échec → RESET → victoire par `cli.main` (game_over 1, niveaux [43, 19, 18],
+  RHAE égal à la forme fermée min((100·(39/43)²+500)/6, 100) ≈ 97.04).
+  Vérification opérateur MASTER_PLAN §5 exécutée : campagne réelle par la CLI
+  dans le terminal, artefacts conservés et relus (`runs/e2e-operateur/` :
+  rapport lu en entier, lignée `git log` v1→v3, arborescence) — consignée au
+  journal. Un défaut étranger constaté et consigné au registre : la boucle ne
+  s'arrête pas sur l'état terminal du jeu (motif `tours_epuises` sur partie
+  gagnée).
 
 ## U22 — Sonde de contrat API officielle `[ ]` **[LIVE]**
 
