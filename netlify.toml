@@ -1,0 +1,8 @@
+# @spec infra/llm-proxy — configuration de déploiement Netlify du pont HTTPS 443
+# vers l'endpoint d'inférence (voir infra/llm-proxy/README.md). Seul le dossier
+# infra/llm-proxy est servi : public/ en statique, la fonction edge sur /*.
+# Aucun secret ici — l'URL d'origine vit dans la variable de site LLM_ORIGIN_URL.
+
+[build]
+  publish = "infra/llm-proxy/public"
+  edge_functions = "infra/llm-proxy/netlify/edge-functions"

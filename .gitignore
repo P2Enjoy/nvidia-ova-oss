@@ -252,3 +252,6 @@ coverage/
 
 # Artefacts d'exécution du harnais (docs/SPEC_HARNAIS.md §H6.1)
 runs/
+
+# Netlify (dossier local de l outil, jamais du code)
+.netlify/
