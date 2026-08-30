@@ -620,3 +620,13 @@ Deux gardes exécutables remplacent la promesse : un balayage statique des const
 **En attente du responsable.** (1) Arbitrage U29 : élargir ou non le périmètre d'évaluation aux benchmarks du papier ; (2) après U28, décision du mode de contexte par défaut pour U25.
 
 **Où reprendre.** Inchangé pour le worker : **U21** (E2E sur rejeu local), puis U26–U27 dans l'ordre. U22, U24, U25, U28 restent [LIVE] en session interactive.
+
+---
+
+## 2026-08-30 (suite) — Tout est fusionné sur `main` ; `main` devient la seule branche de travail
+
+**Instruction du responsable.** « Merge rebase everything to main and work exclusively on main. » La branche de session `claude/avo-harness-implementation-ufsb43` (export SKILL.state, lot G, fusion de rattrapage) a été fusionnée dans `main` en avance rapide (`43eaa4a`) et poussée ; la branche est supprimée, tout son historique étant porté par `main`.
+
+**Règle persistée.** `CLAUDE_PROJECT.md`, Conventions locales : toutes les sessions, planifiées comme interactives, travaillent et poussent exclusivement sur `main` ; aucune branche de travail ; conflits résolus sur place. La présente session poursuit sur `main`.
+
+**Où reprendre.** Inchangé : U21 (E2E sur rejeu local), puis U26–U27 (lot G). U22/U24/U25/U28 [LIVE] en session interactive ; arbitrage U29 en attente.
