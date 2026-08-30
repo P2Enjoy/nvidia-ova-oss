@@ -681,3 +681,60 @@ Deux gardes exécutables remplacent la promesse : un balayage statique des const
 **Routine horaire provisionnée (instruction du responsable, reçue en session).** Déclencheur `trig_01GryirsTmK638VfV7aCAuTP` « CloudWorker AVO (horaire) », cron ancré à :31, session fraîche par exécution dans cet environnement. Prompt = contenu intégral de `docs/.routine` (complété des blocs « variables de session » et « autorisations ») + les quatre variables non persistées (endpoint via le pont HTTPS 443, clé d'inférence, `OLLAMA_CONTEXT_LENGTH=229376` — plafond réel par clé mesuré, point tranché —, clé ARC Prize). Doctrine persistée avant création : MASTER_PLAN §3 (les unités [LIVE] sont prenables par la routine munie des secrets et de l'autorisation, plafonds et garde maintenus), CLAUDE_PROJECT (autorisation du responsable : jouer ARC Prize, publier les scorecards, collecter les résultats, améliorer le fonctionnement général ; INTERDICTION DE BENCHMAXING sans exception). Clé ARC ajoutée au `.env` local (ignoré par git, revérifié).
 
 **Où reprendre.** Ordre du plan : U26 (spécification H15 puis runtime d'état structuré), puis U27 ; les [LIVE] U22 → U24 → U25/U28 sont désormais prenables par la routine — traiter d'abord l'entrée ouverte du registre (arrêt sur état terminal) comme préalable de U24. La routine tire sa première session à 14:31 UTC.
+
+---
+
+## 2026-08-30 (suite 5) — Session planifiée (routine CloudWorker) : U26 livrée et close
+
+**Unité.** U26 — Spécification H15 et runtime d'état structuré, désignée par l'entrée
+précédente. Git rattaché à `main` sans commit local à sauver (§1.3), Docker démarré
+manuellement (`dockerd` direct, le service échoue sur `ulimit`), CA du proxy déposé
+dans `certs/` pour l'image de développement.
+
+**Séquence tenue : spéc d'abord, committée, puis code.** §H15 écrit en entier avant
+la moindre ligne de `avo.context.etat` — contrat de pas `(P, Σₜ, Oₜ) → (Rₜ, ΔΣₜ, aₜ)`,
+opérateur `⊕` à suppression par `null`, schéma possédé et validé par le runtime,
+rollback-retry borné, schéma ARC v1 à quatre champs toujours présents, articulation
+avec H5/H6.2/H10/H12 — committé et poussé seul (`19ea8f4`) avant d'ouvrir le module.
+
+**Une décision tranchée en écrivant la spécification.** Le papier autorise la
+disparition d'une clé sur `null` ; pour un schéma à champs fixes (ARC v1), disparaître
+laisserait Σ dans un état incomplet. Décision : `null` réinitialise le champ à son
+défaut plutôt que de le retirer — Σ reste **toujours** conforme à son schéma. Le point
+est écrit dans H15.2 pour qu'un lecteur du papier ne s'attende pas à une clé absente.
+
+**Livré.** `avo.context.etat` : `Etat` (frozen, quatre champs `position`/`essai`/
+`hypotheses`/`objets`), `fusionner` (validation champ par champ avant toute mutation,
+jamais d'application partielle), `decoder_pas` (bloc ```` ```json ```` à exactement
+`state_patch`/`action`, annexe A.4 SKILL.state), `appliquer` (décodage + fusion),
+`CompteurRetries` (budget borné `RETRIES_MAX = 3`), sérialisation JSON aller-retour.
+Trois erreurs typées (`EtatInvalide`, `PatchMalforme`, `RetriesEpuises`), aucune
+absorbée en silence. Module **pur** : aucune E/S, aucun réseau — le branchement dans
+la boucle et la persistance réelle dans le workspace du run restent le périmètre de
+U27, qui seule consomme un Σ persisté.
+
+**Preuves exécutées, toutes en conteneur, pile compose debout et seedée.**
+`tests/unit/test_etat.py` : 31 tests, dont un par classe de la taxonomie d'erreurs du
+papier §5.7 nommément visée (écrasement/omission de clé 68 % — une clé absente du
+patch survit —, incohérence de type/structure 20 %, JSON malformé 12 %), la
+non-mutation de l'entrée fusionnée, et l'aller-retour de sérialisation exact.
+Campagne complète `make check` verte : lint, `ruff format`, mypy **strict** sur 91
+fichiers, **458 tests unitaires** (dont les 31 de cette unité, zéro régression sur
+les 427 préexistants), **123 d'intégration**, **2 E2E**. `make build` (image de
+production) vert. Vérification opérateur (MASTER_PLAN §5) : `python -m avo
+--version` et un appel manuel de `appliquer()` dans le conteneur, sortie observée
+conforme (patch fusionné, action extraite, raisonnement absent du résultat).
+
+**Un aléa d'environnement rencontré et résolu, pas un défaut du produit.** Le premier
+`make image` a échoué sur un `429 Too Many Requests` de Docker Hub à la résolution de
+`python:3.13-slim` — même limitation de registre que celle notée le 2026-08-30 pour
+`make build` en session U21. Une nouvelle tentative quelques minutes plus tard a
+réussi sans autre changement : transitoire, étranger au produit, non consigné au
+registre (pas une incohérence du dépôt).
+
+**Où reprendre.** U27 — mode `state` de la boucle (`AVO_CONTEXT_MODE`, défaut
+`transcript` inchangé), branchement des primitives de U26 dans `avo.loop.boucle` et
+persistance de Σ dans le workspace, A/B sur rejeu (`cible`) avec rapport comparatif
+committé sous `docs/rapports/`. Ensuite, les [LIVE] restent prenables par la routine
+dans l'ordre déjà consigné : U22 → (registre : arrêt sur état terminal, préalable de
+U24) → U24 → U25/U28.

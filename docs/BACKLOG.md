@@ -572,11 +572,11 @@ fautif, erreurs typées, compteur de retries, sérialisation.
   (`EtatInvalide`, `PatchMalforme`, `RetriesEpuises`), aucune absorbée en silence.
   Preuves : `tests/unit/test_etat.py`, 31 tests couvrant nommément les trois classes
   de la taxonomie §5.7 (écrasement/omission 68 %, type/structure 20 %, JSON malformé
-  12 %), la non-mutation de l'entrée, et l'aller-retour de sérialisation. Preuves de
-  l'unité vertes : lint + `ruff format` + mypy strict sur 91 fichiers, **458 tests
-  unitaires** (dont les 31 de cette unité), aucune régression ; module pur sans
-  surface d'intégration ni E2E propres (aucune E/S). `make check` complet rejoué en
-  fin de session (§4.3) : voir le journal pour son bilan. La persistance de Σ
+  12 %), la non-mutation de l'entrée, et l'aller-retour de sérialisation ; module pur
+  sans surface d'intégration ni E2E propres (aucune E/S). `make check` complet
+  rejoué en fin de session, vert : lint, `ruff format`, mypy strict sur 91 fichiers,
+  **458 tests unitaires** (dont les 31 de cette unité), **123 d'intégration**, **2
+  E2E** — aucune régression. `make build` (image de production) vert. La persistance de Σ
   *dans le workspace du run* (`runs/<run_id>/state/etat.json`) et sa reprise
   (§H15.5) ne sont pas câblées par cette unité : ce module reste pur (aucune E/S) et
   fournit seulement les primitives ; le câblage dans la boucle et le workspace est le
