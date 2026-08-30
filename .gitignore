@@ -248,3 +248,6 @@ coverage/
 # poetry.lock
 # uv.lock
 # requirements*.txt
+
+# Artefacts d'exécution du harnais (docs/SPEC_HARNAIS.md §H6.1)
+runs/

@@ -1,0 +1,48 @@
+# @spec docs/BACKLOG.md U3 — Squelette Python et outillage
+# @spec docs/SPEC_HARNAIS.md §H2.1 (stack, zéro dépendance d'exécution), §H2.2 (arborescence)
+# @spec docs/MASTER_PLAN.md §4 (classes de preuves)
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "avo"
+version = "0.1.0"
+description = "Harnais d'agent AVO (Agentic Variation Operators) — implémentation open source"
+requires-python = ">=3.11"
+license = { text = "MPL-2.0" }
+# H2.1 : AUCUNE dépendance d'exécution. Le harnais n'utilise que la bibliothèque
+# standard. Toute proposition d'ajout passe par une décision documentée (CLAUDE.md §19).
+dependencies = []
+
+[project.optional-dependencies]
+# Accélérateurs de développement UNIQUEMENT. Le dépôt reste intégralement
+# vérifiable sans eux : les preuves reposent sur `unittest` (stdlib), et les
+# étapes qui dépendent d'un outil absent le signalent explicitement (H2.3).
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11"]
+
+[project.scripts]
+avo = "avo.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+# Les tests sont écrits avec `unittest` : ils s'exécutent sous `python -m unittest`
+# comme sous pytest. pytest n'est jamais requis.
+testpaths = ["tests"]
+pythonpath = ["src", "mocks"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "mocks", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src:mocks"
+strict = true
+warn_unused_ignores = true

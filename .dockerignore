@@ -1,0 +1,9 @@
+# @spec docs/BACKLOG.md U3 · docs/SPEC_HARNAIS.md §H2.4
+.git/
+.venv/
+__pycache__/
+*.py[cod]
+runs/
+knowledge/
+docs/
+.env

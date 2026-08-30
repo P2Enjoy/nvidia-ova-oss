@@ -18,24 +18,82 @@ Les éléments constitutifs, tirés des sources exportées dans [`knowledge/`](k
 
 **Phase de préparation — aucun code applicatif n'existe encore.**
 
-- Fait : import des cinq sources de référence dans `knowledge/` (markdown + images + PDF), documentation projet initialisée, backlog détaillé (phases et unités U2.1–U6.3 dans `docs/BACKLOG.md`).
-- En attente d'une action humaine : URL de l'endpoint compatible OpenAI, clé API et nom du modèle à utiliser (annoncés par le responsable, non encore fournis), et confirmation de la liste des benchmarks visés.
-- Prochaine étape : spécification complète du harnais (`docs/`) avant toute ligne de code, conformément à `CLAUDE.md`.
+- Fait : import des quatre sources de référence dans `knowledge/` (markdown + images + PDF), documentation projet initialisée.
+- Fait : endpoint d'inférence fourni par le responsable, **testé et validé de bout en bout** le 2026-08-27 (authentification, tool calling, contexte long réellement exploité) ; le modèle de travail est `qwen3.6:35b`, seul modèle de complétion servi par cet endpoint. Mesures et contraintes qui en découlent : `docs/JOURNAL.md`, entrée du 2026-08-27 (suite 2).
+- Décidé : le benchmark de référence est **ARC-AGI-3, ensemble public** (décision prise par défaut le 2026-08-27 au titre de `CLAUDE.md` §1, « Autonomie de décision » ; motif et options écartées dans `docs/JOURNAL.md`). Aucun autre benchmark n'entre dans le périmètre initial.
+- Fait : **spécification complète écrite et committée** — `docs/SPEC_HARNAIS.md` (noyau agent, H1–H14), `docs/SPEC_ARCAGI3.md` (interface et évaluation, A1–A8), `docs/MASTER_PLAN.md` (ordre d'exécution, DoD commune), backlog redécoupé en unités d'une session (U3–U25), chacune portant ses références de spécification et ses preuves.
+- Prochaine étape : implémentation dans l'ordre du plan, U3 en tête. Les unités marquées [LIVE] (sonde d'API et campagnes) se font en session interactive uniquement.
 
 ## Stack
 
-- Cible prévue : **Python** (conforme aux préférences du socle P2Enjoy pour l'IA/ML ; à confirmer dans la spécification, `docs/BACKLOG.md` U2).
-- Aucune dépendance installée à ce stade.
+- **Python ≥ 3.11, zéro dépendance d'exécution** (bibliothèque standard uniquement) ; outillage de développement : pytest, ruff, mypy (`docs/SPEC_HARNAIS.md` §H2, motifs inclus).
+- Pile locale conteneurisée (Docker Compose) : **`llm-replay`** sur le port `11435` (rejeu d'échanges **enregistrés sur le vrai endpoint** — aucun faux serveur) et `arc-replay` sur `8765` (contrat ARC-AGI-3 + jeu synthétique `cible`, car chaque appel réel publie un scorecard). Les tests tournent hors ligne sans jamais inventer un contrat.
+- Deux images depuis un `Dockerfile` multi-étages : **`avo`** (production, 176 Mo, le paquet seul sans dépendance) et **`avo-dev`** (320 Mo, y ajoute make, pytest, ruff, mypy). L'outillage ne vit que dans l'image de développement.
 
 ## Prérequis
 
-- Git.
-- Python 3 (pour la phase d'implémentation à venir).
-- Un endpoint d'inférence compatible OpenAI (URL + clé API) — fourni séparément, jamais committé.
+**Rien n'est installé sur votre machine : tout s'exécute dans Docker.** Il vous faut donc uniquement :
+
+- `git` et `docker` avec un démon joignable par votre utilisateur — **le mode rootless convient et est le mode vérifié** ;
+- `make` est facultatif sur l'hôte : il est installé dans l'image, et la campagne complète s'exécute avec Docker seul (commande ci-dessous) ;
+- si `docker info` répond « permission denied » en mode classique, l'ajout au groupe `docker` est nécessaire, une seule fois : `sudo usermod -aG docker $USER` puis rouvrir la session ;
+- Python n'est requis sur l'hôte que pour le mode dégradé décrit plus bas ;
+- pour les exécutions live uniquement : l'endpoint d'inférence et la clé ARC Prize (variables ci-dessous, jamais committées).
 
 ## Commandes
 
-Aucune commande de build, de test ou de lancement n'existe encore. Elles seront documentées ici dans le même commit que leur introduction.
+Contrat : `docs/SPEC_HARNAIS.md` §H2.3. Chaque cible lance un **conteneur jetable** sur le dépôt monté en volume ; l'outillage (pytest, ruff, mypy) vit dans l'image, jamais sur l'hôte. Une cible dont l'objet n'est pas encore livré échoue en nommant l'unité de backlog qui le livrera.
+
+| Commande | Rôle |
+|---|---|
+| `make image` (`make install`) | construit l'image de développement `avo-dev` |
+| `make lint` / `make typecheck` | ruff / mypy, dans le conteneur |
+| `make test-unit` / `make test-int` / `make test-e2e` | preuves par classe |
+| `make check` | **campagne complète**, hors ligne et sans secret |
+| `make build` | image de **production** `avo` (le paquet seul, sans outillage) |
+| `make up` / `make down` / `make ps` / `make logs` | pile de services locale (cibles d'hôte) |
+| `make smoke-pile` | fumée de la pile par le port publié (cible d'hôte) |
+| `make seed` | contrôle des fixtures (n'en fabrique aucune) |
+| `make record-llm` / `make test-int-live` | **[LIVE]** enregistrement et détection de dérive (exigent `.env`) |
+| `make smoke-live` | fumée manuelle contre l'endpoint réel (exige `.env`, hors campagne) |
+| `make run-arc` | campagne ARC (replay par défaut ; live sous garde d'accord explicite) |
+| `make resume RUN_ID=<id>` | reprend un run sans rejouer les jeux déjà terminés |
+
+**Lancer une campagne** (la pile doit être debout) :
+
+```sh
+make up
+make run-arc ARGS="--games cible-synthetique --tours-max 40"
+make resume RUN_ID=<identifiant affiché par la commande précédente>
+```
+
+La commande écrit tout dans `runs/<run_id>/` : `report.md` (score, coûts, événements,
+comparaison aux références publiées et **limites**), `campagne.json` (état de reprise),
+`metrics.jsonl`, les transcripts par segment, les frames typées et un dépôt de lignée
+par jeu. En `--mode live`, quatre plafonds sont obligatoires et l'accord de publication
+doit être donné explicitement par `--j-autorise-la-publication` : jouer via l'API
+officielle enregistre un scorecard sur le compte du responsable.
+
+**Lancer la pile locale** (aucun secret requis) :
+
+```sh
+make up            # construit et démarre llm-replay, puis affiche son état
+make smoke-pile    # vérifie le rejeu par le port 11435 : /_health, 401 sans clé, 200 avec
+make down          # arrête la pile
+```
+
+Sans `OLLAMA_API_KEY` dans l'environnement, le rejoueur accepte n'importe quel jeton porteur comme authentification valide et ne distingue que l'absence d'en-tête : la pile démontre donc le refus sans clé et le succès avec clé sans qu'aucun secret n'y entre.
+
+**Sans `make` sur l'hôte** — campagne complète avec Docker pour seul prérequis :
+
+```sh
+docker build -t avo-dev .
+docker run --rm -v "$PWD":/app -w /app -e HOME=/tmp \
+  -e RUFF_CACHE_DIR=/tmp/.ruff_cache -e MYPY_CACHE_DIR=/tmp/.mypy_cache \
+  avo-dev make check          # hors rootless, ajouter --user $(id -u):$(id -g)
+```
+
+**Mode dégradé, sans Docker et sans rien installer** : `AVO_NO_DOCKER=1 make test-unit` exécute les tests sur l'hôte avec la seule bibliothèque standard. Le lint y est réduit à une compilation et le typecheck n'est **pas** exécuté ; les commandes le signalent, et le bilan de `make check` le répète. Ce repli ne vaut pas preuve de style ni de typage.
 
 ## Variables d'environnement
 
@@ -45,7 +103,16 @@ Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors d
 |---|---|---|---|---|
 | `OLLAMA_HOST` | URL de base du serveur Ollama (surface compatible OpenAI sous `/v1`, API native sous `/api`) | URL `https://hôte[:port]` sans slash final | oui | `https://inference.example.com` |
 | `OLLAMA_API_KEY` | Clé d'authentification, envoyée en `Authorization: Bearer …` | chaîne opaque | oui | `sk-ollama-xxxxxxxx` |
-| `OLLAMA_CONTEXT_LENGTH` | Fenêtre de contexte configurée côté serveur, en tokens ; borne les budgets de contexte du harnais | entier | oui | `114688` |
+| `OLLAMA_CONTEXT_LENGTH` | Fenêtre de contexte demandée au serveur, en tokens (transmise en `options.num_ctx`) ; borne les budgets de contexte du harnais | entier | oui | `131072` |
+| `AVO_TOOL_STEPS_MAX` | Garde : nombre maximal d'appels d'outils par tour d'agent, au-delà duquel le tour est clos avec un message explicite | entier | non (défaut `40`) | `40` |
+| `AVO_ACTIONS_MAX_NIVEAU` / `AVO_ACTIONS_MAX_JEU` | Bornes d'actions d'environnement, par niveau et par jeu ; dépassement = arrêt propre avec la borne nommée | entier | non (défauts `1000` / `5000`) | `1000` |
+| `AVO_SUP_STALL_ACTIONS` / `AVO_SUP_COOLDOWN` | Superviseur : actions sans progrès avant intervention, et actions minimales entre deux interventions | entier | non (défauts `60` / `30`) | `60` |
+| `ARC_API_KEY` | Clé d'accès à l'API ARC Prize (ARC-AGI-3), envoyée en en-tête `X-API-Key` ; donne accès aux environnements officiels et à l'ouverture des scorecards | UUID | oui pour l'évaluation ARC-AGI-3, inutile pour le reste du harnais | `00000000-0000-0000-0000-000000000000` |
+| `ARC_BASE_URL` | Base de l'API ARC-AGI-3. En mode rejeu, elle pointe la pile locale et le client **refuse** tout autre hôte : les tests ne peuvent pas publier de scorecard par accident | URL `https://hôte[:port]` | non (défaut selon le mode) | `http://127.0.0.1:8765` |
+
+En **mode rejeu** (le mode par défaut, celui des tests et du worker), aucune de ces variables n'est requise : la configuration pointe la pile locale (`http://127.0.0.1:11435`), emploie un jeton qui n'est pas un secret et une fenêtre de contexte par défaut. En **mode live**, l'absence de `OLLAMA_HOST`, `OLLAMA_API_KEY`, `OLLAMA_CONTEXT_LENGTH` ou `ARC_API_KEY` est une erreur au démarrage qui nomme la variable — jamais une valeur par défaut silencieuse.
+
+Le plafond réellement applicable n'est pas cette variable seule : le proxy d'authentification impose une **limite de contexte par clé API**, qu'il publie dans le corps de sa réponse `HTTP 413` (`max_context_tokens`), et il compare à ce plafond une estimation **majorée de 15 %**. Le budget exploitable par le harnais vaut donc environ `max_context_tokens / 1,15`. Le `413` doit être traité comme un cas nominal (repli par compaction ou continuation en contexte frais), pas comme une erreur fatale ; son corps renvoie `tokens_estimated`, directement exploitable. Valeurs mesurées sur l'endpoint courant : `docs/JOURNAL.md`, entrée du 2026-08-27 (suite 2).
 
 ## Structure du dépôt
 
@@ -55,11 +122,22 @@ Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors d
 ├── CLAUDE_PROJECT.md    # règles propres à ce dépôt
 ├── README.md
 ├── CHANGELOG.md
+├── Dockerfile           # multi-étages : avo (production) et avo-dev (outillage)
+├── docker-compose.yml   # pile locale de rejeu (llm-replay, port 11435)
+├── scripts/             # fumée de la pile (exécutée sur l'hôte)
+├── Makefile             # contrat des commandes, tout en conteneur
+├── pyproject.toml       # paquet avo, zéro dépendance d'exécution
+├── src/avo/             # paquet applicatif (cli, llm, context, memory, tools, loop, arc)
+├── mocks/               # serveurs locaux : llm-replay (U4), arc-replay (U16)
+├── tests/               # unit, integration, e2e, fixtures
 ├── docs/
 │   ├── .routine         # entrée de la tâche planifiée (worker horaire)
 │   ├── CloudWorker.md   # contrat d'exécution du worker planifié
-│   ├── DAT.md           # dossier d'architecture technique (embryonnaire)
-│   ├── BACKLOG.md       # unités de travail et statuts
+│   ├── MASTER_PLAN.md   # ordre d'exécution des unités, DoD commune
+│   ├── SPEC_HARNAIS.md  # spécification du noyau agent (H1–H14)
+│   ├── SPEC_ARCAGI3.md  # spécification interface ARC-AGI-3 et évaluation (A1–A8)
+│   ├── DAT.md           # dossier d'architecture technique (vue d'ensemble)
+│   ├── BACKLOG.md       # unités de travail et statuts (U1–U25)
 │   ├── JOURNAL.md       # décisions et investigations
 │   └── DESIGN_SYSTEM.md # socle UI global P2Enjoy (pas d'UI dans ce projet à ce stade)
 └── knowledge/           # sources de référence exportées (voir knowledge/README.md)
@@ -67,10 +145,13 @@ Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors d
 
 ## Limites connues
 
-- Le harnais n'est pas implémenté : le dépôt ne contient que la connaissance de référence et la documentation de préparation.
-- L'endpoint d'inférence fourni le 2026-08-27 est sain (vérifié depuis des points de mesure externes) mais **injoignable depuis l'environnement d'exécution**, dont la sortie réseau n'autorise le TLS que vers le port 443 alors que l'endpoint écoute sur un port non standard. Diagnostic complet et options de déblocage : `docs/JOURNAL.md`, entrée du 2026-08-27 (suite). Nécessite une action humaine.
-- Le nom du modèle à utiliser n'est pas encore confirmé par le responsable.
-- L'évaluation ARC-AGI-3 officielle suppose un accès à l'API ARC Prize (scorecards) ; cette dépendance sera traitée dans la spécification.
+- Le harnais n'est pas encore implémenté : le dépôt contient la connaissance de référence, la spécification complète, et le squelette outillé (U3). Les composants arrivent avec les unités U4+ du backlog.
+- Le contrat de fil exact de l'API ARC (chemins, corps, coordonnées) est écrit d'après les sources et sera confirmé par la sonde U22 — jouer via l'API publie un scorecard, donc aucune sonde n'a été exécutée d'office (`docs/SPEC_ARCAGI3.md` §A1.4).
+- **Le préremplissage du contexte est le coût dominant de l'endpoint**, très loin devant la génération (débit mesuré le 2026-08-27 : voir `docs/JOURNAL.md`). Un harnais qui réémettrait l'historique complet à chaque tour serait inexploitable en temps sur un benchmark de plusieurs milliers d'actions : l'historique doit rester strictement append-only pour bénéficier du cache de préfixe.
+- **Le budget de contexte utile est inférieur au plafond nominal** de la clé, à cause de la marge de 15 % appliquée par le proxy (voir « Variables d'environnement »).
+- **Le modèle servi est un modèle à raisonnement** : le raisonnement consomme le budget de sortie avant tout contenu, et une valeur de `max_tokens` trop basse produit une réponse vide avec `finish_reason: length`. Politique à arrêter dans la spécification (budget large, ou raisonnement désactivé).
+- **Évaluer, c'est publier** : l'API ARC Prize enregistre chaque partie dans un scorecard rattaché au compte porteur de la clé. Il n'existe pas de mode d'exécution officiel sans dépôt de résultat. Toute campagne engage donc le compte du responsable, et les exécutions d'essai doivent passer par l'environnement local de rejeu plutôt que par l'API.
+- **Une campagne complète est hors de portée en une session** : 25 jeux, 183 niveaux, une référence humaine de 17 135 actions cumulées et des agents de référence autour de 7 000 actions, à combiner avec le coût de préremplissage de l'endpoint. Le périmètre d'une campagne (sous-ensemble de jeux, plafonds d'actions, budget de temps) est défini dans la spécification, jamais implicite.
 
 ## Origine
 
