@@ -212,6 +212,13 @@
 - `docs/BACKLOG.md` redécoupé : U1–U2 closes, 23 unités d'implémentation U3–U25 tenant chacune dans une session, chacune avec références `@spec`, périmètre et preuves propres.
 - `docs/DAT.md` complété (composants, flux, données, interfaces externes, choix actés, compromis) ; `README.md` (stack réelle, prérequis, contrat de commandes, structure, limites) et `CLAUDE_PROJECT.md` (règle de code spécifié, unités [LIVE], vérification CLI) mis en cohérence.
 
+### 2026-08-30 — Cinquième source (SKILL.state) et lot G au backlog
+
+- Ajout dans `knowledge/` de l'export complet du papier SKILL.state (arXiv:2608.26263, fourni par le responsable) : texte intégral, figure d'architecture, dix tableaux transcrits, prompts exacts des quatre runtimes comparés, PDF d'origine ; index mis à jour, SKILL.state y étant présenté comme **alternative mesurable** au transcript append-only retenu par H5 (contrainte mesurée du cache de préfixe), à départager par A/B.
+- Ajout du **lot G** au backlog et au plan directeur : U26 (chapitre H15 puis runtime d'état structuré `avo.context.etat` — patch `⊕`, validation par le runtime, rollback-retry, preuves calquées sur la taxonomie d'erreurs open-weight du papier), U27 (mode `state` optionnel de la boucle, défaut `transcript` inchangé, A/B sur rejeu avec rapport), U28 [LIVE] (A/B en conditions réelles après la campagne pilote), U29 (benchmarks InterCode CTF / τ-Bench — hors périmètre, en attente d'arbitrage explicite du responsable).
+- Mentions périmées corrigées : `README.md` (état actuel remis au réel — U3–U20 et U23 livrées, prochaine unité U21 ; cinq sources), `CLAUDE_PROJECT.md` (plage d'unités, terminologie SKILL.state).
+- Branche de session rattrapée sur `main` par **fusion** (pas de réécriture d'historique) : le redécoupage de backlog committé avant de connaître l'avancement réel est remplacé par les ajouts ci-dessus.
+
 ## [Publié]
 
 _Aucune publication pour le moment._

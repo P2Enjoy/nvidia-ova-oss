@@ -16,13 +16,14 @@ Les éléments constitutifs, tirés des sources exportées dans [`knowledge/`](k
 
 ## État actuel
 
-**Phase de préparation — aucun code applicatif n'existe encore.**
+**Implémentation avancée — lots A à D livrés en entier, lot E livré jusqu'au RHAE, runner de campagne livré.**
 
-- Fait : import des quatre sources de référence dans `knowledge/` (markdown + images + PDF), documentation projet initialisée.
+- Fait : import des cinq sources de référence dans `knowledge/` (markdown + images + PDF) — papier AVO, billet NVIDIA, page VISTA, papier Tycho, papier SKILL.state (arXiv:2608.26263, ajouté le 2026-08-30).
 - Fait : endpoint d'inférence fourni par le responsable, **testé et validé de bout en bout** le 2026-08-27 (authentification, tool calling, contexte long réellement exploité) ; le modèle de travail est `qwen3.6:35b`, seul modèle de complétion servi par cet endpoint. Mesures et contraintes qui en découlent : `docs/JOURNAL.md`, entrée du 2026-08-27 (suite 2).
-- Décidé : le benchmark de référence est **ARC-AGI-3, ensemble public** (décision prise par défaut le 2026-08-27 au titre de `CLAUDE.md` §1, « Autonomie de décision » ; motif et options écartées dans `docs/JOURNAL.md`). Aucun autre benchmark n'entre dans le périmètre initial.
-- Fait : **spécification complète écrite et committée** — `docs/SPEC_HARNAIS.md` (noyau agent, H1–H14), `docs/SPEC_ARCAGI3.md` (interface et évaluation, A1–A8), `docs/MASTER_PLAN.md` (ordre d'exécution, DoD commune), backlog redécoupé en unités d'une session (U3–U25), chacune portant ses références de spécification et ses preuves.
-- Prochaine étape : implémentation dans l'ordre du plan, U3 en tête. Les unités marquées [LIVE] (sonde d'API et campagnes) se font en session interactive uniquement.
+- Décidé : le benchmark de référence est **ARC-AGI-3, ensemble public** (décision prise par défaut le 2026-08-27 au titre de `CLAUDE.md` §1, « Autonomie de décision » ; motif et options écartées dans `docs/JOURNAL.md`). Aucun autre benchmark n'entre dans le périmètre initial ; les benchmarks interactifs du papier SKILL.state sont consignés comme extension possible, en attente d'arbitrage (`docs/BACKLOG.md`, U29).
+- Fait : **spécification complète écrite et committée** — `docs/SPEC_HARNAIS.md` (noyau agent, H1–H14), `docs/SPEC_ARCAGI3.md` (interface et évaluation, A1–A8), `docs/MASTER_PLAN.md` (ordre d'exécution, DoD commune), backlog en unités d'une session, chacune portant ses références de spécification et ses preuves.
+- Fait : **unités U3 à U20 et U23 livrées et vérifiées** (socle conteneurisé, client d'inférence sur cassettes réelles, contexte et notes, outils et boucle P→I→E→B, lignée et superviseur, rejeu ARC local et jeu `cible`, client API ARC, rendu et mémoire de frames, interface direct-interaction, RHAE, runner de campagne `run-arc`/`resume` avec rapport). Campagne de preuves : 550 tests verts, lint, format, mypy strict.
+- Prochaine étape : U21 (E2E sur rejeu local), puis lot G (mode d'exécution à état structuré, U26–U27). Les unités marquées [LIVE] (U22 sonde d'API, U24/U25 campagnes, U28 A/B réel) se font en session interactive uniquement.
 
 ## Stack
 

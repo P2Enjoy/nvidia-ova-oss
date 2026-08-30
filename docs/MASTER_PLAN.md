@@ -17,8 +17,9 @@ spécification déjà écrite est une session en échec.
 
 ## 2. Ordre d'exécution
 
-Les unités du backlog s'exécutent **dans l'ordre de leur numéro** (U3, U4, …, U25),
-sauf reprise désignée par la dernière entrée du journal. Chaque unité tient dans une
+Les unités du backlog s'exécutent **dans l'ordre de leur numéro** (U3, U4, …, U28),
+sauf reprise désignée par la dernière entrée du journal, et sauf U29, hors ordre tant
+que son arbitrage n'est pas rendu (backlog, lot G). Chaque unité tient dans une
 session et produit du code ; aucune unité documentaire ne reste ouverte.
 
 | Lot | Unités | Contenu |
@@ -29,12 +30,13 @@ session et produit du code ; aucune unité documentaire ne reste ouverte.
 | D — Boucle | U12–U15 | outils, boucle P→I→E→B, lignée+score, superviseur |
 | E — ARC-AGI-3 | U16–U22 | rejeu local, client API, rendu, interface, RHAE, E2E, sonde |
 | F — Campagne | U23–U25 | runner+rapport, campagne pilote, campagne étendue |
+| G — État structuré (SKILL.state) | U26–U29 | spec H15 + runtime Σ, mode `state` + A/B rejeu, A/B réel, benchmarks complémentaires (arbitrage) |
 
 ## 3. Unités [LIVE] — règle pour le worker
 
-Les unités marquées **[LIVE]** (U22, U24, U25) exigent les secrets locaux (`.env` :
-endpoint d'inférence et/ou clé ARC) et, pour U24/U25, engagent une publication de
-scorecard au nom du responsable. **Le worker planifié ne les prend jamais** : sans
+Les unités marquées **[LIVE]** (U22, U24, U25, U28) exigent les secrets locaux
+(`.env` : endpoint d'inférence et/ou clé ARC) et, pour U24/U25/U28, engagent une
+publication de scorecard au nom du responsable. **Le worker planifié ne les prend jamais** : sans
 `.env`, elles sont bloquées par un accès externe (cas 4 de « Demande d'arbitrage »,
 CLAUDE.md §1). Le worker les saute et prend l'unité suivante non-[LIVE] ; quand il ne
 reste que des unités [LIVE], le worker est dans le cas d'arrêt n° 2 de

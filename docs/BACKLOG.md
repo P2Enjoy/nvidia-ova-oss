@@ -503,3 +503,86 @@ budget temps/coût), exécution par tranches reprenables, rapport final comparat
 références (A7.3) committé, CHANGELOG et README mis à jour.
 
 - Preuves : rapport final, scorecards, coûts mesurés ; écarts au périmètre nommés.
+
+## Lot G — Contexte à état structuré (SKILL.state)
+
+Source : `knowledge/arxiv-2608.26263-skill-state-long-horizon-agent-skills.md` (ajoutée
+le 2026-08-30 sur fourniture du responsable). Le papier remplace l'historique
+append-only par un état d'exécution structuré mutable : prompt de pas `(P, Σₜ, Oₜ)`,
+raisonnement jeté après projection dans un patch d'état JSON validé, empreinte de
+prompt O(1). Il démontre, à budget de tokens égal, que l'état structuré bat
+troncature, résumé et compression (0,94 contre 0,18–0,52), une récupération immédiate
+après dérive externe, et donne la taxonomie d'erreurs des modèles open-weight qui
+impose la validation stricte des patchs. **Tension assumée avec H5** : le transcript
+append-only du harnais a été choisi sur la contrainte mesurée du cache de préfixe
+(préremplissage dominant, journal du 2026-08-27 suite 2) ; le mode état borne le
+prompt mais reprémplit `(P, Σₜ, Oₜ)` à chaque tour. Le lot livre donc le mode en
+**alternative configurable, jamais en remplacement**, et le départage par la mesure.
+
+## U26 — Spécification H15 et runtime d'état structuré `[ ]`
+
+`@spec` H15 — chapitre à écrire par cette unité et à committer **avant le code**
+(précédent des contrats A6.4/A7.4). H15 spécifie : le contrat d'exécution à état
+structuré adapté de SKILL.state §3 — sortie de pas `(Rₜ, ΔΣₜ, aₜ)` avec bloc JSON
+`{"state_patch": …, "action": …}` ; fusion `⊕` à sémantique de suppression par
+null ; **schéma possédé et validé par le runtime, jamais par le modèle** ;
+rollback-retry borné sur patch invalide (le patch refusé n'atteint jamais Σ) ;
+persistance de Σ dans le workspace et reprise ; schéma ARC v1 de Σ (position, essai,
+hypothèses testées, objets identifiés — champs exacts fixés par H15) ; articulation
+avec H5 (mode exclusif par segment), H6.2 (les notes restent la mémoire durable
+trans-niveaux, Σ est l'état opérationnel du niveau), H10 (les détecteurs du
+superviseur lisent aussi les retries de patch), H12 (raisonnement jeté après
+projection) ; et la limite « statistique suffisante » de SKILL.state §7, qui motive
+de conserver l'archivage sans perte des frames (A4) inchangé. Puis livrer
+`avo.context.etat` : état typé, application de patch, validation nommant le champ
+fautif, erreurs typées, compteur de retries, sérialisation.
+
+- Preuves : unitaires nominal/limites/erreurs couvrant la taxonomie §5.7 du papier —
+  une clé existante absente du patch **survit** (fusion, pas remplacement), une
+  incohérence de type/structure est refusée en nommant le champ, un JSON malformé
+  déclenche le retry borné puis une erreur explicite ; propriété : `Σ ⊕ ΔΣ` ne mute
+  jamais son entrée ; sérialisation aller-retour à l'identique.
+
+## U27 — Mode d'exécution `state` de la boucle et A/B sur rejeu `[ ]`
+
+`@spec` H15 (+ H8.4, H3.1). Variable `AVO_CONTEXT_MODE` ∈ {`transcript`, `state`},
+défaut `transcript` — **aucun comportement existant ne change**, les preuves
+U13/U23 restent valides telles quelles. En mode `state` : le prompt de chaque tour
+est composé de `(P, Σₜ, Oₜ)` + notes, le patch validé est appliqué avant l'action,
+l'échange complet reste archivé dans le workspace (H11) mais n'est pas renvoyé au
+modèle ; la continuation H5.3–H5.4 est sans objet (un `413` y est un incident,
+compté) ; métriques par tour ajoutées : taille de prompt, retries de patch. A/B :
+deux mini-campagnes `run-arc --mode replay` sur le jeu `cible`, une par mode, et un
+rapport comparatif (RHAE, actions, tokens cumulés, taille moyenne de prompt,
+retries) committé sous `docs/rapports/`.
+
+- Preuves : unitaires (composition exacte du prompt de pas ; patch appliqué/refusé au
+  bon moment ; défaut `transcript` vérifié par un test de non-régression) ;
+  intégration : boucle complète en mode `state` contre les deux rejeux en HTTP
+  réel ; E2E : les deux mini-campagnes et le rapport comparatif relu.
+
+## U28 — A/B des deux modes en conditions réelles `[ ]` **[LIVE]**
+
+`@spec` H15, A7. En session interactive, après U24 : rejouer le périmètre pilote de
+U24 en mode `state` sur l'endpoint réel et l'API réelle (mêmes jeux, mêmes
+plafonds), comparer mesures en main : RHAE, actions, tokens prépremplis et générés,
+coût, incidents (`413`, retries de patch), effet du cache de préfixe constaté.
+Rapport comparatif committé ; recommandation du mode par défaut pour U25 arrêtée
+**avec le responsable** sur ces mesures.
+
+- Preuves : rapport committé sous `docs/rapports/` ; réconciliation des compteurs
+  locale/API exacte ; recommandation et décision consignées au journal.
+
+## U29 — Benchmarks interactifs complémentaires `[ ]` **(hors périmètre — arbitrage requis)**
+
+Le périmètre d'évaluation est ARC-AGI-3 seul (décision du 2026-08-27). Le papier
+SKILL.state fournit deux benchmarks interactifs publics réutilisables avec le même
+harnais — InterCode CTF (100 défis bash en conteneurs, pass@1) et Sierra τ-Bench
+(workflows outillés Retail/Airline, évaluateur officiel) — et le patron d'un banc
+diagnostique déterministe type SkillExecBench (générateurs seedés Warehouse /
+Software Repository), utile pour éprouver les longues horizons hors ARC. **Cette
+unité n'entre pas dans l'ordre d'exécution** tant que le responsable n'a pas élargi
+le périmètre ; si elle est retenue, elle commence par sa spécification (chapitres
+S1+) puis se redécoupe en unités d'une session.
+
+- Preuves (si retenue) : fixées par la spécification à écrire.

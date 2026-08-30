@@ -38,7 +38,7 @@ Implémentation open source du harnais d'agent **AVO** (papier arXiv:2603.24517)
 ## Conventions locales
 
 - Documentation projet en français ; les exports de `knowledge/` conservent le texte original anglais sous un en-tête de provenance français.
-- L'état réel du travail vit dans `docs/BACKLOG.md` (unités U1–U6) et `docs/JOURNAL.md` (dernière entrée = point de reprise). Les relire en début de session.
+- L'état réel du travail vit dans `docs/BACKLOG.md` (unités numérotées, lots A à G) et `docs/JOURNAL.md` (dernière entrée = point de reprise). Les relire en début de session.
 - La spécification du harnais (ex-unité U2) est écrite et committée ; toute nouvelle ligne de code doit être couverte par un chapitre de `docs/SPEC_HARNAIS.md` ou `docs/SPEC_ARCAGI3.md` cité en `@spec` — un comportement non spécifié se spécifie d'abord, dans le même chunk.
 - `docs/.routine` et `docs/CloudWorker.md` sont le contrat de la tâche planifiée (worker horaire sur `main`) hérité de la base factory ; une session interactive travaille sur la branche que le responsable lui désigne.
 
