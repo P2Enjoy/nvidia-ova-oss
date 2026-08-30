@@ -588,3 +588,64 @@ modèle, seul le runtime le fait évoluer (schéma v2 hypothétique, hors périm
   reste inchangé et disponible dans les deux modes — c'est le filet qui permet de
   retrouver une information non projetée dans Σ au moment où sa pertinence apparaît,
   sans dépendre de l'historique conversationnel pour cela.
+
+**H15.8 — Un pas = un tour (précision d'implémentation, U27).** H15.1–H15.7
+laissent un point ouvert pour le branchement dans la boucle : la correspondance
+entre « un pas » (papier) et le découpage P→I→E→B de §H8.1. Décision, tranchée à
+l'implémentation faute d'indication contraire du papier ou de la spécification :
+**un pas du mode `state` correspond à un tour entier de la boucle, pas à une phase.**
+Motif : forcer une sortie `(state_patch, action)` à chacun des 3-4 appels d'un
+tour classique obligerait les phases Planning/Evaluation/Bug-Fixing — qui ne
+jouent aucune action — à produire un champ `action` sans objet, ce que le contrat
+à deux clés (§H15.1) ne permet pas de représenter proprement. La machine d'états
+de §H8.1 (phases, transitions) reste donc de la seule responsabilité du mode
+`transcript` ; le mode `state` ne l'utilise pas.
+
+Conséquences, toutes de la seule responsabilité de la boucle (`avo.loop.boucle`),
+le module `avo.context.etat` restant inchangé et pur :
+
+- **Un appel LLM par tour.** Le message système reste `P` (`prompts.SYSTEME`,
+  inchangé) ; le message utilisateur compose Σ sérialisé (§H15.5), les notes
+  (§H6.2, mêmes qu'une continuation), l'observation courante et les actions
+  disponibles, et une invite de protocole (nouvelle constante `prompts.PROTOCOLE_ETAT`,
+  générique, décrivant uniquement le format du bloc JSON et le schéma de Σ —
+  aucune règle de jeu, §A5.1). Aucun outil n'est déclaré à cet appel (`tools=None`) :
+  le contrat SKILL.state ne passe pas par l'appel de fonctions, seulement par le
+  texte (§H15.1).
+- **Rollback-retry (§H15.4) tient le tour, pas le run.** Sur `PatchMalforme` ou
+  `EtatInvalide`, le harnais retente le MÊME appel (mêmes Σ et observation), avec
+  le message d'erreur nommé ajouté à l'invite pour que le modèle se corrige.
+  `CompteurRetries` est réinitialisé à chaque tour. Le budget épuisé lève une
+  erreur fatale explicite qui arrête le run (§H13.1) — jamais un état par défaut.
+- **Résolution générique de l'action.** Le champ `action` du pas est une chaîne
+  `"<nom_outil>"` ou `"<nom_outil> v1,v2,…"` pour un outil dont le schéma déclare
+  des paramètres requis (par exemple un clic à coordonnées) : les valeurs sont
+  lues dans l'ORDRE des paramètres requis déclarés par le schéma de l'outil, et
+  coercées selon leur type JSON déclaré (entier, nombre, chaîne) — jamais un nom
+  d'action ni un nombre de paramètres codé en dur, pour rester valable sur
+  n'importe quel jeu (interdiction de benchmaxing, `CLAUDE_PROJECT.md`). Le nom
+  résolu est exécuté par le registre comme n'importe quel outil d'action
+  (§H8.1 : « c'est le registre qui l'exécute ») ; un nom inconnu ou des valeurs en
+  nombre incorrect produisent l'erreur d'outil habituelle (§H7.4), jamais fatale.
+- **Détection d'événement inchangée.** Niveau complété et partie perdue restent
+  décidés par l'environnement, jamais par le texte (§H8.1, principe repris tel
+  quel). La contradiction reste lue dans le texte du pas (même heuristique qu'en
+  mode `transcript`) : le texte d'un pas contient le raisonnement `Rₜ` avant le
+  bloc JSON, seul endroit où une contradiction peut s'énoncer en mode `state`.
+- **Bug-Fixing est implicite.** Il n'existe pas d'appel séparé : une contradiction
+  ou un game-over n'ouvrent pas une phase à part, ils apparaissent dans
+  l'observation du pas suivant, et c'est au `ΔΣ` de ce pas suivant de porter la
+  révision. C'est une différence assumée avec le mode `transcript`, à départager
+  par la mesure (U27 : A/B sur rejeu ; U28 : A/B en réel), pas sur le papier.
+- **Persistance (§H15.5).** Σ est écrit dans `runs/<run_id>/state/etat.json` après
+  chaque tour réussi (`Workspace.ecrire_etat`). La reprise au niveau où l'existant
+  la supporte réellement est **par jeu**, pas par tour (§A7.4 : un jeu entamé est
+  entièrement rejoué) — ce qui vaut identiquement pour le transcript du mode
+  `transcript`, dont aucun segment archivé n'est aujourd'hui rechargé non plus. Un
+  `BoucleAgent` construit sur un workspace qui porte déjà un `etat.json` le
+  recharge plutôt que de repartir de `Etat.initial()`, ce qui couvre le cas où
+  l'appelant le fournit délibérément.
+- **`413` en mode `state` (§H15.7, H8.4.1).** Sans historique à raccourcir, la
+  continuation de §H5.3 est sans objet. Un `ContextOverflow` est compté
+  (`bilan.depassements`, métrique `depassement`) puis propagé tel quel : c'est une
+  erreur fatale explicite (§H13.1), jamais une absorption silencieuse.
