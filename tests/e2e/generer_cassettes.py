@@ -26,7 +26,14 @@ from avo.config import Mode, charger
 from avo.llm.client import LLMClient, ReponseHTTP
 from avo.memory.workspace import Workspace
 from llm_replay.cassette import AUTH_VALIDE, Cassette, Exchange, RequestRecord, ResponseRecord
-from tests.e2e.scenarios import DOSSIER_CASSETTES, JEU, SCENARIOS, Scenario, gabarit_reponse, repondre
+from tests.e2e.scenarios import (
+    DOSSIER_CASSETTES,
+    JEU,
+    SCENARIOS,
+    Scenario,
+    gabarit_reponse,
+    repondre,
+)
 
 #: Horodatage fixe : la régénération est identique octet à octet (§A8.5).
 HORODATAGE = "2026-08-30T00:00:00+00:00"

@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import contextlib
 import io
-import json
 import os
 import subprocess
 import sys
@@ -109,12 +108,16 @@ class TestVictoireParCliReelle(unittest.TestCase):
         # Lignée git isolée, portant les trois complétions (§H9.3, §A8.5).
         lignee = espace.chemin / "lineage" / JEU
         self.assertTrue((lignee / ".git").is_dir())
-        journal_lignee = subprocess.run(
-            ["git", "--git-dir", str(lignee / ".git"), "log", "--format=%s"],
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip().splitlines()
+        journal_lignee = (
+            subprocess.run(
+                ["git", "--git-dir", str(lignee / ".git"), "log", "--format=%s"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            .stdout.strip()
+            .splitlines()
+        )
         self.assertEqual(len(journal_lignee), 3, journal_lignee)
 
         # Métriques : une par action jouée, et le rapport annonce le même compte.
