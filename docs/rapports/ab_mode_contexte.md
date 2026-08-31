@@ -6,8 +6,8 @@ Comparaison du mode `transcript` (§H5, historique complet renvoyé à chaque se
 |---|---|---|
 | RHAE moyen | 100.00 | 100.00 |
 | Actions | 76 | 76 |
-| Appels au modèle | 316 | 120 |
-| Tokens cumulés | 8848 | 3360 |
+| Appels au modèle | 228 | 76 |
+| Tokens cumulés | 6384 | 2128 |
 | Taille moyenne de prompt (tokens) | 24.00 | 24.00 |
 | Retries de patch | 0 | 0 |
 

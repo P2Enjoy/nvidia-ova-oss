@@ -76,7 +76,10 @@ class TestABModeContexte(unittest.TestCase):
                 self.assertIn(mesure, contenu)
         # Signal O(1) par tour (§H15.1) : moins d'appels en `state` qu'en `transcript`,
         # à RHAE et nombre d'actions égaux — le mode ne dégrade pas la partie jouée.
-        self.assertIn("| Appels au modèle | 316 | 120 |", contenu)
+        # Valeurs révisées avec l'arrêt sur état terminal (§H8.3) : la boucle ne
+        # rappelle plus le modèle après la victoire (316 → 228 et 120 → 76 appels,
+        # mêmes 76 actions) ; en `state`, un appel par action exactement.
+        self.assertIn("| Appels au modèle | 228 | 76 |", contenu)
         self.assertIn("| RHAE moyen | 100.00 | 100.00 |", contenu)
         self.assertIn("| Actions | 76 | 76 |", contenu)
 
