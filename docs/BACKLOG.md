@@ -709,10 +709,12 @@ f)`, la base de connaissances K est une entrée de première classe ; VISTA :
 prédiction avant action, changements observés après, GUIDE/WORKING ; SKILL.state :
 Σ structuré). Ce lot MÉCANISE ces règles, il n'en invente aucune.
 
-## U30 — Spécification H16 et gardes de méthode dans les phases `[ ]`
+## U30 — Spécification H16 et gardes de méthode dans les phases `[~]`
 
-`@spec` H16 — chapitre à écrire par cette unité et à committer AVANT le code
-(précédent U26). H16 spécifie, générique et sans indice de jeu :
+`@spec` H16 — chapitre ÉCRIT ET COMMITTÉ (2026-08-31, avant le code, précédent
+U26) : gardes H16.1–H16.4, principes H16.0 (jamais fatales, bornées, débrayables
+par `AVO_GARDES`, artefacts bornés), observabilité H16.5. Reste à livrer : le code
+des gardes et leurs preuves. H16 spécifie, générique et sans indice de jeu :
 
 1. **Garde documentaire, à l'entrée de Planning** : le harnais compose K — le
    contexte de tâche fourni (protocole de la tâche, documentation d'API donnée par

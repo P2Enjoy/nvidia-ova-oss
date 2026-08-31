@@ -1,7 +1,7 @@
 # Spécification du harnais AVO — noyau agent
 
 Référence stable pour les commentaires `@spec` : `docs/SPEC_HARNAIS.md §Hn`.
-Unités de backlog couvertes : U3–U15, U26–U27 (voir `docs/BACKLOG.md`).
+Unités de backlog couvertes : U3–U15, U26–U27, U30 (voir `docs/BACKLOG.md`).
 Sources faisant foi : exports de `knowledge/` (papier AVO arXiv:2603.24517, billet NVIDIA
 2026-08-21, page VISTA, papier Tycho arXiv:2607.28287, papier SKILL.state
 arXiv:2608.26263 pour §H15). En cas d'écart entre cette spécification et une source, la
@@ -150,6 +150,8 @@ TLS.
 | `AVO_SUP_COOLDOWN` | actions minimales entre deux interventions (H10.3) | `30` |
 | `AVO_RUNS_DIR` | racine des artefacts | `runs/` |
 | `AVO_CONTEXT_MODE` | mode de contexte, `transcript` ou `state` (§H15.7) | `transcript` |
+| `AVO_GARDES` | gardes de méthode dans les phases (§H16) | `true` |
+| `AVO_GARDE_RETRIES` | redemandes d'une même garde par tour (§H16.0) | `2` |
 | `ARC_API_KEY` | API ARC Prize (SPEC_ARCAGI3) | requis pour le live uniquement |
 | `ARC_BASE_URL` | base API ARC | officielle en live, pile locale en rejeu |
 
@@ -666,3 +668,137 @@ le module `avo.context.etat` restant inchangé et pur :
   continuation de §H5.3 est sans objet. Un `ContextOverflow` est compté
   (`bilan.depassements`, métrique `depassement`) puis propagé tel quel : c'est une
   erreur fatale explicite (§H13.1), jamais une absorption silencieuse.
+
+## H16. Gardes de méthode dans les phases — la structure impose ce que le prompt conseille
+
+Chapitre couvrant U30. Source : instruction du responsable (2026-08-31, journal
+suite 3) et les publications de `knowledge/` — AVO met la base de connaissances K
+dans la signature `Vary(Pₜ) = Agent(Pₜ, K, f)` (§H9.1) ; VISTA exige la prédiction
+avant l'action, les changements observés après, et les notes GUIDE/WORKING ;
+SKILL.state porte l'état structuré Σ. Ce chapitre MÉCANISE ces règles à l'intérieur
+des phases P→I→E→B existantes (§H8.1) ; il n'invente aucune règle et ne crée aucune
+phase.
+
+**H16.0 — Statut et principes.**
+
+1. **Le prompt conseille, la structure impose.** Un modèle sous charge dérive de
+   ses consignes, pas de ses contraintes. Chaque garde exige un ARTEFACT à un point
+   précis de la boucle et refuse d'avancer tant qu'il manque — elle n'exige jamais
+   un raisonnement scénarisé : la structure demande l'artefact, le modèle pense.
+2. **Aucune garde n'est fatale pour le run.** Un refus de garde est nommé, compté
+   (H11.2) et borné ; l'épuisement du budget de redemandes clôt le tour sans action
+   ou applique l'issue prudente écrite ici — jamais une exception qui arrête le
+   run, jamais un succès simulé.
+3. **Génériques.** Aucune garde ne mentionne un jeu, un objet ou une règle
+   d'environnement (§A5.1, balayage « zéro indice de jeu » inchangé). Les gardes
+   valent pour les deux modes de contexte (H5 `transcript` et H15 `state`) ; quand
+   un mode ne porte pas la surface nécessaire, le présent chapitre le dit et nomme
+   l'équivalent.
+4. **Débrayables et mesurables.** `AVO_GARDES` (H3.1, défaut `true`) active les
+   quatre gardes ensemble ; `false` restitue exactement le comportement antérieur.
+   C'est ce qui permet la comparaison avant/après sur le jeu `cible` (A/B, même
+   principe que §H15.0 : le départage se fait par la mesure). `AVO_GARDE_RETRIES`
+   (défaut `2`) borne les redemandes d'une même garde dans un même tour.
+5. **Artefacts bornés.** Le préremplissage domine le coût (H1.3.1) : les invites
+   de garde sont des constantes courtes de `prompts.py` (versionnées, VERSION
+   incrémentée) ; une prédiction transmise au fil est tronquée à
+   `PREDICTION_MAX_CARACTERES = 2000` caractères (constante du module, sous la
+   limite mesurée de 16 Ko du champ `reasoning`, §A1.4).
+
+**H16.1 — Garde documentaire, à l'entrée de Planning.** Le réflexe « chercher
+l'information avant d'agir », mécanisé : les outils d'action ne se déverrouillent
+jamais sur un `WORKING.md` vide.
+
+- **Composition de K.** Le premier Planning d'un run reçoit, en plus de
+  l'observation : le contexte de tâche fourni (le message système, et toute
+  documentation de protocole que le responsable fournit au harnais), les notes
+  durables (`GUIDE.md`, injectées par H6.2) et la demande d'artefact : écrire dans
+  `WORKING.md` « ce que je sais / ce que j'ignore / comment je compte le
+  découvrir ». La demande est une constante générique (`prompts.GARDE_DOCUMENTAIRE`).
+- **Invariant (mode `transcript`).** La transition Planning → Implementation est
+  refusée tant que `WORKING.md` est vide : à la place d'Implementation, la boucle
+  redemande l'artefact (invite nommée), au plus `AVO_GARDE_RETRIES` fois par tour ;
+  budget épuisé → le tour est clos sans action (même chemin que « tour sans
+  action », §H8.2), l'événement est compté, le tour suivant redemande. La garde se
+  réarme d'elle-même chaque fois que `WORKING.md` redevient vide (l'interface de
+  tâche peut le vider à un changement de niveau : le brouillon du niveau suivant
+  se recompose alors avant d'agir).
+- **Mode `state`.** L'artefact est le champ `hypotheses` de Σ (§H15.6) : tant
+  qu'il est vide, l'action du pas est retenue (non jouée, donc gratuite) et le pas
+  suivant reçoit l'erreur nommée par le mécanisme d'erreur d'action existant
+  (§H15.8). `hypotheses` survivant aux niveaux, la garde ne mord en pratique qu'à
+  l'ouverture du run — c'est voulu : Σ est trans-tour, pas trans-note.
+
+**H16.2 — Garde de prédiction.** Une action n'est jouable qu'accompagnée de sa
+prédiction (VISTA) ; sur le fil officiel, la prédiction part dans le champ
+`reasoning` mesuré en U22 — auditable dans le scorecard.
+
+- **Mode `transcript`.** Chaque outil d'action (§A5.2) porte un paramètre REQUIS
+  `prediction` (chaîne non vide) : l'effet attendu de l'action, en une ou deux
+  phrases. Un appel sans prédiction est une erreur d'outil nommée (§H7.4), rendue
+  au modèle qui se corrige — l'action n'est PAS jouée, rien n'est dépensé au
+  score. Le paramètre est retiré des arguments avant de jouer la commande ; sa
+  description est générique (« ce que tu attends de cette action ») et ne décrit
+  aucun effet réel (§A5.1).
+- **Mode `state`.** Le pas doit contenir, AVANT le bloc JSON, une ligne
+  `PREDICTION: …` (une seule ligne). Absente → l'action est retenue et le pas
+  suivant reçoit l'erreur nommée (mécanisme §H15.8, aucune action dépensée). La
+  ligne est extraite par le harnais avant que le reste de `Rₜ` ne soit jeté
+  (§H15.1) : la prédiction est le seul fragment de `Rₜ` qui survit au tour, et
+  seulement jusqu'à l'évaluation du tour suivant.
+- **Fil officiel.** La prédiction (tronquée, H16.0.5) est envoyée dans
+  `reasoning` des commandes `ACTION1`–`ACTION7` (§A1.4 ; `RESET` n'en porte pas
+  sur le fil mesuré). En rejeu, `arc-replay` l'accepte sans en faire un critère
+  d'appariement d'épisode (les épisodes enregistrés n'en portent pas).
+- La boucle CONSERVE la prédiction du tour courant pour la garde d'évaluation.
+
+**H16.3 — Garde d'évaluation.** L'environnement tranche les faits (H8.1,
+inchangé) ; le harnais présente prédit-contre-observé et exige la qualification
+avant l'action suivante.
+
+- **Mode `transcript`.** L'invite d'Evaluation cite la prédiction conservée
+  (« Tu avais prédit : “…” ») avec l'observation, et exige une ligne
+  `VERDICT: confirmee` ou `VERDICT: contredite` (accents et casse tolérés).
+  Réponse sans verdict → redemande nommée, au plus `AVO_GARDE_RETRIES` fois ;
+  budget épuisé → issue prudente : la prédiction est réputée CONTREDITE (une
+  prédiction non qualifiée n'est pas confirmée), l'événement `garde_forcee` est
+  compté. Quand la garde est active, le verdict REMPLACE l'heuristique de
+  sous-chaîne (« contredit ») de la boucle pour l'événement CONTRADICTION ;
+  niveau complété et game over restent tranchés par l'environnement, jamais par
+  le verdict.
+- **Mode `state`.** Le pas suivant une action présente prédit-contre-observé dans
+  son invite et exige la ligne `VERDICT: …` avant le bloc JSON, extraite comme la
+  prédiction (H16.2). Absente → l'action du pas est retenue et l'erreur nommée
+  revient au pas suivant ; au-delà du budget par tour, l'issue prudente
+  s'applique comme en mode `transcript`. Le premier pas d'un run, sans prédiction
+  antérieure, n'exige pas de verdict.
+
+**H16.4 — Garde de persistance.** Une connaissance non écrite est une connaissance
+perdue : à chaque complétion de niveau, game over ou intervention du superviseur,
+la mise à jour de `GUIDE.md` est exigée avant de poursuivre.
+
+- **Mode `transcript`.** L'événement arme la garde ; l'invite qui suit (Evaluation
+  ou Bug-Fixing, où les outils de notes sont exposés) porte la demande nommée
+  (`prompts.GARDE_PERSISTANCE`). Les outils d'action restent verrouillés — la
+  prochaine Implementation est refusée et redemandée, comme en H16.1 — tant
+  qu'aucun `note_write` sur `GUIDE` n'a eu lieu depuis l'événement (compteur
+  d'écritures monotone porté par `Notes`, jamais une comparaison de contenu : une
+  réécriture à l'identique est une confirmation explicite et satisfait la garde).
+  Budget de redemandes épuisé → tour clos sans action, compté, tour suivant
+  redemande.
+- **Mode `state`.** Satisfaite par construction : Σ est persisté après chaque pas
+  validé (§H15.5, `Workspace.ecrire_etat`) et le contrat du mode (§H15.8,
+  `tools=None`) ne porte aucune surface d'écriture de notes. La garde ne
+  s'applique que là où une surface d'écriture existe.
+
+**H16.5 — Observabilité et preuves.** Chaque décision de garde écrit un événement
+`garde` dans `metrics.jsonl` (H11.2) : `garde` ∈ {documentaire, prediction,
+evaluation, persistance}, `issue` ∈ {satisfaite_apres_redemande, redemandee,
+tour_clos, forcee} — le chemin nominal (artefact présent du premier coup) n'écrit
+rien, pour ne pas noyer les métriques. Le bilan de run compte les redemandes
+totales. Preuves exigées (U30) : unitaires par garde (refus nommé quand l'artefact
+manque, passage quand il est là, budget épuisé → issue écrite ici), intégration
+sur `cible` (partie jouée sous gardes, artefacts dans le workspace), E2E rejeu
+(cassettes régénérées sous gardes), et comparaison avant/après gardes sur `cible`
+(`AVO_GARDES=false` contre `true`, comportement observé du harnais — jamais un jeu
+officiel particulier).
