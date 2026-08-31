@@ -17,7 +17,7 @@ spécification déjà écrite est une session en échec.
 
 ## 2. Ordre d'exécution
 
-Les unités du backlog s'exécutent **dans l'ordre de leur numéro** (U3, U4, …, U28),
+Les unités du backlog s'exécutent **dans l'ordre de leur numéro** (U3, U4, …, U30),
 sauf reprise désignée par la dernière entrée du journal, et sauf U29, hors ordre tant
 que son arbitrage n'est pas rendu (backlog, lot G). Chaque unité tient dans une
 session et produit du code ; aucune unité documentaire ne reste ouverte.
@@ -31,6 +31,7 @@ session et produit du code ; aucune unité documentaire ne reste ouverte.
 | E — ARC-AGI-3 | U16–U22 | rejeu local, client API, rendu, interface, RHAE, E2E, sonde |
 | F — Campagne | U23–U25 | runner+rapport, campagne pilote, campagne étendue |
 | G — État structuré (SKILL.state) | U26–U29 | spec H15 + runtime Σ, mode `state` + A/B rejeu, A/B réel, benchmarks complémentaires (arbitrage) |
+| H — Méthode dans la structure | U30 | spec H16 + gardes de méthode dans les phases P→I→E→B |
 
 ## 3. Unités [LIVE] — règle pour le worker
 

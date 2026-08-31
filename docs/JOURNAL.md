@@ -1030,3 +1030,38 @@ sessions planifiées d'ici là exécutent, dans cet ordre et sans s'éparpiller 
 
 Aucun de ces gestes ne joue à la place du harnais : ce sont le code, le prompt et
 le contexte qui changent, la stratégie reste au modèle.
+
+---
+
+## 2026-08-31 (suite 3) — Décision : la méthode passe du prompt à la structure (lot H, U30)
+
+**Question du responsable, en session.** La Definition of Done qu'il impose à
+l'agent d'ingénierie — chercher l'information avant d'agir, spécifier, prouver,
+persister — a mesurablement amélioré son niveau. Ces instructions doivent-elles
+vivre dans le prompt du harnais, ou dans ses PHASES — y compris une recherche
+documentaire de la tâche ou de la sous-tâche ?
+
+**Décision (concordante avec le responsable, persistée au backlog : lot H, U30).**
+Oui — sous forme de GARDES ET D'ARTEFACTS EXIGÉS à l'intérieur des phases
+P→I→E→B existantes, jamais comme de nouvelles phases. Motif : le prompt conseille,
+la structure impose — un modèle sous charge dérive de ses consignes, pas de ses
+contraintes (c'est l'observation du responsable sur l'agent d'ingénierie lui-même).
+Et les publications fournissent déjà tous les ancrages, donc aucune déviation de
+méthode : AVO met la base de connaissances K dans la signature même de
+`Vary(Pₜ) = Agent(Pₜ, K, f)` — la garde documentaire de Planning est la
+mécanisation de K ; VISTA exige prédiction avant action et GUIDE/WORKING — les
+gardes de prédiction et de persistance les mécanisent ; H8.1 fait déjà trancher
+l'environnement — la garde d'évaluation la complète. Le champ `reasoning` du fil
+officiel (mesuré en U22) portera la prédiction : auditable dans le scorecard.
+Quatre gardes, spécifiées en H16 avant tout code : documentaire (entrée de
+Planning), prédiction (chaque action), évaluation (prédit-vs-observé qualifié),
+persistance (GUIDE.md exigé aux complétions/game over/interventions).
+
+**Ordre révisé d'ici le rejeu du responsable (2026-09-01)** — remplace la liste de
+la suite 2 : 1) arrêt de la boucle sur état terminal (registre, inchangé) ;
+2) **U30** — spéc H16 committée d'abord, puis les gardes, qui SUBSUME la « revue du
+prompt » (la revue se fait en écrivant H16 : ce qui doit être imposé passe en
+garde, ce qui doit être conseillé reste au prompt) ; 3) U24 (campagne pilote par le
+harnais) ; 4) préparation du lancement live pour le responsable. Décision
+réversible : les gardes sont bornées, configurables par construction, et l'A/B sur
+`cible` mesurera leur effet.

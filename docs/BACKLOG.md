@@ -691,3 +691,47 @@ le périmètre ; si elle est retenue, elle commence par sa spécification (chapi
 S1+) puis se redécoupe en unités d'une session.
 
 - Preuves (si retenue) : fixées par la spécification à écrire.
+
+## Lot H — La méthode dans la structure
+
+Source : instruction du responsable (2026-08-31, session interactive). Les règles de
+méthode qui améliorent un agent quand elles lui sont IMPOSÉES — chercher
+l'information avant d'agir, énoncer ce qu'on va faire, prouver avant de conclure,
+persister ce qu'on a appris — ne doivent pas vivre seulement dans le prompt du
+harnais : le prompt conseille, la structure impose. Le harnais les impose donc comme
+GARDES à l'intérieur des phases P→I→E→B existantes — jamais comme de nouvelles
+phases : les publications donnent déjà le squelette (AVO : `Vary(Pₜ) = Agent(Pₜ, K,
+f)`, la base de connaissances K est une entrée de première classe ; VISTA :
+prédiction avant action, changements observés après, GUIDE/WORKING ; SKILL.state :
+Σ structuré). Ce lot MÉCANISE ces règles, il n'en invente aucune.
+
+## U30 — Spécification H16 et gardes de méthode dans les phases `[ ]`
+
+`@spec` H16 — chapitre à écrire par cette unité et à committer AVANT le code
+(précédent U26). H16 spécifie, générique et sans indice de jeu :
+
+1. **Garde documentaire, à l'entrée de Planning** : le harnais compose K — le
+   contexte de tâche fourni (protocole de la tâche, documentation d'API donnée par
+   le responsable) et les notes durables `GUIDE.md` du run — et exige, avant de
+   déverrouiller les outils d'action, un artefact « ce que je sais / ce que
+   j'ignore / comment je compte le découvrir » (`WORKING.md`, ou champ de Σ en mode
+   `state`). C'est le réflexe « aller chercher les specs », mécanisé.
+2. **Garde de prédiction** : une action n'est jouable qu'accompagnée de sa
+   prédiction (VISTA). Sur le fil officiel, la prédiction part dans le champ
+   `reasoning` mesuré en U22 — auditable dans le scorecard.
+3. **Garde d'évaluation** : l'environnement tranche (H8.1, inchangé) ; le harnais
+   présente prédit-contre-observé et exige la qualification confirmé/réfuté avant
+   l'action suivante.
+4. **Garde de persistance** : à chaque complétion de niveau, game over ou
+   intervention du superviseur, la mise à jour de `GUIDE.md` est exigée avant de
+   poursuivre — une connaissance non écrite est une connaissance perdue.
+
+Contraintes : artefacts BORNÉS (le préremplissage domine le coût — H5, journal du
+2026-08-27) ; aucune scénarisation du raisonnement (la structure exige des
+artefacts, le modèle pense) ; valable dans les deux modes de contexte (H5/H15) ;
+zéro indice de jeu (§A5, balayage exécutable inchangé).
+
+- Preuves : unitaires (chaque garde : refus nommé quand l'artefact manque, passage
+  quand il est là) ; intégration sur `cible` (partie jouée sous gardes, artefacts
+  dans le workspace) ; E2E rejeu ; comparaison avant/après gardes sur `cible`
+  (comportement observé du harnais — jamais un jeu officiel particulier).
