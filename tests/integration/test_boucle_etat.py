@@ -131,10 +131,13 @@ class TestBoucleEtat(unittest.TestCase):
         return f"http://{hote!s}:{port}"
 
     def _config(self, base: str, **surcharges: str) -> Config:
+        # Mécanique du mode `state` hors gardes (§H16.0.4) ; les gardes ont
+        # leurs propres preuves (test_gardes*, U30).
         env = {
             "OLLAMA_HOST": base,
             "OLLAMA_API_KEY": CLE,
             "AVO_CONTEXT_MODE": "state",
+            "AVO_GARDES": "false",
             **surcharges,
         }
         return charger(Mode.REJEU, env=env, racine=Path("/inexistant"))
@@ -167,6 +170,7 @@ class TestBoucleEtat(unittest.TestCase):
                 "OLLAMA_HOST": "http://capture.invalide",
                 "OLLAMA_API_KEY": CLE,
                 "AVO_CONTEXT_MODE": "state",
+                "AVO_GARDES": "false",
                 **surcharges,
             },
             racine=Path("/inexistant"),

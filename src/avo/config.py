@@ -5,6 +5,7 @@
       §H3.4 (modes replay/live)
 @spec docs/SPEC_HARNAIS.md §H4.6 (aucun secret journalisé)
 @spec docs/BACKLOG.md U27 — `AVO_CONTEXT_MODE` (§H15.7, §H15.8)
+@spec docs/BACKLOG.md U30 — `AVO_GARDES`, `AVO_GARDE_RETRIES` (§H16.0)
 
 Deux principes gouvernent ce module :
 
@@ -196,6 +197,8 @@ class Config:
     arc_api_key: str | None
     arc_base_url: str
     contexte_mode: ModeContexte
+    gardes: bool
+    garde_retries: int
 
     @property
     def budget_prompt(self) -> int:
@@ -243,6 +246,8 @@ class Config:
             "runs_dir": str(self.runs_dir),
             "arc_base_url": self.arc_base_url,
             "contexte_mode": self.contexte_mode.value,
+            "gardes": self.gardes,
+            "garde_retries": self.garde_retries,
             "ollama_api_key": "<masquée>",
             "arc_api_key": "<masquée>" if self.arc_api_key else None,
         }
@@ -325,6 +330,8 @@ def charger(
         contexte_mode=_valider_contexte_mode(
             source.texte("AVO_CONTEXT_MODE", ModeContexte.TRANSCRIPT.value)
         ),
+        gardes=source.booleen("AVO_GARDES", True),
+        garde_retries=source.entier("AVO_GARDE_RETRIES", 2),
     )
 
     if config.think and config.num_predict < NUM_PREDICT_MIN_AVEC_THINK:

@@ -4,6 +4,8 @@
 @spec docs/SPEC_HARNAIS.md §H6.2 (mécanisme VISTA repris tel quel), §H7.3 (outils
       `note_read` / `note_write`), §H7.4 (erreurs d'outil rendues au modèle),
       §H5.3 (injection en tête de segment frais)
+@spec docs/BACKLOG.md U30 — compteur d'écritures monotone (§H16.4 : la garde de
+      persistance constate une écriture, jamais une différence de contenu)
 
 Mécanisme repris de VISTA : deux notes seulement, aux rôles distincts. `GUIDE`
 porte la compréhension durable, transverse aux niveaux ; `WORKING` est le brouillon
@@ -42,6 +44,10 @@ class Notes:
     def __init__(self, dossier: Path) -> None:
         self.dossier = dossier
         self.dossier.mkdir(parents=True, exist_ok=True)
+        #: Écritures par note depuis l'ouverture (§H16.4). Monotone et en mémoire :
+        #: la garde de persistance compare des compteurs, jamais des contenus — une
+        #: réécriture à l'identique est une confirmation explicite, elle compte.
+        self._ecritures: dict[str, int] = dict.fromkeys(NOMS_AUTORISES, 0)
 
     @staticmethod
     def valider(nom: str) -> str:
@@ -69,7 +75,13 @@ class Notes:
         append-only : c'est précisément son rôle de pouvoir être révisée quand la
         compréhension change (§H6.2).
         """
-        self.chemin(nom).write_text(contenu, encoding="utf-8")
+        normalise = self.valider(nom)
+        self.chemin(normalise).write_text(contenu, encoding="utf-8")
+        self._ecritures[normalise] += 1
+
+    def ecritures(self, nom: str) -> int:
+        """Nombre d'écritures de la note depuis l'ouverture (§H16.4)."""
+        return self._ecritures[self.valider(nom)]
 
     def vider(self, nom: str) -> None:
         """Efface une note. Employé sur `WORKING` à un changement de niveau."""

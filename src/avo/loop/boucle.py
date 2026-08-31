@@ -9,6 +9,9 @@
       §H12 (politique de raisonnement portée par la configuration)
 @spec docs/SPEC_ARCAGI3.md §A5.1 (direct-interaction : aucune règle de jeu fournie)
 @spec docs/BACKLOG.md U27 — mode `state` de la boucle (§H15.7, §H15.8)
+@spec docs/BACKLOG.md U30 — gardes de méthode dans les phases (§H16.1 garde
+      documentaire, §H16.2 garde de prédiction, §H16.3 garde d'évaluation,
+      §H16.4 garde de persistance, §H16.5 observabilité)
 
 La boucle ne connaît aucun jeu. Elle parle à un `Environnement` par un contrat
 minimal, ce qui permet de l'éprouver sur un environnement factice en mémoire avant
@@ -19,9 +22,10 @@ s'y glisser.
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Protocol
+from typing import Any, Final, Protocol
 
 from avo.config import Config, ModeContexte
 from avo.context.contexte import INVITATION_CONTINUATION, Contexte
@@ -32,7 +36,7 @@ from avo.lineage import Lignee
 from avo.llm.client import ChatResult, ContextOverflow, LLMClient, ToolCall
 from avo.loop import prompts
 from avo.loop.etats import Evenement, Phase, suivant
-from avo.memory.notes import Notes
+from avo.memory.notes import GUIDE, WORKING, Notes
 from avo.memory.workspace import Workspace
 from avo.supervisor import Superviseur
 from avo.tools.registre import RegistreOutils
@@ -51,6 +55,34 @@ OUTILS_PAR_PHASE: dict[Phase, tuple[str, ...]] = {
 
 #: Fraction du budget d'actions au-delà de laquelle l'agent est prévenu (§H8.3).
 SEUIL_AVERTISSEMENT_BORNE = 0.9
+
+#: Ligne de prédiction du mode `state` (§H16.2) : extraite avant que le reste du
+#: raisonnement ne soit jeté (§H15.1).
+_LIGNE_PREDICTION: Final = re.compile(
+    r"^\s*PR[ÉE]DICTION\s*:\s*(.+)$", re.IGNORECASE | re.MULTILINE
+)
+
+#: Ligne de verdict (§H16.3), tolérante à la casse et aux accents.
+_LIGNE_VERDICT: Final = re.compile(
+    r"^\s*VERDICT\s*:\s*(confirm\S*|contred\S*)", re.IGNORECASE | re.MULTILINE
+)
+
+
+def _verdict_dans(texte: str) -> str | None:
+    """Rend « confirmee » ou « contredite », ou `None` si aucun verdict (§H16.3)."""
+    correspondance = _LIGNE_VERDICT.search(texte)
+    if correspondance is None:
+        return None
+    return "confirmee" if correspondance.group(1).lower().startswith("confirm") else "contredite"
+
+
+def _prediction_dans(texte: str) -> str | None:
+    """Extrait la ligne `PREDICTION:` d'un pas du mode `state` (§H16.2)."""
+    correspondance = _LIGNE_PREDICTION.search(texte)
+    if correspondance is None:
+        return None
+    prediction = correspondance.group(1).strip()
+    return prediction or None
 
 
 class Issue(Protocol):
@@ -126,6 +158,8 @@ class Bilan:
     #: tailles de prompt (caractères) des appels, pour la moyenne du rapport A/B.
     retries_patch: int = 0
     taille_prompt_totale: int = 0
+    #: Redemandes de garde totales du run (§H16.5).
+    redemandes_gardes: int = 0
 
     def resume(self) -> dict[str, Any]:
         return {
@@ -143,6 +177,7 @@ class Bilan:
             "tokens_generes": self.tokens_generes,
             "retries_patch": self.retries_patch,
             "taille_prompt_totale": self.taille_prompt_totale,
+            "redemandes_gardes": self.redemandes_gardes,
             "prompts_version": prompts.VERSION,
         }
 
@@ -189,6 +224,15 @@ class BoucleAgent:
         #: Erreur de résolution d'action du tour précédent, à faire lire au modèle
         #: au tour suivant faute d'historique où l'inscrire (§H15.8).
         self._erreur_action_precedente: str | None = None
+        #: Prédiction de la dernière action jouée (§H16.2), conservée jusqu'à sa
+        #: qualification par la garde d'évaluation (§H16.3).
+        self._prediction_courante: str | None = None
+        #: Garde de persistance (§H16.4) : compteur d'écritures de GUIDE relevé à
+        #: l'armement, `None` quand la garde est désarmée.
+        self._persistance_snapshot: int | None = None
+        #: Mode `state` (§H16.3) : verdicts manquants consécutifs pour la même
+        #: prédiction, avant l'issue prudente.
+        self._echecs_verdict = 0
 
     # ------------------------------------------------------------------- bornes
     def _borne_franchie(self) -> str | None:
@@ -321,6 +365,9 @@ class BoucleAgent:
         )
         self.bilan.interventions += 1
         self._metrique("superviseur", motif=motif, action=intervention.action_declencheuse)
+        # Une intervention arme la garde de persistance (§H16.4) : le diagnostic
+        # reçu mérite d'être retenu avant de poursuivre.
+        self._armer_persistance()
 
     def _proposer_a_la_lignee(self) -> None:
         """Une complétion de niveau propose une version (§H9.2, §H8.4).
@@ -357,6 +404,98 @@ class BoucleAgent:
         tour.outils_executes = execution.executes
         tour.garde_outils_franchie = execution.garde_franchie or tour.garde_outils_franchie
 
+    # --------------------------------------------------------------------- gardes
+    def _documentaire_manque(self) -> bool:
+        """Garde documentaire (§H16.1) : `WORKING.md` vide verrouille l'action.
+
+        La garde se réarme d'elle-même chaque fois que la note redevient vide —
+        c'est ce qui la fait mordre à nouveau quand l'interface de tâche vide le
+        brouillon à un changement de niveau.
+        """
+        return not self.notes.lire(WORKING).strip()
+
+    def _persistance_manque(self) -> bool:
+        """Garde de persistance (§H16.4) : armée tant que `GUIDE.md` n'est pas réécrit.
+
+        Le constat est un compteur d'écritures, jamais une différence de contenu :
+        une réécriture à l'identique est une confirmation explicite et satisfait la
+        garde. La satisfaction désarme.
+        """
+        if self._persistance_snapshot is None:
+            return False
+        if self.notes.ecritures(GUIDE) > self._persistance_snapshot:
+            self._persistance_snapshot = None
+            return False
+        return True
+
+    def _armer_persistance(self) -> None:
+        """Arme la garde (§H16.4) sur complétion, game over ou intervention."""
+        if self.config.gardes and self._persistance_snapshot is None:
+            self._persistance_snapshot = self.notes.ecritures(GUIDE)
+
+    def _gardes_manquantes(self) -> list[tuple[str, str]]:
+        manques: list[tuple[str, str]] = []
+        if self._documentaire_manque():
+            manques.append(("documentaire", prompts.GARDE_DOCUMENTAIRE))
+        if self._persistance_manque():
+            manques.append(("persistance", prompts.GARDE_PERSISTANCE))
+        return manques
+
+    def _gate_avant_action(self, tour: Tour) -> bool:
+        """Verrou des outils d'action (§H16.1, §H16.4). `True` = agir est permis.
+
+        Chaque redemande est un échange de Planning (outils de notes exposés), au
+        plus `AVO_GARDE_RETRIES` par tour ; le budget épuisé clôt le tour sans
+        action — compté, jamais fatal (§H16.0.2).
+        """
+        if not self.config.gardes:
+            return True
+        manques = self._gardes_manquantes()
+        redemande = False
+        for _ in range(self.config.garde_retries):
+            if not manques:
+                break
+            for nom, _texte in manques:
+                self.bilan.redemandes_gardes += 1
+                self._metrique("garde", garde=nom, issue="redemandee")
+            redemande = True
+            reponse = self._interroger(
+                Phase.PLANNING, "\n\n".join(texte for _nom, texte in manques)
+            )
+            self._executer_outils(reponse, tour)
+            manques = self._gardes_manquantes()
+        if not manques:
+            if redemande:
+                self._metrique("garde", issue="satisfaite_apres_redemande")
+            return True
+        for nom, _texte in manques:
+            self._metrique("garde", garde=nom, issue="tour_clos")
+        return False
+
+    def _exiger_verdict(self, evaluation: Any, tour: Tour) -> str | None:
+        """Garde d'évaluation (§H16.3) : qualification exigée, issue prudente sinon.
+
+        `None` quand la garde ne s'applique pas (gardes inactives, ou aucune
+        prédiction à qualifier). Budget de redemandes épuisé → la prédiction est
+        réputée CONTREDITE : une prédiction non qualifiée n'est pas confirmée.
+        """
+        if not (self.config.gardes and self._prediction_courante):
+            return None
+        verdict = _verdict_dans(getattr(evaluation, "content", "") or "")
+        tentatives = 0
+        while verdict is None and tentatives < self.config.garde_retries:
+            self.bilan.redemandes_gardes += 1
+            self._metrique("garde", garde="evaluation", issue="redemandee")
+            reponse = self._interroger(Phase.EVALUATION, prompts.GARDE_VERDICT_REDEMANDE)
+            self._executer_outils(reponse, tour)
+            verdict = _verdict_dans(reponse.content or "")
+            tentatives += 1
+        if verdict is None:
+            self._metrique("garde", garde="evaluation", issue="forcee")
+            verdict = "contredite"
+        self._prediction_courante = None
+        return verdict
+
     # ---------------------------------------------------------------------- tour
     def jouer_tour(self, numero: int) -> Tour:
         """Déroule un tour complet (§H8.2), ou un pas du mode `state` (§H15.8)."""
@@ -368,12 +507,26 @@ class BoucleAgent:
         """Un tour du mode `transcript` : P → I → E, puis B si nécessaire (§H8.2)."""
         tour = Tour(numero=numero, phase_finale=self.phase)
 
-        # --- Planning : hypothèses, choix, prédiction énoncée.
+        # --- Planning : hypothèses, choix, prédiction énoncée. Les demandes de
+        # garde (§H16.1, §H16.4) précèdent l'invite : l'artefact d'abord, l'action
+        # ensuite.
         invite = prompts.PLANNING
+        if self.config.gardes and self._documentaire_manque():
+            notes_bloc = self.notes.pour_segment_frais()
+            invite = f"{prompts.GARDE_DOCUMENTAIRE}\n\n{notes_bloc}\n\n{invite}"
+        if self.config.gardes and self._persistance_manque():
+            invite = f"{prompts.GARDE_PERSISTANCE}\n\n{invite}"
         if self._borne_proche():
             invite = f"{prompts.BORNE_PROCHE}\n\n{invite}"
         planning = self._interroger(Phase.PLANNING, self._avec_observation(invite))
         self._executer_outils(planning, tour)
+
+        # --- Verrou des gardes (§H16.1, §H16.4) : les outils d'action ne se
+        # déverrouillent pas tant que les artefacts exigés manquent.
+        if not self._gate_avant_action(tour):
+            tour.phase_finale = self.phase
+            _journal.info("tour clos par une garde", extra={"tour": numero})
+            return tour
         self.phase = suivant(self.phase, Evenement.ACTION_CHOISIE)
 
         # --- Implementation : exactement une action d'environnement.
@@ -387,6 +540,14 @@ class BoucleAgent:
             _journal.info("tour sans action", extra={"tour": numero})
             return tour
 
+        # Garde de prédiction (§H16.2) : la prédiction voyage dans l'appel d'outil
+        # lui-même — son absence est déjà une erreur d'outil rendue au modèle quand
+        # le schéma la requiert, et l'action n'est alors pas jouée.
+        if self.config.gardes:
+            prediction = appel.arguments.get("prediction")
+            if isinstance(prediction, str) and prediction.strip():
+                self._prediction_courante = prediction.strip()
+
         issue = self._jouer_action(appel, tour)
         if issue is None:
             self.phase = Phase.PLANNING
@@ -396,12 +557,27 @@ class BoucleAgent:
         tour.action = appel.nom
         self.phase = suivant(self.phase, Evenement.ACTION_JOUEE)
 
-        # --- Evaluation : confronter, énoncer, mettre à jour.
+        # Garde de persistance (§H16.4) : l'événement rendu par l'environnement
+        # arme la garde AVANT l'évaluation, dont l'invite porte la demande — les
+        # outils de notes y sont exposés, l'agent peut satisfaire immédiatement.
+        if issue.evenement in (Evenement.NIVEAU_COMPLETE, Evenement.GAME_OVER):
+            self._armer_persistance()
+
+        # --- Evaluation : confronter, énoncer, mettre à jour. Sous garde (§H16.3),
+        # l'invite cite la prédiction conservée et exige la qualification.
+        invite_evaluation = (
+            prompts.evaluation_gardee(self._prediction_courante)
+            if self.config.gardes and self._prediction_courante
+            else prompts.EVALUATION
+        )
+        if self.config.gardes and self._persistance_manque():
+            invite_evaluation = f"{invite_evaluation}\n\n{prompts.GARDE_PERSISTANCE}"
         evaluation = self._interroger(
-            Phase.EVALUATION, f"{prompts.EVALUATION}\n\n{issue.observation}"
+            Phase.EVALUATION, f"{invite_evaluation}\n\n{issue.observation}"
         )
         self._executer_outils(evaluation, tour)
-        evenement = self._evenement_apres_evaluation(issue, evaluation)
+        verdict = self._exiger_verdict(evaluation, tour)
+        evenement = self._evenement_apres_evaluation(issue, evaluation, verdict)
         tour.evenement = evenement
         self.phase = suivant(self.phase, evenement)
 
@@ -422,12 +598,24 @@ class BoucleAgent:
 
     # --------------------------------------------------------------- mode state
     def _messages_etat(self, erreur_precedente: str | None) -> list[dict[str, str]]:
-        """Compose le prompt d'un pas : (P, Σₜ, Oₜ) + notes, O(1) par tour (§H15.1)."""
+        """Compose le prompt d'un pas : (P, Σₜ, Oₜ) + notes, O(1) par tour (§H15.1).
+
+        Sous gardes (§H16.2, §H16.3), le protocole exige la ligne `PREDICTION:` et,
+        quand une prédiction antérieure attend sa qualification, la ligne
+        `VERDICT:` — le bloc JSON à deux clés de §H15.1 reste inchangé.
+        """
         assert self.etat is not None
+        protocole = prompts.PROTOCOLE_ETAT
+        if self.config.gardes:
+            protocole = f"{protocole}\n\n{prompts.PROTOCOLE_ETAT_GARDES}"
+            if self._prediction_courante:
+                protocole = (
+                    f"{prompts.verdict_a_qualifier(self._prediction_courante)}\n\n{protocole}"
+                )
         contenu = (
             f"État courant (Σ) :\n{self.etat.vers_json()}\n\n"
             f"{self.notes.pour_segment_frais()}\n\n"
-            f"{self._avec_observation(prompts.PROTOCOLE_ETAT)}"
+            f"{self._avec_observation(protocole)}"
         )
         if erreur_precedente is not None:
             contenu = (
@@ -513,6 +701,68 @@ class BoucleAgent:
                 )
         return ToolCall(nom=nom, arguments=arguments)
 
+    def _avec_prediction_injectee(self, appel: ToolCall, prediction: str) -> ToolCall:
+        """Injecte la prédiction dans l'appel si le schéma la déclare (§H16.2).
+
+        En mode `state`, la prédiction voyage en ligne de texte, pas en paramètre
+        (§H15.8) : c'est la boucle qui la reporte dans l'appel — uniquement quand
+        l'outil déclare la propriété, pour rester valable sur tout environnement.
+        """
+        schemas = {
+            schema["function"]["name"]: schema["function"]
+            for schema in self.registre.schemas(("action",))
+        }
+        schema = schemas.get(appel.nom)
+        if schema is None:
+            return appel
+        proprietes = schema.get("parameters", {}).get("properties", {})
+        if "prediction" not in proprietes:
+            return appel
+        return ToolCall(nom=appel.nom, arguments={**appel.arguments, "prediction": prediction})
+
+    def _gardes_etat(self, contenu: str) -> tuple[str | None, str | None, str | None]:
+        """Gardes du mode `state` (§H16.1–§H16.3) sur le texte d'un pas.
+
+        Rend `(refus, verdict, prediction)`. `refus` non nul = l'action du pas est
+        retenue (gratuite) et le message revient au pas suivant par le mécanisme
+        d'erreur de §H15.8. Le verdict manquant au-delà du budget par prédiction
+        reçoit l'issue prudente de §H16.3 (réputé contredit).
+        """
+        assert self.etat is not None
+        manques: list[str] = []
+        verdict = _verdict_dans(contenu)
+        verdict_force = False
+        if self._prediction_courante and verdict is None:
+            if self._echecs_verdict >= self.config.garde_retries:
+                verdict = "contredite"
+                verdict_force = True
+            else:
+                self._echecs_verdict += 1
+                self.bilan.redemandes_gardes += 1
+                self._metrique("garde", garde="evaluation", issue="redemandee")
+                manques.append(
+                    "ligne « VERDICT: confirmee » ou « VERDICT: contredite » manquante "
+                    "(une prédiction attend sa qualification)"
+                )
+        if not self.etat.champs.get("hypotheses"):
+            self.bilan.redemandes_gardes += 1
+            self._metrique("garde", garde="documentaire", issue="redemandee")
+            manques.append(
+                "champ « hypotheses » de Σ vide : écris au moins une hypothèse via state_patch "
+                "avant d'agir"
+            )
+        prediction = _prediction_dans(contenu)
+        if prediction is None:
+            self.bilan.redemandes_gardes += 1
+            self._metrique("garde", garde="prediction", issue="redemandee")
+            manques.append("ligne « PREDICTION: … » manquante avant le bloc JSON")
+        if manques:
+            return " ; ".join(manques), None, None
+        if verdict_force:
+            self._metrique("garde", garde="evaluation", issue="forcee")
+        self._echecs_verdict = 0
+        return None, verdict, prediction
+
     def _jouer_tour_etat(self, numero: int) -> Tour:
         """Un pas du mode `state` : un seul appel LLM, Σ mis à jour, action jouée (§H15.8)."""
         assert self.etat is not None
@@ -546,6 +796,18 @@ class BoucleAgent:
         if self.workspace is not None:
             self.workspace.ecrire_etat(self.etat)
 
+        # Gardes du mode `state` (§H16.1–§H16.3) : le patch est acquis (la
+        # connaissance est gardée), mais l'action est retenue tant que les
+        # artefacts manquent — gratuite, l'erreur nommée revient au pas suivant.
+        verdict: str | None = None
+        prediction: str | None = None
+        if self.config.gardes:
+            refus, verdict, prediction = self._gardes_etat(resultat.content or "")
+            if refus is not None:
+                self._erreur_action_precedente = refus
+                tour.phase_finale = Phase.PLANNING
+                return tour
+
         appel = self._resoudre_action(action_texte)
         actions_valides = {
             schema["function"]["name"] for schema in self.registre.schemas(("action",))
@@ -558,12 +820,18 @@ class BoucleAgent:
             tour.phase_finale = Phase.PLANNING
             return tour
 
+        if prediction is not None:
+            appel = self._avec_prediction_injectee(appel, prediction)
         issue = self._jouer_action(appel, tour)
         if issue is None:
             tour.phase_finale = Phase.PLANNING
             return tour
         tour.action = appel.nom
-        evenement = self._evenement_apres_evaluation(issue, resultat)
+        # La prédiction accompagne l'action jouée (§H16.2) et attend sa
+        # qualification au pas suivant (§H16.3).
+        if self.config.gardes:
+            self._prediction_courante = prediction
+        evenement = self._evenement_apres_evaluation(issue, resultat, verdict)
         tour.evenement = evenement
         if evenement is Evenement.NIVEAU_COMPLETE:
             self._proposer_a_la_lignee()
@@ -630,6 +898,7 @@ class BoucleAgent:
         l'autorité sur ce qui s'est produit. Sans ce détour, l'outil d'action serait
         une déclaration décorative que rien n'exécuterait.
         """
+        issue_avant = self.environnement.derniere_issue()
         execution = self.registre.executer(
             [appel],
             self.contexte.transcript,
@@ -640,7 +909,11 @@ class BoucleAgent:
         tour.outils_executes = execution.executes
         tour.garde_outils_franchie = execution.garde_franchie or tour.garde_outils_franchie
         issue = self.environnement.derniere_issue()
-        if issue is None:
+        if issue is None or issue is issue_avant:
+            # L'issue n'a pas changé : l'outil a refusé l'appel (arguments
+            # invalides, prédiction absente §H16.2, commande indisponible §A5.2)
+            # et l'erreur est déjà rendue au modèle (§H7.4). Compter une action ou
+            # évaluer l'issue PRÉCÉDENTE fausserait le score et l'évidence.
             return None
         self.bilan.actions_niveau += 1
         self.bilan.actions_jeu += 1
@@ -654,12 +927,16 @@ class BoucleAgent:
         )
         return issue
 
-    def _evenement_apres_evaluation(self, issue: Issue, evaluation: Any) -> Evenement:
+    def _evenement_apres_evaluation(
+        self, issue: Issue, evaluation: Any, verdict: str | None = None
+    ) -> Evenement:
         """L'environnement prime ; le modèle ne tranche que la contradiction.
 
         Un niveau complété ou une partie perdue sont des faits rendus par
         l'environnement : les faire dépendre de ce que le modèle en dit rendrait le
-        score manipulable par le texte.
+        score manipulable par le texte. Sous garde d'évaluation (§H16.3), le
+        VERDICT exigé remplace l'heuristique de sous-chaîne — il est explicite là
+        où elle devine.
         """
         if issue.evenement in (Evenement.NIVEAU_COMPLETE, Evenement.GAME_OVER):
             if issue.evenement is Evenement.NIVEAU_COMPLETE:
@@ -668,6 +945,10 @@ class BoucleAgent:
             else:
                 self.bilan.game_overs += 1
             return issue.evenement
+        if verdict is not None:
+            if verdict == "contredite":
+                return Evenement.CONTRADICTION
+            return Evenement.PREDICTION_CONFIRMEE
         contenu = (getattr(evaluation, "content", "") or "").lower()
         if "contredit" in contenu or "contradiction" in contenu:
             return Evenement.CONTRADICTION

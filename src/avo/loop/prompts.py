@@ -4,6 +4,7 @@
 @spec docs/SPEC_HARNAIS.md §H8.1 (contenu des phases), §H12 (raisonnement en clair)
 @spec docs/SPEC_ARCAGI3.md §A5.1 (contrainte direct-interaction : aucune règle de jeu)
 @spec docs/BACKLOG.md U27 — `PROTOCOLE_ETAT` (§H15.1, §H15.8)
+@spec docs/BACKLOG.md U30 — invites des gardes de méthode (§H16.1–§H16.4)
 
 **Contrainte fondatrice, vérifiée par test** : aucun de ces textes ne décrit les
 règles, les objets ni le but d'un jeu. L'agent reçoit les actions disponibles et rien
@@ -20,7 +21,7 @@ from typing import Final
 
 #: Version des prompts. Change dès qu'un texte change : le rapport d'une campagne
 #: doit pouvoir dire sous quelle formulation ses résultats ont été obtenus.
-VERSION: Final = "1.0"
+VERSION: Final = "1.1"
 
 #: Contrat de tâche, posé une fois en tête de segment (§A5.1, calqué sur VISTA).
 SYSTEME: Final = """Tu joues à un jeu inconnu, tour par tour, sur une grille de
@@ -75,6 +76,47 @@ toujours présents : « position » ({"x": int, "y": int} ou null), « essai »
 au moins « id » et « description »). Une clé absente du patch laisse le champ
 inchangé ; une clé présente à null réinitialise le champ à son défaut. N'inclus
 dans le patch que ce qui change réellement."""
+
+
+#: Garde documentaire (§H16.1) : l'artefact exigé avant de déverrouiller l'action.
+GARDE_DOCUMENTAIRE: Final = """[GARDE] Avant toute action, écris dans WORKING.md
+(outil note_write) : ce que tu sais déjà, ce que tu ignores encore, et comment tu
+comptes le découvrir. Les outils d'action restent verrouillés tant que WORKING.md
+est vide."""
+
+#: Garde de persistance (§H16.4) : la connaissance s'écrit avant de poursuivre.
+GARDE_PERSISTANCE: Final = """[GARDE] Ce qui vient de se passer mérite d'être
+retenu : mets à jour GUIDE.md (outil note_write) avec ce que tu en retiens de
+durable. Les outils d'action restent verrouillés tant que GUIDE.md n'a pas été
+mis à jour."""
+
+#: Garde d'évaluation (§H16.3) : la qualification exigée, en clair.
+GARDE_VERDICT: Final = """Termine par une ligne « VERDICT: confirmee » ou
+« VERDICT: contredite » selon que l'observation confirme ou contredit ta
+prédiction."""
+
+#: Redemande de verdict, quand la réponse d'évaluation n'en portait pas (§H16.3).
+GARDE_VERDICT_REDEMANDE: Final = """[GARDE] Ta réponse ne qualifie pas ta
+prédiction. Réponds par une seule ligne : « VERDICT: confirmee » ou
+« VERDICT: contredite »."""
+
+#: Complément de protocole du mode `state` quand les gardes sont actives (§H16.2,
+#: §H16.3) : la prédiction et le verdict voyagent en lignes de texte, le bloc JSON
+#: à deux clés de §H15.1 restant inchangé.
+PROTOCOLE_ETAT_GARDES: Final = """Fais précéder ton bloc ```json d'une ligne
+« PREDICTION: … » énonçant en une phrase l'effet que tu attends de l'action
+choisie. Si le message te présente une prédiction antérieure à qualifier, ajoute
+aussi une ligne « VERDICT: confirmee » ou « VERDICT: contredite »."""
+
+
+def evaluation_gardee(prediction: str) -> str:
+    """Invite d'Evaluation sous garde (§H16.3) : prédit-contre-observé, en clair."""
+    return f"{EVALUATION}\n\nTu avais prédit : « {prediction} »\n{GARDE_VERDICT}"
+
+
+def verdict_a_qualifier(prediction: str) -> str:
+    """Rappel du mode `state` (§H16.3) : la prédiction du pas précédent à qualifier."""
+    return f"Tu avais prédit : « {prediction} ». Qualifie cette prédiction (VERDICT)."
 
 
 def prompt_de_phase(phase: str) -> str:

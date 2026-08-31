@@ -8,6 +8,8 @@
       §H8.4 (branchements de la boucle), §H9.3 (lignée jetable), §H13.2 (reprise)
 @spec docs/BACKLOG.md U27 — `retries_patch` sur `ResultatJeu` (§H15.4, §H15.8),
       nécessaire au rapport comparatif A/B des deux modes de contexte
+@spec docs/BACKLOG.md U30 — câblage de la garde de prédiction sur l'interface
+      (§H16.2 : requise en `transcript`, optionnelle en `state`)
 
 Le même chemin de code sert en rejeu et en live : seul l'hôte change. Une branche
 live jamais éprouvée serait une branche fausse le jour où elle compte.
@@ -35,7 +37,7 @@ from avo.arc.memoire import (
     outil_read_pixels,
 )
 from avo.arc.rhae import NiveauJoue, ResultatRhae, niveaux_joues, rhae_global, rhae_jeu
-from avo.config import Config, Mode
+from avo.config import Config, Mode, ModeContexte
 from avo.lineage import Lignee, ScorerARC
 from avo.llm.client import LLMClient
 from avo.loop.boucle import Bilan, BoucleAgent
@@ -347,7 +349,16 @@ def jouer_un_jeu(
     memoire = MemoireFrames()
     registre = registre_de_jeu(memoire, notes)
     interface = InterfaceArc(
-        client_arc, memoire=memoire, game_id=game_id, card_id=card_id, registre=registre
+        client_arc,
+        memoire=memoire,
+        game_id=game_id,
+        card_id=card_id,
+        registre=registre,
+        # Garde de prédiction (§H16.2) : paramètre requis en mode `transcript` ;
+        # optionnel en mode `state`, où la prédiction voyage en ligne et est
+        # injectée par la boucle (§H15.8).
+        avec_prediction=config.gardes,
+        prediction_requise=config.contexte_mode is ModeContexte.TRANSCRIPT,
     )
     interface.demarrer()
 

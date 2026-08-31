@@ -175,7 +175,10 @@ class TestBoucleComplete(unittest.TestCase):
         return f"http://{hote!s}:{port}"
 
     def _config(self, base: str, **surcharges: str) -> Config:
-        env = {"OLLAMA_HOST": base, "OLLAMA_API_KEY": CLE, **surcharges}
+        # Ces preuves éprouvent la mécanique de la boucle hors gardes ; §H16.0.4 :
+        # `AVO_GARDES=false` restitue exactement le comportement antérieur. Les
+        # gardes ont leurs propres preuves (test_gardes*, U30).
+        env = {"OLLAMA_HOST": base, "OLLAMA_API_KEY": CLE, "AVO_GARDES": "false", **surcharges}
         return charger(Mode.REJEU, env=env, racine=Path("/inexistant"))
 
     def _boucle_scriptee(
@@ -216,7 +219,12 @@ class TestBoucleComplete(unittest.TestCase):
         env_capture = _EnvironnementFactice(list(scenario_env), terminal_apres=terminal_apres)
         config_capture = charger(
             Mode.REJEU,
-            env={"OLLAMA_HOST": "http://capture.invalide", "OLLAMA_API_KEY": CLE, **surcharges},
+            env={
+                "OLLAMA_HOST": "http://capture.invalide",
+                "OLLAMA_API_KEY": CLE,
+                "AVO_GARDES": "false",
+                **surcharges,
+            },
             racine=Path("/inexistant"),
         )
         BoucleAgent(

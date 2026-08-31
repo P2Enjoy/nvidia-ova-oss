@@ -273,9 +273,11 @@ class TestAgentSurInterface(unittest.TestCase, _PileArc):
         return f"http://{hote!s}:{port}"
 
     def _config_llm(self, base: str) -> Config:
+        # Mécanique de l'agent sur l'interface hors gardes (§H16.0.4) ; les gardes
+        # ont leurs propres preuves (test_gardes*, U30).
         return charger(
             Mode.REJEU,
-            env={"OLLAMA_HOST": base, "OLLAMA_API_KEY": CLE},
+            env={"OLLAMA_HOST": base, "OLLAMA_API_KEY": CLE, "AVO_GARDES": "false"},
             racine=Path("/inexistant"),
         )
 
@@ -301,7 +303,11 @@ class TestAgentSurInterface(unittest.TestCase, _PileArc):
         interface_capture, registre_capture, notes_capture = self._decor("capture")
         config_capture = charger(
             Mode.REJEU,
-            env={"OLLAMA_HOST": "http://capture.invalide", "OLLAMA_API_KEY": CLE},
+            env={
+                "OLLAMA_HOST": "http://capture.invalide",
+                "OLLAMA_API_KEY": CLE,
+                "AVO_GARDES": "false",
+            },
             racine=Path("/inexistant"),
         )
         BoucleAgent(

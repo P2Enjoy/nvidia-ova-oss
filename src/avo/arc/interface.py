@@ -7,6 +7,8 @@
       §A1.2 (protocole de score), §A4.1 (rendu), §A4.3 (mémoire de frames)
 @spec docs/SPEC_HARNAIS.md §H8.2 (contrat `Environnement` de la boucle),
       §H8.3 (arrêt sur état terminal)
+@spec docs/BACKLOG.md U30 — garde de prédiction (§H16.2 : paramètre `prediction`
+      des outils d'action, acheminé tronqué vers `reasoning` du fil officiel)
 
 **Contrainte fondatrice** (billet NVIDIA, VISTA) : l'agent reçoit les actions
 disponibles *sans* description des règles ni du but. Ce module est le seul endroit où
@@ -33,6 +35,14 @@ from avo.tools.registre import Outil, RegistreOutils
 #: Étiquette portée par les outils qui dépensent une action (§H7.1). C'est elle qui
 #: fait qu'ils ne sont offerts qu'à la phase où agir est permis.
 ETIQUETTE_ACTION: Final = "action"
+
+#: Troncature de la prédiction transmise au fil (§H16.0.5) : bien sous la limite
+#: mesurée de 16 Ko du champ `reasoning` (§A1.4), le préremplissage dominant le coût.
+PREDICTION_MAX_CARACTERES: Final = 2000
+
+#: Description du paramètre de prédiction (§H16.2) : générique, aucun effet réel
+#: d'aucune commande n'y est décrit (§A5.1).
+DESCRIPTION_PREDICTION: Final = "Ce que tu attends de cette action, en une ou deux phrases."
 
 #: Descriptions des commandes. Volontairement **muettes sur les effets** (§A5.1) :
 #: dire « déplace vers le haut » donnerait à l'agent ce qu'il doit inférer.
@@ -94,6 +104,8 @@ class InterfaceArc:
         game_id: str | None = None,
         card_id: str | None = None,
         registre: RegistreOutils | None = None,
+        avec_prediction: bool = False,
+        prediction_requise: bool = True,
     ) -> None:
         """`registre` : si fourni, son groupe « action » suit la frame courante.
 
@@ -101,12 +113,21 @@ class InterfaceArc:
         voit : le registre de la boucle est construit une fois, mais les commandes
         déclarées changent à chaque frame. Sans cette synchronisation, l'agent se
         verrait offrir des actions que l'environnement n'offre plus.
+
+        `avec_prediction` (§H16.2) : chaque outil d'action déclare un paramètre
+        `prediction`, acheminé tronqué vers le champ `reasoning` du fil officiel.
+        `prediction_requise` le rend obligatoire (mode `transcript` : un appel sans
+        prédiction est une erreur d'outil, l'action n'est pas jouée) ; en mode
+        `state` il reste optionnel, la prédiction voyageant en ligne de texte et
+        étant injectée par la boucle (§H16.2, §H15.8).
         """
         self.client = client
         self.memoire = memoire or MemoireFrames()
         self.game_id = game_id
         self.card_id = card_id
         self.registre = registre
+        self.avec_prediction = avec_prediction
+        self.prediction_requise = prediction_requise
         self.comptage = Comptage()
         self.guid: str | None = None
         self.dernier: FrameResult | None = None
@@ -195,35 +216,49 @@ class InterfaceArc:
             )
         return outils
 
-    @staticmethod
-    def _parametres(nom: str) -> dict[str, Any]:
-        if nom != "action6":
-            return {"type": "object", "properties": {}}
-        return {
-            "type": "object",
-            "properties": {
-                "row": {"type": "integer"},
-                "col": {"type": "integer"},
-            },
-            "required": ["row", "col"],
-        }
+    def _parametres(self, nom: str) -> dict[str, Any]:
+        proprietes: dict[str, Any] = {}
+        requis: list[str] = []
+        if nom == "action6":
+            proprietes.update({"row": {"type": "integer"}, "col": {"type": "integer"}})
+            requis.extend(["row", "col"])
+        if self.avec_prediction:
+            # Garde de prédiction (§H16.2) : le schéma porte l'exigence, le registre
+            # la fait respecter (§H7.4) — une action sans prédiction n'est pas jouée.
+            proprietes["prediction"] = {"type": "string", "description": DESCRIPTION_PREDICTION}
+            if self.prediction_requise:
+                requis.append("prediction")
+        parametres: dict[str, Any] = {"type": "object", "properties": proprietes}
+        if requis:
+            parametres["required"] = requis
+        return parametres
 
     def _fabriquer(self, commande: str) -> Any:
         if commande == "ACTION6":
 
-            def executer_clic(row: int, col: int) -> str:
-                return self.jouer(commande, (int(row), int(col)))
+            def executer_clic(row: int, col: int, prediction: str | None = None) -> str:
+                return self.jouer(commande, (int(row), int(col)), prediction=prediction)
 
             return executer_clic
 
-        def executer() -> str:
-            return self.jouer(commande)
+        def executer(prediction: str | None = None) -> str:
+            return self.jouer(commande, prediction=prediction)
 
         return executer
 
     # ------------------------------------------------------------------- jouer
-    def jouer(self, commande: str, coordonnees: tuple[int, int] | None = None) -> str:
-        """Joue une commande et rend l'observation résultante (§A5.2)."""
+    def jouer(
+        self,
+        commande: str,
+        coordonnees: tuple[int, int] | None = None,
+        prediction: str | None = None,
+    ) -> str:
+        """Joue une commande et rend l'observation résultante (§A5.2).
+
+        `prediction` (§H16.2) : acheminée tronquée dans `reasoning` des commandes
+        `ACTION1`–`ACTION7` — auditable dans le scorecard. `RESET` n'en porte pas
+        sur le fil mesuré (§A1.4).
+        """
         if self.guid is None or self.dernier is None:
             raise RuntimeError("partie non démarrée : appeler demarrer() d'abord")
         # RESET est toujours jouable (§A1.2) : le fil ne le déclare jamais (§A1.4).
@@ -244,7 +279,11 @@ class InterfaceArc:
         else:
             numero = int(commande.removeprefix("ACTION"))
             resultat = self.client.action(
-                numero, game_id=game_id, guid=self.guid, coordonnees=coordonnees
+                numero,
+                game_id=game_id,
+                guid=self.guid,
+                coordonnees=coordonnees,
+                reasoning=prediction[:PREDICTION_MAX_CARACTERES] if prediction else None,
             )
         self._absorber(resultat, compte_une_action=True)
         return self.observation()

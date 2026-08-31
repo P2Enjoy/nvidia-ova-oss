@@ -6,6 +6,7 @@
       §A1.3–A1.4 (format de fil MESURÉ par la sonde U22), §A4.2 (conversion
       (row, col) → {x, y} confinée ici)
 @spec docs/SPEC_HARNAIS.md §H4.5 (retries partagés), §H4.6 (aucun secret journalisé)
+@spec docs/BACKLOG.md U30 — `reasoning` des actions (§H16.2, fil §A1.4)
 
 **La garde anti-publication est la pièce maîtresse de ce module.** Jouer via l'API
 officielle enregistre un scorecard sur le compte du responsable : un test qui
@@ -452,17 +453,24 @@ class ArcClient:
         game_id: str,
         guid: str,
         coordonnees: tuple[int, int] | None = None,
+        reasoning: str | None = None,
     ) -> FrameResult:
         """`ACTION1`–`ACTION7` : `game_id` et `guid` requis dans chaque action (§A1.4).
 
         `ACTION6` porte des coordonnées, données en (row, col) internes : la
         conversion vers le fil — `x` = colonne, `y` = ligne — est confinée ici
         (§A4.2, mesurée : `{row, col}` est refusé par le serveur).
+
+        `reasoning` (§A1.4, §H16.2) : blob libre ≤ 16 Ko porté par le fil officiel —
+        la garde de prédiction y achemine la prédiction de l'agent, auditable dans
+        le scorecard. Absent du corps quand il n'est pas fourni.
         """
         corps: dict[str, Any] = {"game_id": game_id, "guid": guid}
         if coordonnees is not None:
             row, col = coordonnees
             corps["x"], corps["y"] = col, row
+        if reasoning:
+            corps["reasoning"] = reasoning
         return self._commande(f"ACTION{numero}", corps, coordonnees)
 
     def _commande(

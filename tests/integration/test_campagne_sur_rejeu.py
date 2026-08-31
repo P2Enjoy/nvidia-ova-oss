@@ -96,11 +96,14 @@ class TestCampagneSurRejeu(unittest.TestCase):
     def _config(self, base_llm: str) -> Config:
         return charger(
             Mode.REJEU,
+            # Mécanique de campagne hors gardes (§H16.0.4) ; les gardes ont
+            # leurs propres preuves (test_gardes*, U30).
             env={
                 "ARC_BASE_URL": self.base_arc,
                 "ARC_API_KEY": "cle-de-test",
                 "OLLAMA_HOST": base_llm,
                 "OLLAMA_API_KEY": CLE,
+                "AVO_GARDES": "false",
             },
             racine=Path("/inexistant"),
         )
@@ -271,6 +274,7 @@ class TestCampagneSurRejeu(unittest.TestCase):
             "ARC_API_KEY": "cle-de-test",
             "OLLAMA_API_KEY": CLE,
             "AVO_RUNS_DIR": str(self.racine),
+            "AVO_GARDES": "false",
         }
         with mock.patch.dict(os.environ, {**commun, "OLLAMA_HOST": "http://capture.invalide"}):
             config_capture = charger("replay")
