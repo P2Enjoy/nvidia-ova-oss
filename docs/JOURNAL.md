@@ -999,3 +999,34 @@ transport — sonde U22) reste mesurable directement : elle ne décide d'aucun c
    d'après un jeu particulier.
 3. Toute amélioration issue d'une observation doit valoir pour tous les jeux
    (interdiction de benchmaxing, inchangée).
+
+---
+
+## 2026-08-31 (suite 2) — Instruction du responsable : nature du harnais, et échéance de rejeu
+
+**Instruction reçue en session, persistée dans `CLAUDE_PROJECT.md` (« Nature du
+harnais »).** OVA OSS est à Qwen ce que Claude Code est à Claude : un harnais
+d'agent LLM généraliste auquel on confie un défi mesuré. L'API ARC peut être
+donnée EN CONTEXTE au harnais (outils, protocole, documentation), mais le harnais
+ne se code pas AUTOUR de l'API : noyau §H agnostique, adaptateur §A mince (outils
++ prompt), résolution par le fonctionnement du modèle et le contexte fourni —
+jamais par une logique de résolution codée.
+
+**Échéance.** Le responsable rejoue le harnais avec `qwen3.6:35b` demain
+(2026-09-01) : ce qu'il trouvera sera le résultat de l'implémentation. Les
+sessions planifiées d'ici là exécutent, dans cet ordre et sans s'éparpiller :
+
+1. **Arrêt de la boucle sur état terminal** (registre, préalable de U24) — en
+   l'état, chaque partie gagnée brûle l'inférence jusqu'à `tours_max` et rend un
+   motif d'arrêt trompeur ; inadmissible sur une exécution live du responsable.
+2. **Revue du prompt de tâche et du contexte fourni au modèle** (méthode VISTA,
+   §A5.1) : vérifier que le harnais reçoit le protocole (coût des actions, RESET,
+   rôle des outils d'inspection) et que le prompt installe le réflexe
+   d'exploration — prédire, agir, observer, réviser — sans aucun indice de jeu.
+   L'amélioration se juge sur le comportement observé en rejeu et sur `cible`,
+   jamais sur un jeu officiel particulier.
+3. **Préparation du lancement live** : `run-arc --mode live` prêt à être lancé
+   par le responsable — plafonds documentés, artefacts lisibles, reprise sûre.
+
+Aucun de ces gestes ne joue à la place du harnais : ce sont le code, le prompt et
+le contexte qui changent, la stratégie reste au modèle.
