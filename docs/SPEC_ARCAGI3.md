@@ -28,29 +28,57 @@ lecture seule sont gratuits.
 
 **A1.3 — API officielle.** Base `ARC_BASE_URL`, en-tête `X-API-Key` (vérifié le
 2026-08-27 : 401 sans clé). Surfaces utilisées :
-- `GET /api/games` → liste `{game_id, title, tags, baseline_actions[]}` (vérifié) ;
-- ouverture/fermeture/lecture de scorecard, puis commandes de jeu `RESET` et
-  `ACTION1`–`ACTION6` (`ACTION6` porte des coordonnées de clic), chaque commande
-  renvoyant frame(s), état, score et actions disponibles — contrat d'après l'export
-  Tycho (annexe A : `take_action(action, row?, col?)` contraint à RESET + contrôles
-  déclarés par la frame courante).
+- `GET /api/games` → liste `{game_id, title, tags, baseline_actions[]}` (vérifié ;
+  `GET /api/games/<id|préfixe>` rend la fiche d'un jeu) ;
+- ouverture/fermeture/lecture de scorecard, puis commandes de jeu `RESET`,
+  `ACTION1`–`ACTION5`, `ACTION6` (coordonnées de clic) et `ACTION7` (annulation,
+  pour les jeux qui la servent), chaque commande renvoyant frame(s), état,
+  progression et actions disponibles.
 
-**A1.4 — Format de fil retenu, et son statut.** Le format exact n'a **pas** été
-sondé — jouer via l'API publie un scorecard (règle « évaluer, c'est publier »,
-`CLAUDE_PROJECT.md`). Celui qui suit est écrit d'après l'export Tycho, implémenté des
-deux côtés (client U17, rejeu U16), et **confirmé ou corrigé par l'unité U22** ; tout
-écart constaté corrige le client ET le serveur de rejeu dans le même changement.
+**A1.4 — Format de fil MESURÉ (sonde U22, 2026-08-31).** Le format a été mesuré sur
+l'API officielle — scorecard de sonde `7528ca63-3eff-4866-97c3-8c4a6ded0e63`,
+capture expurgée committée (`tests/fixtures/arc/episodes/sonde_u22*`) — et recoupé
+avec la description OpenAPI publiée (`docs.arcprize.org/arc3v1.yaml`). Client et
+serveur de rejeu implémentent ce format, et lui seul.
 
-- `POST /api/scorecard/open` `{tags}` → `{card_id}` ; `POST /api/scorecard/close`
-  `{card_id}` → résumé ; `GET /api/scorecard/<card_id>` → résumé.
-- `POST /api/cmd/RESET` `{game_id?, card_id?, guid?}` : sans `guid`, crée la partie
-  et rend le sien ; avec, relance la tentative courante.
-- `POST /api/cmd/ACTION1`–`ACTION6` `{guid, card_id?}`, plus `{row, col}` pour
-  `ACTION6`.
-- Réponse commune : `{guid, game_id, frames, state, score, level, actions_level,
-  available_actions}`, où `frames` est la liste des grilles 64×64 émises par la
-  commande — transitoires d'abord, frame de décision en dernier — et `state` vaut
-  `NOT_PLAYED`, `NOT_FINISHED`, `WIN` ou `GAME_OVER`.
+- `POST /api/scorecard/open` `{source_url?, tags?, opaque?, competition_mode?}` →
+  `{card_id}`. Le serveur ajoute de lui-même l'étiquette `agent` aux tags.
+- `POST /api/scorecard/close` `{card_id}` → résumé complet : `{card_id, score,
+  tags, environments: [{id, score, actions, levels_completed, level_count, resets,
+  runs: [{guid, actions, level_actions[], level_baseline_actions[], level_scores[],
+  levels_completed, resets, score, state, completed}]}], tags_scores}`. C'est la
+  **seule** source des compteurs officiels par niveau (réconciliation A5.3).
+- `GET /api/scorecard/<card_id>` : mesuré **404** sur un scorecard sans partie ET
+  après fermeture — ne pas bâtir dessus ; le résumé fait foi à la fermeture.
+- `POST /api/cmd/RESET` `{game_id, card_id, guid?}` — `game_id` ET `card_id`
+  REQUIS. Sans `guid` : crée la partie et rend le sien. Avec `guid` : relance le
+  niveau courant, ou le jeu entier si aucune action n'a été jouée depuis la
+  dernière transition de niveau (`full_reset` le dit) ; deux `RESET` consécutifs
+  garantissent donc une partie neuve.
+- `POST /api/cmd/ACTION1`–`ACTION5`, `ACTION7` : `{game_id, guid, reasoning?}` —
+  `game_id` requis dans CHAQUE action, `card_id` n'y figure pas (l'attribution au
+  scorecard est faite par le `RESET`). `reasoning` : blob JSON libre ≤ 16 Ko.
+- `POST /api/cmd/ACTION6` : `{game_id, guid, x, y, reasoning?}` — `x` = colonne
+  (0 à gauche), `y` = ligne (0 en haut), 0–63. Mesuré : `{row, col}` est refusé
+  (HTTP 500), la conversion A4.2 est donc obligatoire côté client.
+- Réponse commune : `{game_id, guid, frame, state, levels_completed, win_levels,
+  action_input: {id: 0–7, data, reasoning}, full_reset, available_actions}`, où
+  `frame` (au singulier) est la liste des grilles 64×64 émises — transitoires
+  d'abord, frame de décision en dernier —, `state` vaut `NOT_PLAYED`,
+  `NOT_FINISHED`, `WIN` ou `GAME_OVER`, et `available_actions` est une liste
+  d'ENTIERS 0–7 (0 = RESET, jamais observé déclaré : RESET reste toujours jouable,
+  A1.2). La réponse ne porte NI niveau courant, NI score, NI compteur d'actions :
+  le niveau courant se dérive (`levels_completed + 1`, borné par `win_levels`) et
+  le comptage d'actions est local (A5.3).
+- **Affinité de session par cookies** : le serveur pose des cookies (`AWSALB*`)
+  au `RESET`, à renvoyer sur chaque commande de la même partie — sans eux, les
+  requêtes peuvent atteindre un backend qui ignore la session. Le client tient un
+  pot de cookies par instance.
+- **Jeux listés non servis** : `/api/games` peut lister un jeu que le backend de
+  commandes refuse (`400`, « game … not found » — mesuré sur le jeu de moindre
+  coût du listing). Un tel refus est nommé, jamais transformé en saut silencieux.
+- Vérifié : `baseline_actions` du listing = `level_baseline_actions` du résumé de
+  scorecard, niveau par niveau.
 
 **A1.5 — Étiquettes de modalité.** `/api/games` porte `tags` ∈ {`click`, `keyboard`,
 `keyboard_click`, absent}. Elles n'ajoutent aucune règle : la vérité des actions
@@ -61,10 +89,13 @@ uniquement au séquencement de campagne et aux rapports.
 
 **A2.1 —** `ArcClient` (stdlib, mêmes règles transport que H4.5/H4.6 : retries bornés
 sur 5xx/réseau, jamais sur 4xx, aucun secret journalisé). Méthodes : `games()`,
-`open_scorecard(tags)`, `scorecard(id)`, `close_scorecard(id)`, `reset(game, guid?)`,
-`action(n, coords?, guid)`. Réponses normalisées en `FrameResult` typé : frames
-(liste de grilles 64×64), état, score (niveaux), actions disponibles, guid,
-compteur d'actions.
+`open_scorecard(tags)`, `scorecard(id)`, `close_scorecard(id)`,
+`reset(game_id, card_id, guid?)`, `action(n, game_id, guid, coords?)`. Le client
+tient un pot de cookies par instance (affinité de session A1.4) et confine la
+conversion de coordonnées A4.2. Réponses normalisées en `FrameResult` typé : frames
+(liste de grilles 64×64), état, score (= niveaux complétés), niveau courant dérivé,
+niveaux requis pour gagner, actions disponibles (noms `RESET`/`ACTION1`–`ACTION7`),
+guid, drapeau de remise à zéro complète.
 
 **A2.2 — Typage de l'historique** (Tycho déf. 3, simplifié) : chaque frame reçue est
 étiquetée `decision` | `transient` | `terminal_win` | `terminal_gameover` |
@@ -100,8 +131,11 @@ healthcheck ; peuplé par `make seed`.
 
 **A3.3 — Mode rejeu d'épisodes.** `arc-replay` sert aussi des épisodes enregistrés
 (`tests/fixtures/arc/episodes/*.jsonl` : suites requête→réponse capturées en live,
-expurgées de tout secret). La sonde U22 produit le premier épisode réel. Une requête
-qui dévie de l'épisode → réponse d'erreur explicite (test rouge lisible).
+expurgées de tout secret — une ligne = `{"command", "request", "response"}`). Le
+premier épisode réel est celui de la sonde U22 (`sonde_u22.jsonl`). Une requête qui
+dévie de l'épisode — commande différente, ou corps dont une clé ou une valeur
+s'écarte de l'enregistré, `card_id` et `guid` exceptés car propres à chaque
+session — reçoit une réponse d'erreur explicite (test rouge lisible).
 
 **A3.4 — Seed.** `make seed` régénère les fixtures déterministes (scénarios llm-replay,
 paramètres du jeu `cible`, épisodes) — c'est le contrat de données de démonstration du
@@ -115,9 +149,10 @@ d'une grille : 64 lignes de 64 valeurs décimales séparées par des espaces, pr
 d'une ligne d'état (`niveau, score, actions_du_niveau, actions_disponibles`). Aucune
 image, aucun autre enrichissement dans l'observation courante.
 
-**A4.2 — Convention de coordonnées (décision).** Interne : (row, col), 0-basé,
-origine en haut à gauche. La conversion vers le format de fil de l'API (x/y) est
-confinée au client A2.1 et **confirmée en U22** ; l'agent ne voit que (row, col).
+**A4.2 — Convention de coordonnées (MESURÉE en U22).** Interne : (row, col), 0-basé,
+origine en haut à gauche. Le fil exige `x` = colonne et `y` = ligne (A1.4) ; la
+conversion `(row, col) → {x: col, y: row}` est confinée au client A2.1 — mesuré :
+le serveur refuse `{row, col}` — et l'agent ne voit que (row, col).
 
 **A4.3 — Mémoire de frames sans perte** (VISTA). Toute frame reçue (décision et
 transitoire) est stockée, indexée (tour, index de frame). Outils gratuits au score :
@@ -141,9 +176,11 @@ et révisable, énoncer la prédiction avant d'agir et les changements observés
 tenir `GUIDE.md`/`WORKING.md`. Aucun indice spécifique à un jeu, nulle part
 (prompts, code, fixtures) — vérifié en revue.
 
-**A5.2 — Outils d'action.** Un outil par commande disponible (`action1`…`action6`,
+**A5.2 — Outils d'action.** Un outil par commande disponible (`action1`…`action7`,
 `reset`), exposés seulement dans l'état Implementation (H8), filtrés par les actions
-que la frame courante déclare. `action6` exige (row, col) validés dans [0,63].
+que la frame courante déclare — sauf `reset`, toujours offert : le protocole le rend
+toujours jouable (A1.2) et l'API ne le déclare jamais dans `available_actions`
+(mesuré, A1.4). `action6` exige (row, col) validés dans [0,63].
 Chaque appel : joue la commande via `ArcClient`, enregistre les frames typées,
 incrémente le compteur officiel (A1.2 : RESET en cours de partie compte), retourne le
 rendu A4.1 de la nouvelle frame de décision (+ mention des frames transitoires
@@ -155,9 +192,11 @@ frame. L'interface synchronise donc le groupe « action » du registre après ch
 frame absorbée (H7.1). Sans cela, le modèle continuerait de voir une commande que
 l'environnement n'offre plus, et l'apprendrait par une erreur au lieu de l'observer.
 
-**A5.3 — Comptage.** Le compteur d'actions par niveau/jeu est tenu localement ET
-réconcilié avec ce que renvoie l'API ; divergence → journalisée et remontée dans le
-rapport (jamais masquée).
+**A5.3 — Comptage.** Le compteur d'actions par niveau/jeu est tenu localement.
+L'API ne rend AUCUN compteur par frame (mesuré, A1.4) : la réconciliation avec les
+compteurs officiels se fait sur le résumé de scorecard (`level_actions` par run) à
+la fermeture — c'est une preuve de campagne (U24) ; divergence → journalisée et
+remontée dans le rapport (jamais masquée).
 
 ## A6. RHAE
 
