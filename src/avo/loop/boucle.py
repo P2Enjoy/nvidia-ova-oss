@@ -78,6 +78,14 @@ class Environnement(Protocol):
     def actions_disponibles(self) -> Sequence[str]: ...
     def derniere_issue(self) -> Issue | None: ...
 
+    def etat_terminal(self) -> str | None:
+        """Motif d'arrêt si plus aucune action ne peut faire progresser la tâche (§H8.3).
+
+        C'est l'environnement qui tranche, jamais le texte du modèle : dès qu'un
+        motif est rendu, la boucle clôt sans nouvel appel au modèle.
+        """
+        ...
+
 
 class BorneAtteinte(RuntimeError):
     """Une borne d'actions a été franchie : le jeu s'arrête proprement (§H8.3)."""
@@ -565,20 +573,26 @@ class BoucleAgent:
     def executer(
         self, tours_max: int, arret_anticipe: Callable[[], str | None] | None = None
     ) -> Bilan:
-        """Enchaîne les tours jusqu'à une borne ou l'épuisement du quota (§H8.3).
+        """Enchaîne les tours jusqu'à un arrêt ou l'épuisement du quota (§H8.3).
 
-        `arret_anticipe` est consulté **entre deux tours** : c'est ainsi que la
-        campagne fait respecter ses budgets de temps et de tokens sans jamais
-        interrompre une opération en vol (§A7.4, qui concilie ce besoin avec §H8.3).
+        Trois causes d'arrêt, dans l'ordre de priorité de §H8.3 : l'état terminal de
+        la tâche (l'environnement tranche, la boucle ne rappelle plus le modèle),
+        les bornes d'actions, puis `arret_anticipe` — consulté **entre deux tours** :
+        c'est ainsi que la campagne fait respecter ses budgets de temps et de tokens
+        sans jamais interrompre une opération en vol (§A7.4).
         """
         for numero in range(1, tours_max + 1):
-            motif = self._borne_franchie()
+            motif = self.environnement.etat_terminal()
+            if motif is None:
+                motif = self._borne_franchie()
             if motif is None and arret_anticipe is not None:
                 motif = arret_anticipe()
             if motif is not None:
                 return self._clore(motif, numero)
             self.bilan.tours.append(self.jouer_tour(numero))
-        return self._clore("tours_epuises", tours_max)
+        # Une tâche accomplie au dernier tour se clôt sur son motif terminal,
+        # jamais sur « tours_epuises » (§H8.3).
+        return self._clore(self.environnement.etat_terminal() or "tours_epuises", tours_max)
 
     def _clore(self, motif: str, tour: int) -> Bilan:
         """Arrête proprement : le motif est nommé, le dernier segment archivé."""

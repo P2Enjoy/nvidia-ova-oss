@@ -3,9 +3,10 @@
 @spec docs/BACKLOG.md U19 — Interface de tâche direct-interaction ; U22 — fil mesuré
 @spec docs/SPEC_ARCAGI3.md §A5.1 (contrainte fondatrice : aucune règle de jeu),
       §A5.2 (outils filtrés par la frame, reset toujours offert), §A5.3 (comptage
-      local, réconciliation au résumé de scorecard), §A1.2 (protocole de score),
-      §A4.1 (rendu), §A4.3 (mémoire de frames)
-@spec docs/SPEC_HARNAIS.md §H8.2 (contrat `Environnement` de la boucle)
+      local, réconciliation au résumé de scorecard), §A5.4 (état terminal),
+      §A1.2 (protocole de score), §A4.1 (rendu), §A4.3 (mémoire de frames)
+@spec docs/SPEC_HARNAIS.md §H8.2 (contrat `Environnement` de la boucle),
+      §H8.3 (arrêt sur état terminal)
 
 **Contrainte fondatrice** (billet NVIDIA, VISTA) : l'agent reçoit les actions
 disponibles *sans* description des règles ni du but. Ce module est le seul endroit où
@@ -155,6 +156,16 @@ class InterfaceArc:
 
     def derniere_issue(self) -> IssueArc | None:
         return self._derniere_issue
+
+    def etat_terminal(self) -> str | None:
+        """Motif d'arrêt terminal (§A5.4, §H8.3) : « victoire » sur l'état `WIN`.
+
+        `GAME_OVER` n'est pas terminal : `RESET` reste jouable (§A1.2) et relance la
+        tentative — c'est le Bug-Fixing de la boucle qui traite l'échec (§H8.1).
+        """
+        if self.dernier is not None and self.dernier.etat is EtatArc.GAGNEE:
+            return "victoire"
+        return None
 
     # ------------------------------------------------------------------ outils
     def outils(self) -> list[Outil]:

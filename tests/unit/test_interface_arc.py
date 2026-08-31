@@ -4,7 +4,9 @@
 @verifies docs/SPEC_ARCAGI3.md §A5.1 (aucune règle de jeu nulle part), §A5.2 (outils
           filtrés par la frame, reset toujours offert, coordonnées validées),
           §A5.3 (comptage local : le fil ne rend aucun compteur par frame),
+          §A5.4 (état terminal : « victoire » sur WIN, jamais sur GAME_OVER),
           §A1.2 (RESET initial gratuit, suivants comptés)
+@verifies docs/SPEC_HARNAIS.md §H8.3 (motif d'arrêt terminal rendu par l'environnement)
 """
 
 from __future__ import annotations
@@ -207,6 +209,29 @@ class TestEvenements(unittest.TestCase):
         issue = interface.derniere_issue()
         assert issue is not None
         self.assertIs(issue.evenement, Evenement.GAME_OVER)
+
+
+class TestEtatTerminal(unittest.TestCase):
+    """§A5.4 : l'environnement déclare le terminal ; la boucle n'infère rien (§H8.3)."""
+
+    def test_pas_de_motif_avant_le_demarrage_ni_en_cours(self) -> None:
+        interface, _ = _interface(_reponse())
+        self.assertIsNone(interface.etat_terminal(), "partie non démarrée")
+        interface.demarrer()
+        self.assertIsNone(interface.etat_terminal(), "partie en cours")
+
+    def test_la_victoire_rend_un_motif_explicite(self) -> None:
+        interface, _ = _interface(_reponse(), _reponse(state="WIN", levels_completed=3))
+        interface.demarrer()
+        interface.jouer("ACTION1")
+        self.assertEqual(interface.etat_terminal(), "victoire")
+
+    def test_un_game_over_n_est_pas_terminal(self) -> None:
+        """RESET relance la tentative (§A1.2) : la boucle doit pouvoir continuer."""
+        interface, _ = _interface(_reponse(), _reponse(state="GAME_OVER"))
+        interface.demarrer()
+        interface.jouer("ACTION1")
+        self.assertIsNone(interface.etat_terminal())
 
 
 class TestObservation(unittest.TestCase):

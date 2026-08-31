@@ -69,6 +69,10 @@ class _EnvironnementFactice:
     def derniere_issue(self) -> _Issue | None:
         return self._derniere
 
+    def etat_terminal(self) -> str | None:
+        """Jamais terminal ici : ces preuves éprouvent les pas, pas l'arrêt (§H8.3)."""
+        return None
+
     def jouer(self, action: str, **parametres: Any) -> _Issue:
         self.jouees.append((action, parametres))
         index = min(len(self.jouees) - 1, len(self.scenario) - 1)

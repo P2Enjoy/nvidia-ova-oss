@@ -1,7 +1,8 @@
 """La boucle agent, de bout en bout, contre le rejeu HTTP réel.
 
 @verifies docs/BACKLOG.md U13 — Boucle agent P→I→E→B
-@verifies docs/SPEC_HARNAIS.md §H8.1 (phases), §H8.2 (un tour), §H8.3 (bornes),
+@verifies docs/SPEC_HARNAIS.md §H8.1 (phases), §H8.2 (un tour), §H8.3 (arrêts :
+          état terminal, bornes, priorité sur « tours_epuises »),
           §H7.1 (outils exposés selon l'état), §H5.1 (historique append-only)
 
 Les réponses du modèle sont scriptées — c'est le comportement de l'AGENT qu'on met en
@@ -54,8 +55,10 @@ class _Issue:
 class _EnvironnementFactice:
     """Environnement en mémoire : aucune connaissance de jeu ne peut fuiter (§H8.2)."""
 
-    def __init__(self, scenario: list[Evenement]) -> None:
+    def __init__(self, scenario: list[Evenement], terminal_apres: int | None = None) -> None:
         self.scenario = scenario
+        #: Nombre d'actions au-delà duquel l'environnement se déclare terminal (§H8.3).
+        self.terminal_apres = terminal_apres
         self.jouees: list[tuple[str, dict[str, Any]]] = []
         self._derniere: _Issue | None = None
 
@@ -67,6 +70,11 @@ class _EnvironnementFactice:
 
     def derniere_issue(self) -> _Issue | None:
         return self._derniere
+
+    def etat_terminal(self) -> str | None:
+        if self.terminal_apres is not None and len(self.jouees) >= self.terminal_apres:
+            return "victoire"
+        return None
 
     def jouer(self, action: str, **parametres: Any) -> _Issue:
         """Appelée par l'OUTIL d'action, jamais par la boucle (§H8.1)."""
@@ -175,6 +183,7 @@ class TestBoucleComplete(unittest.TestCase):
         reponses: list[tuple[str, list[dict[str, Any]] | None]],
         scenario_env: list[Evenement],
         tours_max: int = 1,
+        terminal_apres: int | None = None,
         **surcharges: str,
     ) -> tuple[BoucleAgent, _EnvironnementFactice, list[str]]:
         """Monte une boucle dont chaque appel au modèle a sa réponse préparée.
@@ -204,7 +213,7 @@ class TestBoucleComplete(unittest.TestCase):
             return ReponseHTTP(200, json.dumps(reponse).encode())
 
         # 1er passage : capture des corps réellement émis par la boucle.
-        env_capture = _EnvironnementFactice(list(scenario_env))
+        env_capture = _EnvironnementFactice(list(scenario_env), terminal_apres=terminal_apres)
         config_capture = charger(
             Mode.REJEU,
             env={"OLLAMA_HOST": "http://capture.invalide", "OLLAMA_API_KEY": CLE, **surcharges},
@@ -231,7 +240,7 @@ class TestBoucleComplete(unittest.TestCase):
         base = self._servir(cassette)
 
         config = self._config(base, **surcharges)
-        environnement = _EnvironnementFactice(list(scenario_env))
+        environnement = _EnvironnementFactice(list(scenario_env), terminal_apres=terminal_apres)
         boucle = BoucleAgent(
             config,
             LLMClient(config, dormir=lambda _: None),
@@ -307,6 +316,42 @@ class TestBoucleComplete(unittest.TestCase):
         self.assertEqual(bilan.actions_jeu, 2)
         self.assertIn("borne d'actions du jeu", bilan.arret)
         self.assertIn("2", bilan.arret)
+
+    def test_l_etat_terminal_arrete_la_boucle_sans_nouvel_appel(self) -> None:
+        """§H8.3 : l'environnement terminal clôt le run, plus aucun appel au modèle."""
+        appel_action = [{"function": {"name": "avance", "arguments": {}}}]
+        boucle, environnement, journal = self._boucle_scriptee(
+            [
+                ("je vais avancer", None),
+                ("j'avance", appel_action),
+                ("conforme, tout est accompli", None),
+            ],
+            [Evenement.NIVEAU_COMPLETE],
+            tours_max=4,
+            terminal_apres=1,
+        )
+        bilan = boucle.executer(tours_max=4)
+        self.assertEqual(bilan.arret, "victoire")
+        self.assertEqual(len(bilan.tours), 1, "aucun tour joué après l'état terminal")
+        self.assertEqual(journal, ["avance"], "une seule action, aucune après la fin")
+        self.assertEqual(environnement.jouees, [("avance", {})])
+
+    def test_l_etat_terminal_au_dernier_tour_prime_tours_epuises(self) -> None:
+        """§H8.3 : une tâche accomplie au dernier tour ne se clôt pas « tours_epuises »."""
+        appel_action = [{"function": {"name": "avance", "arguments": {}}}]
+        boucle, _, _ = self._boucle_scriptee(
+            [
+                ("je vais avancer", None),
+                ("j'avance", appel_action),
+                ("conforme", None),
+            ],
+            [Evenement.NIVEAU_COMPLETE],
+            tours_max=1,
+            terminal_apres=1,
+        )
+        bilan = boucle.executer(tours_max=1)
+        self.assertEqual(bilan.arret, "victoire")
+        self.assertEqual(len(bilan.tours), 1)
 
     def test_un_tour_sans_appel_d_action_n_en_invente_pas(self) -> None:
         boucle, environnement, journal = self._boucle_scriptee(
