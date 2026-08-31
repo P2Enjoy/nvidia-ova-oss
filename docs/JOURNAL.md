@@ -1065,3 +1065,40 @@ garde, ce qui doit être conseillé reste au prompt) ; 3) U24 (campagne pilote p
 harnais) ; 4) préparation du lancement live pour le responsable. Décision
 réversible : les gardes sont bornées, configurables par construction, et l'A/B sur
 `cible` mesurera leur effet.
+
+---
+
+## 2026-08-31 (suite 4) — Arrêt de la boucle sur état terminal, livré (préalable de U24)
+
+**Session planifiée.** Unité : le défaut du registre du 2026-08-30 (la boucle
+continuait d'appeler le modèle après la victoire, motif « tours_epuises » sur
+partie gagnée), premier point de l'ordre révisé de la suite 3.
+
+**Spécifié d'abord, committé avant le code.** §H8.3 réécrit : trois causes
+d'arrêt par ordre de priorité — état terminal (le contrat `Environnement` porte
+`etat_terminal() -> str | None`, l'environnement tranche, la boucle ne rappelle
+plus le modèle), bornes d'actions, arrêt anticipé ; une tâche accomplie au
+dernier tour se clôt sur son motif terminal, jamais « tours_epuises ». §A5.4
+ajouté : l'interface ARC rend « victoire » sur `WIN` ; `GAME_OVER` n'est PAS
+terminal (RESET relance, Bug-Fixing traite).
+
+**Livré.** `avo.loop.boucle` (contrat + consultation en tête de tour et à la
+clôture), `avo.arc.interface.etat_terminal()`. Preuves neuves : 3 unitaires
+(WIN → « victoire », GAME_OVER → None, avant démarrage → None), 2 intégration
+(arrêt sans nouvel appel après l'état terminal ; priorité sur « tours_epuises »
+au dernier tour). Cassettes E2E régénérées (`make seed-e2e`) : victoire 316→228
+échanges, state 120→76 (un appel par action exactement), échec 321→241. Rapport
+A/B régénéré ; la preuve E2E qui épinglait 316/120 révisée dans le fichier avec
+son motif (la règle a changé par spécification). Registre soldé (entrée retirée),
+mentions périmées corrigées (U21, U27), CHANGELOG.
+
+**Campagne complète de fin de session : INTÉGRALEMENT VERTE** — lint,
+`ruff format --check`, mypy strict, 476 unitaires (+3), 140 intégration (+2),
+4 E2E sur pile fraîche, `make build` vert.
+
+**Où reprendre.** Ordre de la suite 3, point 1 fait : U30 maintenant — spéc H16
+committée AVANT le code (gardes documentaire, prédiction, évaluation,
+persistance dans P→I→E→B ; bornage des artefacts ; valable `transcript` et
+`state` ; zéro indice de jeu), puis les gardes et leurs preuves, A/B sur
+`cible`. Ensuite U24 (campagne pilote, plafonds obligatoires), puis préparation
+du lancement live pour le rejeu du responsable (2026-09-01).
