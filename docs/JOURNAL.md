@@ -956,7 +956,9 @@ changées par la liste d'actions déclarées), pile relancée.
 **Preuves exécutées, toutes en conteneur.** lint + `ruff format`, mypy strict (95
 fichiers), 473 tests unitaires (+6), 138 d'intégration (+3), 4 E2E sur pile
 fraîche (le rapport A/B committé reste identique à l'octet près). Campagne
-complète de fin de session : voir l'entrée de preuve ci-dessous du même jour.
+complète de fin de session : `make check` INTÉGRALEMENT VERT (lint, format, mypy
+strict, 473 + 138 + 4 tests) et `make build` vert (image de production
+reconstruite).
 
 **U22 close : DoD satisfaite** (`docs/BACKLOG.md` `[x]`) — implémenté et vérifié,
 scorecard référencé ci-dessus, documents (README, DAT, SPEC, CHANGELOG, backlog)
