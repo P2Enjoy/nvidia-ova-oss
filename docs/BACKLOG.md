@@ -460,9 +460,9 @@ artefacts (report, lignée, métriques) vérifiés ; reprise `resume` couverte.
   Vérification opérateur MASTER_PLAN §5 exécutée : campagne réelle par la CLI
   dans le terminal, artefacts conservés et relus (`runs/e2e-operateur/` :
   rapport lu en entier, lignée `git log` v1→v3, arborescence) — consignée au
-  journal. Un défaut étranger constaté et consigné au registre : la boucle ne
-  s'arrête pas sur l'état terminal du jeu (motif `tours_epuises` sur partie
-  gagnée).
+  journal. Un défaut étranger constaté et consigné au registre — la boucle ne
+  s'arrêtait pas sur l'état terminal du jeu — corrigé le 2026-08-31 (§H8.3,
+  préalable de U24).
 
 ## U22 — Sonde de contrat API officielle `[x]` **[LIVE]**
 
@@ -530,6 +530,10 @@ comportement du modèle) au journal.
 
 - Preuves : rapport et scorecard référencés ; réconciliation compteurs locale/API
   exacte ; limites énoncées.
+- Préalable livré le 2026-08-31 : l'arrêt de la boucle sur l'état terminal du jeu
+  (§H8.3, §A5.4) — plus aucun appel d'inférence après la victoire, motif d'arrêt
+  « victoire » dans le rapport (défaut du registre du 2026-08-30, corrigé et
+  prouvé : unitaires, intégration, E2E régénérés).
 
 ## U25 — Campagne étendue et rapport final `[ ]` **[LIVE]**
 
@@ -634,9 +638,9 @@ retries de patch.
   passes que le générateur `transcript`, régénération identique octet à octet
   vérifiée) : chemin parfait du jeu `cible-synthetique` traduit en textes d'action
   du contrat `state` (§H15.8), sur les mêmes plafonds que le scénario `transcript`
-  (`--tours-max 120 --actions-max-niveau 100 --actions-max-jeu 200`) — la boucle
-  n'arrête pas sur l'état terminal (défaut déjà consigné au registre, préalable de
-  U24, non modifié ici), d'où 120 appels dont 76 jouent réellement une action.
+  (`--tours-max 120 --actions-max-niveau 100 --actions-max-jeu 200`). Depuis
+  l'arrêt sur état terminal (§H8.3, livré le 2026-08-31), la cassette compte
+  76 échanges : un appel par action, plus aucun après la victoire.
   `avo.arc.rapport_ab` (fonction pure, même principe que `avo.arc.rapport`) :
   `MesureMode` (RHAE moyen, actions, appels au modèle, tokens cumulés, taille
   moyenne de prompt, retries de patch) et `rapport()` qui compose le markdown

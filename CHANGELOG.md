@@ -2,6 +2,19 @@
 
 ## [Non publié]
 
+### 2026-08-31 — Arrêt de la boucle sur l'état terminal du jeu (préalable de U24)
+
+- La boucle agent s'arrête dès que l'environnement déclare un état terminal
+  (§H8.3) : le contrat `Environnement` porte `etat_terminal()`, l'interface ARC
+  rend « victoire » sur l'état `WIN` (§A5.4), et plus aucun appel au modèle n'est
+  émis après la fin du jeu. Le motif d'arrêt du rapport dit désormais
+  « victoire » au lieu de « tours_epuises » sur une partie gagnée.
+- `GAME_OVER` reste non terminal : `RESET` relance la tentative et la boucle
+  traite l'échec en Bug-Fixing, comportement inchangé.
+- Mesuré sur les scénarios E2E régénérés : 228 appels au modèle au lieu de 316 en
+  mode `transcript`, 76 au lieu de 120 en mode `state`, mêmes 76 actions et même
+  RHAE 100.00 (rapport A/B `docs/rapports/ab_mode_contexte.md` mis à jour).
+
 ### 2026-08-31 — U22 (clos) : sonde du contrat API ARC réel, fil mesuré des deux côtés
 
 - `scripts/sonde_arc.py` : sonde du contrat de fil de l'API ARC-AGI-3 officielle —
