@@ -327,12 +327,28 @@ courts, sans description des règles du jeu (contrainte direct-interaction).
 P→I→E (B conditionnelle) → le dernier frame retourné devient l'observation suivante.
 Toute frame retournée entre dans la mémoire de frames (SPEC_ARCAGI3 §A4).
 
-**H8.3 — Bornes.** Deux bornes distinctes, car un niveau qui s'enlise et un jeu qui
-s'éternise ne se diagnostiquent pas pareil : `AVO_ACTIONS_MAX_NIVEAU` et
-`AVO_ACTIONS_MAX_JEU`. Généreuses par défaut, resserrées en campagne où elles sont
-exigées (SPEC_ARCAGI3 §A7.1). Dépassement → arrêt propre du jeu, la borne franchie
-étant nommée dans le rapport. Aucune temporisation arbitraire : on borne des actions,
-jamais du temps d'horloge.
+**H8.3 — Arrêts.** Trois causes d'arrêt, consultées entre deux tours et à la
+clôture, dans cet ordre de priorité :
+
+1. **État terminal de la tâche.** Le contrat `Environnement` (H8.2) porte
+   `etat_terminal() -> str | None` : un motif explicite (par exemple « victoire »)
+   quand l'environnement est dans un état où plus aucune action ne peut faire
+   progresser la tâche, `None` sinon. C'est l'environnement qui tranche, jamais le
+   texte du modèle (même principe qu'en H8.1). Dès que le motif est rendu, la boucle
+   clôt SANS nouvel appel au modèle : tout tour joué après l'état terminal serait de
+   l'inférence dépensée pour un score qui ne peut plus changer (mesuré, run
+   opérateur U21 : 44 tours d'appels au modèle après la victoire). Ce motif prime
+   les bornes et l'épuisement des tours — une tâche accomplie au dernier tour se
+   clôt sur son motif terminal, jamais sur « tours_epuises ».
+2. **Bornes d'actions.** Deux bornes distinctes, car un niveau qui s'enlise et un
+   jeu qui s'éternise ne se diagnostiquent pas pareil : `AVO_ACTIONS_MAX_NIVEAU` et
+   `AVO_ACTIONS_MAX_JEU`. Généreuses par défaut, resserrées en campagne où elles
+   sont exigées (SPEC_ARCAGI3 §A7.1). Dépassement → arrêt propre du jeu, la borne
+   franchie étant nommée dans le rapport. Aucune temporisation arbitraire : on borne
+   des actions, jamais du temps d'horloge.
+3. **Arrêt anticipé** (`arret_anticipe`, SPEC_ARCAGI3 §A7.4) : consulté entre deux
+   tours seulement, après les deux causes précédentes — c'est ainsi que la campagne
+   fait respecter ses budgets sans interrompre une opération en vol.
 
 **H8.4 — Ce que la boucle porte en plus des phases.** Trois mécanismes livrés
 ailleurs n'existent pour un run que si la boucle les appelle ; sans cela ils sont du

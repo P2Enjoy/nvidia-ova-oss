@@ -198,6 +198,13 @@ compteurs officiels se fait sur le résumé de scorecard (`level_actions` par ru
 la fermeture — c'est une preuve de campagne (U24) ; divergence → journalisée et
 remontée dans le rapport (jamais masquée).
 
+**A5.4 — État terminal.** L'interface implémente `etat_terminal()` (SPEC_HARNAIS
+§H8.3) : « victoire » quand la frame courante déclare l'état `WIN` (A1.4), `None`
+sinon. `GAME_OVER` n'est PAS terminal : `RESET` reste jouable (A1.2), relance la
+tentative, et la boucle traite l'échec en Bug-Fixing (H8.1). Après `WIN`,
+l'environnement n'offre plus que `RESET` (mesuré, run opérateur U21) : poursuivre ne
+peut ni améliorer le score ni apprendre quoi que ce soit d'utile au run.
+
 ## A6. RHAE
 
 **A6.1 — Définition** (export Tycho §3.1, fait foi) : pour le niveau ℓ (1-indexé) de
