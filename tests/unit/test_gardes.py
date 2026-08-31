@@ -28,7 +28,7 @@ from avo.llm.client import LLMClient, ReponseHTTP
 from avo.loop import prompts
 from avo.loop.boucle import BoucleAgent
 from avo.loop.etats import Evenement, Phase
-from avo.memory.notes import GUIDE, WORKING, SCHEMA_NOTE_WRITE, Notes, note_write
+from avo.memory.notes import GUIDE, SCHEMA_NOTE_WRITE, WORKING, Notes, note_write
 from avo.tools.registre import Outil, RegistreOutils, outil_depuis_schema
 
 CLE = "sk-cle-gardes"
@@ -472,9 +472,7 @@ class TestGardesModeEtat(unittest.TestCase):
             [
                 self._pas("pas de ligne de prédiction", {"hypotheses": ["h"]}),
                 self._pas("PREDICTION: la grille change", {"hypotheses": ["h"]}),
-                self._pas(
-                    "VERDICT: confirmee\nPREDICTION: la suite", {"hypotheses": ["h"]}
-                ),
+                self._pas("VERDICT: confirmee\nPREDICTION: la suite", {"hypotheses": ["h"]}),
             ]
         )
         premier = boucle.jouer_tour(1)
