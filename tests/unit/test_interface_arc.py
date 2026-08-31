@@ -7,6 +7,8 @@
           §A5.4 (état terminal : « victoire » sur WIN, jamais sur GAME_OVER),
           §A1.2 (RESET initial gratuit, suivants comptés)
 @verifies docs/SPEC_HARNAIS.md §H8.3 (motif d'arrêt terminal rendu par l'environnement)
+@verifies docs/BACKLOG.md U30 — garde de prédiction sur l'interface (§H16.2 :
+          paramètre déclaré, requis ou non, acheminé tronqué vers `reasoning`)
 """
 
 from __future__ import annotations
@@ -22,6 +24,7 @@ from avo.arc.client import ArcClient
 from avo.arc.interface import (
     DESCRIPTIONS,
     ETIQUETTE_ACTION,
+    PREDICTION_MAX_CARACTERES,
     ActionIndisponible,
     CoordonneesInvalides,
     InterfaceArc,
@@ -426,6 +429,65 @@ class TestRevueZeroIndiceSurToutesLesSurfaces(unittest.TestCase):
         ]
         self.assertIn(module.IMPLEMENTATION, textes)
         self.assertIn(module.SYSTEME, textes)
+
+
+class TestGardeDePrediction(unittest.TestCase):
+    """§H16.2 : le schéma porte l'exigence, le fil reçoit la prédiction tronquée."""
+
+    def _interface_gardee(
+        self, *reponses: tuple[int, Any], prediction_requise: bool = True
+    ) -> tuple[InterfaceArc, _TransportScripte]:
+        transport = _TransportScripte(*reponses)
+        config = charger(Mode.REJEU, env={}, racine=Path("/inexistant"))
+        interface = InterfaceArc(
+            ArcClient(config, transport=transport, dormir=lambda _: None),
+            avec_prediction=True,
+            prediction_requise=prediction_requise,
+        )
+        return interface, transport
+
+    def test_sans_garde_les_schemas_ne_declarent_pas_la_prediction(self) -> None:
+        interface, _ = _interface(_reponse())
+        interface.demarrer()
+        for outil in interface.outils():
+            with self.subTest(outil=outil.nom):
+                self.assertNotIn("prediction", outil.parametres.get("properties", {}))
+
+    def test_le_parametre_est_requis_quand_la_garde_l_exige(self) -> None:
+        interface, _ = self._interface_gardee(_reponse())
+        interface.demarrer()
+        for outil in interface.outils():
+            with self.subTest(outil=outil.nom):
+                self.assertIn("prediction", outil.parametres["properties"])
+                self.assertIn("prediction", outil.parametres["required"])
+
+    def test_le_parametre_reste_optionnel_en_mode_state(self) -> None:
+        interface, _ = self._interface_gardee(_reponse(), prediction_requise=False)
+        interface.demarrer()
+        for outil in interface.outils():
+            with self.subTest(outil=outil.nom):
+                self.assertIn("prediction", outil.parametres["properties"])
+                self.assertNotIn("prediction", outil.parametres.get("required", []))
+
+    def test_la_prediction_part_tronquee_dans_reasoning(self) -> None:
+        interface, transport = self._interface_gardee(_reponse(), _reponse())
+        interface.demarrer()
+        interface.jouer("ACTION1", prediction="x" * (PREDICTION_MAX_CARACTERES + 50))
+        corps = transport.appels[-1][2]
+        self.assertEqual(corps["reasoning"], "x" * PREDICTION_MAX_CARACTERES)
+
+    def test_reset_ne_porte_jamais_de_reasoning(self) -> None:
+        """`RESET` n'en porte pas sur le fil mesuré (§A1.4, §H16.2)."""
+        interface, transport = self._interface_gardee(_reponse(), _reponse())
+        interface.demarrer()
+        interface.jouer("RESET", prediction="peu importe")
+        self.assertNotIn("reasoning", transport.appels[-1][2])
+
+    def test_sans_prediction_le_corps_n_a_pas_de_reasoning(self) -> None:
+        interface, transport = self._interface_gardee(_reponse(), _reponse())
+        interface.demarrer()
+        interface.jouer("ACTION1")
+        self.assertNotIn("reasoning", transport.appels[-1][2])
 
 
 if __name__ == "__main__":  # pragma: no cover
