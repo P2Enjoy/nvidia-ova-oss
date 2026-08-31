@@ -1,8 +1,9 @@
 """Le contrat ARC-AGI-3 local, éprouvé en HTTP réel.
 
-@verifies docs/BACKLOG.md U16 — Serveur de rejeu arc-replay et jeu cible
+@verifies docs/BACKLOG.md U16 — Serveur de rejeu arc-replay et jeu cible ; U22 — fil mesuré
 @verifies docs/SPEC_ARCAGI3.md §A3.1 (contrat HTTP), §A3.3 (épisodes, déviation),
-          §A1.2 (protocole de score), §A1.3 (surfaces), §A6.2 (baselines exposées)
+          §A1.2 (protocole de score), §A1.3 (surfaces), §A1.4 (format de fil mesuré),
+          §A6.2 (baselines exposées)
 
 Une partie est gagnée **à la main, par requêtes**, action par action : c'est la
 preuve que le contrat tient debout avant que le client U17 ne s'y branche.
@@ -63,6 +64,15 @@ class TestContratHTTP(unittest.TestCase, _ServeurLance):
     def tearDown(self) -> None:
         self.arreter()
 
+    def _demarrer_partie(self) -> tuple[str, str, dict[str, Any]]:
+        """RESET conforme au fil mesuré : `game_id` ET `card_id` requis (§A1.4)."""
+        _, ouverture = self.client.appeler("POST", "/api/scorecard/open", {"tags": []})
+        carte = ouverture["card_id"]
+        _, debut = self.client.appeler(
+            "POST", "/api/cmd/RESET", {"game_id": "cible-synthetique", "card_id": carte}
+        )
+        return carte, debut["guid"], debut
+
     def test_le_point_de_sante_repond(self) -> None:
         statut, corps = self.client.appeler("GET", "/_health")
         self.assertEqual(statut, 200)
@@ -90,77 +100,119 @@ class TestContratHTTP(unittest.TestCase, _ServeurLance):
         self.assertEqual(statut, 404)
 
     def test_le_reset_cree_la_partie_et_rend_une_frame(self) -> None:
-        statut, corps = self.client.appeler("POST", "/api/cmd/RESET", {"game_id": "cible"})
+        _, ouverture = self.client.appeler("POST", "/api/scorecard/open", {"tags": []})
+        statut, corps = self.client.appeler(
+            "POST",
+            "/api/cmd/RESET",
+            {"game_id": "cible-synthetique", "card_id": ouverture["card_id"]},
+        )
         self.assertEqual(statut, 200)
         self.assertEqual(corps["state"], "NOT_FINISHED")
-        self.assertEqual(corps["score"], 0)
-        self.assertEqual(len(corps["frames"]), 1)
-        self.assertEqual(len(corps["frames"][0]), 64)
-        self.assertIn("ACTION6", corps["available_actions"])
+        self.assertEqual(corps["levels_completed"], 0)
+        self.assertEqual(corps["win_levels"], 3)
+        self.assertTrue(corps["full_reset"])
+        self.assertEqual(corps["action_input"]["id"], 0)
+        self.assertEqual(len(corps["frame"]), 1)
+        self.assertEqual(len(corps["frame"][0]), 64)
+        self.assertIn(6, corps["available_actions"])
+        self.assertNotIn(0, corps["available_actions"], "RESET jamais déclaré (§A1.4)")
+
+    def test_un_jeu_inconnu_du_backend_est_refuse_nomme(self) -> None:
+        """§A1.4 mesuré : le refus nomme le jeu, comme l'API officielle."""
+        _, ouverture = self.client.appeler("POST", "/api/scorecard/open", {"tags": []})
+        statut, corps = self.client.appeler(
+            "POST", "/api/cmd/RESET", {"game_id": "cible", "card_id": ouverture["card_id"]}
+        )
+        self.assertEqual(statut, 400)
+        self.assertIn("cible not found", corps["error"])
+
+    def test_un_reset_sans_card_id_est_refuse(self) -> None:
+        statut, corps = self.client.appeler(
+            "POST", "/api/cmd/RESET", {"game_id": "cible-synthetique"}
+        )
+        self.assertEqual(statut, 400)
+        self.assertIn("card_id", corps["error"])
 
     def test_une_action_rend_deux_frames_dont_la_transitoire(self) -> None:
-        _, ouverture = self.client.appeler("POST", "/api/cmd/RESET", {})
-        _, corps = self.client.appeler("POST", "/api/cmd/ACTION2", {"guid": ouverture["guid"]})
-        self.assertEqual(len(corps["frames"]), 2)
-        self.assertEqual(corps["actions_level"], 1)
+        _, guid, _ = self._demarrer_partie()
+        _, corps = self.client.appeler(
+            "POST", "/api/cmd/ACTION2", {"game_id": "cible-synthetique", "guid": guid}
+        )
+        self.assertEqual(len(corps["frame"]), 2)
+        self.assertNotIn("actions_level", corps, "aucun compteur par frame (§A1.4)")
 
     def test_une_partie_est_gagnee_a_la_main_action_par_action(self) -> None:
         """La preuve centrale : le contrat permet une vraie partie de bout en bout."""
-        _, ouverture = self.client.appeler("POST", "/api/scorecard/open", {"tags": []})
-        carte = ouverture["card_id"]
-        _, debut = self.client.appeler("POST", "/api/cmd/RESET", {"card_id": carte})
-        guid = debut["guid"]
+        carte, guid, _ = self._demarrer_partie()
 
         temoin = JeuCible(niveaux=3)
         temoin.reset()
         actions = 0
         for niveau in (1, 2, 3):
             for action, ligne, colonne in temoin.chemin_optimal():
-                charge: dict[str, Any] = {"guid": guid, "card_id": carte}
+                charge: dict[str, Any] = {"game_id": "cible-synthetique", "guid": guid}
                 if ligne is not None:
-                    charge |= {"row": ligne, "col": colonne}
+                    # Fil mesuré (§A4.2) : x = colonne, y = ligne.
+                    charge |= {"x": colonne, "y": ligne}
                 statut, corps = self.client.appeler("POST", f"/api/cmd/{action}", charge)
                 self.assertEqual(statut, 200)
                 temoin.jouer(action, ligne, colonne)
                 actions += 1
-            self.assertEqual(corps["score"], niveau, f"niveau {niveau} complété")
+            self.assertEqual(corps["levels_completed"], niveau, f"niveau {niveau} complété")
 
         self.assertEqual(corps["state"], "WIN")
         self.assertEqual(actions, sum(baseline_humaine(n) for n in (1, 2, 3)))
-        self.assertEqual(corps["available_actions"], ["RESET"])
+        self.assertEqual(corps["available_actions"], [], "RESET jamais déclaré (§A1.4)")
 
         _, fermeture = self.client.appeler("POST", "/api/scorecard/close", {"card_id": carte})
-        self.assertEqual(fermeture["cards"]["cible-synthetique"]["score"], 3)
+        environnements = {env["id"]: env for env in fermeture["environments"]}
+        self.assertEqual(environnements["cible-synthetique"]["levels_completed"], 3)
 
     def test_trois_clics_rates_perdent_la_partie(self) -> None:
-        _, debut = self.client.appeler("POST", "/api/cmd/RESET", {})
-        guid = debut["guid"]
+        _, guid, _ = self._demarrer_partie()
         for _ in range(3):
             statut, corps = self.client.appeler(
-                "POST", "/api/cmd/ACTION6", {"guid": guid, "row": 32, "col": 32}
+                "POST",
+                "/api/cmd/ACTION6",
+                {"game_id": "cible-synthetique", "guid": guid, "x": 32, "y": 32},
             )
             self.assertEqual(statut, 200)
         self.assertEqual(corps["state"], "GAME_OVER")
-        self.assertEqual(corps["available_actions"], ["RESET"])
+        self.assertEqual(corps["available_actions"], [])
 
     def test_le_reset_relance_apres_une_perte(self) -> None:
-        _, debut = self.client.appeler("POST", "/api/cmd/RESET", {})
-        guid = debut["guid"]
+        carte, guid, _ = self._demarrer_partie()
         for _ in range(3):
-            self.client.appeler("POST", "/api/cmd/ACTION6", {"guid": guid, "row": 32, "col": 32})
-        _, reprise = self.client.appeler("POST", "/api/cmd/RESET", {"guid": guid})
+            self.client.appeler(
+                "POST",
+                "/api/cmd/ACTION6",
+                {"game_id": "cible-synthetique", "guid": guid, "x": 32, "y": 32},
+            )
+        _, reprise = self.client.appeler(
+            "POST",
+            "/api/cmd/RESET",
+            {"game_id": "cible-synthetique", "card_id": carte, "guid": guid},
+        )
         self.assertEqual(reprise["state"], "NOT_FINISHED")
+        self.assertFalse(reprise["full_reset"], "relance de la partie existante")
 
     def test_une_action_sur_une_partie_inconnue_est_refusee(self) -> None:
-        statut, corps = self.client.appeler("POST", "/api/cmd/ACTION1", {"guid": "inexistant"})
+        statut, corps = self.client.appeler(
+            "POST", "/api/cmd/ACTION1", {"game_id": "cible-synthetique", "guid": "inexistant"}
+        )
         self.assertEqual(statut, 404)
         self.assertIn("inconnue", corps["error"])
 
-    def test_une_action_invalide_est_refusee_avec_son_motif(self) -> None:
-        _, debut = self.client.appeler("POST", "/api/cmd/RESET", {})
-        statut, corps = self.client.appeler("POST", "/api/cmd/ACTION6", {"guid": debut["guid"]})
+    def test_action6_sans_x_y_est_refuse_comme_le_fil_mesure(self) -> None:
+        """§A1.4 mesuré : row/col n'existe pas sur le fil, seuls x et y passent."""
+        _, guid, _ = self._demarrer_partie()
+        statut, corps = self.client.appeler(
+            "POST",
+            "/api/cmd/ACTION6",
+            {"game_id": "cible-synthetique", "guid": guid, "row": 32, "col": 32},
+        )
         self.assertEqual(statut, 400)
-        self.assertIn("coordonnées", corps["error"])
+        self.assertIn("x et y", corps["error"])
 
 
 class TestModeEpisode(unittest.TestCase, _ServeurLance):
@@ -196,7 +248,7 @@ class TestModeEpisode(unittest.TestCase, _ServeurLance):
     def test_une_deviation_rend_une_erreur_explicite(self) -> None:
         self.client.appeler("POST", "/api/cmd/RESET", {})
         statut, corps = self.client.appeler("POST", "/api/cmd/ACTION4", {"guid": "g1"})
-        self.assertEqual(statut, 599)
+        self.assertEqual(statut, 409)
         self.assertIn("déviation de l'épisode", corps["error"])
         self.assertIn("ACTION2", corps["error"])
 
@@ -204,7 +256,7 @@ class TestModeEpisode(unittest.TestCase, _ServeurLance):
         self.client.appeler("POST", "/api/cmd/RESET", {})
         self.client.appeler("POST", "/api/cmd/ACTION2", {"guid": "g1"})
         statut, corps = self.client.appeler("POST", "/api/cmd/ACTION2", {"guid": "g1"})
-        self.assertEqual(statut, 599)
+        self.assertEqual(statut, 409)
         self.assertIn("épuisé", corps["error"])
 
 

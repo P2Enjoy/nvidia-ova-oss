@@ -1,9 +1,10 @@
 """Interface de tâche direct-interaction : ce que l'agent voit et ce qu'il peut faire.
 
-@spec docs/BACKLOG.md U19 — Interface de tâche direct-interaction
+@spec docs/BACKLOG.md U19 — Interface de tâche direct-interaction ; U22 — fil mesuré
 @spec docs/SPEC_ARCAGI3.md §A5.1 (contrainte fondatrice : aucune règle de jeu),
-      §A5.2 (outils d'action filtrés par la frame), §A5.3 (comptage réconcilié),
-      §A1.2 (protocole de score), §A4.1 (rendu), §A4.3 (mémoire de frames)
+      §A5.2 (outils filtrés par la frame, reset toujours offert), §A5.3 (comptage
+      local, réconciliation au résumé de scorecard), §A1.2 (protocole de score),
+      §A4.1 (rendu), §A4.3 (mémoire de frames)
 @spec docs/SPEC_HARNAIS.md §H8.2 (contrat `Environnement` de la boucle)
 
 **Contrainte fondatrice** (billet NVIDIA, VISTA) : l'agent reçoit les actions
@@ -18,7 +19,6 @@ client ARC, le rendu texte, la mémoire de frames et la machine d'états.
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Final
@@ -28,8 +28,6 @@ from avo.arc.memoire import MemoireFrames
 from avo.arc.rendu import COTE, rendre_observation
 from avo.loop.etats import Evenement
 from avo.tools.registre import Outil, RegistreOutils
-
-_journal = logging.getLogger("avo.arc.interface")
 
 #: Étiquette portée par les outils qui dépensent une action (§H7.1). C'est elle qui
 #: fait qu'ils ne sont offerts qu'à la phase où agir est permis.
@@ -44,6 +42,7 @@ DESCRIPTIONS: Final = {
     "action4": "Joue la commande ACTION4. Coûte une action.",
     "action5": "Joue la commande ACTION5. Coûte une action.",
     "action6": "Joue la commande ACTION6 aux coordonnées (row, col). Coûte une action.",
+    "action7": "Joue la commande ACTION7. Coûte une action.",
     "reset": "Joue la commande RESET : relance la tentative en cours. Coûte une action.",
 }
 
@@ -66,7 +65,11 @@ class IssueArc:
 
 @dataclass
 class Comptage:
-    """Compteurs locaux, et divergences avec ceux du serveur (§A5.3)."""
+    """Compteurs locaux (§A5.3 : le fil ne rend aucun compteur par frame).
+
+    `divergences` accueille les écarts constatés à la réconciliation contre le
+    résumé de scorecard (fermeture de campagne) — jamais masqués.
+    """
 
     actions_niveau: int = 0
     actions_jeu: int = 0
@@ -131,7 +134,10 @@ class InterfaceArc:
             frame.grille,
             self.dernier.niveau,
             self.dernier.score,
-            self.dernier.actions_niveau,
+            # Le fil ne rend aucun compteur par frame (§A1.4) : le compteur
+            # local fait l'affichage, la réconciliation officielle passant par
+            # le résumé de scorecard (§A5.3).
+            self.comptage.actions_niveau,
             self.dernier.actions_disponibles,
         )
         transitoires = sum(
@@ -155,10 +161,15 @@ class InterfaceArc:
         """Un outil par commande que la frame courante déclare (§A5.2).
 
         Le filtrage vient de la frame, pas d'une liste figée : si l'environnement
-        cesse d'offrir une commande, l'agent cesse de la voir.
+        cesse d'offrir une commande, l'agent cesse de la voir. Seul `reset` est
+        toujours offert : le protocole le rend toujours jouable (§A1.2) et le fil
+        ne le déclare jamais dans `available_actions` (§A1.4).
         """
+        commandes = list(self.actions_disponibles())
+        if "RESET" not in commandes:
+            commandes.append("RESET")
         outils: list[Outil] = []
-        for commande in self.actions_disponibles():
+        for commande in commandes:
             nom = commande.lower()
             if nom not in DESCRIPTIONS:
                 continue
@@ -202,9 +213,10 @@ class InterfaceArc:
     # ------------------------------------------------------------------- jouer
     def jouer(self, commande: str, coordonnees: tuple[int, int] | None = None) -> str:
         """Joue une commande et rend l'observation résultante (§A5.2)."""
-        if self.guid is None:
+        if self.guid is None or self.dernier is None:
             raise RuntimeError("partie non démarrée : appeler demarrer() d'abord")
-        disponibles = set(self.actions_disponibles())
+        # RESET est toujours jouable (§A1.2) : le fil ne le déclare jamais (§A1.4).
+        disponibles = set(self.actions_disponibles()) | {"RESET"}
         if commande not in disponibles:
             raise ActionIndisponible(
                 f"« {commande} » n'est pas déclarée par la frame courante ; "
@@ -215,12 +227,13 @@ class InterfaceArc:
                 raise CoordonneesInvalides("ACTION6 exige row et col")
             self._valider(coordonnees)
 
+        game_id = self.game_id or self.dernier.game_id
         if commande == "RESET":
-            resultat = self.client.reset(guid=self.guid, card_id=self.card_id)
+            resultat = self.client.reset(game_id=game_id, card_id=self.card_id, guid=self.guid)
         else:
             numero = int(commande.removeprefix("ACTION"))
             resultat = self.client.action(
-                numero, guid=self.guid, coordonnees=coordonnees, card_id=self.card_id
+                numero, game_id=game_id, guid=self.guid, coordonnees=coordonnees
             )
         self._absorber(resultat, compte_une_action=True)
         return self.observation()
@@ -233,7 +246,7 @@ class InterfaceArc:
 
     # ---------------------------------------------------------------- internes
     def _absorber(self, resultat: FrameResult, compte_une_action: bool) -> None:
-        """Met à jour mémoire, compteurs et issue, puis réconcilie (§A5.3)."""
+        """Met à jour mémoire, compteurs locaux et issue (§A5.3)."""
         niveau_avant = self.dernier.niveau if self.dernier else resultat.niveau
         self.memoire.enregistrer_tour(
             [(frame.type.value, frame.grille) for frame in resultat.frames]
@@ -244,31 +257,11 @@ class InterfaceArc:
         if resultat.niveau != niveau_avant:
             self.comptage.actions_niveau = 0
         self.dernier = resultat
-        self._reconcilier(resultat)
         if self.registre is not None:
             self.registre.synchroniser(ETIQUETTE_ACTION, self.outils())
         self._derniere_issue = IssueArc(
             observation=self.observation(), evenement=self._evenement(resultat)
         )
-
-    def _reconcilier(self, resultat: FrameResult) -> None:
-        """Compare le compteur local à celui du serveur (§A5.3).
-
-        Une divergence n'est jamais masquée : elle est journalisée et conservée pour
-        le rapport. Le compteur du serveur fait foi — c'est lui qui produit le score
-        officiel — mais l'écart doit être visible, car il signale un défaut de notre
-        comptage ou un protocole mal compris.
-        """
-        if resultat.actions_niveau == self.comptage.actions_niveau:
-            return
-        ecart = {
-            "local": self.comptage.actions_niveau,
-            "serveur": resultat.actions_niveau,
-            "niveau": resultat.niveau,
-        }
-        self.comptage.divergences.append(ecart)
-        _journal.info("divergence de comptage d'actions", extra=ecart)
-        self.comptage.actions_niveau = resultat.actions_niveau
 
     @staticmethod
     def _evenement(resultat: FrameResult) -> Evenement:

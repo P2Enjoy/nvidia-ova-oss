@@ -55,7 +55,10 @@ class TestRhaeSurPartieReelle(unittest.TestCase):
         )
 
     def _interface(self) -> InterfaceArc:
-        interface = InterfaceArc(ArcClient(self._config()))
+        client = ArcClient(self._config())
+        interface = InterfaceArc(
+            client, game_id="cible-synthetique", card_id=client.open_scorecard([])
+        )
         interface.demarrer()
         return interface
 

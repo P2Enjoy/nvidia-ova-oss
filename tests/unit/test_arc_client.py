@@ -1,8 +1,9 @@
 """Preuves du client ARC : garde anti-publication, typage des frames, historique.
 
-@verifies docs/BACKLOG.md U17 — Client API ARC
+@verifies docs/BACKLOG.md U17 — Client API ARC ; U22 — format de fil mesuré
 @verifies docs/SPEC_ARCAGI3.md §A2.1 (`FrameResult`), §A2.2 (historique typé),
-          §A2.3 (garde anti-publication), §A1.2 (protocole)
+          §A2.3 (garde anti-publication), §A1.2 (protocole), §A1.4 (fil mesuré),
+          §A4.2 (conversion (row, col) → {x, y})
 @verifies docs/SPEC_HARNAIS.md §H4.5 (retries partagés), §H4.6 (aucun secret)
 """
 
@@ -69,15 +70,17 @@ class _TransportScripte:
 
 
 def _reponse(**surcharges: Any) -> dict[str, Any]:
+    """Réponse au format de fil MESURÉ par la sonde U22 (§A1.4)."""
     return {
         "guid": "g1",
         "game_id": "cible-synthetique",
-        "frames": [_GRILLE],
+        "frame": [_GRILLE],
         "state": "NOT_FINISHED",
-        "score": 0,
-        "level": 1,
-        "actions_level": 0,
-        "available_actions": ["ACTION1", "ACTION6", "RESET"],
+        "levels_completed": 0,
+        "win_levels": 3,
+        "action_input": {"id": 0, "data": {}, "reasoning": None},
+        "full_reset": False,
+        "available_actions": [1, 6],
         **surcharges,
     }
 
@@ -129,9 +132,9 @@ class TestTypageDesFrames(unittest.TestCase):
         self.assertIs(resultat.etat, EtatArc.EN_COURS)
 
     def test_les_frames_intermediaires_sont_transitoires(self) -> None:
-        client, _ = _client((200, _reponse()), (200, _reponse(frames=[_GRILLE, _GRILLE])))
+        client, _ = _client((200, _reponse()), (200, _reponse(frame=[_GRILLE, _GRILLE])))
         client.reset()
-        resultat = client.action(2, guid="g1")
+        resultat = client.action(2, game_id="cible-synthetique", guid="g1")
         self.assertEqual(
             [frame.type for frame in resultat.frames],
             [TypeFrame.TRANSITOIRE, TypeFrame.DECISION],
@@ -139,30 +142,30 @@ class TestTypageDesFrames(unittest.TestCase):
 
     def test_une_completion_de_niveau_donne_une_frame_d_init_de_niveau(self) -> None:
         client, _ = _client(
-            (200, _reponse()), (200, _reponse(score=1, level=2, frames=[_GRILLE, _GRILLE]))
+            (200, _reponse()), (200, _reponse(levels_completed=1, frame=[_GRILLE, _GRILLE]))
         )
         client.reset()
-        resultat = client.action(6, guid="g1", coordonnees=(3, 4))
+        resultat = client.action(6, game_id="cible-synthetique", guid="g1", coordonnees=(3, 4))
         self.assertIs(resultat.frames[-1].type, TypeFrame.INIT_NIVEAU)
 
     def test_une_victoire_donne_un_terminal_gagnant(self) -> None:
-        client, _ = _client((200, _reponse()), (200, _reponse(state="WIN", score=3)))
+        client, _ = _client((200, _reponse()), (200, _reponse(state="WIN", levels_completed=3)))
         client.reset()
-        resultat = client.action(6, guid="g1", coordonnees=(3, 4))
+        resultat = client.action(6, game_id="cible-synthetique", guid="g1", coordonnees=(3, 4))
         self.assertIs(resultat.frames[-1].type, TypeFrame.TERMINAL_GAGNE)
         self.assertTrue(resultat.terminee)
 
     def test_une_perte_donne_un_terminal_perdant(self) -> None:
         client, _ = _client((200, _reponse()), (200, _reponse(state="GAME_OVER")))
         client.reset()
-        resultat = client.action(6, guid="g1", coordonnees=(3, 4))
+        resultat = client.action(6, game_id="cible-synthetique", guid="g1", coordonnees=(3, 4))
         self.assertIs(resultat.frames[-1].type, TypeFrame.TERMINAL_PERDU)
 
     def test_une_frame_terminale_n_est_pas_une_frame_de_decision(self) -> None:
         """On n'agit jamais depuis un terminal (§A2.2)."""
         client, _ = _client((200, _reponse()), (200, _reponse(state="WIN")))
         client.reset()
-        resultat = client.action(6, guid="g1", coordonnees=(3, 4))
+        resultat = client.action(6, game_id="cible-synthetique", guid="g1", coordonnees=(3, 4))
         self.assertIsNone(resultat.frame_de_decision)
 
 
@@ -170,9 +173,9 @@ class TestHistorique(unittest.TestCase):
     """§A2.2 : chaque action est rattachée à la frame d'où elle a été choisie."""
 
     def test_l_action_est_rattachee_a_la_frame_de_decision_precedente(self) -> None:
-        client, _ = _client((200, _reponse()), (200, _reponse(frames=[_GRILLE, _GRILLE])))
+        client, _ = _client((200, _reponse()), (200, _reponse(frame=[_GRILLE, _GRILLE])))
         client.reset()
-        client.action(2, guid="g1")
+        client.action(2, game_id="cible-synthetique", guid="g1")
         entrees = client.historique.entrees
         self.assertIsNone(entrees[0].frame_de_decision, "le RESET ne suit aucune décision")
         self.assertEqual(entrees[1].frame_de_decision, 0)
@@ -180,18 +183,18 @@ class TestHistorique(unittest.TestCase):
     def test_les_coordonnees_du_clic_sont_conservees(self) -> None:
         client, _ = _client((200, _reponse()), (200, _reponse()))
         client.reset()
-        client.action(6, guid="g1", coordonnees=(12, 34))
+        client.action(6, game_id="cible-synthetique", guid="g1", coordonnees=(12, 34))
         self.assertEqual(client.historique.entrees[-1].coordonnees, (12, 34))
 
     def test_l_historique_s_ecrit_par_niveau(self) -> None:
         client, _ = _client(
             (200, _reponse()),
-            (200, _reponse(score=1, level=2)),
-            (200, _reponse(score=1, level=2)),
+            (200, _reponse(levels_completed=1)),
+            (200, _reponse(levels_completed=1)),
         )
         client.reset()
-        client.action(6, guid="g1", coordonnees=(3, 4))
-        client.action(1, guid="g1")
+        client.action(6, game_id="cible-synthetique", guid="g1", coordonnees=(3, 4))
+        client.action(1, game_id="cible-synthetique", guid="g1")
         with tempfile.TemporaryDirectory() as dossier:
             client.historique.ecrire(Path(dossier))
             fichiers = sorted(chemin.name for chemin in Path(dossier).glob("*.jsonl"))
@@ -199,6 +202,55 @@ class TestHistorique(unittest.TestCase):
             lignes = (Path(dossier) / "niveau_02.jsonl").read_text(encoding="utf-8").splitlines()
             self.assertEqual(len(lignes), 2)
             self.assertEqual(json.loads(lignes[0])["commande"], "ACTION6")
+
+
+class TestFilMesure(unittest.TestCase):
+    """§A1.4/§A4.2 : le client émet et lit exactement le fil mesuré par la sonde."""
+
+    def test_le_reset_porte_game_id_et_card_id(self) -> None:
+        client, transport = _client((200, _reponse()))
+        client.reset(game_id="cible-synthetique", card_id="carte-1")
+        self.assertEqual(
+            transport.appels[0][2], {"game_id": "cible-synthetique", "card_id": "carte-1"}
+        )
+
+    def test_une_action_porte_game_id_et_guid_sans_card_id(self) -> None:
+        client, transport = _client((200, _reponse()), (200, _reponse()))
+        client.reset()
+        client.action(1, game_id="cible-synthetique", guid="g1")
+        self.assertEqual(transport.appels[1][2], {"game_id": "cible-synthetique", "guid": "g1"})
+
+    def test_action6_convertit_row_col_en_x_y(self) -> None:
+        """(row, col) internes → x = col, y = row sur le fil ; jamais row/col (§A4.2)."""
+        client, transport = _client((200, _reponse()), (200, _reponse()))
+        client.reset()
+        client.action(6, game_id="cible-synthetique", guid="g1", coordonnees=(12, 34))
+        corps = transport.appels[1][2]
+        self.assertEqual((corps["x"], corps["y"]), (34, 12))
+        self.assertNotIn("row", corps)
+        self.assertNotIn("col", corps)
+
+    def test_les_actions_disponibles_sont_normalisees_en_noms(self) -> None:
+        client, _ = _client((200, _reponse(available_actions=[0, 1, 6, 7])))
+        resultat = client.reset()
+        self.assertEqual(resultat.actions_disponibles, ("RESET", "ACTION1", "ACTION6", "ACTION7"))
+
+    def test_le_niveau_se_derive_des_niveaux_completes(self) -> None:
+        """Le fil ne porte pas de niveau courant : niveau = complétés + 1, borné (§A1.4)."""
+        client, _ = _client(
+            (200, _reponse()),
+            (200, _reponse(levels_completed=1)),
+            (200, _reponse(levels_completed=3, state="WIN")),
+        )
+        self.assertEqual(client.reset().niveau, 1)
+        self.assertEqual(client.action(1, game_id="cible-synthetique", guid="g1").niveau, 2)
+        gagne = client.action(1, game_id="cible-synthetique", guid="g1")
+        self.assertEqual(gagne.niveau, 3, "borné par win_levels, jamais au-delà")
+        self.assertEqual(gagne.score, 3)
+
+    def test_le_drapeau_de_remise_a_zero_complete_est_lu(self) -> None:
+        client, _ = _client((200, _reponse(full_reset=True)))
+        self.assertTrue(client.reset().remise_a_zero_complete)
 
 
 class TestErreursEtRetries(unittest.TestCase):
@@ -244,7 +296,7 @@ class TestAucunSecretJournalise(unittest.TestCase):
         self.assertNotIn("00000000", str(resultat.resume()))
 
     def test_le_resume_ne_porte_aucune_grille(self) -> None:
-        client, _ = _client((200, _reponse(frames=[_GRILLE, _GRILLE])))
+        client, _ = _client((200, _reponse(frame=[_GRILLE, _GRILLE])))
         resume = client.reset().resume()
         self.assertEqual(resume["frames"], 2)
         self.assertNotIn("[[0, 0]", str(resume))

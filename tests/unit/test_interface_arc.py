@@ -1,8 +1,9 @@
 """Preuves de l'interface de tâche : filtrage, validation, comptage, zéro indice.
 
-@verifies docs/BACKLOG.md U19 — Interface de tâche direct-interaction
+@verifies docs/BACKLOG.md U19 — Interface de tâche direct-interaction ; U22 — fil mesuré
 @verifies docs/SPEC_ARCAGI3.md §A5.1 (aucune règle de jeu nulle part), §A5.2 (outils
-          filtrés par la frame, coordonnées validées), §A5.3 (comptage réconcilié),
+          filtrés par la frame, reset toujours offert, coordonnées validées),
+          §A5.3 (comptage local : le fil ne rend aucun compteur par frame),
           §A1.2 (RESET initial gratuit, suivants comptés)
 """
 
@@ -50,15 +51,18 @@ class _TransportScripte:
 
 
 def _reponse(**surcharges: Any) -> tuple[int, dict[str, Any]]:
+    """Réponse au format de fil MESURÉ par la sonde U22 (§A1.4) : RESET n'y est
+    jamais déclaré, les actions sont des entiers, aucun compteur par frame."""
     return 200, {
         "guid": "g1",
         "game_id": "jeu",
-        "frames": [_GRILLE],
+        "frame": [_GRILLE],
         "state": "NOT_FINISHED",
-        "score": 0,
-        "level": 1,
-        "actions_level": 0,
-        "available_actions": ["ACTION1", "ACTION2", "ACTION6", "RESET"],
+        "levels_completed": 0,
+        "win_levels": 3,
+        "action_input": {"id": 0, "data": {}, "reasoning": None},
+        "full_reset": False,
+        "available_actions": [1, 2, 6],
         **surcharges,
     }
 
@@ -80,9 +84,7 @@ class TestOutilsFiltres(unittest.TestCase):
         self.assertEqual(noms, ["action1", "action2", "action6", "reset"])
 
     def test_une_commande_retiree_disparait_des_outils(self) -> None:
-        interface, _ = _interface(
-            _reponse(), _reponse(available_actions=["RESET"], state="GAME_OVER")
-        )
+        interface, _ = _interface(_reponse(), _reponse(available_actions=[], state="GAME_OVER"))
         interface.demarrer()
         interface.jouer("ACTION1")
         self.assertEqual([outil.nom for outil in interface.outils()], ["reset"])
@@ -140,7 +142,7 @@ class TestComptage(unittest.TestCase):
         self.assertEqual(interface.comptage.actions_jeu, 0)
 
     def test_chaque_action_incremente_les_deux_compteurs(self) -> None:
-        interface, _ = _interface(_reponse(), _reponse(actions_level=1), _reponse(actions_level=2))
+        interface, _ = _interface(_reponse(), _reponse(), _reponse())
         interface.demarrer()
         interface.jouer("ACTION1")
         interface.jouer("ACTION2")
@@ -148,43 +150,42 @@ class TestComptage(unittest.TestCase):
         self.assertEqual(interface.comptage.actions_niveau, 2)
 
     def test_un_reset_en_cours_de_partie_compte(self) -> None:
-        interface, _ = _interface(_reponse(), _reponse(actions_level=1))
+        interface, _ = _interface(_reponse(), _reponse())
         interface.demarrer()
         interface.jouer("RESET")
         self.assertEqual(interface.comptage.actions_jeu, 1)
 
     def test_le_compteur_de_niveau_repart_a_zero(self) -> None:
-        interface, _ = _interface(
-            _reponse(), _reponse(actions_level=1), _reponse(score=1, level=2, actions_level=0)
-        )
+        interface, _ = _interface(_reponse(), _reponse(), _reponse(levels_completed=1))
         interface.demarrer()
         interface.jouer("ACTION1")
         interface.jouer("ACTION1")
         self.assertEqual(interface.comptage.actions_niveau, 0)
         self.assertEqual(interface.comptage.actions_jeu, 2)
 
-    def test_une_divergence_est_consignee_et_non_masquee(self) -> None:
-        """§A5.3 : le serveur fait foi, mais l'écart reste visible."""
-        interface, _ = _interface(_reponse(), _reponse(actions_level=7))
+    def test_le_compteur_local_alimente_l_observation(self) -> None:
+        """§A5.3 mesuré : le fil ne rend aucun compteur par frame — le compteur
+        local fait l'affichage, la réconciliation officielle passant par le résumé
+        de scorecard à la fermeture (preuve de campagne, U24)."""
+        interface, _ = _interface(_reponse(), _reponse())
         interface.demarrer()
-        interface.jouer("ACTION1")
-        self.assertEqual(len(interface.comptage.divergences), 1)
-        self.assertEqual(interface.comptage.divergences[0]["local"], 1)
-        self.assertEqual(interface.comptage.divergences[0]["serveur"], 7)
-        self.assertEqual(interface.comptage.actions_niveau, 7, "le serveur fait foi")
+        observation = interface.jouer("ACTION1")
+        self.assertIn("actions_niveau=1", observation.splitlines()[0])
 
-    def test_sans_divergence_rien_n_est_consigne(self) -> None:
-        interface, _ = _interface(_reponse(), _reponse(actions_level=1))
+    def test_reset_reste_jouable_sans_etre_declare(self) -> None:
+        """§A5.2 : le fil ne déclare jamais RESET, le protocole le rend jouable."""
+        interface, _ = _interface(_reponse(available_actions=[1]), _reponse())
         interface.demarrer()
-        interface.jouer("ACTION1")
-        self.assertEqual(interface.comptage.divergences, [])
+        self.assertIn("reset", [outil.nom for outil in interface.outils()])
+        interface.jouer("RESET")
+        self.assertEqual(interface.comptage.actions_jeu, 1)
 
 
 class TestEvenements(unittest.TestCase):
     """L'environnement dit ce qui s'est produit ; le modèle ne tranche pas (§H8.1)."""
 
     def test_une_progression_ordinaire(self) -> None:
-        interface, _ = _interface(_reponse(), _reponse(actions_level=1))
+        interface, _ = _interface(_reponse(), _reponse())
         interface.demarrer()
         interface.jouer("ACTION1")
         issue = interface.derniere_issue()
@@ -192,7 +193,7 @@ class TestEvenements(unittest.TestCase):
         self.assertIs(issue.evenement, Evenement.PREDICTION_CONFIRMEE)
 
     def test_une_completion_de_niveau_est_signalee(self) -> None:
-        interface, _ = _interface(_reponse(), _reponse(score=1, level=2))
+        interface, _ = _interface(_reponse(), _reponse(levels_completed=1))
         interface.demarrer()
         interface.jouer("ACTION1")
         issue = interface.derniere_issue()
@@ -218,7 +219,7 @@ class TestObservation(unittest.TestCase):
 
     def test_les_frames_transitoires_sont_annoncees_sans_etre_rendues(self) -> None:
         """Regarder les intermédiaires reste au choix de l'agent (§A4.3)."""
-        interface, _ = _interface(_reponse(), _reponse(frames=[_GRILLE, _GRILLE]))
+        interface, _ = _interface(_reponse(), _reponse(frame=[_GRILLE, _GRILLE]))
         interface.demarrer()
         observation = interface.jouer("ACTION1")
         self.assertIn("frame(s) intermédiaire(s)", observation)
@@ -288,9 +289,7 @@ class TestSynchronisationDuRegistre(unittest.TestCase):
 
     def test_une_commande_retiree_disparait_de_ce_que_voit_le_modele(self) -> None:
         registre = RegistreOutils()
-        interface, _ = _interface(
-            _reponse(), _reponse(available_actions=["RESET"], state="GAME_OVER")
-        )
+        interface, _ = _interface(_reponse(), _reponse(available_actions=[], state="GAME_OVER"))
         interface.registre = registre
         interface.demarrer()
         interface.jouer("ACTION1")

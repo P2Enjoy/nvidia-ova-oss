@@ -99,7 +99,13 @@ class TestPartieEntiereParLInterface(unittest.TestCase, _PileArc):
         self._dossier.cleanup()
 
     def _interface(self, registre: RegistreOutils | None = None) -> InterfaceArc:
-        return InterfaceArc(ArcClient(_config_arc(self.base)), registre=registre)
+        client = ArcClient(_config_arc(self.base))
+        return InterfaceArc(
+            client,
+            game_id="cible-synthetique",
+            card_id=client.open_scorecard([]),
+            registre=registre,
+        )
 
     def test_une_partie_parfaite_compte_exactement_les_baselines(self) -> None:
         """Le comptage local suit le serveur action par action, sans divergence."""
@@ -138,8 +144,7 @@ class TestPartieEntiereParLInterface(unittest.TestCase, _PileArc):
         interface.jouer("RESET")
         assert interface.dernier is not None
         self.assertEqual(interface.comptage.actions_jeu, 1)
-        self.assertEqual(interface.dernier.actions_niveau, 1, "le serveur compte aussi")
-        self.assertEqual(interface.comptage.divergences, [])
+        self.assertEqual(interface.comptage.actions_niveau, 1)
 
     def test_les_commandes_declarees_se_reduisent_apres_la_perte(self) -> None:
         """L'agent le découvre en agissant : rien ne le lui a dit (§A5.1)."""
@@ -224,7 +229,12 @@ class TestAgentSurInterface(unittest.TestCase, _PileArc):
     # -- décor -----------------------------------------------------------------
     def _decor(self, suffixe: str) -> tuple[InterfaceArc, RegistreOutils, Notes]:
         """Une partie neuve, un registre neuf : les deux passes sont identiques."""
-        interface = InterfaceArc(ArcClient(_config_arc(self.base_arc)))
+        client_arc = ArcClient(_config_arc(self.base_arc))
+        interface = InterfaceArc(
+            client_arc,
+            game_id="cible-synthetique",
+            card_id=client_arc.open_scorecard([]),
+        )
         interface.registre = RegistreOutils(
             [
                 outil_depuis_schema(

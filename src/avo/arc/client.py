@@ -1,8 +1,10 @@
 """Client de l'API ARC-AGI-3 : commandes typées et historique typé.
 
-@spec docs/BACKLOG.md U17 — Client API ARC
-@spec docs/SPEC_ARCAGI3.md §A2.1 (méthodes, `FrameResult`), §A2.2 (historique typé),
-      §A2.3 (garde anti-publication), §A1.2 (protocole), §A1.3–A1.4 (format de fil)
+@spec docs/BACKLOG.md U17 — Client API ARC ; U22 — format de fil mesuré
+@spec docs/SPEC_ARCAGI3.md §A2.1 (méthodes, `FrameResult`, cookies), §A2.2
+      (historique typé), §A2.3 (garde anti-publication), §A1.2 (protocole),
+      §A1.3–A1.4 (format de fil MESURÉ par la sonde U22), §A4.2 (conversion
+      (row, col) → {x, y} confinée ici)
 @spec docs/SPEC_HARNAIS.md §H4.5 (retries partagés), §H4.6 (aucun secret journalisé)
 
 **La garde anti-publication est la pièce maîtresse de ce module.** Jouer via l'API
@@ -14,6 +16,7 @@ par discipline.
 
 from __future__ import annotations
 
+import http.cookiejar
 import json
 import logging
 import urllib.error
@@ -93,7 +96,12 @@ class FrameTypee:
 
 @dataclass(frozen=True)
 class FrameResult:
-    """Réponse normalisée d'une commande (§A2.1)."""
+    """Réponse normalisée d'une commande (§A2.1, format de fil §A1.4).
+
+    `score` est le nombre de niveaux complétés (`levels_completed` du fil) ;
+    `niveau` en est dérivé — le fil ne porte ni niveau courant ni compteur
+    d'actions (§A5.3 : le comptage est local).
+    """
 
     guid: str
     game_id: str
@@ -101,8 +109,9 @@ class FrameResult:
     etat: EtatArc
     score: int
     niveau: int
-    actions_niveau: int
+    niveaux_requis: int
     actions_disponibles: tuple[str, ...]
+    remise_a_zero_complete: bool = False
 
     @property
     def frame_de_decision(self) -> FrameTypee | None:
@@ -122,7 +131,7 @@ class FrameResult:
             "etat": self.etat.value,
             "score": self.score,
             "niveau": self.niveau,
-            "actions_niveau": self.actions_niveau,
+            "niveaux_requis": self.niveaux_requis,
             "frames": len(self.frames),
             "types": [frame.type.value for frame in self.frames],
         }
@@ -221,22 +230,47 @@ class TransportArc(Protocol):
     ) -> tuple[int, bytes]: ...
 
 
+class TransportUrllib:
+    """Transport par défaut, bibliothèque standard, UN pot de cookies par instance.
+
+    L'API officielle route les commandes d'une partie par affinité de session :
+    les cookies (`AWSALB*`) posés au `RESET` doivent revenir sur chaque commande
+    suivante (§A1.4). Chaque `ArcClient` reçoit donc sa propre instance — les
+    sessions de deux clients ne se mélangent jamais.
+    """
+
+    def __init__(self) -> None:
+        self._ouvreur = urllib.request.build_opener(
+            urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
+        )
+
+    def __call__(
+        self,
+        methode: str,
+        url: str,
+        corps: bytes | None,
+        entetes: Mapping[str, str],
+        timeout: float,
+    ) -> tuple[int, bytes]:
+        requete = urllib.request.Request(url, data=corps, method=methode)  # noqa: S310
+        for nom, valeur in entetes.items():
+            requete.add_header(nom, valeur)
+        try:
+            with self._ouvreur.open(requete, timeout=timeout) as reponse:
+                return int(reponse.status), reponse.read()
+        except urllib.error.HTTPError as erreur:
+            return int(erreur.code), erreur.read()
+        except urllib.error.URLError as erreur:
+            raise ArcTransportError(f"API ARC injoignable : {erreur.reason}") from erreur
+        except TimeoutError as erreur:
+            raise ArcTransportError(f"délai dépassé après {timeout} s") from erreur
+
+
 def transport_urllib(
     methode: str, url: str, corps: bytes | None, entetes: Mapping[str, str], timeout: float
 ) -> tuple[int, bytes]:
-    """Transport par défaut, bibliothèque standard (§H2.1)."""
-    requete = urllib.request.Request(url, data=corps, method=methode)  # noqa: S310
-    for nom, valeur in entetes.items():
-        requete.add_header(nom, valeur)
-    try:
-        with urllib.request.urlopen(requete, timeout=timeout) as reponse:  # noqa: S310
-            return int(reponse.status), reponse.read()
-    except urllib.error.HTTPError as erreur:
-        return int(erreur.code), erreur.read()
-    except urllib.error.URLError as erreur:
-        raise ArcTransportError(f"API ARC injoignable : {erreur.reason}") from erreur
-    except TimeoutError as erreur:
-        raise ArcTransportError(f"délai dépassé après {timeout} s") from erreur
+    """Transport stdlib SANS état de session — pour un appel isolé (sonde, listing)."""
+    return TransportUrllib()(methode, url, corps, entetes, timeout)
 
 
 def verifier_hote(base_url: str, mode: Mode) -> None:
@@ -275,7 +309,9 @@ class ArcClient:
     ) -> None:
         verifier_hote(config.arc_base_url, config.mode)
         self.config = config
-        self._transport: TransportArc = transport or transport_urllib
+        # Un pot de cookies PAR CLIENT : l'affinité de session de l'API (§A1.4)
+        # exige que les cookies posés au RESET reviennent sur chaque commande.
+        self._transport: TransportArc = transport or TransportUrllib()
         self._dormir = dormir
         self._alea = alea
         self.historique = HistoriqueFrames()
@@ -324,11 +360,19 @@ class ArcClient:
         return charge
 
     # ------------------------------------------------------------------ typage
+    @staticmethod
+    def _nommer_action(numero: int) -> str:
+        """Nom normalisé d'une action du fil : `0` → `RESET`, `n` → `ACTIONn` (§A1.4)."""
+        return "RESET" if numero == 0 else f"ACTION{numero}"
+
     def _typer(self, charge: Mapping[str, Any], commande: str) -> FrameResult:
-        """Étiquette chaque frame selon son rôle (§A2.2)."""
-        grilles = list(charge.get("frames") or [])
+        """Normalise une réponse du fil mesuré (§A1.4) et étiquette les frames (§A2.2)."""
+        grilles = list(charge.get("frame") or [])
         etat = EtatArc(str(charge.get("state", EtatArc.EN_COURS.value)))
-        score = int(charge.get("score") or 0)
+        score = int(charge.get("levels_completed") or 0)
+        niveaux_requis = int(charge.get("win_levels") or 0)
+        # Le fil ne porte pas de niveau courant : il se dérive (§A1.4).
+        niveau = min(score + 1, niveaux_requis) if niveaux_requis else score + 1
 
         if etat is EtatArc.GAGNEE:
             dernier = TypeFrame.TERMINAL_GAGNE
@@ -356,9 +400,13 @@ class ArcClient:
             frames=frames,
             etat=etat,
             score=score,
-            niveau=int(charge.get("level") or 1),
-            actions_niveau=int(charge.get("actions_level") or 0),
-            actions_disponibles=tuple(charge.get("available_actions") or ()),
+            niveau=max(niveau, 1),
+            niveaux_requis=niveaux_requis,
+            actions_disponibles=tuple(
+                self._nommer_action(int(numero))
+                for numero in (charge.get("available_actions") or ())
+            ),
+            remise_a_zero_complete=bool(charge.get("full_reset") or False),
         )
 
     # ---------------------------------------------------------------- méthodes
@@ -380,16 +428,20 @@ class ArcClient:
         return dict(charge)
 
     def reset(
-        self, game_id: str | None = None, guid: str | None = None, card_id: str | None = None
+        self, game_id: str | None = None, card_id: str | None = None, guid: str | None = None
     ) -> FrameResult:
-        """`RESET` : crée la partie sans `guid`, relance la tentative avec (§A1.2)."""
+        """`RESET` : crée la partie sans `guid`, relance le niveau courant avec (§A1.2).
+
+        Le fil mesuré exige `game_id` ET `card_id` (§A1.4) ; le serveur nomme leur
+        absence — le client transmet ce qu'on lui donne et laisse le refus parler.
+        """
         corps: dict[str, Any] = {}
         if game_id:
             corps["game_id"] = game_id
-        if guid:
-            corps["guid"] = guid
         if card_id:
             corps["card_id"] = card_id
+        if guid:
+            corps["guid"] = guid
         if guid is None:
             self._score_courant = 0
         return self._commande("RESET", corps, None)
@@ -397,16 +449,20 @@ class ArcClient:
     def action(
         self,
         numero: int,
+        game_id: str,
         guid: str,
         coordonnees: tuple[int, int] | None = None,
-        card_id: str | None = None,
     ) -> FrameResult:
-        """`ACTION1`–`ACTION6` ; `ACTION6` porte des coordonnées (§A1.3)."""
-        corps: dict[str, Any] = {"guid": guid}
-        if card_id:
-            corps["card_id"] = card_id
+        """`ACTION1`–`ACTION7` : `game_id` et `guid` requis dans chaque action (§A1.4).
+
+        `ACTION6` porte des coordonnées, données en (row, col) internes : la
+        conversion vers le fil — `x` = colonne, `y` = ligne — est confinée ici
+        (§A4.2, mesurée : `{row, col}` est refusé par le serveur).
+        """
+        corps: dict[str, Any] = {"game_id": game_id, "guid": guid}
         if coordonnees is not None:
-            corps["row"], corps["col"] = coordonnees
+            row, col = coordonnees
+            corps["x"], corps["y"] = col, row
         return self._commande(f"ACTION{numero}", corps, coordonnees)
 
     def _commande(

@@ -71,13 +71,9 @@ class Sonde:
         )
         self.captures: list[dict[str, Any]] = []
 
-    def appeler(
-        self, methode: str, chemin: str, corps: dict[str, Any] | None
-    ) -> tuple[int, Any]:
+    def appeler(self, methode: str, chemin: str, corps: dict[str, Any] | None) -> tuple[int, Any]:
         charge = json.dumps(corps).encode() if corps is not None else None
-        requete = urllib.request.Request(
-            f"{self.base_url}{chemin}", data=charge, method=methode
-        )
+        requete = urllib.request.Request(f"{self.base_url}{chemin}", data=charge, method=methode)
         requete.add_header("X-API-Key", self._api_key)
         if charge is not None:
             requete.add_header("Content-Type", "application/json")
@@ -168,9 +164,7 @@ def main() -> int:
             print(f"listing des jeux impossible (HTTP {statut}) : arrêt.", file=sys.stderr)
             return 1
 
-        statut, ouverture = sonde.appeler(
-            "POST", "/api/scorecard/open", {"tags": ETIQUETTES_SONDE}
-        )
+        statut, ouverture = sonde.appeler("POST", "/api/scorecard/open", {"tags": ETIQUETTES_SONDE})
         card_id = ouverture.get("card_id") if isinstance(ouverture, dict) else None
         if statut != 200 or not card_id:
             print(f"ouverture du scorecard refusée (HTTP {statut}) : arrêt.", file=sys.stderr)
