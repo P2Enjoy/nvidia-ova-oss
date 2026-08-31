@@ -970,3 +970,32 @@ traite maintenant, PUIS U24 (campagne pilote : périmètre serré consigné au j
 avant lancement, plafonds obligatoires, réconciliation des compteurs sur le résumé
 de scorecard). Attention mesurée pour U24 : choisir des jeux que le backend sert
 réellement (refus « not found » possible) et ne pas compter sur `GET /scorecard`.
+
+---
+
+## 2026-08-31 (suite) — Instruction du responsable : les rôles, gravés
+
+**Instruction reçue en session, persistée dans `CLAUDE_PROJECT.md` (« Répartition
+des rôles »).** Le harnais OVA OSS joue ARC ; la session d'ingénierie ne joue
+jamais à sa place, ne lui souffle aucune réponse et ne détermine aucune stratégie
+en son nom. Le rôle de la session : coder le harnais, le lancer, OBSERVER son
+comportement sur les résultats collectés, et améliorer son fonctionnement général
+en restant dans la méthode des publications de `knowledge/`. Un échec du harnais
+par manque d'information se corrige en lui donnant le réflexe générique d'aller
+chercher l'information lui-même (expérimentation, inspection, prompt qui installe
+ce réflexe) — jamais en la lui fournissant. La plomberie hors-jeu (contrat de fil,
+transport — sonde U22) reste mesurable directement : elle ne décide d'aucun coup.
+
+**Conséquences pour les prochaines sessions.**
+
+1. Le préalable du registre (arrêt de la boucle sur état terminal) et U24 se font
+   en lançant le HARNAIS via `run-arc` (rejeu d'abord, live ensuite sous plafonds) :
+   la session lit les artefacts (`report.md`, transcripts, frames, métriques,
+   notes GUIDE/WORKING) et n'intervient qu'en amélioration générale.
+2. Le PROMPT est un levier de premier rang : vérifier que le prompt de tâche
+   (calqué VISTA, §A5.1) installe réellement le réflexe d'exploration — prédire
+   avant d'agir, observer les changements, inspecter les frames, entretenir un
+   modèle révisable — et l'améliorer d'après le comportement observé, jamais
+   d'après un jeu particulier.
+3. Toute amélioration issue d'une observation doit valoir pour tous les jeux
+   (interdiction de benchmaxing, inchangée).
