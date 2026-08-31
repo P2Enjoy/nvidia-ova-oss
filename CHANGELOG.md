@@ -2,6 +2,39 @@
 
 ## [Non publié]
 
+### 2026-08-31 — U22 (clos) : sonde du contrat API ARC réel, fil mesuré des deux côtés
+
+- `scripts/sonde_arc.py` : sonde du contrat de fil de l'API ARC-AGI-3 officielle —
+  scorecard étiqueté `probe`/`sonde-u22` ouvert et fermé au nom du responsable
+  (`7528ca63-3eff-4866-97c3-8c4a6ded0e63`), RESET + ACTION6 joués sur un jeu réel,
+  capture requête→réponse expurgée committée (`tests/fixtures/arc/episodes/`).
+- `docs/SPEC_ARCAGI3.md` A1.3/A1.4/A2.1/A3.3/A4.2/A5.2/A5.3 : le format de fil passe
+  de « supposé d'après l'export Tycho » à « mesuré » — `frame` au singulier,
+  `levels_completed`/`win_levels` (ni niveau courant, ni compteur d'actions par
+  frame), `available_actions` en entiers 0–7 (RESET jamais déclaré), `game_id`
+  requis dans chaque action, `card_id` requis au RESET et absent des actions,
+  `x`/`y` pour ACTION6 (`row`/`col` refusé, mesuré), affinité de session par
+  cookies `AWSALB*`, jeux listés non servis par le backend (refus nommé),
+  `GET /api/scorecard/<id>` non fiable (404 mesuré avant partie et après fermeture).
+- `avo.arc.client` : lecture et émission du fil mesuré, conversion
+  `(row, col) → {x: col, y: row}` confinée au client, pot de cookies par instance
+  (`TransportUrllib`), `FrameResult` porte `niveaux_requis` et
+  `remise_a_zero_complete`, le niveau courant étant dérivé.
+- `avo.arc.interface` : `reset` toujours offert (le fil ne le déclare jamais),
+  comptage local seul (la réconciliation officielle passe par le résumé de
+  scorecard, preuve de campagne U24), outil `action7` (annulation, jeux qui la
+  servent).
+- `mocks/arc_replay` : même contrat mesuré (refus nommés identiques à l'API,
+  résumé de scorecard en `environments`), déviation d'épisode étendue au corps des
+  requêtes et rendue en 409 (un 5xx serait retenté et perdrait son motif).
+- `tests/integration/test_episode_reel_sonde.py` : l'épisode réel de la sonde
+  rejoué vert par le client contre `arc-replay` (corps émis conformes à ce que
+  l'API a accepté, réponses réelles parsées sans perte).
+- Cassettes E2E régénérées (`make seed-e2e`) : les observations rendues au modèle
+  changent avec la liste d'actions déclarées.
+- Campagne complète verte : 473 tests unitaires, 138 d'intégration, 4 E2E, lint,
+  format, mypy strict.
+
 ### 2026-08-30 (suite 6 à 7) — U27 (clos) : mode `state` de la boucle et A/B sur rejeu
 
 - `docs/SPEC_HARNAIS.md` §H15.8 : précise qu'un pas du mode `state` correspond à un

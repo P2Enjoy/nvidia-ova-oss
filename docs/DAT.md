@@ -100,8 +100,10 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
 
 ## Compromis connus
 
-- Le contrat de fil ARC exact reste à confirmer par la sonde U22 (A1.4) — écrit
-  d'après l'export Tycho, corrigeable des deux côtés (client + rejeu).
+- Le contrat de fil ARC est MESURÉ (sonde U22, 2026-08-31, capture committée) et
+  implémenté à l'identique côté client et côté rejeu (A1.4). La réconciliation des
+  compteurs officiels par niveau passe par le résumé de scorecard à la fermeture
+  (A5.3) — preuve portée par la campagne pilote U24.
 - Une campagne complète 25 jeux est hors budget temps d'une session : périmètre
   toujours explicite (A7.1), exécution par tranches reprenables.
 - Le RHAE officiel dépend des baselines servies par l'API ; en rejeu local il repose

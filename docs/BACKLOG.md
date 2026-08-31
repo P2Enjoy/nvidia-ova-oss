@@ -352,8 +352,8 @@ fermée, frame transitoire), mode épisodes (A3.3), intégration compose + healt
   d'intégration HTTP, dont **une partie gagnée à la main par requêtes** dépensant
   exactement la somme des baselines. Campagne : **359 tests**, lint, format, mypy
   strict (66 fichiers).
-- Le format de fil est désormais **écrit** en A1.4 et implémenté des deux côtés ; il
-  reste à confirmer par la sonde U22, qui corrigera client et rejeu ensemble.
+- Le format de fil a été **mesuré** par la sonde U22 (2026-08-31) et le serveur de
+  rejeu corrigé avec le client dans le même changement (A1.4).
 
 ## U17 — Client API ARC `[x]`
 
@@ -464,16 +464,32 @@ artefacts (report, lignée, métriques) vérifiés ; reprise `resume` couverte.
   s'arrête pas sur l'état terminal du jeu (motif `tours_epuises` sur partie
   gagnée).
 
-## U22 — Sonde de contrat API officielle `[ ]` **[LIVE]**
+## U22 — Sonde de contrat API officielle `[x]` **[LIVE]**
 
-`@spec` A1.4, A2, A3.3. En session interactive : un scorecard explicitement étiqueté
-sonde, RESET + quelques actions sur un jeu court, capture de l'épisode réel expurgé
-→ fixture A3.3, confirmation/correction du format de fil (coordonnées A4.2 comprises)
-dans le client ET arc-replay, journal détaillé. Publie un scorecard (accord du
-responsable du 2026-08-27 pour l'usage de l'API ; périmètre minimal).
+`@spec` A1.4, A2, A3.3. Un scorecard explicitement étiqueté sonde, RESET + quelques
+actions sur un jeu court, capture de l'épisode réel expurgé → fixture A3.3,
+confirmation/correction du format de fil (coordonnées A4.2 comprises) dans le client
+ET arc-replay, journal détaillé. Publie un scorecard (accord du responsable du
+2026-08-27 pour l'usage de l'API ; périmètre minimal).
 
 - Preuves : épisode réel rejoué vert par `make test-int` ; écarts constatés corrigés
   et testés ; scorecard référencé au journal.
+- **Livré et intégralement vérifié le 2026-08-31** (routine planifiée, autorisation
+  du 2026-08-30). Sonde `scripts/sonde_arc.py` exécutée contre l'API officielle :
+  scorecard `7528ca63-3eff-4866-97c3-8c4a6ded0e63` (étiquettes `probe`,
+  `sonde-u22`), RESET + ACTION6 sur un jeu réel, fermé proprement ; capture
+  expurgée committée (`tests/fixtures/arc/episodes/sonde_u22_brut.json` +
+  `sonde_u22.jsonl`), recoupée avec l'OpenAPI publiée (`arc3v1.yaml`). Écarts
+  mesurés et corrigés des deux côtés dans le même changement (A1.4 réécrit en
+  contrat mesuré) : `frame` au singulier, `levels_completed`/`win_levels` sans
+  niveau courant ni compteur par frame, `available_actions` en entiers (RESET
+  jamais déclaré), `game_id` requis par action, `card_id` au RESET seul, `x`/`y`
+  pour ACTION6 (`row`/`col` → 500 mesuré), cookies d'affinité `AWSALB*`, jeux
+  listés non servis (refus nommé), `GET /api/scorecard/<id>` non fiable.
+  Preuves : `tests/integration/test_episode_reel_sonde.py` (épisode réel rejoué
+  vert par le client via `make test-int`), corps de requêtes vérifiés contre
+  l'enregistré (déviation d'épisode étendue au corps), campagne complète verte
+  (473 unitaires, 138 intégration, 4 E2E, mypy strict), cassettes E2E régénérées.
 
 ## Lot F — Campagne
 

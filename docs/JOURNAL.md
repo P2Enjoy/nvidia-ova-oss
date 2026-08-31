@@ -902,3 +902,69 @@ responsable pour jouer via l'API officielle et publier des scorecards en son nom
 (2026-08-30, `CLAUDE_PROJECT.md`) ; les plafonds de campagne (`SPEC_ARCAGI3.md`
 §A7.1) restent obligatoires et l'interdiction de benchmaxing s'applique sans
 exception à toute correction du harnais qui suivrait ces mesures.
+
+---
+
+## 2026-08-31 — Session planifiée (routine CloudWorker) : U22 close, le contrat de fil ARC est mesuré
+
+**Unité.** U22 — sonde de contrat API officielle, désignée par l'entrée précédente.
+Git rattaché à `main` (aucun commit local à sauver), Docker démarré manuellement,
+CA du proxy déposé dans `certs/`, pile montée et seedée. Autorisation du
+responsable (2026-08-30) : la routine joue via l'API officielle et publie des
+scorecards à son nom.
+
+**Sonde exécutée, périmètre minimal.** `scripts/sonde_arc.py` (nouveau) : mesure au
+niveau transport, sans le parsing d'`ArcClient` — c'est lui qu'on mesure. Scorecard
+de sonde `7528ca63-3eff-4866-97c3-8c4a6ded0e63` (étiquettes `probe`, `sonde-u22` ;
+le serveur y ajoute `agent` de lui-même), RESET + une ACTION6 sur un jeu réel choisi
+par un critère générique (modalité click, moindre somme de baselines), scorecard
+fermé. Capture requête→réponse expurgée committée sous
+`tests/fixtures/arc/episodes/` (brut + épisode A3.3), recoupée avec l'OpenAPI
+publiée (`docs.arcprize.org/arc3v1.yaml`, copiée en scratchpad, non committée).
+Deux scorecards d'essais préalables (`e8c6ffae…`, `d26657c1…`, `b8317eac…`) ont
+été ouverts pendant la mise au point : aucun n'a coûté d'action scorée hormis un
+RESET gratuit sur le troisième, refermé aussitôt.
+
+**Ce que la mesure a corrigé (A1.4 réécrit en contrat mesuré).** Le fil réel
+diffère du contrat supposé d'après l'export Tycho sur presque tous les points :
+réponse `{game_id, guid, frame, state, levels_completed, win_levels, action_input,
+full_reset, available_actions}` (entiers 0–7, RESET jamais déclaré ; ni niveau
+courant, ni score, ni compteur d'actions par frame) ; requêtes `RESET {game_id,
+card_id, guid?}` (les deux premiers REQUIS), actions `{game_id, guid}` sans
+card_id, ACTION6 `{x, y}` avec x=colonne et y=ligne — `{row, col}` refusé (500
+mesuré) ; affinité de session par cookies `AWSALB*` posés au RESET ; le listing
+`/api/games` peut annoncer un jeu que le backend de commandes refuse (`400 game …
+not found`, mesuré sur le jeu de moindre coût du listing) ; `GET
+/api/scorecard/<id>` rend 404 sur une carte sans partie ET après fermeture — le
+résumé de fermeture fait foi (il porte `level_actions`, `level_baseline_actions`,
+`level_scores` par run : c'est la source de la réconciliation A5.3, preuve
+déplacée vers U24 puisque la réconciliation par frame n'existe structurellement
+plus). Vérifié : `baseline_actions` du listing = `level_baseline_actions` du
+résumé.
+
+**Livré, client et rejeu corrigés ensemble (règle de l'unité).** `avo.arc.client`
+(fil mesuré, conversion x/y confinée, pot de cookies par instance via
+`TransportUrllib`, `FrameResult.niveaux_requis`/`remise_a_zero_complete`, niveau
+dérivé), `avo.arc.interface` (reset toujours offert, comptage local seul, outil
+`action7`), `mocks/arc_replay` (même contrat, refus nommés identiques, résumé en
+`environments`, déviation d'épisode étendue au CORPS des requêtes et rendue 409 —
+un 5xx serait retenté et perdrait son motif, point tranché). Nouveau
+`tests/integration/test_episode_reel_sonde.py` : l'épisode réel rejoué vert par le
+client contre arc-replay. Cassettes E2E régénérées (`make seed-e2e`, observations
+changées par la liste d'actions déclarées), pile relancée.
+
+**Preuves exécutées, toutes en conteneur.** lint + `ruff format`, mypy strict (95
+fichiers), 473 tests unitaires (+6), 138 d'intégration (+3), 4 E2E sur pile
+fraîche (le rapport A/B committé reste identique à l'octet près). Campagne
+complète de fin de session : voir l'entrée de preuve ci-dessous du même jour.
+
+**U22 close : DoD satisfaite** (`docs/BACKLOG.md` `[x]`) — implémenté et vérifié,
+scorecard référencé ci-dessus, documents (README, DAT, SPEC, CHANGELOG, backlog)
+mis à jour dans les mêmes commits.
+
+**Où reprendre.** Ordre du plan : le préalable consigné au registre — l'arrêt de
+la boucle sur état terminal du jeu (défaut du 2026-08-30, préalable de U24) — se
+traite maintenant, PUIS U24 (campagne pilote : périmètre serré consigné au journal
+avant lancement, plafonds obligatoires, réconciliation des compteurs sur le résumé
+de scorecard). Attention mesurée pour U24 : choisir des jeux que le backend sert
+réellement (refus « not found » possible) et ne pas compter sur `GET /scorecard`.
