@@ -162,6 +162,35 @@ sans quoi un agent bloqué boucle sans fin ; POINT TRANCHÉ, la source compte le
 actions invalides comme échouées sans détailler la suite). `etat_terminal()`
 rend alors le motif « épisode épuisé » (§H8.3).
 
+**S3.8 — Dérive d'état, condition 3** (source §5.4, Experiment 3 : l'état de
+vérité est modifié HORS de la boucle d'action de l'agent et une alerte NON
+STRUCTURÉE l'en informe ; la mesure est le retard de récupération, §S5.5).
+Avec `derive` actif, l'épisode porte EXACTEMENT UNE dérive, figée à la
+génération (§S1.4) sur un flux aléatoire seedé séparé (`derive-<seed>`), au
+premier pas `d ≥ horizon // 2` où l'état nominal offre un candidat (une
+étagère occupée ET une étagère vide) ; si aucun pas n'en offre, la génération
+échoue par une erreur nommée — le point de mesure prend un autre seed.
+
+Au pas `d` : (1) l'article d'une étagère occupée nominale, tirée au rng de
+dérive, est déplacé vers la plus petite étagère nominale vide — « un opérateur
+externe déplace un article », l'exemple même de la source ; (2) l'événement du
+pas `d` est FORCÉ à `commande` de cet article, sans consommer le rng principal
+à ce pas : seule l'alerte dit où l'article se trouve désormais — l'événement
+teste la prise en compte de l'alerte ; (3) l'observation du pas `d` porte,
+après la ligne d'événement et avant la télémétrie, l'alerte sous l'en-tête
+`--- ALERTE EXTERNE ---` :
+`[Audit externe] <article> déplacé de <source> vers <destination> par un opérateur externe.`.
+
+Sur l'état RÉEL, la dérive s'applique au moment où l'événement `d` devient
+observable : si l'article est réellement porté par une étagère et que la
+destination nominale est réellement vide, il y est déplacé ; sinon (divergence
+antérieure de l'agent) l'état réel est inchangé — l'alerte est émise telle
+quelle et l'écart se paie comme toute divergence (§S3.4). La dérive n'est PAS
+un événement actionnable : elle ne consomme rien et n'appelle aucune action
+propre ; l'obligation du pas `d` reste celle de son événement (§S3.5), évaluée
+sur l'état réel. À `derive` inactif, la génération est inchangée octet pour
+octet — mêmes épisodes qu'avant la condition 3.
+
 ---
 
 ## S4. Environnement Dépôt logiciel
@@ -271,6 +300,28 @@ non — consomme l'événement courant, et l'épisode se termine quand les `hori
 événements actionnables sont consommés ; `etat_terminal()` rend « épisode
 épuisé ».
 
+**S4.7 — Dérive d'état du dépôt** (source §5.4 et table 10 : l'état du dépôt
+est altéré via une alerte non structurée). §S3.8 s'applique — une seule dérive,
+rng de dérive séparé, premier pas `d ≥ horizon // 2` offrant un candidat,
+erreur nommée sinon, alerte sous `--- ALERTE EXTERNE ---`, génération
+inchangée à `derive` inactif — avec la mutation propre au dépôt : le candidat
+est une demande en vie dont la PR nominale est ouverte et prête à fusionner
+(prochain événement nominal `ci_verte`), et sa CI est cassée par un commit
+direct externe.
+
+Au pas `d` : (1) la demande candidate, tirée au rng de dérive, voit sa CI
+nominale repasser rouge — son prochain événement nominal redevient `echec_ci`,
+puis le cycle reprend (§S4.3) ; (2) l'événement du pas `d` est FORCÉ au
+`ci_verte` de sa PR — la notification périmée, partie avant la casse : seule
+l'alerte dit la vérité, et l'obligation réelle du pas est `wait` (§S4.5, la CI
+n'est plus verte) là où un agent à l'état périmé fusionne et casse master ;
+(3) l'alerte du pas `d` :
+`[Alerte] Commit direct sur <branche> : sa CI est repassée au rouge.`.
+
+Sur l'état RÉEL : si la branche existe réellement et que sa CI est verte, elle
+passe rouge au moment où l'événement `d` devient observable ; sinon
+(divergence antérieure) l'état réel est inchangé.
+
 ---
 
 ## S5. Score et relevé
@@ -312,6 +363,16 @@ notre mode `state` en est l'homologue) :
 taille similaire » du déclencheur U25 pour ce banc. La source mesure sur
 5 seeds ; la nôtre relève au minimum 3 seeds par point avant toute comparaison.
 
+**S5.5 — Mesure de récupération** (source §5.4 : « recovery steps »). Avec la
+dérive active (§S3.8, §S4.7), le relevé porte en champs libres :
+`derive_evenement` (l'indice `d`) ; `pas_de_recuperation` — le nombre
+d'événements consommés depuis `d` avant la PREMIÈRE action correcte : 0 quand
+l'action du pas `d` lui-même est correcte, `null` quand aucune action correcte
+ne suit la dérive ; `recupere` — vrai dès qu'une action correcte suit la
+dérive. Un épisode sans dérive ne porte aucun de ces champs. La comparaison
+entre runs exige des épisodes complets (§S5.3) aux mêmes paramètres, dérive
+comprise.
+
 ---
 
 ## S6. Adaptateur harnais et CLI
@@ -326,10 +387,13 @@ description peut nommer l'effet, contrairement à ARC.
 
 **S6.2 — Contexte de tâche.** L'adaptateur fournit à K (§H16.1) le protocole du
 banc : espace d'actions, règles de validité, obligations de §S3.5. Il ne fournit
-ni l'état de vérité, ni la suite d'événements, ni aucune solution.
+ni l'état de vérité, ni la suite d'événements, ni aucune solution. Il nomme le
+canal d'alerte (§S3.8) : les lignes sous `--- ALERTE EXTERNE ---` rapportent des
+changements RÉELS effectués hors du contrôle de l'agent — sans dire quand ni
+quoi, l'alerte reste non structurée et son contenu n'est jamais annoncé.
 
 **S6.3 — CLI.** Sous-commande `banc` :
-`python -m avo banc skillexec --env entrepot --horizon 50 --seed 42 [--bruit N]`.
+`python -m avo banc skillexec --env entrepot --horizon 50 --seed 42 [--bruit N] [--derive]`.
 Elle monte la boucle complète (client LLM selon le mode, workspace, gardes) et
 écrit le relevé §S5.3. En mode rejeu, elle pointe la pile locale comme le reste
 du produit.
@@ -339,7 +403,10 @@ du produit.
 - unitaires : générateur (déterminisme à seed égal, faisabilité des événements,
   divergence §S3.4), transitions (chaque action valide/invalide de §S3.2),
   score (§S5.2, cas nominal, action valide-mais-autre, invalide, `wait` dû et
-  indu), bruit (n'altère pas l'état, en-tête, comptage) ;
+  indu), bruit (n'altère pas l'état, en-tête, comptage), dérive (§S3.8/§S4.7 :
+  unicité et pas forcé, alerte à l'observation, erreur nommée sans candidat,
+  génération inchangée à `derive` inactif, application réelle et cas de
+  divergence, obligation du pas `d`, mesure §S5.5) ;
 - intégration : partie jouée en rejeu par la boucle complète sous gardes sur un
   épisode court, relevé `banc.json` écrit et exact ;
 - E2E : scénario rejoué par cassette (épisode court, score attendu exact) ;
