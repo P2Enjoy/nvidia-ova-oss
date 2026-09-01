@@ -1554,3 +1554,34 @@ U29a1 `[x]`, U29 passe `[~]`.
 étiquetés `action` avec `prediction`, contexte de tâche §S6.2) + sous-commande CLI
 `banc`, cassette de rejeu, intégration + E2E, premier relevé live 3 seeds aux
 horizons 10 et 25, consigné au journal pour amorcer le suivi du déclencheur U25.
+
+---
+
+## 2026-09-01 (suite 13) — U31/U29a2 : décisions d'ouverture, avant le code
+
+Session planifiée. Cible désignée par la suite 12 : U29a2 (adaptateur harnais +
+CLI `banc`). La spécification existe (§S6) et couvre le reste à livrer : pas de
+réécriture, code direct (exception « spécification existante » du contrat worker).
+Trois points d'implémentation tranchés, persistés ici avant la première ligne :
+
+1. **Message système du mode `state`** : `_messages_etat` employait la constante
+   `prompts.SYSTEME` au lieu du message système du contexte monté — le mode
+   `transcript` honore `Contexte.systeme`, le mode `state` l'ignorait. Sans cette
+   surface, aucun adaptateur ne peut fournir son contexte de tâche à K (§H16.1,
+   §S6.2). §H15.8 est amendé sur ce point précis ; le défaut reste
+   `prompts.SYSTEME`, ARC inchangé octet pour octet (cassettes intactes). Issue
+   écartée : injecter le protocole du banc dans `GUIDE.md` — les notes sont la
+   mémoire de l'agent, pas la documentation du responsable.
+2. **L'issue de la dernière action entre dans l'observation du banc** : en mode
+   `state`, le prompt d'un pas ne porte que (P, Σ, O) ; sans cela l'agent ne
+   verrait jamais « Succès/error » de son action précédente, que §S2.3 lui donne
+   (« les observations textuelles et les issues de ses actions »). C'est
+   l'adaptateur qui compose, le noyau est intouché.
+3. **`tours_max` par défaut de la CLI `banc` = 4 × horizon** : un pas retenu par
+   une garde ou une résolution d'action refusée consomme un tour sans consommer
+   d'événement ; 4× laisse ces détours possibles sans permettre une boucle sans
+   fin. Surchargé par `--tours-max`.
+
+La sous-commande `banc` du noyau reste générique : `cli.py` délègue à
+`avo.bancs.executer_banc` sans nommer aucun banc ni environnement (balayage
+« zéro indice » préservé sur le noyau).

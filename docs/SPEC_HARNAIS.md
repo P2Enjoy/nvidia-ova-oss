@@ -630,8 +630,12 @@ de §H8.1 (phases, transitions) reste donc de la seule responsabilité du mode
 Conséquences, toutes de la seule responsabilité de la boucle (`avo.loop.boucle`),
 le module `avo.context.etat` restant inchangé et pur :
 
-- **Un appel LLM par tour.** Le message système reste `P` (`prompts.SYSTEME`,
-  inchangé) ; le message utilisateur compose Σ sérialisé (§H15.5), les notes
+- **Un appel LLM par tour.** Le message système reste `P` — celui du contexte
+  monté par l'appelant (`Contexte.systeme`, défaut `prompts.SYSTEME`) : c'est la
+  même surface qu'en mode `transcript`, et c'est elle qui permet à un adaptateur
+  de tâche de fournir son contexte de tâche à K (§H16.1, `docs/SPEC_BANCS.md`
+  §S6.2) sans toucher au noyau ; le message utilisateur compose Σ sérialisé
+  (§H15.5), les notes
   (§H6.2, mêmes qu'une continuation), l'observation courante et les actions
   disponibles, et une invite de protocole (nouvelle constante `prompts.PROTOCOLE_ETAT`,
   générique, décrivant uniquement le format du bloc JSON et le schéma de Σ —
