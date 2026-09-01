@@ -1791,3 +1791,43 @@ brancher le Dépôt logiciel à l'adaptateur et à la CLI (§S6), puis campagne 
 banc — bruit, récupération d'état, relevés multi-seeds sur les deux
 environnements, alimentation du déclencheur U25. La piste « schéma Σ par
 adaptateur » (suite 15) reste en attente d'une mesure qui la confirme.
+
+---
+
+## 2026-09-01 (suite 14, clôture — consignée après les suites 15–17)
+
+La session de la suite 14 s'est achevée après les pushes des suites 15–17 ; sa
+clôture vient ici. Constaté au push : U29a2 était déjà close (suite 15), U29a3
+livrée (suite 17), et le relevé d'incident §S5.3 déjà spécifié ET livré — la
+piste que cette session avait notée en observation. Aucun document n'est modifié
+au-delà de la présente entrée ; le backlog distant fait foi.
+
+**Relevé live h25, seeds 1–3** — TROISIÈME série indépendante, mêmes commandes
+et conditions que les suites 15 (101–103) et 16 (1–3) :
+
+| seed | score | corr/inc/inv | évts | tours | tokens | durée |
+|---|---|---|---|---|---|---|
+| 1 | 1,00 | 25/0/0 | 25/25 | 26 | 36 082 | 375 s |
+| 2 | 0,76 | 19/1/5 | 25/25 | 32 | 41 781 | 761 s |
+| 3 | 0,28 | 7/10/8 | 25/25 | 31 | 40 084 | 926 s |
+
+Le seed 3 a exigé SIX lancements (cinq morts en rafale de HTTP 500 : 0, 8, 0,
+19 et 3 événements consommés — antérieurs au relevé d'incident §S5.3, donc sans
+`banc.json`) ; le sixième est complet. Lecture croisée des trois séries h25 :
+la variance INTER-RUNS sur un même seed est du même ordre que la variance
+inter-seeds (seed 1 : 1,00 ici contre 0,84 en suite 16 ; seed 3 : 0,28 contre
+0,44) — un score h25 isolé ne dit rien, seule la moyenne multi-seeds
+multi-séries alimente le déclencheur U25. Taxonomie confirmée : zéro tour perdu
+en résolution d'action (normalisations §H15.8 efficaces sur les trois séries),
+pertes = tenue d'état (identifiant inventé `article_4_new`, `move` répété trois
+fois vers une étagère occupée, `wait` face à une réception).
+
+**Campagne complète verte** (aucun code modifié par cette session) : lint, ruff
+format 111 fichiers, mypy strict 110 fichiers, 562 unitaires, 148 intégration,
+5 E2E sur pile fraîche, build — état AVANT la fusion des suites 15–17, qui ont
+rejoué leur propre campagne en aval. Registre : entrée « contrôle `RESET` du
+script de fumée périmé » consignée (poussée avec la suite 14).
+
+**Où reprendre.** Inchangé de la suite 17 : U31 → U29a4 (branchement du Dépôt
+logiciel à l'adaptateur et à la CLI, campagne de banc multi-seeds). La mesure
+de variance inter-runs ci-dessus appartient au dossier du déclencheur U25.
