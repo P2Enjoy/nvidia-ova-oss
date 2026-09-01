@@ -2,6 +2,15 @@
 
 ## [Non publié]
 
+### 2026-09-01 — Relevé d'incident du banc (§S5.3)
+
+- `banc.json` s'écrit désormais MÊME quand l'épisode est interrompu par une
+  erreur (panne d'endpoint plus longue que les relances §H4.5) : `arret` porte
+  `incident : <classe>: <message>`, les compteurs valent ce qui a réellement été
+  consommé, et l'erreur remonte inchangée. Mesuré le 2026-09-01 : un épisode h25
+  de ~13 minutes perdu sans aucune mesure sur des HTTP 500 continus de plus de
+  quatre minutes (journal, suite 16).
+
 ### 2026-09-01 — U29a2 : adaptateur du banc a et CLI `banc`
 
 - Adaptateur de boucle du banc a (`src/avo/bancs/skillexec/adaptateur.py`) :
