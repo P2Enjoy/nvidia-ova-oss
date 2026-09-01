@@ -2,6 +2,18 @@
 
 ## [Non publié]
 
+### 2026-09-01 — U29a1 : banc a (patron SkillExecBench), spécification et environnement Entrepôt
+
+- Nouvelle spécification `docs/SPEC_BANCS.md` (§S1–§S7) : cadre commun des bancs
+  d'affinage (adaptateurs minces, noyau §H intouché), banc a en entier —
+  environnements Entrepôt et Dépôt logiciel, générateurs seedés, score continu,
+  bruit de condition 1, scores de référence open-weight consignés (§S5.4),
+  découpage en unités U29a1–a4.
+- Environnement Entrepôt livré (`src/avo/bancs/skillexec/`) : générateur
+  d'épisodes déterministe à double flux (événements/bruit séparés), état de
+  vérité et transitions validées, obligations par événement, relevé et score
+  continu (§S5.1). 26 preuves unitaires (`tests/unit/test_banc_entrepot.py`).
+
 ### 2026-09-01 — Le mode de contexte `state` devient le défaut (décision du responsable)
 
 - `AVO_CONTEXT_MODE` passe de `transcript` à `state` par défaut, sur décision du

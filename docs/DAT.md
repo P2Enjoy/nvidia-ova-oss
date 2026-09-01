@@ -1,8 +1,8 @@
 # Dossier d'architecture technique (DAT)
 
-> Le détail normatif vit dans `docs/SPEC_HARNAIS.md` (H1–H14) et
-> `docs/SPEC_ARCAGI3.md` (A1–A8) ; ce dossier est la vue d'ensemble. Le code
-> n'existe pas encore : l'implémentation suit `docs/MASTER_PLAN.md` (U3+).
+> Le détail normatif vit dans `docs/SPEC_HARNAIS.md` (H1–H16),
+> `docs/SPEC_ARCAGI3.md` (A1–A8) et `docs/SPEC_BANCS.md` (S1+) ; ce dossier est
+> la vue d'ensemble. L'implémentation suit `docs/MASTER_PLAN.md`.
 
 ## Objet du système
 
@@ -26,6 +26,7 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 | `avo.transport` | H4.5, A2.1 | politique de retry partagée par les deux clients |
 | `avo.runlog` | H11 | logs JSON corrélés, filtre de masquage des secrets |
 | `avo.arc` | A2, A4–A7 | client API ARC, rendu texte canonique, mémoire de frames sans perte, interface de tâche direct-interaction (`Environnement` de la boucle), calcul du RHAE, runner de campagne et rapport |
+| `avo.bancs` | S1–S7 | bancs d'affinage du harnais : environnements de mesure déterministes (banc a : Entrepôt livré, générateur seedé, score continu) branchés comme adaptateurs minces sur le contrat `Environnement` |
 | `mocks/llm_replay` | H4.7 | rejeu d'échanges enregistrés sur le vrai endpoint, injection de fautes |
 | `mocks/arc_replay` | A3 | contrat ARC local (port 8765), jeu `cible` en forme fermée, rejeu d'épisodes |
 
