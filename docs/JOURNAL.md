@@ -1684,3 +1684,32 @@ périmés (origine hors 443, plafond 114688) qui priment sur `.env` (§H3.1).
 détail exécutable de §S4 (dans ce chapitre), puis `depot.py` et ses preuves.
 L'amélioration « schéma Σ par adaptateur » attend une spécification dédiée si la
 prochaine mesure la confirme ; le relevé du déclencheur U25 s'étoffe en U29a4.
+---
+
+## 2026-09-01 (suite 16) — session parallèle : relevé h25 indépendant (seeds 1–3), incident d'endpoint mesuré, relevé d'incident spécifié
+
+Session planifiée, démarrée au créneau horaire suivant la suite 14 et jouée en
+PARALLÈLE de la suite 15 ci-dessus (constaté au push : la suite 15 avait déjà
+clos U29a2). Cette session avait repris la consigne de la suite 14 — compléter le
+relevé h25 (3 seeds) — et l'a exécutée sur les seeds 1–3 : mesure INDÉPENDANTE du
+relevé 101–103 de la suite 15, consignée plus bas dans cette entrée. Pile montée
+et seedée (dockerd manuel, CA du proxy dans `certs/`), `make smoke-live` tout
+vert.
+
+**Incident mesuré pendant le relevé.** Le seed 2 h25 est mort à mi-épisode :
+l'endpoint a rendu des HTTP 500 continus de 20:53 à 20:57 (plus de quatre
+minutes), les cinq relances §H4.5 (repli exponentiel 1,2 → 69,7 s) ont été
+épuisées, et `ServerError` a remonté — 19 inférences et ~13 minutes perdues sans
+AUCUN relevé : `banc.json` n'est écrit qu'au terme de l'épisode. C'est la même
+famille de panne que le `ServerError` persistant déjà noté en suite 15
+(h25-s103) : la panne y avait coûté un rejeu complet, ici elle coûte l'épisode.
+
+**Décision (persistée avant le code).** §S5.3 amendé : le relevé s'écrit MÊME
+quand l'épisode est interrompu — `arret` porte `incident : <classe>: <message>`,
+les compteurs valent ce qui a réellement été consommé, l'erreur remonte
+inchangée (aucun masquage, aucune perte silencieuse) ; un relevé dont
+`evenements_consommes < horizon` n'entre dans aucune comparaison de scores.
+Issue écartée : élever le plafond de relances §H4.5 — une panne peut durer
+arbitrairement et ce plafond protège la latence de TOUS les appels ; l'invariant
+est « aucune perte silencieuse », pas « attendre indéfiniment ». Le seed 2 sera
+rejoué après le seed 3 pour compléter le relevé.

@@ -197,6 +197,13 @@ taille moyenne de prompt, durée. Le relevé s'écrit en JSON dans le workspace 
 run (`banc.json`), à côté des artefacts H16 ; c'est lui qui alimente le journal
 et le déclencheur U25.
 
+Le relevé s'écrit MÊME quand l'épisode est interrompu par une erreur avant son
+terme (panne de l'endpoint plus longue que les relances §H4.5, incident de
+transport) : `arret` porte alors `incident : <classe>: <message>`, les compteurs
+valent ce qui a réellement été consommé, et l'erreur remonte inchangée à
+l'appelant — un relevé partiel n'est jamais un succès simulé, et un relevé dont
+`evenements_consommes < horizon` n'entre dans aucune comparaison de scores.
+
 **S5.4 — Scores de référence consignés** (source annexe D, modèles open-weight
 de taille comparable à `qwen3.6:35b`, Entrepôt, bruit 0, runtime SKILL.state —
 notre mode `state` en est l'homologue) :
