@@ -657,7 +657,16 @@ class BoucleAgent:
         résolution qui échoue rend un `ToolCall` en erreur, diagnosticable par le
         registre comme n'importe quel outil (§H7.4), jamais fatale.
         """
-        nom, _, reste = action_texte.strip().partition(" ")
+        texte = action_texte.strip()
+        # §H15.8 : la syntaxe d'appel de fonction — « nom(v1, v2) », « nom() » —
+        # est un bruit de format des modèles open-weight (mesuré : relevé live du
+        # banc, 2026-09-01) ; elle se lit comme « nom v1,v2 », purement
+        # syntaxique, valable pour tout environnement.
+        appel_fonction = re.fullmatch(r"([^\s(]+)\s*\((.*)\)\s*", texte, re.DOTALL)
+        if appel_fonction is not None:
+            nom, reste = appel_fonction.group(1), appel_fonction.group(2)
+        else:
+            nom, _, reste = texte.partition(" ")
         # §H15.8 : la ponctuation traînante du jeton de nom est un bruit de format
         # des modèles open-weight (mesuré : « action1, », run ab-u28-state) — elle
         # est retirée avant la recherche, sans toucher aux valeurs ni au sens.
@@ -683,6 +692,13 @@ class BoucleAgent:
             if reste.strip()
             else []
         )
+        if len(valeurs) != len(requis):
+            # §H15.8 : quand les virgules ne rendent pas le compte de paramètres
+            # requis mais que les espaces le rendent (« store a b », mesuré sur le
+            # relevé live du banc), le découpage par espaces fait foi.
+            par_espaces = reste.split()
+            if len(par_espaces) == len(requis):
+                valeurs = par_espaces
         if len(valeurs) != len(requis):
             return ToolCall(
                 nom=nom,

@@ -308,6 +308,19 @@ class TestBoucleEtat(unittest.TestCase):
         self.assertEqual(environnement.jouees, [("avance", {})])
         self.assertEqual(journal, ["avance"])
 
+    def test_la_syntaxe_d_appel_de_fonction_est_normalisee(self) -> None:
+        """§H15.8 : « avance() » est un bruit de format, pas une action inconnue.
+
+        Mesuré en conditions réelles (relevé live du banc, 2026-09-01) : cinq
+        tours perdus sur « wait() ». La normalisation est purement syntaxique.
+        """
+        boucle, environnement, journal = self._boucle_scriptee(
+            [_bloc_json({}, "avance()")], [Evenement.PREDICTION_CONFIRMEE]
+        )
+        boucle.executer(tours_max=1)
+        self.assertEqual(environnement.jouees, [("avance", {})])
+        self.assertEqual(journal, ["avance"])
+
     def test_sigma_est_persiste_dans_le_workspace_apres_chaque_tour(self) -> None:
         espace = Workspace.ouvrir(
             self._config("http://inutilise.invalide"), "run-etat", racine=self.racine / "ws"
