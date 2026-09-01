@@ -5,7 +5,22 @@ registre devient vide, le fichier lui-même est supprimé du dépôt (CLAUDE.md 
 
 ## Ouverts
 
-_Aucune entrée ouverte._
+### 2026-09-01 — `scripts/smoke_pile.sh` : le contrôle `RESET` ne suit plus le contrat du rejoueur ARC
+
+- **Constat.** Le script de fumée envoie `POST /api/cmd/RESET` avec un corps `{}`
+  et attend `NOT_FINISHED`. Le rejoueur (`mocks/arc_replay/serveur.py`, fidèle à
+  l'API réelle) exige `game_id` dans chaque action et `card_id` au `RESET` : ce
+  contrôle ne peut plus passer, quel que soit l'état de la pile.
+- **Mesure.** Relevé le 2026-09-01 sur pile fraîche et saine (`docker compose ps`
+  rend les deux services *healthy*, `/api/games` rend 200 avec le jeu cible) :
+  `curl -X POST -d '{}' /api/cmd/RESET` → `{"error": "game (absent) not found"}` ;
+  avec `game_id` seul → `{"error": "card_id (absent) inconnu ou fermé"}`. La fumée
+  conclut `ECHEC` alors que la pile fonctionne (les 4 E2E passent sur cette même
+  pile).
+- **Issue retenue.** Aligner le contrôle sur le contrat réel : ouvrir un scorecard
+  (`POST /api/scorecard/open`), puis `RESET` avec `game_id` et `card_id`. Correction
+  étrangère à l'unité en cours (U29a2) : comportement laissé inchangé, à traiter
+  dans un commit dédié par une session dont c'est le chemin.
 
 ## Traitées dans la session qui les a rencontrées
 
