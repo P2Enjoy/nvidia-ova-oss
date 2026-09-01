@@ -166,18 +166,110 @@ rend alors le motif « épisode épuisé » (§H8.3).
 
 ## S4. Environnement Dépôt logiciel
 
-Spécifié ici dans ses invariants ; son unité (U29a3) précise le détail exécutable
-avant son code, dans ce chapitre, sans toucher aux chapitres voisins.
+Détail exécutable écrit à l'ouverture de U29a3, avant son code, dans ce chapitre
+seul. La source (annexe B.1) donne les invariants — état, espace d'actions,
+familles d'observations, règles de transition, critère de succès — mais AUCUN
+algorithme de génération pour cet environnement : le détail ci-dessous transpose
+le patron de l'Entrepôt (§S3.3–§S3.5 ; état nominal, événements référençant les
+entités nominales, une obligation par événement), qui est le patron mesuré de la
+source (B.2). Chaque point que la source ne fixe pas est un POINT TRANCHÉ,
+consigné ici avec l'issue écartée quand elle éclaire la décision.
 
-**S4.1 — État de vérité** (source B.1) : branches (histoires de commits),
-contenus de fichiers, PR ouvertes, statuts CI. **S4.2 — Actions** :
-`commit <branche> <fichier>`, `create_pr <branche>`, `merge <pr>`,
-`fix_ci <branche>`, `wait`. NOTE : le corps de la source (§4.1) nomme un espace
-différent (CherryPick/Merge/RunTests/CreateRelease/Rollback) ; l'annexe B.1, plus
-précise et opérationnelle, fait foi — écart consigné ici, pas ailleurs.
-**S4.3 — Observations** : notifications CI, revues, affectations d'issues.
-**S4.4 — Score** : pourcentage de demandes de fonctionnalité correctement
-résolues — fusionnées dans `master` sans casser la CI.
+**S4.1 — État de vérité** (source B.1). Le dépôt simulé porte :
+
+- la branche `master` (dictionnaire fichier → contenu) et des branches de
+  fonctionnalité `branche_N` — une par demande, créée par le PREMIER `commit` de
+  l'agent sur son nom, supprimée par la fusion (B.1 : « merging a PR deletes the
+  feature branch ») ;
+- les PR ouvertes : numéro RÉEL croissant à partir de 1 dans l'ordre de création
+  par l'agent, branche portée ;
+- le statut CI de chaque branche : `rouge` si le défaut tiré de la demande
+  (§S4.3) est présent et non corrigé, `verte` sinon ; indéfini avant tout commit ;
+- les demandes annoncées (§S4.3) et, pour chaque fusion, le fait qu'elle a ou non
+  cassé la CI.
+
+L'état de vérité appartient à l'environnement, évolue exclusivement par les
+actions VALIDES de l'agent, et n'est jamais montré à l'agent (§S3.1 s'applique).
+
+**S4.2 — Actions** (B.1 fait foi ; NOTE : le corps de la source (§4.1) nomme un
+espace différent — CherryPick/Merge/RunTests/CreateRelease/Rollback — l'annexe
+B.1, plus précise et opérationnelle, fait foi ; écart consigné ici, pas ailleurs) :
+
+| Action | Validité | Effet |
+|---|---|---|
+| `commit <branche> <fichier>` | la branche est celle d'une demande annoncée non encore fusionnée | crée la branche au besoin, écrit le fichier ; au PREMIER commit de la branche, le défaut tiré de la demande se matérialise (CI `rouge`) ou non (CI `verte`) |
+| `create_pr <branche>` | la branche existe réellement ET aucune PR ouverte ne la porte | ouvre la PR de numéro réel suivant ; la CI de la PR est celle de la branche |
+| `merge <pr>` | la PR est ouverte | les fichiers de la branche entrent dans `master`, la branche est supprimée, la PR fermée ; si la CI était `rouge`, la fusion CASSE la CI — l'issue le dit, la demande n'est pas correctement résolue (§S4.4) |
+| `fix_ci <branche>` | la branche existe ET sa CI est `rouge` | le défaut est corrigé, la CI passe `verte` et le reste (le défaut est propre à la demande : corrigé, il ne revient pas) |
+| `wait` | toujours | aucun |
+
+Une action INVALIDE rend une erreur locale nommée et NE change PAS l'état
+(§S3.2 s'applique) ; une action valide s'exécute toujours, même hors obligation.
+POINT TRANCHÉ : `merge` sur CI rouge est VALIDE et casse la CI, plutôt que
+refusé — c'est ce qui donne son sens au « sans casser la CI » du critère B.1 ;
+l'issue nomme la casse, aucune perte silencieuse. `fix_ci` prend la branche
+(signature B.1), même quand l'événement d'échec CI référence une PR.
+
+**S4.3 — Cycle d'une demande et générateur.** Les demandes de fonctionnalité
+sont l'unité de travail (B.1 : « feature requests »). La demande d'indice N
+(croissant depuis 0) porte le fichier `fichier_N` et la branche `branche_N`. Son
+cycle NOMINAL, dans l'ordre, chaque étape étant un événement actionnable :
+
+1. `affectation` — `Issue affectée : demande_N — écrire fichier_N sur
+   branche_N.` ; à son émission, le générateur tire au rng le défaut de la
+   demande (équiprobable : la CI du premier commit sera `rouge` ou `verte`) ;
+2. `revue` — `Revue approuvée pour branche_N : la PR peut être ouverte.` ;
+3. si le défaut est tiré : `echec_ci` — `CI en échec pour PR #k (branche_N) :
+   erreur de lint.` ;
+4. `ci_verte` — `CI verte pour PR #k (branche_N) : prête à fusionner.`.
+
+`#k` est le numéro de PR NOMINAL : croissant depuis 1 dans l'ordre nominal
+d'ouverture (§S3.4 s'applique — les événements référencent les entités
+nominales ; un agent qui a divergé rencontre des numéros qui ne correspondent
+plus à son état réel, et l'écart se paie au score, jamais par un épisode
+différent). Le générateur (`random.Random(seed)`, ordre d'appel fixe) maintient
+l'état nominal en appliquant la réponse parfaite à chaque événement émis ; à
+chaque pas, il choisit `rng.choice` parmi les candidats, liste construite dans
+un ordre fixe : une `affectation` neuve (toujours faisable), puis le prochain
+événement nominal de chaque demande en vie, dans l'ordre des indices. Le bruit
+(§S3.6 s'applique : flux seedé séparé, en-tête `--- TELEMETRIE DE FOND ---`,
+jamais d'effet sur l'état) tire ses lignes des distracteurs C.3 de la source :
+télémétrie syslog de serveurs sans rapport (`[Syslog] Serveur-<n> — charge
+CPU : <x> %, RAM : <y> %`).
+
+**S4.4 — Score et résolution.** Le score CONTINU de §S5.1–§S5.2 s'applique
+inchangé (source §4.3 : il couvre SkillExecBench entier, les deux
+environnements). S'y ajoute le critère propre de B.1 : la RÉSOLUTION,
+`resolution = demandes correctement résolues / demandes jugées`, où :
+
+- une demande est CORRECTEMENT RÉSOLUE si, à la fin de l'épisode, son fichier
+  figure dans `master` et sa fusion n'a pas cassé la CI ;
+- les demandes JUGÉES sont celles dont l'événement `ci_verte` nominal est apparu
+  dans l'épisode — celles dont l'horizon a réellement demandé la fusion ; une
+  demande coupée en milieu de cycle par la fin d'épisode n'est pas jugée ;
+- `resolution` vaut `null` quand aucune demande n'est jugée (jamais un faux 0).
+
+Le relevé (§S5.3) d'un épisode Dépôt logiciel porte `resolution`,
+`demandes_resolues` et `demandes_jugees` en plus des compteurs communs.
+
+**S4.5 — Obligation d'un événement**, évaluée sur l'état de vérité RÉEL au
+moment de l'action (§S3.5 s'applique, divergence comprise) :
+
+- `affectation` de `demande_N` → `commit branche_N fichier_N` ;
+- `revue` pour `branche_N` → `create_pr branche_N` si la branche réelle existe
+  sans PR ouverte ; sinon (branche absente, ou PR déjà ouverte — divergence) →
+  `wait` ;
+- `echec_ci` pour la PR nominale `#k` (`branche_N`) → `fix_ci branche_N` si la
+  branche réelle existe avec CI `rouge` ; sinon → `wait` ;
+- `ci_verte` pour la PR nominale `#k` → `merge k` si la PR réelle `#k` est
+  ouverte avec CI `verte` ; sinon (PR inexistante, fermée, ou CI `rouge` —
+  divergence) → `wait` ;
+- observation de bruit seul → `wait`.
+
+**S4.6 — Fin d'épisode.** §S3.7 s'applique tel quel : chaque action — valide ou
+non — consomme l'événement courant, et l'épisode se termine quand les `horizon`
+événements actionnables sont consommés ; `etat_terminal()` rend « épisode
+épuisé ».
 
 ---
 
