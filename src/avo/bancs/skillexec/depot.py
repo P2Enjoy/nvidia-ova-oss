@@ -2,6 +2,7 @@
 
 @spec docs/BACKLOG.md U29a3 — environnement Dépôt logiciel du banc a ; U29a4 —
       branchement à l'adaptateur (le numéro de PR de `merge` arrive en texte)
+      et dérive d'état de la condition 3
 @spec docs/SPEC_BANCS.md §S4.1 (état de vérité : master, branches, PR, CI,
       demandes — jamais montré à l'agent), §S4.2 (actions, validité, effets ;
       une action invalide rend une erreur nommée et ne change pas l'état ;
@@ -9,7 +10,9 @@
       demande, générateur nominal seedé, bruit C.3), §S4.4 (score continu
       inchangé + résolution B.1 au relevé), §S4.5 (obligation d'un événement,
       évaluée sur l'état RÉEL, divergence → `wait`), §S4.6 (une action consomme
-      l'événement, fin d'épisode)
+      l'événement, fin d'épisode), §S4.7 (dérive d'état : CI cassée par un
+      commit direct externe, événement `ci_verte` périmé forcé, alerte),
+      §S5.5 (mesure de récupération au relevé)
 
 L'état de vérité appartient à l'environnement et évolue exclusivement par les
 actions VALIDES de l'agent. L'agent ne voit que `observation()` et les issues.
@@ -24,7 +27,7 @@ from dataclasses import dataclass
 from typing import Final
 
 from avo.bancs.skillexec.entrepot import MOTIF_EPUISE, IssueBanc
-from avo.bancs.skillexec.generation import ENTETE_TELEMETRIE
+from avo.bancs.skillexec.generation import ENTETE_ALERTE, ENTETE_TELEMETRIE
 from avo.bancs.skillexec.score import Releve
 
 #: Types d'événements actionnables du cycle d'une demande (§S4.3).
@@ -69,12 +72,27 @@ class EvenementDepot:
 
 
 @dataclass(frozen=True)
+class DeriveDepot:
+    """La dérive d'état de la condition 3 au dépôt, figée à la génération (§S4.7).
+
+    `demande` et `pr` sont NOMINAUX ; l'application à l'état réel (CI de la
+    branche cassée si elle est réellement verte) appartient à l'environnement.
+    """
+
+    evenement: int
+    demande: int
+    pr: int
+    alerte: str
+
+
+@dataclass(frozen=True)
 class EpisodeDepot:
     """Un épisode entier, figé à la génération (§S1.4).
 
     `defauts[d]` dit si la demande d'indice d porte le défaut tiré (§S4.3) : la
     CI du premier commit réel de sa branche sera `rouge`. `telemetrie[i]` porte
-    les lignes de bruit accompagnant `evenements[i]`.
+    les lignes de bruit accompagnant `evenements[i]` ; `derive` porte l'unique
+    dérive de la condition 3 (§S4.7), None sans elle.
     """
 
     seed: int
@@ -83,6 +101,7 @@ class EpisodeDepot:
     evenements: tuple[EvenementDepot, ...]
     telemetrie: tuple[tuple[str, ...], ...]
     defauts: tuple[bool, ...]
+    derive: DeriveDepot | None = None
 
 
 def _ligne_telemetrie(rng: random.Random) -> str:
@@ -104,13 +123,19 @@ class _DemandeNominale:
     pr: int | None = None
 
 
-def generer_episode_depot(seed: int, horizon: int, bruit: int = 0) -> EpisodeDepot:
+def generer_episode_depot(
+    seed: int, horizon: int, bruit: int = 0, derive: bool = False
+) -> EpisodeDepot:
     """Engendre l'épisode complet sur l'état nominal (§S4.3, §S3.4 appliqué).
 
     À chaque pas, les candidats sont construits dans un ordre fixe — une
     affectation neuve (toujours faisable), puis le prochain événement nominal de
     chaque demande en vie dans l'ordre des indices — et `rng.choice` tranche.
-    Le générateur applique la réponse parfaite à chaque événement émis.
+    Le générateur applique la réponse parfaite à chaque événement émis. Avec
+    `derive`, l'unique dérive de §S4.7 se place au premier pas `d ≥ horizon // 2`
+    offrant un candidat (demande en vie prête à fusionner), sur un rng séparé :
+    le rng principal n'est pas consommé à ce pas, et la génération à `derive`
+    inactif reste inchangée octet pour octet.
     """
     if horizon < 0:
         raise ValueError(f"horizon négatif : {horizon}")
@@ -120,13 +145,46 @@ def generer_episode_depot(seed: int, horizon: int, bruit: int = 0) -> EpisodeDep
     #: Flux séparé pour la télémétrie (§S3.6 s'applique) : le niveau de bruit ne
     #: change jamais la suite d'événements.
     rng_bruit = random.Random(f"bruit-{seed}")
+    rng_derive = random.Random(f"derive-{seed}")
+    derive_posee: DeriveDepot | None = None
     vivantes: list[_DemandeNominale] = []
     defauts: list[bool] = []
     evenements: list[EvenementDepot] = []
     telemetrie: list[tuple[str, ...]] = []
     prochaine_demande = 0
     prochaine_pr = 1
-    for _ in range(horizon):
+    for pas in range(horizon):
+        if derive and derive_posee is None and pas >= horizon // 2:
+            pretes = [v for v in vivantes if v.prochain == CI_VERTE and v.pr is not None]
+            if pretes:
+                #: Dérive (§S4.7) : un commit direct externe casse la CI de la
+                #: demande tirée ; l'événement forcé est la notification
+                #: `ci_verte` périmée, partie avant la casse — seule l'alerte dit
+                #: la vérité, et l'obligation réelle du pas est `wait` (§S4.5).
+                choix_derive = rng_derive.choice(pretes)
+                numero_pr = choix_derive.pr or 0
+                evenements.append(
+                    EvenementDepot(
+                        CI_VERTE,
+                        choix_derive.indice,
+                        numero_pr,
+                        f"CI verte pour PR #{numero_pr} "
+                        f"({nom_branche(choix_derive.indice)}) : prête à fusionner.",
+                    )
+                )
+                derive_posee = DeriveDepot(
+                    evenement=pas,
+                    demande=choix_derive.indice,
+                    pr=numero_pr,
+                    alerte=f"[Alerte] Commit direct sur {nom_branche(choix_derive.indice)} : "
+                    "sa CI est repassée au rouge.",
+                )
+                #: Résolution nominale du pas forcé : l'agent parfait lit
+                #: l'alerte et attend ; la CI nominale étant rouge, le cycle de
+                #: la demande reprend à `echec_ci` (§S4.7).
+                choix_derive.prochain = ECHEC_CI
+                telemetrie.append(tuple(_ligne_telemetrie(rng_bruit) for _ in range(bruit)))
+                continue
         candidats: list[_DemandeNominale | None] = [None]
         candidats.extend(vivantes)
         choix = rng.choice(candidats)
@@ -184,6 +242,12 @@ def generer_episode_depot(seed: int, horizon: int, bruit: int = 0) -> EpisodeDep
             #: Réponse parfaite : fusion jouée, la demande nominale est close.
             vivantes.remove(choix)
         telemetrie.append(tuple(_ligne_telemetrie(rng_bruit) for _ in range(bruit)))
+    if derive and derive_posee is None:
+        raise ValueError(
+            f"aucun candidat de dérive au seed {seed} (horizon {horizon}) : "
+            "aucun pas ≥ horizon // 2 n'offre une demande prête à fusionner — "
+            "prendre un autre seed (§S4.7)."
+        )
     return EpisodeDepot(
         seed=seed,
         horizon=horizon,
@@ -191,6 +255,7 @@ def generer_episode_depot(seed: int, horizon: int, bruit: int = 0) -> EpisodeDep
         evenements=tuple(evenements),
         telemetrie=tuple(telemetrie),
         defauts=tuple(defauts),
+        derive=derive_posee,
     )
 
 
@@ -220,14 +285,26 @@ class EnvironnementDepot:
         #: Par fichier de master : la fusion qui l'a (dernièrement) écrit
         #: était-elle propre — CI verte (§S4.4) ?
         self._fusion_propre: dict[str, bool] = {}
+        #: Mesure de récupération (§S5.5) : événements consommés depuis la dérive
+        #: avant la première action correcte, None tant qu'aucune ne l'est.
+        self._recuperation: int | None = None
         self.releve = Releve(seed=episode.seed, horizon=episode.horizon, bruit=episode.bruit)
 
     def _preparer(self) -> None:
         """Annonce la demande de l'événement courant, une seule fois : le
-        `commit` dû est valide dès que l'affectation est observable (§S4.2)."""
+        `commit` dû est valide dès que l'affectation est observable (§S4.2).
+        La dérive réelle (§S4.7) s'applique au même moment, quand l'événement
+        porteur devient observable."""
         evenement = self._evenement_courant()
         if evenement is not None and self._prepare_index != self._index:
             self._prepare_index = self._index
+            derive = self._episode.derive
+            if derive is not None and self._index == derive.evenement:
+                #: Dérive réelle (§S4.7) : la CI de la branche est cassée si elle
+                #: est réellement verte ; sinon l'état réel reste inchangé.
+                branche = nom_branche(derive.demande)
+                if self._ci.get(branche) == VERTE:
+                    self._ci[branche] = ROUGE
             if evenement.type == AFFECTATION:
                 self._annoncees.add(evenement.demande)
 
@@ -239,6 +316,9 @@ class EnvironnementDepot:
             return MOTIF_EPUISE
         evenement = self._episode.evenements[self._index]
         lignes = [evenement.observation]
+        derive = self._episode.derive
+        if derive is not None and self._index == derive.evenement:
+            lignes.extend((ENTETE_ALERTE, derive.alerte))
         bruit = self._episode.telemetrie[self._index]
         if bruit:
             lignes.append(ENTETE_TELEMETRIE)
@@ -412,7 +492,7 @@ class EnvironnementDepot:
         return self.demandes_resolues() / jugees
 
     def completer_releve(self) -> Releve:
-        """Porte la résolution au relevé (§S4.4) et rend le relevé (§S5.3)."""
+        """Porte la résolution (§S4.4) et la récupération (§S5.5) au relevé."""
         self.releve.champs_libres.update(
             {
                 "resolution": self.resolution(),
@@ -420,11 +500,28 @@ class EnvironnementDepot:
                 "demandes_jugees": self.demandes_jugees(),
             }
         )
+        if self._episode.derive is not None:
+            self.releve.champs_libres.update(
+                {
+                    "derive_evenement": self._episode.derive.evenement,
+                    "pas_de_recuperation": self._recuperation,
+                    "recupere": self._recuperation is not None,
+                }
+            )
         return self.releve
 
     # -------------------------------------------------------------- mécanique
     def _consommer(self, valide: bool, correcte: bool, observation: str) -> IssueBanc:
         """Compte la première action au relevé et consomme l'événement (§S4.6)."""
+        derive = self._episode.derive
+        if (
+            derive is not None
+            and correcte
+            and self._recuperation is None
+            and self._index >= derive.evenement
+        ):
+            #: Première action correcte depuis la dérive (§S5.5).
+            self._recuperation = self._index - derive.evenement
         self.releve.compter(valide, correcte)
         self._index += 1
         return IssueBanc(observation, valide=valide, correcte=correcte)

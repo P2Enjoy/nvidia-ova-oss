@@ -100,6 +100,11 @@ def _build_parser() -> argparse.ArgumentParser:
     banc.add_argument("--seed", type=int, required=True, help="seed de l'épisode (§S2.2)")
     banc.add_argument("--horizon", type=int, required=True, help="événements actionnables (§S2.2)")
     banc.add_argument("--bruit", type=int, default=0, help="lignes de télémétrie par observation")
+    banc.add_argument(
+        "--derive",
+        action="store_true",
+        help="active la dérive d'état de la condition 3 (docs/SPEC_BANCS.md §S3.8, §S4.7)",
+    )
     banc.add_argument("--mode", choices=("replay", "live"), default="replay")
     banc.add_argument("--run-id", default=None, help="identifiant du run (défaut : horodaté)")
     banc.add_argument(
@@ -176,6 +181,7 @@ def _executer_banc(args: argparse.Namespace) -> int:
             mode=args.mode,
             run_id=args.run_id,
             tours_max=args.tours_max,
+            derive=args.derive,
         )
     except BancInconnu as erreur:
         print(f"avo: banc refusé — {erreur}", file=sys.stderr)
@@ -187,6 +193,11 @@ def _executer_banc(args: argparse.Namespace) -> int:
         f"({releve.correctes} correctes, {releve.incorrectes} incorrectes, "
         f"{releve.invalides} invalides)"
     )
+    if "derive_evenement" in releve.champs_libres:
+        # Mesure de récupération de la condition 3 (docs/SPEC_BANCS.md §S5.5).
+        pas = releve.champs_libres["pas_de_recuperation"]
+        etat = f"récupération en {pas} pas" if pas is not None else "non récupérée"
+        print(f"dérive à l'événement {releve.champs_libres['derive_evenement']} — {etat}")
     print(f"relevé : {sortie.chemin_releve}")
     return 0
 

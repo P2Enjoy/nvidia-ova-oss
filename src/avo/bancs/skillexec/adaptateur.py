@@ -75,7 +75,9 @@ et CHAQUE événement appelle exactement UNE action de ta part :
 Une action invalide rend une erreur nommée, ne change rien à l'entrepôt, et
 l'événement est perdu. Une action valide s'exécute toujours, même si elle ne
 répond pas à l'événement. Les lignes sous « --- TELEMETRIE DE FOND --- » sont du
-bruit de capteurs, sans rapport avec la tâche.
+bruit de capteurs, sans rapport avec la tâche. Les lignes sous
+« --- ALERTE EXTERNE --- » rapportent des changements RÉELS effectués hors de
+ton contrôle : prends-les en compte et mets ton état à jour.
 
 L'état de l'entrepôt ne t'est jamais montré : tiens-le toi-même, exactement, car
 le score est le nombre d'événements traités par l'action correcte."""
@@ -115,7 +117,9 @@ l'événement est perdu. Une action valide s'exécute toujours, même si elle ne
 répond pas à l'événement. Les événements référencent les numéros de PR du
 déroulé nominal : si tu as divergé, ils peuvent ne plus correspondre aux tiens.
 Les lignes sous « --- TELEMETRIE DE FOND --- » sont de la télémétrie de serveurs
-sans rapport avec la tâche.
+sans rapport avec la tâche. Les lignes sous « --- ALERTE EXTERNE --- »
+rapportent des changements RÉELS effectués hors de ton contrôle : prends-les en
+compte et mets ton état à jour.
 
 L'état du dépôt ne t'est jamais montré : tiens-le toi-même, exactement, car le
 score est le nombre d'événements traités par l'action correcte, et une demande
@@ -343,24 +347,26 @@ def jouer_episode(
     tours_max: int | None = None,
     client_llm: LLMClient | None = None,
     environnement: str = "entrepot",
+    derive: bool = False,
 ) -> Releve:
     """Monte la boucle complète sur un épisode et écrit le relevé (§S6.3, §S5.3).
 
     `tours_max` par défaut : 4 × horizon (décision, journal 2026-09-01 suite 13) —
     un pas retenu par une garde consomme un tour sans consommer d'événement.
     `environnement` choisit le terrain (§S2.1) : `entrepot` (§S3) ou `depot`
-    (§S4) — même boucle, mêmes gardes, même relevé.
+    (§S4) — même boucle, mêmes gardes, même relevé. `derive` active la condition 3
+    (§S3.8, §S4.7) : dérive d'état et mesure de récupération (§S5.5).
     """
     moteur: EnvironnementEntrepot | EnvironnementDepot
     env_boucle: _EnvironnementBancCommun[Any]
     avec_prediction = config.gardes
     prediction_requise = config.contexte_mode is ModeContexte.TRANSCRIPT
     if environnement == "entrepot":
-        moteur = EnvironnementEntrepot(generer_episode(seed, horizon, bruit))
+        moteur = EnvironnementEntrepot(generer_episode(seed, horizon, bruit, derive))
         env_boucle = EnvironnementBancEntrepot(moteur, avec_prediction, prediction_requise)
         systeme = CONTEXTE_TACHE
     elif environnement == "depot":
-        moteur = EnvironnementDepot(generer_episode_depot(seed, horizon, bruit))
+        moteur = EnvironnementDepot(generer_episode_depot(seed, horizon, bruit, derive))
         env_boucle = EnvironnementBancDepot(moteur, avec_prediction, prediction_requise)
         systeme = CONTEXTE_TACHE_DEPOT
     else:
@@ -420,11 +426,10 @@ def jouer_episode(
 def _releve_final(moteur: EnvironnementEntrepot | EnvironnementDepot) -> Releve:
     """Le relevé du moteur, complété des compteurs propres à l'environnement.
 
-    Le Dépôt logiciel porte la résolution B.1 (§S4.4) ; l'Entrepôt n'ajoute rien.
+    Le Dépôt logiciel ajoute la résolution B.1 (§S4.4) ; les deux environnements
+    ajoutent la mesure de récupération quand la dérive est active (§S5.5).
     """
-    if isinstance(moteur, EnvironnementDepot):
-        return moteur.completer_releve()
-    return moteur.releve
+    return moteur.completer_releve()
 
 
 def _ecrire_releve(

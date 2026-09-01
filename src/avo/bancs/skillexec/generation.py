@@ -1,10 +1,13 @@
 """Générateur d'épisodes seedés de l'environnement Entrepôt.
 
-@spec docs/BACKLOG.md U29a1 — environnement Entrepôt du banc a
+@spec docs/BACKLOG.md U29a1 — environnement Entrepôt du banc a ; U29a4 — dérive
+      d'état de la condition 3
 @spec docs/SPEC_BANCS.md §S1.4 (déterminisme), §S2.2 (paramètres d'un épisode),
       §S3.3 (générateur, types faisables), §S3.4 (résolution nominale : les
       événements référencent l'état d'un jeu parfait, jamais l'état réel de
-      l'agent), §S3.6 (bruit de condition 1, seedé, sans effet sur l'état)
+      l'agent), §S3.6 (bruit de condition 1, seedé, sans effet sur l'état),
+      §S3.8 (dérive d'état : une seule, rng séparé, pas forcé, alerte non
+      structurée, génération inchangée à `derive` inactif)
 
 L'épisode est engendré EN ENTIER avant le jeu : à seed et paramètres identiques,
 la suite d'événements et la télémétrie sont identiques octet pour octet, quel que
@@ -23,6 +26,9 @@ NB_ETAGERES: Final = 500
 
 #: En-tête des lignes de télémétrie (§S3.6).
 ENTETE_TELEMETRIE: Final = "--- TELEMETRIE DE FOND ---"
+
+#: En-tête de l'alerte non structurée de la dérive d'état (§S3.8).
+ENTETE_ALERTE: Final = "--- ALERTE EXTERNE ---"
 
 #: Types d'événements actionnables (§S3.3).
 RECEPTION: Final = "reception"
@@ -62,10 +68,26 @@ class EvenementEntrepot:
 
 
 @dataclass(frozen=True)
+class DeriveEntrepot:
+    """La dérive d'état de la condition 3, figée à la génération (§S3.8).
+
+    `source` et `destination` sont les étagères NOMINALES du déplacement externe ;
+    l'application à l'état réel appartient à l'environnement.
+    """
+
+    evenement: int
+    article: str
+    source: str
+    destination: str
+    alerte: str
+
+
+@dataclass(frozen=True)
 class Episode:
     """Un épisode entier, figé à la génération (§S1.4).
 
-    `telemetrie[i]` porte les lignes de bruit accompagnant `evenements[i]`.
+    `telemetrie[i]` porte les lignes de bruit accompagnant `evenements[i]` ;
+    `derive` porte l'unique dérive de la condition 3 (§S3.8), None sans elle.
     """
 
     seed: int
@@ -73,6 +95,7 @@ class Episode:
     bruit: int
     evenements: tuple[EvenementEntrepot, ...]
     telemetrie: tuple[tuple[str, ...], ...]
+    derive: DeriveEntrepot | None = None
 
 
 def _ligne_telemetrie(rng: random.Random) -> str:
@@ -95,13 +118,16 @@ def _ligne_telemetrie(rng: random.Random) -> str:
     return rng.choice(_OCR)
 
 
-def generer_episode(seed: int, horizon: int, bruit: int = 0) -> Episode:
+def generer_episode(seed: int, horizon: int, bruit: int = 0, derive: bool = False) -> Episode:
     """Engendre l'épisode complet sur l'état nominal (§S3.3, §S3.4).
 
     L'état nominal est celui qu'aurait produit un agent parfait : rangement sur la
     plus petite étagère vide, obligations honorées à chaque pas. Les tirages
     (type d'événement, article commandé, étagère en maintenance) viennent du seul
-    `random.Random(seed)`, dans un ordre d'appel fixe.
+    `random.Random(seed)`, dans un ordre d'appel fixe. Avec `derive`, une unique
+    dérive d'état (§S3.8) se place au premier pas `d ≥ horizon // 2` offrant un
+    candidat, sur un rng séparé : le rng principal n'est pas consommé à ce pas,
+    et la génération à `derive` inactif reste inchangée octet pour octet.
     """
     if horizon < 0:
         raise ValueError(f"horizon négatif : {horizon}")
@@ -111,13 +137,40 @@ def generer_episode(seed: int, horizon: int, bruit: int = 0) -> Episode:
     #: Flux séparé pour la télémétrie (§S3.6) : le niveau de bruit ne change
     #: jamais la suite d'événements — même tâche, distracteurs ajoutés.
     rng_bruit = random.Random(f"bruit-{seed}")
+    rng_derive = random.Random(f"derive-{seed}")
+    derive_posee: DeriveEntrepot | None = None
     nominal: list[str | None] = [None] * NB_ETAGERES
     prochain_article = 0
     evenements: list[EvenementEntrepot] = []
     telemetrie: list[tuple[str, ...]] = []
-    for _ in range(horizon):
+    for pas in range(horizon):
         occupees = [i for i, article in enumerate(nominal) if article is not None]
         vides = [i for i, article in enumerate(nominal) if article is None]
+        if derive and derive_posee is None and pas >= horizon // 2 and occupees and vides:
+            #: Dérive (§S3.8) : un opérateur externe déplace un article nominal,
+            #: et l'événement forcé `commande` teste la prise en compte de
+            #: l'alerte — seule elle dit où l'article se trouve désormais.
+            indice_source = rng_derive.choice(occupees)
+            article = nominal[indice_source] or ""
+            destination = min(vides)
+            nominal[indice_source] = None
+            nominal[destination] = article
+            derive_posee = DeriveEntrepot(
+                evenement=pas,
+                article=article,
+                source=nom_etagere(indice_source),
+                destination=nom_etagere(destination),
+                alerte=f"[Audit externe] {article} déplacé de {nom_etagere(indice_source)} "
+                f"vers {nom_etagere(destination)} par un opérateur externe.",
+            )
+            #: Résolution nominale du pas forcé : l'agent parfait lit l'alerte et
+            #: expédie depuis la destination (§S3.4).
+            nominal[destination] = None
+            evenements.append(
+                EvenementEntrepot(COMMANDE, article, None, f"Commande client : {article}.")
+            )
+            telemetrie.append(tuple(_ligne_telemetrie(rng_bruit) for _ in range(bruit)))
+            continue
         types = [RECEPTION] if vides else []
         if occupees:
             types.extend((COMMANDE, MAINTENANCE))
@@ -146,10 +199,17 @@ def generer_episode(seed: int, horizon: int, bruit: int = 0) -> Episode:
             )
         evenements.append(evenement)
         telemetrie.append(tuple(_ligne_telemetrie(rng_bruit) for _ in range(bruit)))
+    if derive and derive_posee is None:
+        raise ValueError(
+            f"aucun candidat de dérive au seed {seed} (horizon {horizon}) : "
+            "aucun pas ≥ horizon // 2 n'offre une étagère occupée — "
+            "prendre un autre seed (§S3.8)."
+        )
     return Episode(
         seed=seed,
         horizon=horizon,
         bruit=bruit,
         evenements=tuple(evenements),
         telemetrie=tuple(telemetrie),
+        derive=derive_posee,
     )

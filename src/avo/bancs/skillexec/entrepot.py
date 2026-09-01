@@ -1,12 +1,15 @@
 """Environnement Entrepôt : état de vérité, transitions, obligations, issues.
 
-@spec docs/BACKLOG.md U29a1 — environnement Entrepôt du banc a
+@spec docs/BACKLOG.md U29a1 — environnement Entrepôt du banc a ; U29a4 — dérive
+      d'état de la condition 3
 @spec docs/SPEC_BANCS.md §S3.1 (état de vérité, jamais montré à l'agent),
       §S3.2 (espace d'actions et validité ; une action invalide rend une erreur
       locale nommée et ne change pas l'état), §S3.5 (obligation d'un événement,
       évaluée sur l'état RÉEL au moment de l'action), §S3.6 (le bruit accompagne
       l'observation sans altérer l'état), §S3.7 (une action consomme l'événement,
-      fin d'épisode), §S5.2 (la première action de l'événement fait le score)
+      fin d'épisode), §S3.8 (application réelle de la dérive, alerte à
+      l'observation du pas porteur), §S5.2 (la première action de l'événement
+      fait le score), §S5.5 (mesure de récupération au relevé)
 
 L'état de vérité appartient à l'environnement et évolue exclusivement par les
 actions VALIDES de l'agent. L'agent ne voit que `observation()` et les issues.
@@ -18,6 +21,7 @@ from dataclasses import dataclass
 
 from avo.bancs.skillexec.generation import (
     COMMANDE,
+    ENTETE_ALERTE,
     ENTETE_TELEMETRIE,
     MAINTENANCE,
     NB_ETAGERES,
@@ -60,15 +64,31 @@ class EnvironnementEntrepot:
         self._index = 0
         #: Dernier indice d'événement dont l'arrivée a été appliquée (§S3.2).
         self._prepare_index = -1
+        #: Mesure de récupération (§S5.5) : événements consommés depuis la dérive
+        #: avant la première action correcte, None tant qu'aucune ne l'est.
+        self._recuperation: int | None = None
         self.releve = Releve(seed=episode.seed, horizon=episode.horizon, bruit=episode.bruit)
 
     def _preparer(self) -> None:
         """Applique l'arrivée de l'événement courant, une seule fois : l'article
         d'une réception entre au quai dès que l'événement est observable, pour que
-        le `store` dû soit valide (§S3.2, §S3.5)."""
+        le `store` dû soit valide (§S3.2, §S3.5). La dérive réelle (§S3.8)
+        s'applique au même moment, quand l'événement porteur devient observable."""
         evenement = self._evenement_courant()
         if evenement is not None and self._prepare_index != self._index:
             self._prepare_index = self._index
+            derive = self._episode.derive
+            if derive is not None and self._index == derive.evenement:
+                #: Dérive réelle (§S3.8) : l'article est déplacé s'il est
+                #: réellement porté et si la destination est réellement vide ;
+                #: sinon l'état réel reste inchangé (divergence antérieure).
+                porteur = next(
+                    (i for i, a in enumerate(self._etageres) if a == derive.article), None
+                )
+                destination = self._indice(derive.destination)
+                if porteur is not None and self._etageres[destination] is None:
+                    self._etageres[porteur] = None
+                    self._etageres[destination] = derive.article
             if evenement.type == RECEPTION:
                 self._quai.add(evenement.article)
 
@@ -80,6 +100,9 @@ class EnvironnementEntrepot:
             return MOTIF_EPUISE
         evenement = self._episode.evenements[self._index]
         lignes = [evenement.observation]
+        derive = self._episode.derive
+        if derive is not None and self._index == derive.evenement:
+            lignes.extend((ENTETE_ALERTE, derive.alerte))
         bruit = self._episode.telemetrie[self._index]
         if bruit:
             lignes.append(ENTETE_TELEMETRIE)
@@ -91,6 +114,21 @@ class EnvironnementEntrepot:
         if self._index >= len(self._episode.evenements):
             return MOTIF_EPUISE
         return None
+
+    def completer_releve(self) -> Releve:
+        """Porte la mesure de récupération au relevé (§S5.5) et rend le relevé.
+
+        Un épisode sans dérive ne porte aucun champ de récupération.
+        """
+        if self._episode.derive is not None:
+            self.releve.champs_libres.update(
+                {
+                    "derive_evenement": self._episode.derive.evenement,
+                    "pas_de_recuperation": self._recuperation,
+                    "recupere": self._recuperation is not None,
+                }
+            )
+        return self.releve
 
     # ----------------------------------------------------------------- accès
     def etagere(self, nom: str) -> str | None:
@@ -199,6 +237,15 @@ class EnvironnementEntrepot:
         demeure VALIDE (il ne sera plus l'obligation d'aucun événement, donc
         jamais correct).
         """
+        derive = self._episode.derive
+        if (
+            derive is not None
+            and correcte
+            and self._recuperation is None
+            and self._index >= derive.evenement
+        ):
+            #: Première action correcte depuis la dérive (§S5.5).
+            self._recuperation = self._index - derive.evenement
         self.releve.compter(valide, correcte)
         self._index += 1
         return IssueBanc(observation, valide=valide, correcte=correcte)

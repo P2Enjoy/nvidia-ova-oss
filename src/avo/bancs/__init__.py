@@ -41,6 +41,7 @@ def executer_banc(
     mode: str = "replay",
     run_id: str | None = None,
     tours_max: int | None = None,
+    derive: bool = False,
 ) -> SortieBanc:
     """Monte et joue un épisode de banc, puis rend le relevé (§S6.3).
 
@@ -71,5 +72,6 @@ def executer_banc(
         bruit=bruit,
         tours_max=tours_max,
         environnement=environnement,
+        derive=derive,
     )
     return SortieBanc(run_id=identifiant, releve=releve, chemin_releve=espace.chemin / "banc.json")
