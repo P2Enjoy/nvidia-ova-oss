@@ -1742,12 +1742,52 @@ bruit C.3 sans effet sur les événements. Balayage « mots du banc hors
 
 **Tranché à la clôture.** Le branchement adaptateur+CLI du dépôt appartient à
 U29a4, premier consommateur (campagne de banc) — §S7 amendé, message du dispatch
-`avo.bancs` mis au vrai. Le relevé h25 seeds 1–3 de la suite 16 a été perdu
-(session interrompue avant consignation) ; il n'est PAS repris : la suite 15
-porte déjà un relevé 3 seeds, et les relevés suivants viennent de U29a4
-(multi-seeds, les deux environnements).
+`avo.bancs` mis au vrai. La session de la suite 16 tournait encore en parallèle :
+son relevé h25 (seeds 1–3) est consigné dans sa clôture ci-dessous ; le
+déclencheur U25 s'appuie sur la série 101–103 de la suite 15, complète, et les
+relevés suivants viennent de U29a4 (multi-seeds, les deux environnements).
 
 **Où reprendre.** U31 → U29a4 : brancher le Dépôt logiciel à l'adaptateur et à
 la CLI (§S6 : outils, contexte de tâche, dispatch, intégration + E2E), puis
 campagne de banc — bruit, récupération d'état, relevés multi-seeds sur les deux
 environnements, alimentation du déclencheur U25.
+---
+
+## 2026-09-01 (suite 16, clôture — consignée après la suite 17)
+
+La session de la suite 16 s'est achevée après le push de la suite 17 ; sa
+clôture vient donc ici, à sa place chronologique.
+
+**Relevé live h25, seeds 1–3** (`python -m avo banc skillexec --env entrepot
+--seed S --horizon 25 --mode live`, défaut `state`, bruit 0, gardes actives) —
+mesure indépendante, complémentaire du relevé 101–103 de la suite 15 :
+
+| seed | score | corr/inc/inv | évts | tours | tokens | durée | arrêt |
+|---|---|---|---|---|---|---|---|
+| 1 | 0,84 | 21/2/2 | 25/25 | 31 | 36 095 | 725 s | épisode épuisé |
+| 2 | — | 7/2/2 | 11/25 | 14 | 17 665 | 592 s | incident HTTP 500 (3ᵉ tentative) |
+| 3 | 0,44 | 11/4/10 | 25/25 | 35 | 45 029 | 1 473 s | épisode épuisé |
+
+Le seed 2 reste SANS score comparable : trois tentatives, trois pannes
+d'endpoint (20:53–20:57, 21:27–21:34, ~22:05 — HTTP 500 continus au-delà des
+relances §H4.5). Écart nommé : le point h25-seed2 de cette série manque ; le
+déclencheur U25 s'appuie sur la série 101–103 de la suite 15, complète. Sur les
+seeds aboutis (1 : 0,84 ; 3 : 0,44), la variance rejoint celle de la suite 15
+(0,88/0,56/0,64) : mêmes vraies erreurs de tenue d'état (10 invalides sur le
+seed 3), même conclusion — l'affinage continue, sous la fourchette §S5.4.
+
+**Livré et vérifié : relevé d'incident (§S5.3).** Défaut reproduit par test
+unitaire avant correction (`test_incident_ecrit_le_releve_partiel_et_remonte`),
+correction dans `jouer_episode` (écriture du relevé refactorisée, `arret` porte
+l'incident, erreur remontée inchangée), VALIDÉE DEUX FOIS en conditions réelles
+dans cette même session : les deux interruptions du seed 2 (r2 et r3) ont chacune
+laissé leur `banc.json` d'incident, là où la première (avant correction) n'avait
+rien laissé. Campagne complète verte après le changement : lint, ruff format,
+mypy strict 110 fichiers, 563 unitaires, 148 intégration, 5 E2E sur pile
+fraîche, build.
+
+**Où reprendre.** La suite 17 ayant clos U29a3 entre-temps : U31 → U29a4,
+brancher le Dépôt logiciel à l'adaptateur et à la CLI (§S6), puis campagne de
+banc — bruit, récupération d'état, relevés multi-seeds sur les deux
+environnements, alimentation du déclencheur U25. La piste « schéma Σ par
+adaptateur » (suite 15) reste en attente d'une mesure qui la confirme.
