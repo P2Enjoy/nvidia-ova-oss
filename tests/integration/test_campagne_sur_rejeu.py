@@ -285,6 +285,10 @@ class TestCampagneSurRejeu(_SocleCampagneSurRejeu):
             "OLLAMA_API_KEY": CLE,
             "AVO_RUNS_DIR": str(self.racine),
             "AVO_GARDES": "false",
+            # Épinglé (§A8.5, même principe que tests/e2e/scenarios.ENV_EPINGLE) :
+            # un `.env` local en mode `state` ferait diverger le chemin d'exécution
+            # de la cassette `transcript` (mesuré le 2026-09-01, session ab-u28).
+            "AVO_CONTEXT_MODE": "transcript",
         }
         with mock.patch.dict(os.environ, {**commun, "OLLAMA_HOST": "http://capture.invalide"}):
             config_capture = charger("replay")
