@@ -11,10 +11,12 @@ sans réseau et sans attente réelle.
 
 from __future__ import annotations
 
+import http.client
 import json
 import unittest
 from pathlib import Path
 from typing import Any
+from unittest import mock
 
 from avo.config import Config, Mode, charger
 from avo.llm.client import (
@@ -28,6 +30,7 @@ from avo.llm.client import (
     TransportError,
     analyser_reponse,
     construire_corps,
+    transport_urllib,
 )
 from avo.transport import ATTENTES_RETRY, JITTER
 
@@ -185,6 +188,28 @@ class TestAnalyseDeLaReponse(unittest.TestCase):
         self.assertFalse(appel.valide)
         self.assertIsNotNone(appel.erreur_arguments)
         self.assertEqual(appel.arguments_bruts, "{pas du json")
+
+
+class TestTransportUrllib(unittest.TestCase):
+    """§H4.4 : toute panne de réseau du transport réel est TYPÉE, jamais brute.
+
+    Mesuré le 2026-09-01 (relevé live du banc) : un pont qui coupe après l'envoi
+    de la requête mais avant les premiers en-têtes lève `RemoteDisconnected`,
+    que `urllib` n'enveloppe pas en `URLError` — non typée, elle arrêtait le run
+    au lieu d'être retentée (§H4.5).
+    """
+
+    def _leve(self, erreur: Exception) -> None:
+        with mock.patch("urllib.request.urlopen", side_effect=erreur):
+            with self.assertRaises(TransportError) as contexte:
+                transport_urllib("https://exemple.invalide/api/chat", b"{}", {}, timeout=1.0)
+        self.assertIn("connexion interrompue", str(contexte.exception))
+
+    def test_remote_disconnected_devient_transport_error(self) -> None:
+        self._leve(http.client.RemoteDisconnected("Remote end closed connection"))
+
+    def test_connection_reset_nu_devient_transport_error(self) -> None:
+        self._leve(ConnectionResetError(104, "Connection reset by peer"))
 
 
 class TestErreursTypees(unittest.TestCase):

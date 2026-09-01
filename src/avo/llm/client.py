@@ -12,6 +12,7 @@ qui permet de l'éprouver contre le rejeu des échanges RÉELS enregistrés (§H
 
 from __future__ import annotations
 
+import http.client
 import json
 import logging
 import random
@@ -180,6 +181,14 @@ def transport_urllib(
         raise TransportError(f"endpoint injoignable : {erreur.reason}") from erreur
     except TimeoutError as erreur:
         raise TransportError(f"délai dépassé après {timeout} s") from erreur
+    except (http.client.HTTPException, OSError) as erreur:
+        # Mesuré (2026-09-01, relevé live du banc) : un pont qui coupe APRÈS
+        # l'envoi de la requête mais AVANT les premiers en-têtes lève
+        # `RemoteDisconnected` (ou un `ConnectionResetError` nu) que `urllib`
+        # n'enveloppe pas en `URLError`. C'est une panne de transport comme les
+        # autres (§H4.4) : typée, donc retentée selon §H4.5 — jamais un arrêt
+        # brut du run.
+        raise TransportError(f"connexion interrompue : {erreur!r}") from erreur
 
 
 def construire_corps(
