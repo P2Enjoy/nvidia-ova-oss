@@ -196,11 +196,16 @@ la forme « chaîne JSON » reste gérée, les deux étant admises par l'API.
 `ContextOverflow` (413 — porte `tokens_estimated` et `max_context_tokens` du corps ;
 déclenche H5.4), `ServerError` (5xx), `TransportError` (réseau, timeout).
 
-**H4.5 — Retries.** Uniquement `ServerError` et `TransportError` : **jusqu'à trois
-nouvelles tentatives après l'échec initial**, soit quatre requêtes au plus, avec des
-attentes de 1 s, 4 s et 16 s affectées d'un jitter de ±25 %. Jamais sur 4xx — un refus
-d'authentification ou un dépassement de contexte se retenteraient à l'identique.
-Chaque nouvelle tentative est journalisée (numéro, attente, motif).
+**H4.5 — Retries.** Uniquement `ServerError` et `TransportError` : **jusqu'à cinq
+nouvelles tentatives après l'échec initial**, soit six requêtes au plus, avec des
+attentes de 1 s, 4 s, 16 s, 45 s et 90 s affectées d'un jitter de ±25 %. Jamais sur
+4xx — un refus d'authentification ou un dépassement de contexte se retenteraient à
+l'identique. Chaque nouvelle tentative est journalisée (numéro, attente, motif).
+Motif des deux paliers longs (mesuré le 2026-09-01, pilote `pilote-u24c`) : à
+travers un pont qui coupe avant les premiers en-têtes, chaque tentative échouée
+fait néanmoins avancer le cache de préfixe du serveur ; une politique patiente
+transforme donc une panne transitoire de quelques minutes en simple retard, là où
+trois retries (~21 s d'attente cumulée) clôturaient le jeu en échec nommé.
 
 **H4.6 — Journalisation sans secret.** Ni clé, ni en-tête d'autorisation, ni URL avec
 credentials dans les logs. Au niveau INFO : compteurs et durées ; le contenu complet

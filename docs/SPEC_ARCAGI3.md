@@ -403,6 +403,14 @@ RHAE, baseline), score global, coûts (tokens, durées, actions), événements
 (continuations, interventions superviseur, 413), comparaison aux références des
 sources (AVO 100.00/6 624 ; VISTA 100.00/7 542 ; Tycho Opus 5 100.00/6 641), écarts
 et limites. Les rapports de campagne officielle sont committés sous `docs/rapports/`.
+Les lignes d'inférence de la section Coûts — appels au modèle, tokens de prompt,
+tokens générés, durée d'inférence — se calculent depuis les MÉTRIQUES persistées du
+run, qui couvrent aussi les jeux clos en échec nommé (A7.4) : un jeu refusé en cours
+de partie a réellement dépensé ces tokens, et un rapport qui les annonce à zéro ment
+(mesuré le 2026-09-01, pilote `pilote-u24c` : 7 appels, ~150 k tokens de prompt,
+rapport à zéro partout). Les lignes de partie — actions dépensées, tours joués,
+durée cumulée de jeu — restent celles des jeux menés à leur terme ; lorsque des jeux
+ont été refusés, le rapport nomme explicitement que ces lignes ne les couvrent pas.
 
 ## A8. Plan de tests ARC
 
