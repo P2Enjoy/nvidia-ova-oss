@@ -238,6 +238,12 @@ seed:
 	else \
 	  echo "  e2e_etat_victoire.jsonl ABSENTE — lancez « make seed-e2e » puis relancez la pile"; \
 	fi
+	@echo "→ cassette de scénario E2E, banc a (U29a2, générée : make seed-e2e)"
+	@if [ -s tests/fixtures/llm/cassettes/e2e_banc_entrepot.jsonl ]; then \
+	  echo "  e2e_banc_entrepot.jsonl : $$(wc -l < tests/fixtures/llm/cassettes/e2e_banc_entrepot.jsonl) échanges"; \
+	else \
+	  echo "  e2e_banc_entrepot.jsonl ABSENTE — lancez « make seed-e2e » puis relancez la pile"; \
+	fi
 
 # Cassettes de scénario E2E (§A8.5) : génération DÉTERMINISTE par capture en deux
 # passes, auto-vérifiée (double génération comparée). Le rejoueur charge ses
@@ -246,6 +252,7 @@ seed-e2e:
 	@$(MAKE) --no-print-directory docker-check
 	$(RUN) python -m tests.e2e.generer_cassettes
 	$(RUN) python -m tests.e2e.generer_cassette_etat
+	$(RUN) python -m tests.e2e.generer_cassette_banc
 	@echo "cassettes E2E écrites — relancez la pile pour qu'elle les serve : make down && make up"
 
 # Fumée manuelle contre le VRAI endpoint (§H4.8). Exige .env, jamais dans check.
