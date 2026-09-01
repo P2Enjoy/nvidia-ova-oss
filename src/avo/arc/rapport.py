@@ -142,14 +142,19 @@ def sections(
         [
             f"- mode : **{resultat.mode}**",
             f"- score global (moyenne des RHAE de jeu) : **{formater(resultat.score_global)}**",
-            f"- jeux joués : **{len(resultat.jeux)}**",
+            f"- jeux joués : **{len(resultat.jeux)}**"
+            + (
+                f" — jeux refusés par le backend : **{len(resultat.refus)}**"
+                if resultat.refus
+                else ""
+            ),
             f"- plafonds : {plafonds.actions_niveau} actions/niveau, "
             f"{plafonds.actions_jeu} actions/jeu, {plafonds.tours_max} tours max, "
             f"temps/jeu {plafonds.secondes_jeu or 'aucun'}, "
             f"tokens/jeu {plafonds.tokens_jeu or 'aucun'}",
         ]
     )
-    return [
+    sections_rapport = [
         ("Résultat", entete),
         ("Par jeu", table_par_jeu(resultat.jeux)),
         ("Détail par niveau", table_par_niveau(resultat.jeux)),
@@ -158,6 +163,14 @@ def sections(
         ("Comparaison aux références publiées", comparaison(resultat)),
         ("Limites et écarts", limites(resultat)),
     ]
+    if resultat.refus:
+        # Un refus n'est jamais un saut silencieux (§A1.4, §A7.4) : le rapport le
+        # remonte avec son motif, hors score.
+        lignes_refus = "\n".join(
+            f"- `{entree['jeu']}` : {entree['motif']}" for entree in resultat.refus
+        )
+        sections_rapport.insert(2, ("Jeux refusés par le backend (hors score)", lignes_refus))
+    return sections_rapport
 
 
 def ecrire(workspace: Workspace, resultat: ResultatCampagne) -> None:

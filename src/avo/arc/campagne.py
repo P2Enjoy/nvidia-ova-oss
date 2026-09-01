@@ -29,7 +29,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-from avo.arc.client import ArcClient
+from avo.arc.client import ArcClient, ArcProtocoleError, TransportUrllib
 from avo.arc.interface import InterfaceArc
 from avo.arc.memoire import (
     SCHEMA_DIFF,
@@ -205,10 +205,15 @@ class EtatCampagne:
     autorise_publication: bool = False
     card_id: str | None = None
     resultats: list[ResultatJeu] = field(default_factory=list)
+    #: Jeux refusés par le backend, avec leur motif (§A7.4) : issue nommée du jeu
+    #: pour ce run — la reprise ne les rejoue pas, le rapport les remonte.
+    refus: list[dict[str, str]] = field(default_factory=list)
 
     @property
     def termines(self) -> set[str]:
-        return {resultat.game_id for resultat in self.resultats}
+        return {resultat.game_id for resultat in self.resultats} | {
+            entree["jeu"] for entree in self.refus
+        }
 
     def restants(self) -> list[str]:
         return [jeu for jeu in self.jeux_demandes if jeu not in self.termines]
@@ -222,6 +227,7 @@ class EtatCampagne:
             "autorise_publication": self.autorise_publication,
             "card_id": self.card_id,
             "resultats": [resultat.en_json() for resultat in self.resultats],
+            "refus": self.refus,
         }
         (workspace.chemin / ETAT).write_text(
             json.dumps(contenu, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
@@ -244,6 +250,7 @@ class EtatCampagne:
             autorise_publication=bool(donnees.get("autorise_publication", False)),
             card_id=donnees.get("card_id"),
             resultats=[ResultatJeu.depuis_json(entree) for entree in donnees["resultats"]],
+            refus=[dict(entree) for entree in donnees.get("refus", [])],
         )
 
 
@@ -257,16 +264,32 @@ class ResultatCampagne:
     plafonds: Plafonds
     jeux: tuple[ResultatJeu, ...]
     score_global: float
+    #: Jeux refusés par le backend (§A7.4) : hors score, remontés au rapport.
+    refus: tuple[dict[str, str], ...] = ()
 
     def resume(self) -> dict[str, Any]:
         return {
             "run_id": self.run_id,
             "mode": self.mode,
             "jeux": len(self.jeux),
+            "refus": len(self.refus),
             "score_global": self.score_global,
             "actions": sum(jeu.actions for jeu in self.jeux),
             "tokens": sum(jeu.tokens for jeu in self.jeux),
         }
+
+
+def fabrique_partagee(config: Config) -> Any:
+    """Fabrique de clients ARC au transport COMMUN (§A7.4, décision 2026-09-01).
+
+    L'affinité de session par cookies couvre le scorecard (§A1.4, mesuré) : les
+    clients d'une même campagne — ouverture, jeux, fermeture — doivent partager le
+    pot de cookies, sans quoi la fermeture atteint un backend qui ignore le
+    scorecard et le résumé officiel est perdu. Chaque client garde son historique
+    typé : seul le transport est partagé.
+    """
+    transport = TransportUrllib()
+    return lambda: ArcClient(config, transport=transport)
 
 
 def reconcilier(resume: dict[str, Any], jeu: ResultatJeu) -> list[dict[str, Any]]:
@@ -489,7 +512,7 @@ def executer_campagne(
     scorecard ouvert est réutilisé (§H13.2, §A7.4).
     """
     valider(config, plafonds, autorise_publication)
-    fabriquer = fabrique_arc or (lambda: ArcClient(config))
+    fabriquer = fabrique_arc or fabrique_partagee(config)
     llm = client_llm or LLMClient(config)
 
     catalogue = {str(jeu["game_id"]): jeu for jeu in fabriquer().games()}
@@ -519,19 +542,27 @@ def executer_campagne(
     notes = Notes(workspace.notes)
     for game_id in etat.restants():
         baselines = [int(valeur) for valeur in catalogue[game_id]["baseline_actions"]]
-        etat.resultats.append(
-            jouer_un_jeu(
-                config,
-                workspace,
-                plafonds,
-                game_id,
-                baselines,
-                etat.card_id,
-                llm,
-                fabriquer(),
-                notes,
+        try:
+            etat.resultats.append(
+                jouer_un_jeu(
+                    config,
+                    workspace,
+                    plafonds,
+                    game_id,
+                    baselines,
+                    etat.card_id,
+                    llm,
+                    fabriquer(),
+                    notes,
+                )
             )
-        )
+        except ArcProtocoleError as erreur:
+            # Jeu refusé par le backend — typiquement « listé non servi » (§A1.4).
+            # Issue nommée du jeu pour ce run (§A7.4) : la campagne poursuit, le
+            # scorecard sera fermé normalement, le rapport remonte le refus.
+            etat.refus.append({"jeu": game_id, "motif": str(erreur)})
+            workspace.metrique("refus_jeu", jeu=game_id, motif=str(erreur))
+            _journal.warning("jeu refusé", extra={"jeu": game_id, "motif": str(erreur)})
         etat.ecrire(workspace)
 
     resume_scorecard = fabriquer().close_scorecard(etat.card_id)
@@ -561,7 +592,10 @@ def executer_campagne(
         card_id=etat.card_id,
         plafonds=etat.plafonds,
         jeux=jeux_joues,
-        score_global=rhae_global([jeu.rhae.valeur for jeu in jeux_joues]),
+        # Une moyenne sur rien n'existe pas (§A6.4) : si tous les jeux ont été
+        # refusés, le score global est 0.0 et le rapport dit pourquoi (refus).
+        score_global=rhae_global([jeu.rhae.valeur for jeu in jeux_joues]) if jeux_joues else 0.0,
+        refus=tuple(etat.refus),
     )
     # Import local : le rapport lit les structures de ce module, l'importer en tête
     # ferait un cycle. « Campagne terminée ⇒ rapport écrit » est un invariant du

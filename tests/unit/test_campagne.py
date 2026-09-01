@@ -22,6 +22,7 @@ from avo.arc.campagne import (
     EtatCampagne,
     Plafonds,
     ResultatJeu,
+    fabrique_partagee,
     reconcilier,
     valider,
 )
@@ -245,6 +246,36 @@ class TestReconciliation(unittest.TestCase):
     def test_environnement_absent_est_une_divergence(self) -> None:
         divergences = reconcilier({"environments": []}, _resultat())
         self.assertEqual(divergences[0]["champ"], "environnement")
+
+
+class TestRefusEtAffinite(unittest.TestCase):
+    """§A7.4 (2026-09-01) : refus de jeu persisté hors score, cookies partagés."""
+
+    def test_un_refus_persiste_et_sort_des_restants(self) -> None:
+        etat = EtatCampagne(
+            run_id="r",
+            mode="replay",
+            plafonds=_plafonds(),
+            jeux_demandes=["a", "b"],
+            refus=[{"jeu": "a", "motif": "game a not found"}],
+        )
+        self.assertEqual(etat.restants(), ["b"], "le refus est l'issue nommée du jeu")
+        with tempfile.TemporaryDirectory() as dossier:
+            config = charger(Mode.REJEU, env={}, racine=Path("/inexistant"))
+            espace = Workspace.ouvrir(config, "r", racine=Path(dossier))
+            etat.ecrire(espace)
+            relu = EtatCampagne.lire(espace)
+        self.assertEqual(relu.refus, [{"jeu": "a", "motif": "game a not found"}])
+        self.assertEqual(relu.restants(), ["b"], "la reprise ne rejoue pas un jeu refusé")
+
+    def test_la_fabrique_partagee_donne_le_meme_transport_a_chaque_client(self) -> None:
+        """§A1.4 mesuré : l'affinité par cookies couvre le scorecard — sans pot
+        commun, la fermeture atteint un backend qui ignore le scorecard."""
+        config = charger(Mode.REJEU, env={}, racine=Path("/inexistant"))
+        fabriquer = fabrique_partagee(config)
+        premier, second = fabriquer(), fabriquer()
+        self.assertIsNot(premier, second, "chaque client garde son historique typé")
+        self.assertIs(premier._transport, second._transport, "un seul pot de cookies")
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -73,10 +73,21 @@ serveur de rejeu implémentent ce format, et lui seul.
 - **Affinité de session par cookies** : le serveur pose des cookies (`AWSALB*`)
   au `RESET`, à renvoyer sur chaque commande de la même partie — sans eux, les
   requêtes peuvent atteindre un backend qui ignore la session. Le client tient un
-  pot de cookies par instance.
+  pot de cookies par instance. **L'affinité vaut aussi pour le SCORECARD**
+  (mesuré le 2026-09-01) : un `close` émis sans les cookies de la session qui a
+  ouvert rend `404 VALIDATION_ERROR « scorecard … not found »`, le même `close`
+  avec le pot de cookies rend `200` et le résumé ; une campagne partage donc UN
+  pot de cookies entre l'ouverture, chaque jeu et la fermeture (§A7.4). Le
+  résumé de fermeture mesuré porte, en plus des champs déjà décrits : `score`,
+  `total_actions`, `total_environments`, `total_environments_completed`,
+  `total_levels`, `total_levels_completed`.
 - **Jeux listés non servis** : `/api/games` peut lister un jeu que le backend de
   commandes refuse (`400`, « game … not found » — mesuré sur le jeu de moindre
   coût du listing). Un tel refus est nommé, jamais transformé en saut silencieux.
+  **L'ensemble servi VARIE dans le temps** (mesuré : le jeu refusé le 2026-08-31
+  était le seul servi parmi cinq candidats le 2026-09-01, et le jeu joué par la
+  sonde U22 la veille était refusé) : le runner enregistre le refus nommé et
+  poursuit la campagne sur les jeux restants (§A7.4), il n'avorte pas.
 - Vérifié : `baseline_actions` du listing = `level_baseline_actions` du résumé de
   scorecard, niveau par niveau.
 
@@ -346,6 +357,21 @@ supposerait de retrouver la frame courante, qu'aucune requête ne rend gratuitem
 la redemander coûterait une action, et le score mêlerait deux tentatives, ce qui
 priverait le RHAE de sens. Ce qui coûte cher, ce sont les jeux déjà terminés : ils ne
 sont jamais rejoués.
+
+**Décision : un pot de cookies par CAMPAGNE (2026-09-01, mesuré).** L'affinité de
+session couvre le scorecard (§A1.4) : la fabrique de clients par défaut du runner
+partage un même transport (donc un même pot de cookies) entre l'ouverture du
+scorecard, les clients de jeu — qui gardent chacun leur historique typé — et la
+fermeture. Sans cela, la fermeture atteint un backend qui ignore le scorecard et
+le résumé (seule source des compteurs officiels, §A5.3) est définitivement perdu.
+
+**Décision : un jeu refusé par le backend ne fait pas avorter la campagne
+(2026-09-01, mesuré).** Un refus de protocole sur un jeu — typiquement « game …
+not found » d'un jeu listé non servi (§A1.4) — est enregistré dans l'état de
+campagne (`refus`, persisté) avec son motif, compté en métrique, remonté dans le
+rapport, et la campagne poursuit sur les jeux restants puis ferme le scorecard.
+Un jeu refusé n'entre pas dans le score global (ce n'est pas une performance) et
+la reprise ne le rejoue pas : le refus est l'issue nommée de ce jeu pour ce run.
 
 **Décision : une lignée par JEU, sous `runs/<id>/lineage/<game_id>/`.** La politique
 H9.1 est « correct ∧ ≥ meilleur » ; or le score H9.2 est

@@ -1180,3 +1180,38 @@ relisible (404 mesuré).
 Attendu du pilote : débits réels, coût par tour, comportement des gardes et du
 harnais sur un jeu officiel inconnu — jamais une adaptation à ce jeu
 (interdiction de benchmaxing, CLAUDE_PROJECT.md).
+
+---
+
+## 2026-09-01 (suite 2) — U24 : trois mesures live, deux corrections générales, périmètre ajusté AVANT relance
+
+**Mesuré sur l'API officielle (plomberie hors-jeu, autorisée) :**
+
+1. Le lancement sur `r11l-495a7899` a été refusé : `400 SERVER_ERROR « game …
+   not found »`. Sondage dédié (scorecard `b59c1306…`, étiqueté `probe`) : sur
+   cinq candidats, SEUL `cd82-fb555c5d` est servi aujourd'hui — celui-là même
+   qui était refusé le 2026-08-31. **L'ensemble servi varie dans le temps**
+   (§A1.4 mis à jour).
+2. **L'affinité par cookies couvre le scorecard** : `close` sans les cookies de
+   la session d'ouverture → `404 VALIDATION_ERROR « scorecard not found »` ;
+   avec le pot (`AWSALB*`) → `200` et le résumé complet (champs additionnels
+   mesurés : `score`, `total_*`, `tags_scores`). §A1.4 mis à jour.
+3. Le résumé de fermeture mesuré confirme la forme attendue par `reconcilier`.
+
+**Corrigé en conséquence (général, aucun indice de jeu)** : la fabrique de
+clients de la campagne partage UN transport (un pot de cookies) entre ouverture,
+jeux et fermeture (`fabrique_partagee`, §A7.4) ; un jeu refusé par le backend
+n'avorte plus la campagne — refus nommé persisté (`refus` de l'état), métrique,
+section du rapport, hors score, jamais rejoué par la reprise (§A7.4). Preuves :
+2 unitaires (persistance du refus + transport partagé), 4 unitaires de
+réconciliation.
+
+**Scorecards de cette investigation** : `2abc230e…` (pilote avorté, vide) et
+`b59c1306…` (sondage) n'ont pas pu être refermés — ouverts sans pot de cookies,
+leur backend d'origine est inatteignable (mesuré : `404` à la fermeture). Limite
+nommée : ils restent ouverts, vides ou quasi vides, étiquetés.
+
+**Périmètre relancé (mêmes plafonds, consigné avant lancement)** : un jeu,
+`cd82-fb555c5d` (6 niveaux, baselines somme 171, tag `keyboard_click`), 80
+actions/niveau, 300 actions/jeu, 1 800 s/jeu, 1 500 000 tokens/jeu, 400 tours,
+`run-id: pilote-u24b`, gardes actives, mode `transcript`.
