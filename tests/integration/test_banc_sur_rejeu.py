@@ -1,10 +1,12 @@
 """Le banc a joué par la boucle complète sous gardes, contre le rejeu HTTP réel.
 
-@verifies docs/BACKLOG.md U29a2 — adaptateur harnais + CLI `banc`
+@verifies docs/BACKLOG.md U29a2 — adaptateur harnais + CLI `banc` ; U29a4 —
+          dérive d'état jouée par la boucle complète
 @verifies docs/SPEC_BANCS.md §S6.4 (intégration : partie jouée en rejeu par la
           boucle complète sous gardes sur un épisode court, relevé `banc.json`
           écrit et exact), §S5.1–§S5.3 (score continu et relevé), §S1.4
-          (déterminisme : épisode identique à seed égal)
+          (déterminisme : épisode identique à seed égal), §S3.8 et §S5.5
+          (épisode sous dérive : alerte lue, récupération immédiate au relevé)
 @verifies docs/SPEC_HARNAIS.md §H15.8 (un pas = un tour, message système du
           contexte monté), §H16 (gardes actives : lignes PREDICTION/VERDICT,
           champ `hypotheses` peuplé)
@@ -149,6 +151,39 @@ class TestBancSurRejeu(unittest.TestCase):
         # une hypothèse (§H16.1).
         etat = json.loads(espace.etat_json.read_text(encoding="utf-8"))
         self.assertEqual(etat["hypotheses"], ["je tiens l'état exact de l'entrepôt"])
+
+    def test_episode_sous_derive_recupere_en_zero_pas(self) -> None:
+        """§S3.8, §S5.5 : la boucle complète joue l'épisode à dérive en HTTP ;
+        la politique parfaite lit l'alerte, le score reste 1 et la récupération
+        est immédiate — le relevé porte les champs de §S5.5."""
+        self.actions = actions_parfaites(generer_episode(SEED, HORIZON, derive=True))
+        corps_emis: list[dict[str, Any]] = []
+
+        def transport(url: str, corps: bytes, entetes: Any, timeout: float) -> ReponseHTTP:
+            corps_emis.append(json.loads(corps))
+            reponse = reponse_pas(self.gabarit, self.actions[len(corps_emis) - 1])
+            return ReponseHTTP(200, json.dumps(reponse).encode())
+
+        config = self._config("http://capture.invalide")
+        espace = Workspace.ouvrir(config, "derive-capture", racine=self.racine / "derive-capture")
+        jouer_episode(
+            config,
+            espace,
+            seed=SEED,
+            horizon=HORIZON,
+            derive=True,
+            client_llm=LLMClient(config, transport=transport, dormir=lambda _: None),
+        )
+        base = self._servir(corps_emis)
+        config = self._config(base)
+        espace = Workspace.ouvrir(config, "derive-rejeu", racine=self.racine / "derive-rejeu")
+        releve = jouer_episode(config, espace, seed=SEED, horizon=HORIZON, derive=True)
+
+        self.assertEqual(releve.score, 1.0)
+        ecrit = json.loads((espace.chemin / "banc.json").read_text(encoding="utf-8"))
+        self.assertEqual(ecrit["pas_de_recuperation"], 0)
+        self.assertTrue(ecrit["recupere"])
+        self.assertGreaterEqual(ecrit["derive_evenement"], HORIZON // 2)
 
     def test_requete_hors_cassette_rend_une_erreur_explicite(self) -> None:
         """§H4.7 : un écart d'appariement est un rouge lisible, jamais une réponse

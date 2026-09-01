@@ -3,7 +3,9 @@
 @verifies docs/BACKLOG.md U29a2 — adaptateur harnais + CLI `banc` ; U29a4 —
           branchement du Dépôt logiciel (politique parfaite §S4.5)
 @verifies docs/SPEC_BANCS.md §S3.5 et §S4.5 (obligations : les politiques
-          parfaites les rejouent exactement), §S6.4 (preuves du banc : rejeu
+          parfaites les rejouent exactement), §S3.8 et §S4.7 (la politique
+          parfaite lit l'alerte de dérive : déplacement appliqué à l'ombre,
+          `wait` sur la notification périmée), §S6.4 (preuves du banc : rejeu
           déterministe, score exact)
 @verifies docs/SPEC_HARNAIS.md §H15.8 (forme textuelle du champ `action`),
           §H16.2 et §H16.3 (lignes PREDICTION/VERDICT des pas scriptés)
@@ -74,7 +76,14 @@ def actions_parfaites(episode: Episode) -> list[str]:
     """
     etageres: dict[str, str] = {}
     actions: list[str] = []
-    for evenement in episode.evenements:
+    for indice, evenement in enumerate(episode.evenements):
+        derive = episode.derive
+        if derive is not None and indice == derive.evenement:
+            # La politique parfaite lit l'alerte (§S3.8) : l'ombre applique le
+            # déplacement externe avant de répondre à l'événement forcé.
+            if etageres.get(derive.source) == derive.article and derive.destination not in etageres:
+                del etageres[derive.source]
+                etageres[derive.destination] = derive.article
         if evenement.type == RECEPTION:
             libre = _plus_petite_vide(etageres)
             etageres[libre] = evenement.article
@@ -112,7 +121,12 @@ def actions_parfaites_depot(episode: EpisodeDepot) -> list[str]:
     obligation est jouable, et `wait` n'est jamais dû.
     """
     actions: list[str] = []
-    for evenement in episode.evenements:
+    for indice, evenement in enumerate(episode.evenements):
+        if episode.derive is not None and indice == episode.derive.evenement:
+            # La politique parfaite lit l'alerte (§S4.7) : la CI est cassée, la
+            # notification `ci_verte` est périmée — `wait` est l'obligation.
+            actions.append("wait")
+            continue
         if evenement.type == AFFECTATION:
             actions.append(
                 f"commit {nom_branche(evenement.demande)}, {nom_fichier(evenement.demande)}"
