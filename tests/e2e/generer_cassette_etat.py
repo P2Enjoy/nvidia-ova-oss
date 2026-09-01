@@ -5,6 +5,8 @@
       (bloc ```` ```json ```` à deux clés), §H15.8 (un pas = un tour : un appel LLM
       joue exactement une action, sans les phases P/I/E/B du mode `transcript`)
 @spec docs/SPEC_ARCAGI3.md §A8.5 (capture en deux passes, régénération identique)
+@spec docs/BACKLOG.md U30 — pas conformes aux gardes du mode `state` (§H16 :
+      lignes PREDICTION/VERDICT, champ `hypotheses` de Σ peuplé au premier pas)
 
 Même principe que `generer_cassettes.py` (mode `transcript`) : une première passe
 capture les corps de requête réellement émis contre un rejeu ARC en mémoire, une
@@ -71,13 +73,25 @@ def _environnement(hote_llm: str, base_arc: str) -> dict[str, str]:
 
 
 def _repondre(gabarit: dict[str, Any], rang: int) -> dict[str, Any]:
-    """Un pas = un tour (§H15.8) : le rang de l'appel EST le rang de l'action."""
+    """Un pas = un tour (§H15.8) : le rang de l'appel EST le rang de l'action.
+
+    Chaque pas satisfait les gardes (§H16) : la ligne `PREDICTION:` accompagne
+    l'action, la ligne `VERDICT:` qualifie la prédiction précédente (inutile mais
+    inoffensive au premier pas), et le patch peuple `hypotheses` — identique à
+    chaque pas, donc Σ reste stable et la génération déterministe.
+    """
     reponse = copy.deepcopy(gabarit)
     actions = actions_texte()
     action = actions[min(rang, len(actions) - 1)]
-    charge = {"state_patch": {}, "action": action}
+    charge = {
+        "state_patch": {"hypotheses": ["les effets des commandes restent à découvrir"]},
+        "action": action,
+    }
     reponse["message"]["content"] = (
-        "je joue la commande prévue par le scénario\n```json\n" + json.dumps(charge) + "\n```"
+        "je joue la commande prévue par le scénario\n"
+        "PREDICTION: je m'attends à un changement visible de la grille\n"
+        "VERDICT: confirmee\n"
+        "```json\n" + json.dumps(charge) + "\n```"
     )
     reponse["message"].pop("tool_calls", None)
     return reponse

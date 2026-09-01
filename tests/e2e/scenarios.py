@@ -4,6 +4,9 @@
 @spec docs/SPEC_ARCAGI3.md §A8.5 (contrat d'implémentation des E2E), §A8.3
 @spec docs/SPEC_ARCAGI3.md §A3.2 (chemin optimal du jeu `cible`, outil de test)
 @spec docs/SPEC_HARNAIS.md §H4.7 (enveloppe de réponse prise dans la cassette réelle)
+@spec docs/BACKLOG.md U30 — politique conforme aux gardes (§H16 : WORKING écrit à la
+      demande documentaire, prédiction dans chaque action, VERDICT à l'évaluation,
+      GUIDE écrit à la demande de persistance)
 
 Ce module est importé par le générateur de cassettes ET par les tests : les deux
 doivent partager à l'octet près l'environnement épinglé et la politique scriptée,
@@ -51,6 +54,9 @@ PLAFONDS_CLI = ("--tours-max", "120", "--actions-max-niveau", "100", "--actions-
 
 #: Clic hors cible à coup sûr : le curseur y démarre, aucune cible n'y est (§A3.2).
 CLIC_MANQUE = {"row": DEPART[0], "col": DEPART[1]}
+
+#: Prédiction scriptée, constante : la garde exige l'artefact, pas son contenu (§H16.2).
+PREDICTION = "je m'attends à un changement visible de la grille"
 
 Outil = tuple[str, dict[str, Any]]
 
@@ -157,13 +163,47 @@ def repondre(
     gabarit: dict[str, Any], charge: dict[str, Any], rang: int, scenario: Scenario
 ) -> tuple[dict[str, Any], bool]:
     """Politique scriptée : une action du scénario par prompt d'Implementation,
-    un constat textuel partout ailleurs. Rend (réponse, le rang avance)."""
+    un constat textuel partout ailleurs, et les artefacts que les gardes exigent
+    (§H16) — WORKING à la demande documentaire, GUIDE à la demande de persistance,
+    prédiction dans chaque action, VERDICT quand l'évaluation le demande.
+    Rend (réponse, le rang avance)."""
     reponse = copy.deepcopy(gabarit)
-    if prompts.IMPLEMENTATION in charge["messages"][-1]["content"]:
+    dernier = str(charge["messages"][-1]["content"])
+    if prompts.IMPLEMENTATION in dernier:
         nom, arguments = scenario.actions[min(rang, len(scenario.actions) - 1)]
         reponse["message"]["content"] = "je joue la commande prévue par le scénario"
-        reponse["message"]["tool_calls"] = [{"function": {"name": nom, "arguments": arguments}}]
+        reponse["message"]["tool_calls"] = [
+            {"function": {"name": nom, "arguments": {**arguments, "prediction": PREDICTION}}}
+        ]
         return reponse, True
-    reponse["message"]["content"] = "j'observe la grille et je consigne ce que je vois"
-    reponse["message"].pop("tool_calls", None)
+    appels: list[dict[str, Any]] = []
+    if prompts.GARDE_DOCUMENTAIRE in dernier:
+        appels.append(
+            {
+                "function": {
+                    "name": "note_write",
+                    "arguments": {
+                        "name": "WORKING",
+                        "content": "je sais peu / j'ignore les règles / j'agis pour découvrir",
+                    },
+                }
+            }
+        )
+    if prompts.GARDE_PERSISTANCE in dernier:
+        appels.append(
+            {
+                "function": {
+                    "name": "note_write",
+                    "arguments": {"name": "GUIDE", "content": "ce que la partie m'apprend"},
+                }
+            }
+        )
+    texte = "j'observe la grille et je consigne ce que je vois"
+    if "VERDICT" in dernier:
+        texte = f"{texte}\nVERDICT: confirmee"
+    reponse["message"]["content"] = texte
+    if appels:
+        reponse["message"]["tool_calls"] = appels
+    else:
+        reponse["message"].pop("tool_calls", None)
     return reponse, False
