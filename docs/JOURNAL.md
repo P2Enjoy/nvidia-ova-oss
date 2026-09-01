@@ -1215,3 +1215,39 @@ nommée : ils restent ouverts, vides ou quasi vides, étiquetés.
 `cd82-fb555c5d` (6 niveaux, baselines somme 171, tag `keyboard_click`), 80
 actions/niveau, 300 actions/jeu, 1 800 s/jeu, 1 500 000 tokens/jeu, 400 tours,
 `run-id: pilote-u24b`, gardes actives, mode `transcript`.
+
+---
+
+## 2026-09-01 (suite 3) — Pilote b : les gardes vivent, l'endpoint casse à ~120 k, robustesse corrigée, relance c
+
+**Mesuré sur `pilote-u24b` (cd82-fb555c5d, 17 appels, 3 actions, ~10 min)** :
+
+- **Les gardes H16 s'exercent sur un modèle vivant et convergent** : garde
+  documentaire redemandée 2× puis WORKING écrit ; garde d'évaluation redemandée
+  2× puis VERDICT rendu ; les trois actions jouées portent leur prédiction
+  (champ `reasoning` du scorecard).
+- **Le prompt croît de ~30-40 k tokens par tour** en mode `transcript` (la
+  grille 64×64 ≈ 9 k tokens revient dans l'observation de Planning, le résultat
+  d'outil d'action ET l'évaluation) : 9 k → 122 k en 17 appels.
+- **L'endpoint casse au-delà de ~120 k tokens de prompt à travers le pont** :
+  série de `500` (40 s avant premiers en-têtes côté pont, préremplissage des
+  gros deltas), retries épuisés à ~140 k → le run avortait SANS rapport ni
+  fermeture de scorecard. Scorecard `pilote-u24b` resté ouvert (3 actions
+  publiées) — non refermable sans les cookies du conteneur défunt, limite nommée.
+
+**Corrigé (général)** : un échec d'inférence à retries épuisés (`ServerError`,
+`TransportError`) clôt désormais le JEU en échec nommé — même traitement que le
+refus de protocole (§A7.4 amendé) : état persisté, métrique, section du rapport,
+scorecard fermé, campagne poursuivie. Preuve d'intégration : `500` permanent →
+rapport écrit, résumé persisté, refus nommé.
+
+**Recette d'exploitation pour la relance et le rejeu du responsable** (aucun
+changement de code, configuration existante) : demander une fenêtre plus courte
+pour que la continuation VISTA arrive AVANT la zone de casse —
+`OLLAMA_CONTEXT_LENGTH=98304` → budget de prompt ≈ 81 k, continuation à 85 % ≈
+69 k. Le plafond par clé (229 376) reste vrai ; c'est le débit de préremplissage
+à travers le pont qui borne en pratique.
+
+**Relance (périmètre consigné avant lancement)** : mêmes plafonds et même jeu
+que le pilote b, `run-id: pilote-u24c`, avec `OLLAMA_CONTEXT_LENGTH=98304` dans
+l'environnement du run.

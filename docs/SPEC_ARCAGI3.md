@@ -365,13 +365,20 @@ scorecard, les clients de jeu — qui gardent chacun leur historique typé — e
 fermeture. Sans cela, la fermeture atteint un backend qui ignore le scorecard et
 le résumé (seule source des compteurs officiels, §A5.3) est définitivement perdu.
 
-**Décision : un jeu refusé par le backend ne fait pas avorter la campagne
-(2026-09-01, mesuré).** Un refus de protocole sur un jeu — typiquement « game …
-not found » d'un jeu listé non servi (§A1.4) — est enregistré dans l'état de
-campagne (`refus`, persisté) avec son motif, compté en métrique, remonté dans le
-rapport, et la campagne poursuit sur les jeux restants puis ferme le scorecard.
-Un jeu refusé n'entre pas dans le score global (ce n'est pas une performance) et
-la reprise ne le rejoue pas : le refus est l'issue nommée de ce jeu pour ce run.
+**Décision : un jeu refusé ou échoué ne fait pas avorter la campagne
+(2026-09-01, mesuré deux fois).** Deux causes, même traitement : un refus de
+protocole ARC — typiquement « game … not found » d'un jeu listé non servi
+(§A1.4) — et un échec d'inférence à retries épuisés (`ServerError` ou
+`TransportError` du client LLM, §H4.5 ; mesuré : série de 500 de l'endpoint
+au-delà de ~120 k tokens de prompt à travers le pont, run pilote `pilote-u24b`).
+L'échec est enregistré dans l'état de campagne (`refus`, persisté) avec son
+motif, compté en métrique, remonté dans le rapport, et la campagne poursuit sur
+les jeux restants puis ferme le scorecard — le rapport et le résumé officiel ne
+sont jamais perdus pour un jeu qui casse. Un jeu refusé ou échoué n'entre pas
+dans le score global (ce n'est pas une performance mesurée) et la reprise ne le
+rejoue pas : c'est l'issue nommée de ce jeu pour ce run. `AuthError` reste
+fatale (configuration, §H4.4), et un état terminal ou une borne restent des
+arrêts NORMAUX du jeu, pas des échecs.
 
 **Décision : une lignée par JEU, sous `runs/<id>/lineage/<game_id>/`.** La politique
 H9.1 est « correct ∧ ≥ meilleur » ; or le score H9.2 est

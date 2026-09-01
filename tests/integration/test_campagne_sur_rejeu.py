@@ -394,5 +394,41 @@ class TestJeuRefuse(unittest.TestCase):
         self.assertTrue((espace.chemin / "scorecard.json").exists(), "résumé persisté (§A5.3)")
 
 
+class TestEchecInference(unittest.TestCase):
+    """§A7.4 : un échec d'inférence à retries épuisés clôt le JEU en échec nommé."""
+
+    setUp = TestCampagneSurRejeu.setUp
+    tearDown = TestCampagneSurRejeu.tearDown
+    _config = TestCampagneSurRejeu._config
+    _plafonds = staticmethod(TestCampagneSurRejeu._plafonds)
+    _gabarit = staticmethod(TestCampagneSurRejeu._gabarit)
+    _servir = TestCampagneSurRejeu._servir
+
+    def test_un_500_permanent_ne_tue_pas_la_campagne(self) -> None:
+        config = self._config("http://serveur-en-panne.invalide")
+        espace = Workspace.ouvrir(config, "run-panne", racine=self.racine)
+
+        def transport_en_panne(url: str, corps: bytes, entetes: Any, timeout: float) -> Any:
+            return ReponseHTTP(500, b"erreur interne")
+
+        resultat = executer_campagne(
+            config,
+            espace,
+            self._plafonds(),
+            jeux=[JEU],
+            client_llm=LLMClient(config, transport=transport_en_panne, dormir=lambda _: None),
+        )
+
+        self.assertEqual(len(resultat.jeux), 0)
+        self.assertEqual([entree["jeu"] for entree in resultat.refus], [JEU])
+        self.assertIn("ServerError", resultat.refus[0]["motif"])
+        self.assertTrue(espace.rapport.exists(), "le rapport n'est jamais perdu (§A7.4)")
+        self.assertIn(
+            "Jeux refusés par le backend",
+            espace.rapport.read_text(encoding="utf-8"),
+        )
+        self.assertTrue((espace.chemin / "scorecard.json").exists(), "fermeture faite (§A5.3)")
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

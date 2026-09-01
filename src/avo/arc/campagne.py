@@ -43,7 +43,7 @@ from avo.arc.memoire import (
 from avo.arc.rhae import NiveauJoue, ResultatRhae, niveaux_joues, rhae_global, rhae_jeu
 from avo.config import Config, Mode, ModeContexte
 from avo.lineage import Lignee, ScorerARC
-from avo.llm.client import LLMClient
+from avo.llm.client import LLMClient, ServerError, TransportError
 from avo.loop.boucle import Bilan, BoucleAgent
 from avo.memory.notes import (
     SCHEMA_NOTE_READ,
@@ -556,13 +556,16 @@ def executer_campagne(
                     notes,
                 )
             )
-        except ArcProtocoleError as erreur:
-            # Jeu refusé par le backend — typiquement « listé non servi » (§A1.4).
-            # Issue nommée du jeu pour ce run (§A7.4) : la campagne poursuit, le
-            # scorecard sera fermé normalement, le rapport remonte le refus.
-            etat.refus.append({"jeu": game_id, "motif": str(erreur)})
-            workspace.metrique("refus_jeu", jeu=game_id, motif=str(erreur))
-            _journal.warning("jeu refusé", extra={"jeu": game_id, "motif": str(erreur)})
+        except (ArcProtocoleError, ServerError, TransportError) as erreur:
+            # Jeu refusé par le backend (« listé non servi », §A1.4) ou échec
+            # d'inférence à retries épuisés (§H4.5). Issue nommée du jeu pour ce
+            # run (§A7.4) : la campagne poursuit, le scorecard sera fermé
+            # normalement, le rapport remonte l'échec — jamais un run avorté sans
+            # rapport ni fermeture.
+            motif = f"{type(erreur).__name__}: {erreur}"
+            etat.refus.append({"jeu": game_id, "motif": motif})
+            workspace.metrique("refus_jeu", jeu=game_id, motif=motif)
+            _journal.warning("jeu refusé ou échoué", extra={"jeu": game_id, "motif": motif})
         etat.ecrire(workspace)
 
     resume_scorecard = fabriquer().close_scorecard(etat.card_id)
