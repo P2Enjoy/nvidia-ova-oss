@@ -1389,3 +1389,54 @@ Sans réponse, il ne reste aucune unité constructible : U29 est hors périmètr
 vérifie d'abord si une réponse est arrivée (journal, backlog, instruction),
 sinon elle applique §4.5 (elle établit le cas 2 et arrête proprement la
 boucle planifiée si rien d'autre n'est constructible).
+
+---
+
+## 2026-09-01 (suite 8) — ARRÊT de la boucle planifiée : cas 2 du CloudWorker §4.5 établi
+
+**Vérifié en ouverture.** Aucune réponse du responsable n'est arrivée depuis la
+suite 7 : `origin/main` s'arrête au commit de la session précédente, le prompt de
+la tâche planifiée est inchangé (autorisations du 2026-08-30, rien qui fixe le
+périmètre U25), le registre d'incohérences n'a aucune entrée ouverte.
+
+**Unités restantes, vérifiées une par une (condition du §4.5)** :
+
+- **U25 `[ ]`** — sa spécification arrête son périmètre AVEC le responsable ;
+  arbitrage (cas 3 + 2) demandé en suite 6, non rendu. Bloquée.
+- **U28 `[~]`** — tout le mesurable est livré et vérifié (rapport
+  `docs/rapports/ab-u28-state.md`, réconciliation exacte) ; seule reste la
+  DÉCISION du responsable (mode par défaut, avec le périmètre U25). Bloquée par
+  le même arbitrage.
+- **U29 `[ ]`** — hors périmètre par décision du 2026-08-27 ; n'entre pas dans
+  l'ordre d'exécution tant que le responsable n'a pas élargi le périmètre.
+  Bloquée.
+
+L'autorisation permanente « améliorer le fonctionnement GÉNÉRAL du harnais
+d'après les résultats collectés » n'ouvre aucune unité constructible ici : aucun
+défaut n'est consigné au registre, et la seule amélioration désignée par les
+mesures — basculer le défaut sur `state` — est précisément la décision réservée
+au responsable (contrat U28). L'inventer serait du périmètre ajouté.
+
+**Cas 2 du §4.5 établi** : tout ce qui reste est bloqué par un arbitrage
+relevant de « Demande d'arbitrage » (CLAUDE.md) et non rendu. La boucle
+planifiée est donc ARRÊTÉE.
+
+**Limite d'outillage, nommée.** Cette session ne dispose d'aucun outil pour
+supprimer la tâche planifiée du nuage (aucune tâche locale à couper ;
+la planification vit dans la configuration du compte). Conformément au §4.5
+point 1 : le responsable doit supprimer lui-même la tâche planifiée
+« CloudWorker » dans son interface. Tant qu'elle n'est pas supprimée, chaque
+exécution refera ce même constat d'arrêt sans rien modifier.
+
+**Points tranchés de la session** : pile compose non montée et campagne de
+preuves non exécutée — aucun code n'est modifié (session documentaire d'arrêt,
+cas de blocage réel consigné, §4.2 bis) ; le temps d'une campagne de 40–70 min
+n'apprendrait rien sur un dépôt inchangé dont la campagne complète était verte
+en suite 7.
+
+**Où reprendre, quand l'arbitrage sera rendu.** Le responsable fixe : (1) le
+périmètre U25 (jeux, plafonds, budget temps/coût) ; (2) le mode par défaut
+(recommandation mesurée : `state`). La session suivante exécute alors U25 par
+tranches reprenables (A7), solde U28 en consignant la décision, et U29 reste
+fermée sauf élargissement explicite. Scorecards `2abc230e…`, `b59c1306…` et
+`pilote-u24b` : toujours ouverts côté ARC, non refermables d'ici (limite connue).

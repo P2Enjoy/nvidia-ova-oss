@@ -554,6 +554,14 @@ budget temps/coût), exécution par tranches reprenables, rapport final comparat
 références (A7.3) committé, CHANGELOG et README mis à jour.
 
 - Preuves : rapport final, scorecards, coûts mesurés ; écarts au périmètre nommés.
+- **Bloquée — arbitrage non rendu.** Cas 3 (et 2) de « Demande d'arbitrage »
+  (CLAUDE.md) : ni la demande, ni le journal, ni la spécification ne fixent
+  jeux/plafonds/budget de la campagne étendue, deux périmètres raisonnables
+  donnent deux rapports finaux différents, et la dépense d'inférence engagée est
+  substantielle. Arbitrage demandé au journal du 2026-09-01 (suite 6), sans
+  réponse au 2026-09-01. Pour débloquer : le responsable arrête le périmètre
+  (jeux, plafonds, budget) et le mode par défaut (recommandation mesurée U28 :
+  `state`, `docs/rapports/ab-u28-state.md`).
 
 ## Lot G — Contexte à état structuré (SKILL.state)
 
