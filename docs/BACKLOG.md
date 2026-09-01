@@ -5,8 +5,9 @@ Statuts : `[ ]` non commencé · `[~]` en cours ou insuffisamment vérifié · `
 Ordre d'exécution et Definition of Done commune : `docs/MASTER_PLAN.md`. Chaque unité
 cite ses chapitres de spécification (`docs/SPEC_HARNAIS.md` = H, `docs/SPEC_ARCAGI3.md`
 = A) ; ses spécifications sont déjà écrites — une session la prenant code directement.
-Les unités marquées **[LIVE]** ne sont jamais prises par le worker planifié
-(MASTER_PLAN §3).
+Les unités marquées **[LIVE]** exigent les secrets d'environnement ; leur prise
+obéit à MASTER_PLAN §3 — la routine planifiée provisionnée par le responsable les
+prend comme les autres, une session sans secrets ne les prend jamais.
 
 ---
 
@@ -549,19 +550,20 @@ comportement du modèle) au journal.
 
 ## U25 — Campagne étendue et rapport final `[ ]` **[LIVE]**
 
-`@spec` A7. Périmètre arrêté avec le responsable au vu de U24 (jeux, plafonds,
-budget temps/coût), exécution par tranches reprenables, rapport final comparatif aux
-références (A7.3) committé, CHANGELOG et README mis à jour.
+`@spec` A7. Périmètre arrêté par le responsable (2026-09-01, session interactive),
+exécution par tranches reprenables, rapport final comparatif aux références (A7.3)
+committé, CHANGELOG et README mis à jour.
 
+- **Périmètre arrêté (2026-09-01)** : tous les jeux que `/api/games` déclare ;
+  plafonds par jeu : 80 actions/niveau, 300 actions/jeu, 1 200 s/jeu,
+  1 500 000 tokens/jeu, 400 tours (ceux du pilote U24d) ; mode de contexte
+  `state` (décision U28) ; budget global ILLIMITÉ tant que le modèle est
+  `qwen3.6:35b` et que l'inférence passe par le gateway LLM du responsable
+  (`CLAUDE_PROJECT.md`, « Budget d'inférence ») — toute autre configuration
+  rouvre l'arbitrage de dépense. Exécution par tranches reprenables (A7,
+  granularité jeu) au fil des sessions planifiées, dans le cadre de la mission
+  permanente U31.
 - Preuves : rapport final, scorecards, coûts mesurés ; écarts au périmètre nommés.
-- **Bloquée — arbitrage non rendu.** Cas 3 (et 2) de « Demande d'arbitrage »
-  (CLAUDE.md) : ni la demande, ni le journal, ni la spécification ne fixent
-  jeux/plafonds/budget de la campagne étendue, deux périmètres raisonnables
-  donnent deux rapports finaux différents, et la dépense d'inférence engagée est
-  substantielle. Arbitrage demandé au journal du 2026-09-01 (suite 6), sans
-  réponse au 2026-09-01. Pour débloquer : le responsable arrête le périmètre
-  (jeux, plafonds, budget) et le mode par défaut (recommandation mesurée U28 :
-  `state`, `docs/rapports/ab-u28-state.md`).
 
 ## Lot G — Contexte à état structuré (SKILL.state)
 
@@ -708,9 +710,12 @@ Rapport comparatif committé ; recommandation du mode par défaut pour U25 arrê
   (`docs/rapports/ab-u28-state.md`) : 33 actions contre 6 à budget de temps égal,
   prompt borné 8 890–9 223 tokens (O(1) constaté), 0 continuation, 1 retry de
   patch corrigé, ~15× moins de tokens de prompt par action ; recommandation
-  consignée (mode `state` par défaut pour U25). **Seul reste ouvert** : la
-  DÉCISION du responsable (avec le périmètre U25, arbitrage demandé au journal du
-  2026-09-01 suite 6) — tout le mesurable de l'unité est livré et vérifié.
+  consignée (mode `state` par défaut pour U25).
+- **Décision rendue le 2026-09-01 (session interactive, journal suite 9)** : le
+  responsable suit la recommandation — `state` devient le mode par défaut. La
+  bascule du défaut `AVO_CONTEXT_MODE` (spéc §H15.7 amendée, `avo.config`,
+  README, CHANGELOG) s'applique dans la même session ; l'unité passe à `[x]`
+  quand cette bascule est prouvée (tests ciblés + campagne complète).
 
 ## U29 — Benchmarks interactifs complémentaires `[ ]` **(hors périmètre — arbitrage requis)**
 
@@ -725,6 +730,8 @@ le périmètre ; si elle est retenue, elle commence par sa spécification (chapi
 S1+) puis se redécoupe en unités d'une session.
 
 - Preuves (si retenue) : fixées par la spécification à écrire.
+- Détails fournis au responsable le 2026-09-01 (session interactive, journal
+  suite 9) ; décision toujours ouverte — l'unité reste hors périmètre.
 
 ## Lot H — La méthode dans la structure
 
@@ -786,3 +793,40 @@ zéro indice de jeu (§A5, balayage exécutable inchangé).
   verte (lint, mypy strict, 499 unitaires, 142 intégration, 4 E2E, build).
   Les preuves antérieures de la mécanique hors gardes sont épinglées
   `AVO_GARDES=false` (§H16.0.4).
+
+## Lot I — Concours permanent
+
+Source : instruction du responsable (2026-09-01, session interactive). La raison
+d'être de la boucle planifiée devient RÉUSSIR ARC Prize avec le harnais : chaque
+itération exécute le harnais sur le concours, observe les résultats, puis améliore
+ou corrige le fonctionnement GÉNÉRAL du harnais d'après ces mesures. L'interdiction
+de benchmaxing (`CLAUDE_PROJECT.md`) s'applique sans exception ; le budget
+d'inférence est illimité tant que le modèle est `qwen3.6:35b` et que l'inférence
+passe par le gateway LLM du responsable.
+
+## U31 — Boucle permanente de concours : jouer, observer, améliorer `[~]` **[LIVE]** (permanente)
+
+`@spec` A7 (campagne), H (harnais général) ; mission et bornes :
+`CLAUDE_PROJECT.md` (« Mission permanente », « Budget d'inférence »). Unité
+PERMANENTE : elle ne passe jamais à `[x]`, et la boucle planifiée ne s'arrête pas
+tant qu'elle est active (MASTER_PLAN §7). Chaque session planifiée, dans cet
+ordre :
+
+1. **Jouer** : poursuivre la campagne en cours (`python -m avo resume <run_id>`)
+   ou en ouvrir une au périmètre U25 (tous les jeux de `/api/games`, plafonds
+   80 actions/niveau, 300 actions/jeu, 1 200 s/jeu, 1 500 000 tokens/jeu,
+   400 tours, mode `state`), par tranches reprenables (A7, granularité jeu).
+2. **Observer** : dépouiller les artefacts du run (rapport, RHAE, incidents,
+   interventions du superviseur, retries de patch, coûts) et consigner les
+   mesures au journal.
+3. **Améliorer ou corriger** : sur ces mesures uniquement, une amélioration
+   GÉNÉRIQUE du harnais (boucle, prompts, outils, mémoire, superviseur) ou une
+   correction de défaut — spécifiée, codée et prouvée dans la même session ;
+   balayage « zéro indice de jeu » (§A5) avant tout commit de code ou de prompt.
+   Pas de mesure fraîche qui désigne une amélioration : pas d'amélioration
+   inventée.
+
+- Preuves par itération : la tranche de campagne jouée et réconciliée (scorecard
+  fermé quand la campagne se clôt), l'analyse consignée au journal, et pour toute
+  modification du harnais ses preuves propres plus la campagne complète
+  (`make check`).

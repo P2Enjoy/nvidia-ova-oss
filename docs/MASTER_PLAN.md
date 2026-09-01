@@ -17,10 +17,12 @@ spécification déjà écrite est une session en échec.
 
 ## 2. Ordre d'exécution
 
-Les unités du backlog s'exécutent **dans l'ordre de leur numéro** (U3, U4, …, U30),
+Les unités du backlog s'exécutent **dans l'ordre de leur numéro** (U3, U4, …, U31),
 sauf reprise désignée par la dernière entrée du journal, et sauf U29, hors ordre tant
 que son arbitrage n'est pas rendu (backlog, lot G). Chaque unité tient dans une
-session et produit du code ; aucune unité documentaire ne reste ouverte.
+session et produit du code ; aucune unité documentaire ne reste ouverte. U31 est
+PERMANENTE (lot I) : quand aucune unité de construction ne reste, chaque session
+planifiée exécute une itération de U31.
 
 | Lot | Unités | Contenu |
 |---|---|---|
@@ -32,6 +34,7 @@ session et produit du code ; aucune unité documentaire ne reste ouverte.
 | F — Campagne | U23–U25 | runner+rapport, campagne pilote, campagne étendue |
 | G — État structuré (SKILL.state) | U26–U29 | spec H15 + runtime Σ, mode `state` + A/B rejeu, A/B réel, benchmarks complémentaires (arbitrage) |
 | H — Méthode dans la structure | U30 | spec H16 + gardes de méthode dans les phases P→I→E→B |
+| I — Concours permanent | U31 | boucle permanente : jouer ARC Prize, observer, améliorer le harnais (mission du 2026-09-01) |
 
 ## 3. Unités [LIVE] — règle pour le worker
 
@@ -102,9 +105,14 @@ Interdits rappelés : aucun appel réseau externe depuis les tests (garde A2.3),
 aucun secret committé ou journalisé, aucune unité [LIVE] prise sans `.env`, aucune
 branche/worktree (CLAUDE.md §13), lignée git uniquement sous `runs/…` (H9.3).
 
-## 7. Fin de la boucle planifiée
+## 7. Boucle planifiée permanente
 
-La tâche planifiée s'arrête (procédure `docs/CloudWorker.md` §4.5) quand U3–U21 et
-U23 sont `[x]` et qu'il ne reste que des unités [LIVE], ou quand tout est `[x]`.
-Les campagnes U24/U25 et la sonde U22 se font en session interactive avec le
-responsable ; leur périmètre exact est consigné au journal avant lancement.
+Depuis l'instruction du responsable du 2026-09-01, la boucle planifiée porte une
+mission PERMANENTE : U31 — jouer ARC Prize au périmètre arrêté en U25, observer les
+résultats, améliorer ou corriger le fonctionnement général du harnais. La condition
+d'arrêt « backlog terminé » (`docs/CloudWorker.md` §4.5, cas 1) ne s'applique donc
+plus tant que U31 est active : la boucle ne s'arrête que sur instruction du
+responsable, ou si U31 elle-même devient inexécutable — secrets absents, API ou
+endpoint durablement indisponibles, arbitrage indispensable non rendu (cas 2 du
+§4.5, constaté unité par unité et consigné). Le périmètre exact de toute campagne
+est consigné au journal avant lancement ; tout écart au périmètre U25 est nommé.

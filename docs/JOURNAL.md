@@ -1440,3 +1440,35 @@ périmètre U25 (jeux, plafonds, budget temps/coût) ; (2) le mode par défaut
 tranches reprenables (A7), solde U28 en consignant la décision, et U29 reste
 fermée sauf élargissement explicite. Scorecards `2abc230e…`, `b59c1306…` et
 `pilote-u24b` : toujours ouverts côté ARC, non refermables d'ici (limite connue).
+
+---
+
+## 2026-09-01 (suite 9) — Arbitrages rendus par le responsable : U25 débloquée, `state` par défaut, mission permanente de concours
+
+Session interactive. Le responsable a rendu en séance les arbitrages demandés en
+suite 6 et constatés bloquants en suite 8 — l'arrêt de la boucle prononcé en
+suite 8 est donc LEVÉ :
+
+1. **Budget U25** : illimité TANT QUE le modèle de travail est `qwen3.6:35b` ET que
+   l'inférence passe par le gateway LLM du responsable. Le reste du périmètre
+   proposé est validé : tous les jeux que `/api/games` déclare, plafonds par jeu du
+   pilote (80 actions/niveau, 300 actions/jeu, 1 200 s/jeu, 1 500 000 tokens/jeu,
+   400 tours). Consigné dans l'unité U25.
+2. **Mode par défaut** : `state` (« c'est plus cohérent ») — la recommandation
+   mesurée de U28 est suivie. La bascule du défaut `AVO_CONTEXT_MODE` (spéc §H15.7
+   amendée, `avo.config`, README) s'applique dans cette même session, chunk de code
+   dédié, preuves ciblées puis campagne complète.
+3. **Mission permanente** : la boucle planifiée change de raison d'être — RÉUSSIR
+   ARC Prize. Chaque itération joue (campagne officielle au périmètre U25), observe
+   les résultats, puis améliore ou corrige le fonctionnement GÉNÉRAL du harnais
+   d'après ces mesures. Nouvelle unité PERMANENTE U31 (lot I) ;
+   `CLAUDE_PROJECT.md` (« Concours permanent ») et `docs/MASTER_PLAN.md` §7
+   portent la règle. La condition d'arrêt « backlog terminé » ne s'applique plus
+   tant que U31 est active.
+4. **U29** : détails fournis au responsable en séance (InterCode CTF, τ-Bench,
+   patron SkillExecBench) ; décision toujours ouverte, l'unité reste hors
+   périmètre.
+
+**Où reprendre.** La prochaine session planifiée exécute U31 : ouvrir la campagne
+au périmètre U25 (mode `state`) et jouer la première tranche, puis observer et
+améliorer sur les mesures.
