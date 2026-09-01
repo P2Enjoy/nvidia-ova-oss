@@ -1521,3 +1521,36 @@ déclencheur n'est pas atteint, la campagne ARC ensuite ; `CLAUDE_PROJECT.md`
 écrire et committer la spécification S1+ du banc a (patron SkillExecBench —
 générateurs seedés déterministes, score continu, scores de référence consignés),
 puis coder par unités d'une session.
+
+---
+
+## 2026-09-01 (suite 12) — U31/U29 : spécification du banc a écrite, U29a1 (environnement Entrepôt) livrée et close
+
+Session planifiée. Cible désignée par la suite 11 : U31 → U29, banc a.
+
+**Livré** : `docs/SPEC_BANCS.md` (§S1–§S7), committée avant le code — cadre commun
+des bancs (adaptateurs minces sur le contrat `Environnement` §H8.2, noyau §H
+intouché, règles du banc DONNÉES à l'agent contrairement à §A5.1, différence
+assumée en §S1.3), environnement Entrepôt normé (§S3), Dépôt logiciel en
+invariants (§S4), score continu (§S5), scores de référence open-weight consignés
+(§S5.4 : fourchette Qwen-3-8B ↔ Gemma-4-31B pour le déclencheur U25), découpage
+U29a1–a4 (§S7). Puis U29a1 codée : `src/avo/bancs/skillexec/{generation,entrepot,
+score}.py` — générateur d'épisodes seedé à DOUBLE flux (événements/bruit séparés :
+le niveau de bruit ne change pas la tâche), état de vérité, transitions validées,
+obligations par événement, relevé `en_dict()` pour le futur `banc.json`.
+
+**Points tranchés** (motifs en §S3.4 et §S3.7) : les événements référencent l'état
+NOMINAL d'un jeu parfait — épisodes comparables entre runtimes, la divergence de
+l'agent se paie au score ; une action invalide consomme l'événement (un agent
+bloqué ne boucle pas) ; l'article d'une réception entre au quai à l'émission de
+l'événement, un rangement tardif reste valide mais jamais correct.
+
+**Preuves** : 26 unitaires du banc verts ; balayage « mots du banc hors
+`src/avo/bancs/` » vide ; campagne complète verte (lint, ruff format, mypy strict
+103 fichiers, 534 unitaires, 145 intégration, 4 E2E sur pile fraîche, build).
+U29a1 `[x]`, U29 passe `[~]`.
+
+**Où reprendre.** U29a2 (§S7) : `adaptateur.py` (contrat `Environnement`, outils
+étiquetés `action` avec `prediction`, contexte de tâche §S6.2) + sous-commande CLI
+`banc`, cassette de rejeu, intégration + E2E, premier relevé live 3 seeds aux
+horizons 10 et 25, consigné au journal pour amorcer le suivi du déclencheur U25.

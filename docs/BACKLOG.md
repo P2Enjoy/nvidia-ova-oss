@@ -727,7 +727,7 @@ Rapport comparatif committé ; recommandation du mode par défaut pour U25 arrê
   (lint, mypy strict, 508 unitaires, 145 intégration, 4 E2E, build). Unité
   close.
 
-## U29 — Benchmarks interactifs complémentaires : terrain d'affinage du harnais `[ ]`
+## U29 — Benchmarks interactifs complémentaires : terrain d'affinage du harnais `[~]`
 
 **Ouverte par le responsable le 2026-09-01** (session interactive, journal
 suite 11) : le harnais s'AFFINE sur ces bancs avant de rejouer la campagne ARC
@@ -760,9 +760,14 @@ benchmaxing inchangée — aucune adaptation à un défi particulier.
 de référence consignés (§S5.4). Le banc a se découpe en unités d'une session
 (§S7) :
 
-- **U29a1 `[~]`** — spécification S1+ (faite) + environnement Entrepôt :
+- **U29a1 `[x]`** — spécification S1+ + environnement Entrepôt :
   `src/avo/bancs/skillexec/{entrepot,generation,score}.py`, preuves unitaires de
   §S6.4 (générateur, transitions, score, bruit). Sans adaptateur ni CLI.
+  **Livré et vérifié le 2026-09-01** : 26 unitaires verts
+  (`tests/unit/test_banc_entrepot.py`), balayage « mots du banc hors
+  `src/avo/bancs/` » vide, campagne complète verte (lint, mypy strict
+  103 fichiers, 534 unitaires, 145 intégration, 4 E2E, build). L'intégration et
+  l'E2E du banc appartiennent à U29a2 (§S7), qui branche l'adaptateur.
 - **U29a2 `[ ]`** — adaptateur harnais + CLI `banc` (§S6) : boucle complète en
   rejeu, cassette, intégration + E2E, premier relevé live (3 seeds, horizons 10
   et 25) au journal.
