@@ -29,6 +29,7 @@ from unittest import mock
 from arc_replay.serveur import creer_serveur as creer_serveur_arc
 from avo import cli
 from avo.arc.campagne import ETAT, EtatCampagne, Plafonds, executer_campagne, reprendre_campagne
+from avo.arc.client import ArcClient, ArcProtocoleError
 from avo.config import Config, Mode, charger
 from avo.llm.client import LLMClient, ReponseHTTP
 from avo.loop import prompts
@@ -336,6 +337,61 @@ class TestCampagneSurRejeu(unittest.TestCase):
         with self.assertRaises(Exception) as capture:
             reprendre_campagne(config, self.racine, "run-fantome")
         self.assertIn("run-fantome", str(capture.exception))
+
+
+class _ClientAvecFantome(ArcClient):
+    """Client réel dont le catalogue liste un jeu que le backend refuse (§A1.4)."""
+
+    def games(self) -> list[dict[str, Any]]:
+        return [*super().games(), {"game_id": "fantome", "baseline_actions": [5, 5]}]
+
+    def reset(
+        self, game_id: str | None = None, card_id: str | None = None, guid: str | None = None
+    ) -> Any:
+        if game_id == "fantome":
+            raise ArcProtocoleError("/api/cmd/RESET : HTTP 400 — game fantome not found")
+        return super().reset(game_id=game_id, card_id=card_id, guid=guid)
+
+
+class TestJeuRefuse(unittest.TestCase):
+    """§A7.4 (2026-09-01) : un jeu refusé est nommé, la campagne poursuit et ferme."""
+
+    setUp = TestCampagneSurRejeu.setUp
+    tearDown = TestCampagneSurRejeu.tearDown
+    _config = TestCampagneSurRejeu._config
+    _plafonds = staticmethod(TestCampagneSurRejeu._plafonds)
+    _gabarit = staticmethod(TestCampagneSurRejeu._gabarit)
+    _repondre = TestCampagneSurRejeu._repondre
+    _preparer_cassette = TestCampagneSurRejeu._preparer_cassette
+    _servir = TestCampagneSurRejeu._servir
+
+    def test_un_jeu_refuse_est_nomme_et_la_campagne_poursuit(self) -> None:
+        config = self._config(self._preparer_cassette("run-refuse"))
+        espace = Workspace.ouvrir(config, "run-refuse", racine=self.racine)
+        resultat = executer_campagne(
+            config,
+            espace,
+            self._plafonds(),
+            jeux=["fantome", JEU],
+            client_llm=LLMClient(config, dormir=lambda _: None),
+            fabrique_arc=lambda: _ClientAvecFantome(config),
+        )
+
+        self.assertEqual([entree["jeu"] for entree in resultat.refus], ["fantome"])
+        self.assertIn("not found", resultat.refus[0]["motif"])
+        self.assertEqual([jeu.game_id for jeu in resultat.jeux], [JEU], "la campagne a poursuivi")
+        self.assertIsNotNone(resultat.card_id, "le scorecard a été ouvert puis fermé")
+
+        etat = EtatCampagne.lire(espace)
+        self.assertEqual(etat.refus, list(resultat.refus), "le refus est persisté (§A7.4)")
+        self.assertEqual(etat.restants(), [], "la reprise ne rejouerait pas le jeu refusé")
+
+        rapport = espace.rapport.read_text(encoding="utf-8")
+        self.assertIn("Jeux refusés par le backend", rapport)
+        self.assertIn("fantome", rapport)
+        types = [ligne["type"] for ligne in espace.lire_metriques()]
+        self.assertIn("refus_jeu", types)
+        self.assertTrue((espace.chemin / "scorecard.json").exists(), "résumé persisté (§A5.3)")
 
 
 if __name__ == "__main__":  # pragma: no cover
