@@ -1146,3 +1146,37 @@ live` prêt : plafonds documentés, artefacts lisibles, reprise sûre). Les gard
 sont actives par défaut : le rejeu du responsable les exercera ; leur effet réel
 sur un modèle vivant se lira dans `reasoning` des scorecards et les métriques
 `garde`.
+
+---
+
+## 2026-09-01 (suite) — U24 : périmètre de la campagne pilote, consigné AVANT lancement
+
+**Session planifiée, autorisation du responsable du 2026-08-30** (jouer ARC Prize,
+ouvrir et clore des scorecards en son nom, garde de publication levée ; plafonds
+§A7.1 obligatoires). Fumée live préalable : TOUT VERT (version 0.32.14,
+`qwen3.6:35b` servi, complétion et appel d'outil à travers le pont 443).
+
+**Préalable codé dans cette session** (couvert par §A5.3/§A1.4, commit `cfea9cc`) :
+le résumé de scorecard est persisté à la fermeture (`scorecard.json` du workspace)
+et réconcilié champ à champ avec les compteurs locaux — la preuve « réconciliation
+exacte » de U24 était impossible sans cela, un scorecard fermé n'étant plus
+relisible (404 mesuré).
+
+**Périmètre du pilote — serré, un seul jeu :**
+
+- jeu : `r11l-495a7899` (6 niveaux, baselines [22, 33, 51, 26, 52, 49], tag
+  `click`) — service PROUVÉ par la sonde U22 ; le moins cher du listing
+  (`cd82-…`) est écarté car mesuré « listé non servi » (§A1.4) ;
+- plafonds (§A7.1, tous obligatoires) : 80 actions/niveau, 300 actions/jeu,
+  1 800 s/jeu, 1 500 000 tokens/jeu, 400 tours max ;
+- mode `transcript` (défaut), gardes H16 ACTIVES (défaut) — leur premier
+  exercice sur modèle vivant ; prédictions attendues dans `reasoning` du
+  scorecard ;
+- `run-id` : `pilote-u24` ; commande exacte :
+  `make run-arc ARGS="--mode live --games r11l-495a7899 --actions-max-niveau 80
+  --actions-max-jeu 300 --budget-secondes-jeu 1800 --budget-tokens-jeu 1500000
+  --tours-max 400 --run-id pilote-u24 --j-autorise-la-publication"`.
+
+Attendu du pilote : débits réels, coût par tour, comportement des gardes et du
+harnais sur un jeu officiel inconnu — jamais une adaptation à ce jeu
+(interdiction de benchmaxing, CLAUDE_PROJECT.md).
