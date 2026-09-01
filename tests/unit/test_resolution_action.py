@@ -69,8 +69,11 @@ def _boucle(dossier: Path) -> BoucleAgent:
     )
     return BoucleAgent(
         config,
-        LLMClient(config, transport=lambda *a, **k: (_ for _ in ()).throw(AssertionError()),
-                  dormir=lambda _: None),
+        LLMClient(
+            config,
+            transport=lambda *a, **k: (_ for _ in ()).throw(AssertionError()),
+            dormir=lambda _: None,
+        ),
         registre,
         _EnvironnementInerte(),
         Notes(dossier / "notes"),
