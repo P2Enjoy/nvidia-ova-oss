@@ -89,9 +89,7 @@ class TestBancParCliReelle(unittest.TestCase):
             check=False,
         )
         self.assertEqual(execution.returncode, 0, execution.stderr)
-        self.assertIn(
-            f"seed {SEED}, horizon {HORIZON}, bruit 0 — score 1.00", execution.stdout
-        )
+        self.assertIn(f"seed {SEED}, horizon {HORIZON}, bruit 0 — score 1.00", execution.stdout)
         self.assertIn(f"{HORIZON} correctes, 0 incorrectes, 0 invalides", execution.stdout)
 
         espace = self.racine / self.RUN_ID

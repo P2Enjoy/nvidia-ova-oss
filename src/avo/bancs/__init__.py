@@ -72,6 +72,4 @@ def executer_banc(
         bruit=bruit,
         tours_max=tours_max,
     )
-    return SortieBanc(
-        run_id=identifiant, releve=releve, chemin_releve=espace.chemin / "banc.json"
-    )
+    return SortieBanc(run_id=identifiant, releve=releve, chemin_releve=espace.chemin / "banc.json")

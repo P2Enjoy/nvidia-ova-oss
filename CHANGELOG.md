@@ -2,6 +2,25 @@
 
 ## [Non publié]
 
+### 2026-09-01 — U29a2 : adaptateur du banc a et CLI `banc`
+
+- Adaptateur de boucle du banc a (`src/avo/bancs/skillexec/adaptateur.py`) :
+  contrat `Environnement` sur l'Entrepôt, quatre outils étiquetés `action` avec
+  paramètre `prediction` (§H16.2), contexte de tâche donné en message système
+  (§S1.3, §S6.2), issue de la dernière action composée dans l'observation
+  (§S2.3), relevé `banc.json` écrit dans le workspace (§S5.3).
+- Nouvelle sous-commande `python -m avo banc <nom> --env … --seed … --horizon …`
+  (§S6.3) : boucle complète sous gardes, mode `replay` (pile locale) ou `live`
+  (endpoint réel) ; la CLI du noyau reste générique, le dispatch vit sous
+  `avo.bancs`.
+- Mode `state` : le message système d'un pas est désormais celui du contexte
+  monté par l'appelant (défaut `prompts.SYSTEME`, ARC inchangé) — §H15.8 amendé ;
+  c'est la surface par laquelle un adaptateur fournit son contexte de tâche à K.
+- Preuves : 18 unitaires (`tests/unit/test_banc_adaptateur.py`), intégration en
+  rejeu HTTP réel (`tests/integration/test_banc_sur_rejeu.py`), cassette E2E
+  déterministe `e2e_banc_entrepot.jsonl` + scénario CLI réelle
+  (`tests/e2e/test_banc_replay.py`), `make seed`/`make seed-e2e` étendus.
+
 ### 2026-09-01 — U29a1 : banc a (patron SkillExecBench), spécification et environnement Entrepôt
 
 - Nouvelle spécification `docs/SPEC_BANCS.md` (§S1–§S7) : cadre commun des bancs

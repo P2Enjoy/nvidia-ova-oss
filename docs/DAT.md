@@ -26,7 +26,7 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 | `avo.transport` | H4.5, A2.1 | politique de retry partagée par les deux clients |
 | `avo.runlog` | H11 | logs JSON corrélés, filtre de masquage des secrets |
 | `avo.arc` | A2, A4–A7 | client API ARC, rendu texte canonique, mémoire de frames sans perte, interface de tâche direct-interaction (`Environnement` de la boucle), calcul du RHAE, runner de campagne et rapport |
-| `avo.bancs` | S1–S7 | bancs d'affinage du harnais : environnements de mesure déterministes (banc a : Entrepôt livré, générateur seedé, score continu) branchés comme adaptateurs minces sur le contrat `Environnement` |
+| `avo.bancs` | S1–S7 | bancs d'affinage du harnais : environnements de mesure déterministes (banc a : Entrepôt livré, générateur seedé, score continu) branchés comme adaptateurs minces sur le contrat `Environnement` ; adaptateur de boucle livré (`skillexec/adaptateur.py` : outils `action`, contexte de tâche en message système, relevé `banc.json`) et sous-commande CLI `banc` — le dispatch et les mots du banc vivent sous `avo.bancs`, la CLI du noyau reste générique |
 | `mocks/llm_replay` | H4.7 | rejeu d'échanges enregistrés sur le vrai endpoint, injection de fautes |
 | `mocks/arc_replay` | A3 | contrat ARC local (port 8765), jeu `cible` en forme fermée, rejeu d'épisodes |
 

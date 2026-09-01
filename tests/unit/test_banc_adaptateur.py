@@ -107,7 +107,9 @@ class TestContratEnvironnement(unittest.TestCase):
         self.assertIsNotNone(self.environnement.etat_terminal())
 
     def test_actions_disponibles(self) -> None:
-        self.assertEqual(self.environnement.actions_disponibles(), ("store", "ship", "move", "wait"))
+        self.assertEqual(
+            self.environnement.actions_disponibles(), ("store", "ship", "move", "wait")
+        )
 
 
 class TestOutils(unittest.TestCase):
@@ -167,9 +169,7 @@ class TestContexteTache(unittest.TestCase):
 class TestEpisodeJoue(unittest.TestCase):
     """§S6.3, §S5.3 : la boucle complète sous gardes, relevé écrit et exact."""
 
-    def _jouer(
-        self, contenus: list[str], tours_max: int | None = None
-    ) -> tuple[Any, Workspace]:
+    def _jouer(self, contenus: list[str], tours_max: int | None = None) -> tuple[Any, Workspace]:
         config = _config()
         dossier = tempfile.TemporaryDirectory()
         self.addCleanup(dossier.cleanup)
@@ -189,7 +189,10 @@ class TestEpisodeJoue(unittest.TestCase):
         releve, espace = self._jouer([contenu_pas(action) for action in actions])
         self.assertEqual(releve.score, 1.0)
         self.assertEqual(releve.correctes, HORIZON)
-        self.assertEqual(releve.champs_libres["arret"], "épisode épuisé : tous les événements sont consommés")
+        self.assertEqual(
+            releve.champs_libres["arret"],
+            "épisode épuisé : tous les événements sont consommés",
+        )
         self.assertEqual(releve.tokens_consommes, 150 * HORIZON)
         self.assertIsNotNone(releve.taille_prompt_moyenne)
         ecrit = json.loads((espace.chemin / "banc.json").read_text(encoding="utf-8"))
