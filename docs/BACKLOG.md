@@ -795,9 +795,22 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   campagne complète verte (lint, mypy strict 112 fichiers, 592 unitaires,
   148 intégration, 5 E2E, build). Le branchement adaptateur+CLI du dépôt
   appartient à U29a4 (§S7, point tranché à la clôture).
-- **U29a4 `[ ]`** — branchement du Dépôt logiciel à l'adaptateur et à la CLI
+- **U29a4 `[~]`** — branchement du Dépôt logiciel à l'adaptateur et à la CLI
   (§S6), puis bruit et récupération d'état en campagne de banc, relevés
   multi-seeds, alimentation du déclencheur U25.
+  **Livré et vérifié le 2026-09-01** : adaptateur des deux environnements (base
+  commune de boucle, contexte de tâche §S4.2/§S4.5, cinq outils `action`,
+  numéro de PR de `merge` en texte à l'erreur nommée), dispatch CLI
+  `--env depot`, résolution B.1 au relevé ; 18 unitaires, intégration en rejeu
+  HTTP réel (résolution exacte), cassette E2E `e2e_banc_depot.jsonl` + scénario
+  CLI réel, campagne complète verte (lint, mypy strict, 610 unitaires,
+  149 intégration, 6 E2E, build). Relevés live consignés (journal, suite 18) :
+  dépôt h10 seeds 1–3 bruit 0 (0,60 / 0,80 / 0,60), premier point bruit 5 sur
+  les deux environnements.
+  **Reste à livrer** : campagne de banc systématique — bruit aux niveaux de
+  référence (0/5/20/50) et récupération d'état sur les deux environnements,
+  relevés multi-seeds aux horizons 25+ (3 seeds minimum par point, §S5.4),
+  alimentation du déclencheur U25 avec ces séries.
 
 ## Lot H — La méthode dans la structure
 

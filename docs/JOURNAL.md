@@ -1831,3 +1831,53 @@ script de fumée périmé » consignée (poussée avec la suite 14).
 **Où reprendre.** Inchangé de la suite 17 : U31 → U29a4 (branchement du Dépôt
 logiciel à l'adaptateur et à la CLI, campagne de banc multi-seeds). La mesure
 de variance inter-runs ci-dessus appartient au dossier du déclencheur U25.
+
+---
+
+## 2026-09-01 (suite 18) — U31/U29a4 : le Dépôt logiciel branché, premiers relevés live du dépôt
+
+Session planifiée. Pile montée et seedée (dockerd manuel, CA du proxy dans
+`certs/`), reprise désignée par la suite 17 : U29a4. La spécification (§S6,
+§S4) couvrant déjà le branchement, aucun commit documentaire préalable — code
+directement (§3.2 du CloudWorker, exception de reprise).
+
+**Livré.** Adaptateur des deux environnements (`adaptateur.py`, commits
+`e99ff11`/`cf3f3d8`) : mécanique de boucle factorisée en base commune générique
+(observation, issue, motif de fin — identiques par construction), contexte de
+tâche du dépôt (protocole §S4.2/§S4.5), cinq outils `action`, dispatch CLI
+`--env depot`, résolution B.1 au relevé (incident compris). Points tranchés :
+`jouer_episode` prend `environnement` (défaut `entrepot`, appels intacts) ; le
+numéro de PR de `merge` reste `string` au schéma et s'analyse dans le moteur
+(« 3 »/« #3 » se lisent, l'imprenable est invalide nommé qui consomme, §S4.6) —
+issue écartée : type `integer` au schéma, qui ferait échouer la résolution AVANT
+l'environnement et créerait un comportement différent entre outils.
+
+**Prouvé.** 18 unitaires (`test_banc_adaptateur_depot.py`), intégration rejeu
+HTTP deux passes avec résolution exacte, cassette `e2e_banc_depot.jsonl` seedée
+(double génération comparée) + scénario CLI réel ; la cassette Entrepôt
+régénérée est IDENTIQUE octet pour octet — la refactorisation ne change pas la
+boucle. Campagne complète verte : lint, mypy strict, 610 unitaires,
+149 intégration, 6 E2E, build.
+
+**Relevé live du dépôt** (`--env depot --horizon 10 --mode live`, `state`,
+gardes actives) — premier relevé de cet environnement :
+
+| seed | bruit | score | corr/inc/inv | résolution | tokens | durée |
+|---|---|---|---|---|---|---|
+| 1 | 0 | 0,60 | 6/1/3 | 0,0 (0/2) | 22 930 | 148 s |
+| 2 | 0 | 0,80 | 8/1/1 | 0,5 (1/2) | 25 434 | 241 s |
+| 3 | 0 | 0,60 | 6/0/4 | 0,0 (0/2) | 19 239 | 270 s |
+| 1 | 5 | 1,00 | 10/0/0 | 1,0 (2/2) | 21 109 | 206 s |
+
+Entrepôt h10 bruit 5, seed 1 : 0,80 (8/0/2), premier point bruit de cet
+environnement. Lecture : le dépôt (état intriqué) score sous l'entrepôt à
+horizon égal, la résolution paie cher chaque divergence ; à bruit 5 la variance
+inter-runs domine l'effet du bruit (1,00 sur le même seed qui rendait 0,60).
+Erreurs observées : tenue d'état du modèle (`wait` face à des `revue` sans
+divergence, `merge` d'une PR jamais ouverte) — aucune anomalie du harnais ; le
+`wait` dû en divergence a compté correct en réel (§S4.5 confirmé).
+
+**Où reprendre.** U29a4 reste `[~]` : campagne de banc systématique — bruit aux
+niveaux de référence (0/5/20/50) et récupération d'état sur les DEUX
+environnements, relevés multi-seeds aux horizons 25+ (3 seeds minimum par
+point), alimentation du déclencheur U25 avec ces séries.

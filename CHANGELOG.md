@@ -2,6 +2,31 @@
 
 ## [Non publié]
 
+### 2026-09-01 — U29a4 : le Dépôt logiciel branché à l'adaptateur et à la CLI (§S6)
+
+- L'adaptateur du banc a joue désormais les DEUX environnements :
+  `python -m avo banc skillexec --env depot …` monte la boucle complète sous
+  gardes sur le Dépôt logiciel, avec son contexte de tâche (protocole §S4.2 et
+  §S4.5 donné à l'agent) et ses cinq outils étiquetés `action`
+  (`commit`, `create_pr`, `merge`, `fix_ci`, `wait`). Mécanique de boucle
+  factorisée en base commune : composition de l'observation, issue et motif de
+  fin identiques dans les deux environnements, par construction.
+- Le relevé `banc.json` porte l'environnement joué et, pour le dépôt, la
+  résolution B.1 (`resolution`, `demandes_resolues`, `demandes_jugees`), relevé
+  d'incident compris.
+- Le numéro de PR de `merge` arrive en texte : « 3 » et « #3 » se lisent, un
+  numéro imprenable est une action invalide NOMMÉE qui consomme l'événement
+  (§S4.6), jamais une erreur obscure avant l'environnement.
+- Preuves : 18 unitaires (`tests/unit/test_banc_adaptateur_depot.py`),
+  intégration en rejeu HTTP réel à deux passes avec résolution exacte
+  (`tests/integration/test_banc_depot_sur_rejeu.py`), cassette E2E seedée
+  `e2e_banc_depot.jsonl` (double génération comparée ; la cassette Entrepôt
+  régénérée est identique octet pour octet — la refactorisation ne change pas
+  la boucle) et scénario CLI réel sur pile compose. Campagne complète verte
+  (lint, mypy strict, 610 unitaires, 149 intégration, 6 E2E, build).
+- Premiers relevés live du dépôt consignés au journal (h10, seeds 1–3, bruit 0
+  et premier point bruit 5).
+
 ### 2026-09-01 — U29a3 : environnement Dépôt logiciel du banc a (§S4)
 
 - Détail exécutable de §S4 écrit et committé avant le code : cycle des demandes
