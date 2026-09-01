@@ -1251,3 +1251,35 @@ pour que la continuation VISTA arrive AVANT la zone de casse —
 **Relance (périmètre consigné avant lancement)** : mêmes plafonds et même jeu
 que le pilote b, `run-id: pilote-u24c`, avec `OLLAMA_CONTEXT_LENGTH=98304` dans
 l'environnement du run.
+
+---
+
+## 2026-09-01 (suite 4) — Pilote c dépouillé, deux correctifs généraux, relance d
+
+**Pilote `pilote-u24c` (cd82-fb555c5d, fenêtre 98 304)** : jeu servi, 3 actions
+jouées (réconciliation locale/API exacte 3 = 3), gardes H16 exercées, puis série
+de `500` à retries épuisés à ~48 k de prompt (4 tentatives, ~3,5 min) — l'échec
+nommé du 2026-08-31 a fonctionné : campagne terminée, scorecard
+`2e57f802…` fermé, résumé et rapport persistés. Rapport committé :
+`docs/rapports/pilote-u24c.md`. La casse n'est PAS la fenêtre : c'est l'endpoint
+sous charge à travers le pont (les 500 isolés des tours précédents guérissaient
+au premier retry).
+
+**Corrigé (général, spéc amendée avant code, tout committé)** :
+
+1. §A7.3 : les lignes d'inférence de la section Coûts viennent des MÉTRIQUES du
+   run — le pilote c a montré un rapport annonçant 0 token quand 149 705 avaient
+   été dépensés par un jeu clos en échec nommé ; l'écart actions/tours des jeux
+   refusés est nommé dans le rapport.
+2. §H4.5 : retries étendus à six requêtes (paliers 45 s et 90 s) — à travers le
+   pont chaque tentative échouée réchauffe le cache de préfixe, la patience
+   transforme une panne transitoire en retard.
+3. mypy strict rétabli : les scénarios de campagne héritent d'un socle partagé au
+   lieu d'emprunter les méthodes attribut par attribut (préexistant, bloquait la
+   campagne de preuves).
+
+**Périmètre `pilote-u24d`, consigné avant lancement** : mêmes jeu et plafonds que
+c (cd82-fb555c5d, 80 actions/niveau, 300 actions/jeu, 1 500 000 tokens/jeu,
+400 tours, fenêtre 98 304, gardes actives, mode transcript) SAUF budget temps
+réduit à 1 200 s/jeu pour tenir dans la session — point tranché : un pilote
+borné et terminé vaut mieux qu'un pilote interrompu par la fin de machine.
