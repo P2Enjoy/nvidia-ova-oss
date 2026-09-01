@@ -294,6 +294,20 @@ class TestBoucleEtat(unittest.TestCase):
         self.assertIsNone(bilan.tours[0].evenement)
         self.assertIs(bilan.tours[1].evenement, Evenement.PREDICTION_CONFIRMEE)
 
+    def test_la_ponctuation_trainante_du_nom_d_action_est_normalisee(self) -> None:
+        """§H15.8 : « avance, » est un bruit de format, pas une action inconnue.
+
+        Mesuré en conditions réelles (run `ab-u28-state`, 2026-09-01) : un tour
+        entier perdu sur « action1, ». La normalisation ne touche que la
+        ponctuation de bord du jeton de nom.
+        """
+        boucle, environnement, journal = self._boucle_scriptee(
+            [_bloc_json({}, "avance,")], [Evenement.PREDICTION_CONFIRMEE]
+        )
+        boucle.executer(tours_max=1)
+        self.assertEqual(environnement.jouees, [("avance", {})])
+        self.assertEqual(journal, ["avance"])
+
     def test_sigma_est_persiste_dans_le_workspace_apres_chaque_tour(self) -> None:
         espace = Workspace.ouvrir(
             self._config("http://inutilise.invalide"), "run-etat", racine=self.racine / "ws"

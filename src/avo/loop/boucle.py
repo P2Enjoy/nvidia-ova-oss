@@ -655,7 +655,10 @@ class BoucleAgent:
         registre comme n'importe quel outil (§H7.4), jamais fatale.
         """
         nom, _, reste = action_texte.strip().partition(" ")
-        nom = nom.strip().lower()
+        # §H15.8 : la ponctuation traînante du jeton de nom est un bruit de format
+        # des modèles open-weight (mesuré : « action1, », run ab-u28-state) — elle
+        # est retirée avant la recherche, sans toucher aux valeurs ni au sens.
+        nom = nom.strip().lower().rstrip(",;:.")
         schemas = {
             schema["function"]["name"]: schema["function"]
             for schema in self.registre.schemas(("action",))
