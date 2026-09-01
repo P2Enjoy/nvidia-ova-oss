@@ -659,7 +659,15 @@ le module `avo.context.etat` restant inchangé et pur :
   open-weight, mesuré en conditions réelles (run `ab-u28-state`, 2026-09-01 : un
   tour perdu sur « action1, ») et cohérent avec la taxonomie d'erreurs de
   SKILL.state ; la normalisation ne touche que la ponctuation de bord du jeton,
-  jamais les valeurs ni le sens. Le nom
+  jamais les valeurs ni le sens. Deux autres bruits de format des mêmes modèles,
+  mesurés en conditions réelles (relevé live du banc a, 2026-09-01 : 11 tours
+  perdus sur 30 événements), sont normalisés au même titre : la syntaxe d'appel
+  de fonction — « nom(v1, v2) » et « nom() » se lisent comme « nom v1,v2 » et
+  « nom » — et, lorsque le découpage des valeurs par virgules ne rend pas le
+  compte de paramètres requis mais que le découpage par espaces le rend, ce
+  dernier fait foi. Ces normalisations sont purement syntaxiques et valent pour
+  tout environnement : aucun nom d'action ni compte de paramètres n'y est codé.
+  Le nom
   résolu est exécuté par le registre comme n'importe quel outil d'action
   (§H8.1 : « c'est le registre qui l'exécute ») ; un nom inconnu ou des valeurs en
   nombre incorrect produisent l'erreur d'outil habituelle (§H7.4), jamais fatale.
