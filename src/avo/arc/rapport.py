@@ -64,23 +64,41 @@ def table_par_niveau(jeux: Sequence[ResultatJeu]) -> str:
     return "\n".join(lignes) if len(lignes) > 2 else "_Aucun niveau._"
 
 
-def couts(jeux: Sequence[ResultatJeu], metriques: Sequence[Mapping[str, Any]]) -> str:
-    """Tokens, durées, actions — et le nombre d'appels, qui vient des métriques."""
-    appels = sum(1 for ligne in metriques if ligne.get("type") == "llm")
-    tronquees = sum(
-        1 for ligne in metriques if ligne.get("type") == "llm" and ligne.get("tronquee")
-    )
-    return "\n".join(
-        [
-            f"- appels au modèle : **{appels}**"
-            + (f", dont {tronquees} tronqué(s) par la limite de sortie" if tronquees else ""),
-            f"- tokens de prompt : **{sum(jeu.tokens_prompt for jeu in jeux)}**",
-            f"- tokens générés : **{sum(jeu.tokens_generes for jeu in jeux)}**",
-            f"- actions dépensées : **{sum(jeu.actions for jeu in jeux)}**",
-            f"- tours joués : **{sum(jeu.tours for jeu in jeux)}**",
-            f"- durée cumulée : **{formater(sum(jeu.secondes for jeu in jeux))} s**",
-        ]
-    )
+def couts(
+    jeux: Sequence[ResultatJeu],
+    metriques: Sequence[Mapping[str, Any]],
+    jeux_refuses: int = 0,
+) -> str:
+    """Tokens, durées, actions — les lignes d'inférence viennent des métriques (§A7.3).
+
+    Les métriques du run couvrent TOUS les jeux, ceux clos en échec nommé compris
+    (§A7.4) : un jeu refusé en cours de partie a réellement dépensé ses tokens, et
+    les compter à zéro mentirait. Les lignes de partie (actions, tours, durée de
+    jeu) restent celles des jeux menés à leur terme, et l'écart est nommé.
+    """
+    lignes_llm = [ligne for ligne in metriques if ligne.get("type") == "llm"]
+    appels = len(lignes_llm)
+    tronquees = sum(1 for ligne in lignes_llm if ligne.get("tronquee"))
+    tokens_prompt = sum(int(ligne.get("tokens_prompt", 0)) for ligne in lignes_llm)
+    tokens_generes = sum(int(ligne.get("tokens_generes", 0)) for ligne in lignes_llm)
+    duree_inference = sum(float(ligne.get("duree_ms", 0)) for ligne in lignes_llm) / 1000.0
+    lignes = [
+        f"- appels au modèle : **{appels}**"
+        + (f", dont {tronquees} tronqué(s) par la limite de sortie" if tronquees else ""),
+        f"- tokens de prompt : **{tokens_prompt}**",
+        f"- tokens générés : **{tokens_generes}**",
+        f"- durée d'inférence cumulée : **{formater(duree_inference)} s**",
+        f"- actions dépensées : **{sum(jeu.actions for jeu in jeux)}**",
+        f"- tours joués : **{sum(jeu.tours for jeu in jeux)}**",
+        f"- durée cumulée de jeu : **{formater(sum(jeu.secondes for jeu in jeux))} s**",
+    ]
+    if jeux_refuses:
+        lignes.append(
+            "- les lignes d'inférence couvrent tous les jeux, refusés compris ; "
+            f"actions, tours et durée de jeu ne comptent que les {len(jeux)} jeu(x) "
+            "mené(s) à terme (§A7.3)"
+        )
+    return "\n".join(lignes)
 
 
 def evenements(jeux: Sequence[ResultatJeu]) -> str:
@@ -158,7 +176,7 @@ def sections(
         ("Résultat", entete),
         ("Par jeu", table_par_jeu(resultat.jeux)),
         ("Détail par niveau", table_par_niveau(resultat.jeux)),
-        ("Coûts", couts(resultat.jeux, metriques)),
+        ("Coûts", couts(resultat.jeux, metriques, jeux_refuses=len(resultat.refus))),
         ("Événements", evenements(resultat.jeux)),
         ("Comparaison aux références publiées", comparaison(resultat)),
         ("Limites et écarts", limites(resultat)),

@@ -61,7 +61,14 @@ class _ClientLLMInterdit(LLMClient):
         raise AssertionError("le modèle a été appelé alors qu'aucun jeu ne restait à jouer")
 
 
-class TestCampagneSurRejeu(unittest.TestCase):
+class _SocleCampagneSurRejeu(unittest.TestCase):
+    """Pile de rejeu montée et démontée par test : socle partagé des scénarios.
+
+    Les classes de scénario en héritent au lieu d'emprunter ses méthodes attribut
+    par attribut — l'emprunt inter-classes rendait les types de `self` invalides
+    (mypy strict, corrigé le 2026-09-01).
+    """
+
     def setUp(self) -> None:
         if not CASSETTE_REELLE.exists():
             self.skipTest("cassette absente : lancer « make record-llm »")
@@ -191,6 +198,8 @@ class TestCampagneSurRejeu(unittest.TestCase):
         )
         return resultat, espace
 
+
+class TestCampagneSurRejeu(_SocleCampagneSurRejeu):
     # -- preuves ---------------------------------------------------------------
     def test_une_mini_campagne_joue_mesure_et_rend_compte(self) -> None:
         resultat, espace = self._campagne("run-mini")
@@ -353,17 +362,8 @@ class _ClientAvecFantome(ArcClient):
         return super().reset(game_id=game_id, card_id=card_id, guid=guid)
 
 
-class TestJeuRefuse(unittest.TestCase):
+class TestJeuRefuse(_SocleCampagneSurRejeu):
     """§A7.4 (2026-09-01) : un jeu refusé est nommé, la campagne poursuit et ferme."""
-
-    setUp = TestCampagneSurRejeu.setUp
-    tearDown = TestCampagneSurRejeu.tearDown
-    _config = TestCampagneSurRejeu._config
-    _plafonds = staticmethod(TestCampagneSurRejeu._plafonds)
-    _gabarit = staticmethod(TestCampagneSurRejeu._gabarit)
-    _repondre = TestCampagneSurRejeu._repondre
-    _preparer_cassette = TestCampagneSurRejeu._preparer_cassette
-    _servir = TestCampagneSurRejeu._servir
 
     def test_un_jeu_refuse_est_nomme_et_la_campagne_poursuit(self) -> None:
         config = self._config(self._preparer_cassette("run-refuse"))
@@ -394,15 +394,8 @@ class TestJeuRefuse(unittest.TestCase):
         self.assertTrue((espace.chemin / "scorecard.json").exists(), "résumé persisté (§A5.3)")
 
 
-class TestEchecInference(unittest.TestCase):
+class TestEchecInference(_SocleCampagneSurRejeu):
     """§A7.4 : un échec d'inférence à retries épuisés clôt le JEU en échec nommé."""
-
-    setUp = TestCampagneSurRejeu.setUp
-    tearDown = TestCampagneSurRejeu.tearDown
-    _config = TestCampagneSurRejeu._config
-    _plafonds = staticmethod(TestCampagneSurRejeu._plafonds)
-    _gabarit = staticmethod(TestCampagneSurRejeu._gabarit)
-    _servir = TestCampagneSurRejeu._servir
 
     def test_un_500_permanent_ne_tue_pas_la_campagne(self) -> None:
         config = self._config("http://serveur-en-panne.invalide")

@@ -94,17 +94,45 @@ class TestTables(unittest.TestCase):
 
 
 class TestCoutsEtEvenements(unittest.TestCase):
-    def test_les_couts_comptent_les_appels_depuis_les_metriques(self) -> None:
+    # Preuve révisée le 2026-09-01 (§A7.3 amendé) : les lignes d'inférence viennent
+    # désormais des MÉTRIQUES du run, non des seuls jeux terminés — le pilote
+    # `pilote-u24c` a montré un rapport annonçant zéro token alors que ~150 k
+    # avaient été dépensés par un jeu clos en échec nommé.
+    def test_les_couts_d_inference_viennent_des_metriques(self) -> None:
         metriques: list[dict[str, Any]] = [
-            {"type": "llm"},
-            {"type": "llm", "tronquee": True},
+            {"type": "llm", "tokens_prompt": 600, "tokens_generes": 200, "duree_ms": 1500},
+            {
+                "type": "llm",
+                "tokens_prompt": 400,
+                "tokens_generes": 100,
+                "duree_ms": 500,
+                "tronquee": True,
+            },
             {"type": "action"},
         ]
         rendu = couts([_jeu("cible")], metriques)
         self.assertIn("appels au modèle : **2**", rendu)
         self.assertIn("1 tronqué", rendu)
         self.assertIn("tokens de prompt : **1000**", rendu)
+        self.assertIn("tokens générés : **300**", rendu)
+        self.assertIn("durée d'inférence cumulée : **2.00 s**", rendu)
         self.assertIn("actions dépensées : **76**", rendu)
+
+    def test_un_jeu_refuse_garde_ses_couts_et_l_ecart_est_nomme(self) -> None:
+        """Tous les jeux refusés : les tokens dépensés restent au rapport (§A7.3)."""
+        metriques: list[dict[str, Any]] = [
+            {"type": "llm", "tokens_prompt": 9000, "tokens_generes": 500, "duree_ms": 30000},
+            {"type": "refus_jeu", "jeu": "x", "motif": "ServerError"},
+        ]
+        rendu = couts([], metriques, jeux_refuses=1)
+        self.assertIn("tokens de prompt : **9000**", rendu)
+        self.assertIn("tokens générés : **500**", rendu)
+        self.assertIn("actions dépensées : **0**", rendu)
+        self.assertIn("refusés compris", rendu)
+        self.assertIn("0 jeu(x)", rendu)
+
+    def test_sans_refus_l_ecart_n_est_pas_mentionne(self) -> None:
+        self.assertNotIn("refusés compris", couts([_jeu("cible")], [{"type": "llm"}]))
 
     def test_sans_troncature_la_mention_n_apparait_pas(self) -> None:
         self.assertNotIn("tronqué", couts([_jeu("cible")], [{"type": "llm"}]))

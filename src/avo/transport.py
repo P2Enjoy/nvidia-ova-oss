@@ -17,9 +17,12 @@ import time
 from collections.abc import Callable
 from typing import TypeVar
 
-#: Attentes entre deux tentatives, en secondes (§H4.5). Trois nouvelles tentatives
-#: suivent l'échec initial, soit quatre requêtes au plus.
-ATTENTES_RETRY: tuple[float, ...] = (1.0, 4.0, 16.0)
+#: Attentes entre deux tentatives, en secondes (§H4.5). Cinq nouvelles tentatives
+#: suivent l'échec initial, soit six requêtes au plus. Les deux paliers longs
+#: absorbent les pannes transitoires de quelques minutes : à travers un pont qui
+#: coupe avant les premiers en-têtes, chaque tentative échouée fait néanmoins
+#: avancer le cache de préfixe du serveur (mesuré le 2026-09-01, `pilote-u24c`).
+ATTENTES_RETRY: tuple[float, ...] = (1.0, 4.0, 16.0, 45.0, 90.0)
 
 #: Amplitude du jitter appliqué à chaque attente (§H4.5).
 JITTER = 0.25

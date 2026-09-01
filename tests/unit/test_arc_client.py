@@ -29,6 +29,7 @@ from avo.arc.client import (
     verifier_hote,
 )
 from avo.config import Config, Mode, charger
+from avo.transport import ATTENTES_RETRY
 
 _GRILLE = [[0, 0], [0, 0]]
 
@@ -263,10 +264,12 @@ class TestErreursEtRetries(unittest.TestCase):
         self.assertEqual(len(transport.appels), 1)
 
     def test_une_erreur_serveur_est_retentee_puis_leve(self) -> None:
+        # Preuve révisée le 2026-09-01 (§H4.5 amendé) : cinq nouvelles tentatives
+        # après l'échec initial, la politique patiente mesurée sur `pilote-u24c`.
         client, transport = _client((503, {"error": "panne"}))
         with self.assertRaises(ArcServeurError):
             client.games()
-        self.assertEqual(len(transport.appels), 4, "trois nouvelles tentatives")
+        self.assertEqual(len(transport.appels), len(ATTENTES_RETRY) + 1, "retries épuisés")
 
     def test_une_erreur_serveur_puis_succes(self) -> None:
         client, transport = _client((500, {}), (200, [{"game_id": "x"}]))
