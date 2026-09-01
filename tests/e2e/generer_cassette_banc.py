@@ -1,6 +1,7 @@
-"""Générateur déterministe de la cassette E2E du banc a (épisode Entrepôt).
+"""Générateur déterministe des cassettes E2E du banc a (Entrepôt et Dépôt logiciel).
 
-@verifies docs/BACKLOG.md U29a2 — adaptateur harnais + CLI `banc`
+@verifies docs/BACKLOG.md U29a2 — adaptateur harnais + CLI `banc` ; U29a4 —
+          branchement du Dépôt logiciel (cassette E2E du dépôt)
 @verifies docs/SPEC_BANCS.md §S6.4 (E2E : scénario rejoué par cassette, épisode
           court, score attendu exact), §S1.4 (déterminisme : double génération
           comparée)
@@ -17,10 +18,12 @@ from __future__ import annotations
 
 import json
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from avo.bancs.skillexec.adaptateur import jouer_episode
+from avo.bancs.skillexec.depot import generer_episode_depot
 from avo.bancs.skillexec.generation import generer_episode
 from avo.config import Mode, charger
 from avo.llm.client import LLMClient, ReponseHTTP
@@ -28,8 +31,10 @@ from avo.memory.workspace import Workspace
 from llm_replay.cassette import AUTH_VALIDE, Cassette, Exchange, RequestRecord, ResponseRecord
 from tests.e2e.scenarios_banc import (
     ENV_EPINGLE_BANC,
+    HYPOTHESE_DEPOT,
     JETON,
     actions_parfaites,
+    actions_parfaites_depot,
     gabarit_reponse,
     reponse_pas,
 )
@@ -37,22 +42,49 @@ from tests.e2e.scenarios_banc import (
 #: Horodatage fixe : la régénération est identique octet à octet (§A8.5).
 HORODATAGE = "2026-09-01T00:00:00+00:00"
 
-CASSETTE_NOM = "e2e_banc_entrepot.jsonl"
 DOSSIER_CASSETTES = Path("tests/fixtures/llm/cassettes")
 
-#: Paramètres de l'épisode du scénario (§S2.2) — courts, score attendu exact 1.00.
-SEED = 42
-HORIZON = 6
+#: Hypothèse par défaut des pas de l'Entrepôt — celle du décor (`contenu_pas`).
+HYPOTHESE_ENTREPOT = "je tiens l'état exact de l'entrepôt"
 
 
-def _capturer_corps(gabarit: dict[str, Any]) -> list[dict[str, Any]]:
+@dataclass(frozen=True)
+class ScenarioBanc:
+    """Un scénario E2E du banc : environnement, épisode court, jeu parfait (§S6.4)."""
+
+    environnement: str
+    cassette: str
+    seed: int
+    horizon: int
+    hypothese: str
+
+    def actions(self) -> list[str]:
+        if self.environnement == "entrepot":
+            return actions_parfaites(generer_episode(self.seed, self.horizon))
+        return actions_parfaites_depot(generer_episode_depot(self.seed, self.horizon))
+
+
+#: Paramètres des scénarios (§S2.2) — courts, score attendu exact 1.00. Le dépôt
+#: couvre les quatre types d'événements et DEUX demandes jugées (seed 6, relevé
+#: du générateur), résolution attendue 1.0.
+SCENARIO_ENTREPOT = ScenarioBanc("entrepot", "e2e_banc_entrepot.jsonl", 42, 6, HYPOTHESE_ENTREPOT)
+SCENARIO_DEPOT = ScenarioBanc("depot", "e2e_banc_depot.jsonl", 6, 8, HYPOTHESE_DEPOT)
+SCENARIOS = (SCENARIO_ENTREPOT, SCENARIO_DEPOT)
+
+#: Compatibilité de lecture pour les preuves de l'Entrepôt (U29a2).
+CASSETTE_NOM = SCENARIO_ENTREPOT.cassette
+SEED = SCENARIO_ENTREPOT.seed
+HORIZON = SCENARIO_ENTREPOT.horizon
+
+
+def _capturer_corps(scenario: ScenarioBanc, gabarit: dict[str, Any]) -> list[dict[str, Any]]:
     """Première passe : joue l'épisode et relève les corps réellement émis."""
-    actions = actions_parfaites(generer_episode(SEED, HORIZON))
+    actions = scenario.actions()
     corps_emis: list[dict[str, Any]] = []
 
     def transport(url: str, corps: bytes, entetes: Any, timeout: float) -> ReponseHTTP:
         corps_emis.append(json.loads(corps))
-        reponse = reponse_pas(gabarit, actions[len(corps_emis) - 1])
+        reponse = reponse_pas(gabarit, actions[len(corps_emis) - 1], scenario.hypothese)
         return ReponseHTTP(200, json.dumps(reponse).encode())
 
     environnement = {
@@ -66,21 +98,25 @@ def _capturer_corps(gabarit: dict[str, Any]) -> list[dict[str, Any]]:
         releve = jouer_episode(
             config,
             espace,
-            seed=SEED,
-            horizon=HORIZON,
+            seed=scenario.seed,
+            horizon=scenario.horizon,
             client_llm=LLMClient(config, transport=transport, dormir=lambda _: None),
+            environnement=scenario.environnement,
         )
-    if releve.score != 1.0 or releve.correctes != HORIZON:
+    if releve.score != 1.0 or releve.correctes != scenario.horizon:
         raise AssertionError(
-            f"scénario banc : attendu {HORIZON}/{HORIZON} correctes (score 1.00), "
+            f"scénario banc ({scenario.environnement}) : attendu "
+            f"{scenario.horizon}/{scenario.horizon} correctes (score 1.00), "
             f"obtenu {releve.correctes} correctes (score {releve.score:.2f})"
         )
     return corps_emis
 
 
-def _cassette(gabarit: dict[str, Any], corps_emis: list[dict[str, Any]]) -> str:
+def _cassette(
+    scenario: ScenarioBanc, gabarit: dict[str, Any], corps_emis: list[dict[str, Any]]
+) -> str:
     """Seconde passe : apparie chaque corps émis à la réponse de la politique."""
-    actions = actions_parfaites(generer_episode(SEED, HORIZON))
+    actions = scenario.actions()
     cassette = Cassette()
     for rang, corps in enumerate(corps_emis):
         cassette.ajouter(
@@ -89,7 +125,7 @@ def _cassette(gabarit: dict[str, Any], corps_emis: list[dict[str, Any]]) -> str:
                 response=ResponseRecord(
                     status=200,
                     headers={"content-type": "application/json"},
-                    body=reponse_pas(gabarit, actions[rang]),
+                    body=reponse_pas(gabarit, actions[rang], scenario.hypothese),
                 ),
                 recorded_at=HORODATAGE,
                 duration_ms=1,
@@ -98,24 +134,29 @@ def _cassette(gabarit: dict[str, Any], corps_emis: list[dict[str, Any]]) -> str:
     return "".join(json.dumps(echange.en_json(), ensure_ascii=False) + "\n" for echange in cassette)
 
 
-def generer() -> str:
+def generer(scenario: ScenarioBanc) -> str:
     """Génère deux fois, compare, et rend le contenu unique du scénario (§A8.5)."""
     gabarit = gabarit_reponse()
-    premiere = _cassette(gabarit, _capturer_corps(gabarit))
-    seconde = _cassette(gabarit, _capturer_corps(gabarit))
+    premiere = _cassette(scenario, gabarit, _capturer_corps(scenario, gabarit))
+    seconde = _cassette(scenario, gabarit, _capturer_corps(scenario, gabarit))
     if premiere != seconde:
         raise AssertionError(
-            "scénario banc : deux générations diffèrent — le décor n'est pas "
-            "déterministe, la cassette ne peut pas être seedée (§A8.5, §S1.4)"
+            f"scénario banc ({scenario.environnement}) : deux générations diffèrent "
+            "— le décor n'est pas déterministe, la cassette ne peut pas être "
+            "seedée (§A8.5, §S1.4)"
         )
     return premiere
 
 
 def main() -> int:
-    contenu = generer()
-    chemin = DOSSIER_CASSETTES / CASSETTE_NOM
-    chemin.write_text(contenu, encoding="utf-8")
-    print(f"  {CASSETTE_NOM} : {contenu.count(chr(10))} échanges, régénération vérifiée")
+    for scenario in SCENARIOS:
+        contenu = generer(scenario)
+        chemin = DOSSIER_CASSETTES / scenario.cassette
+        chemin.write_text(contenu, encoding="utf-8")
+        print(
+            f"  {scenario.cassette} : {contenu.count(chr(10))} échanges, "
+            "régénération vérifiée"
+        )
     return 0
 
 
