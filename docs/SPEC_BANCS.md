@@ -148,10 +148,12 @@ action correcte, évaluée sur l'état de vérité RÉEL au moment de l'action :
 - observation de bruit seul (§S3.6) → `wait`.
 
 **S3.6 — Bruit, condition 1** (source annexe C). Avec `bruit=N`, chaque
-observation reçoit N lignes de télémétrie strictement hors sujet, tirées au rng
-seedé (batterie, température, charge CPU, capteurs, OCR caméra — gabarits de
-C.2), sous l'en-tête `--- TELEMETRIE DE FOND ---`. Le bruit n'altère jamais
-l'état et n'appelle jamais d'action. Niveaux de référence : 0, 5, 20, 50.
+observation reçoit N lignes de télémétrie strictement hors sujet, tirées d'un
+flux aléatoire seedé SÉPARÉ de celui des événements — le niveau de bruit ne
+change jamais la suite d'événements : même tâche, distracteurs ajoutés (batterie,
+température, charge CPU, capteurs, OCR caméra — gabarits de C.2), sous l'en-tête
+`--- TELEMETRIE DE FOND ---`. Le bruit n'altère jamais l'état et n'appelle
+jamais d'action. Niveaux de référence : 0, 5, 20, 50.
 
 **S3.7 — Fin d'épisode.** L'épisode se termine quand les `horizon` événements
 actionnables sont consommés (chacun par exactement une action de l'agent,
