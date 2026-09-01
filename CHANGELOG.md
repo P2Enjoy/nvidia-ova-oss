@@ -2,6 +2,20 @@
 
 ## [Non publié]
 
+### 2026-09-01 — U28 : A/B transcript/state en conditions réelles, robustesse de la résolution d'action
+
+- A/B des deux modes de contexte sur l'API ARC officielle à périmètre constant
+  (run `ab-u28-state`, scorecard `4cedc4e1…` fermé, réconciliation locale/API
+  exacte) : rapport comparatif committé (`docs/rapports/ab-u28-state.md`) —
+  33 actions contre 6 à budget de temps égal, prompt borné (max 9 223 tokens),
+  0 continuation ; recommandation `state` par défaut pour U25 consignée,
+  décision du responsable attendue.
+- Résolution générique d'action (§H15.8) : la ponctuation traînante du jeton de
+  nom est normalisée (bruit de format mesuré en réel), test d'intégration rouge
+  avant correction.
+- Le test CLI de campagne épingle `AVO_CONTEXT_MODE` : un `.env` local en mode
+  `state` faisait diverger le chemin d'exécution de la cassette `transcript`.
+
 ### 2026-09-01 — U24 : campagne pilote live menée à terme, robustesse générale du harnais
 
 - Campagne pilote `pilote-u24d` jouée à terme sur l'API ARC officielle

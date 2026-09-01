@@ -1356,3 +1356,36 @@ U28, §H15.8) ; `run-id: ab-u28-state`, commande :
 Attendu : mesures en main contre `docs/rapports/pilote-u24d.md` (RHAE, actions,
 tokens prépremplis/générés, appels, incidents `413`/retries de patch, effet du
 cache de préfixe) ; rapport comparatif committé sous `docs/rapports/`.
+
+---
+
+## 2026-09-01 (suite 7) — U28 mesuré : l'A/B réel donne 33 actions contre 6, recommandation `state` consignée
+
+**Mesuré sur `ab-u28-state`** (`cd82-fb555c5d`, mêmes plafonds/fenêtre que
+`pilote-u24d`, gardes actives, mode `state`) : jeu joué au plafond de 1 200 s,
+arrêt propre, scorecard `4cedc4e1…` fermé, réconciliation locale/API EXACTE
+(33 = 33, `divergences: []`). 43 appels, prompt borné 8 890–9 223 tokens (O(1)
+du papier constaté en réel), 0 continuation, 389 879 tokens de prompt cumulés
+(contre 1 105 505 pour 6 actions en `transcript`), 1 retry de patch (clé hors
+schéma refusée en la nommant, corrigée au retry), 1 intervention superviseur,
+1 `500` absorbé. Dépouillement complet : `docs/rapports/ab-u28-state.md`.
+
+**Corrigé (général, spéc amendée avant code, test rouge avant correction)** :
+la ponctuation traînante du jeton de nom d'action est normalisée (§H15.8) — un
+tour entier était perdu sur « action1, » (bruit de format, taxonomie
+SKILL.state). Défaut rencontré et traité dans la même session : le test CLI de
+campagne n'épinglait pas `AVO_CONTEXT_MODE` et rougissait sous un `.env` local
+en mode `state` (même famille que l'incident A/B du 2026-09-01 ; épinglage
+aligné, reproduction puis preuve verte).
+
+**U28 passe à `[~]` avancé** : tout le mesurable est livré et vérifié ;
+seule la DÉCISION du responsable (mode par défaut, avec le périmètre U25)
+reste ouverte — recommandation consignée : `state` par défaut.
+
+**Où reprendre.** U25 attend l'arbitrage du responsable sur son périmètre
+(cas 3, demandé en suite 6) et sa décision de mode (recommandation : `state`).
+Sans réponse, il ne reste aucune unité constructible : U29 est hors périmètre
+(arbitrage requis), U25/U28 attendent le responsable — la prochaine session
+vérifie d'abord si une réponse est arrivée (journal, backlog, instruction),
+sinon elle applique §4.5 (elle établit le cas 2 et arrête proprement la
+boucle planifiée si rien d'autre n'est constructible).

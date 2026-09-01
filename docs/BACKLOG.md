@@ -682,7 +682,7 @@ retries de patch.
   actions identiques dans les deux modes ; `state` : 120 appels contre 316 en
   `transcript` (le mode ne dégrade pas la partie jouée).
 
-## U28 — A/B des deux modes en conditions réelles `[ ]` **[LIVE]**
+## U28 — A/B des deux modes en conditions réelles `[~]` **[LIVE]**
 
 `@spec` H15, A7. En session interactive, après U24 : rejouer le périmètre pilote de
 U24 en mode `state` sur l'endpoint réel et l'API réelle (mêmes jeux, mêmes
@@ -693,6 +693,16 @@ Rapport comparatif committé ; recommandation du mode par défaut pour U25 arrê
 
 - Preuves : rapport committé sous `docs/rapports/` ; réconciliation des compteurs
   locale/API exacte ; recommandation et décision consignées au journal.
+- **Mesures livrées le 2026-09-01 (session planifiée)** : run `ab-u28-state`
+  (`cd82-fb555c5d`, mêmes plafonds et fenêtre que `pilote-u24d`, gardes actives)
+  mené au plafond de temps, scorecard `4cedc4e1…` fermé, réconciliation
+  locale/API EXACTE (33 = 33) ; rapport comparatif committé
+  (`docs/rapports/ab-u28-state.md`) : 33 actions contre 6 à budget de temps égal,
+  prompt borné 8 890–9 223 tokens (O(1) constaté), 0 continuation, 1 retry de
+  patch corrigé, ~15× moins de tokens de prompt par action ; recommandation
+  consignée (mode `state` par défaut pour U25). **Seul reste ouvert** : la
+  DÉCISION du responsable (avec le périmètre U25, arbitrage demandé au journal du
+  2026-09-01 suite 6) — tout le mesurable de l'unité est livré et vérifié.
 
 ## U29 — Benchmarks interactifs complémentaires `[ ]` **(hors périmètre — arbitrage requis)**
 
