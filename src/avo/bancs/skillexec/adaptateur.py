@@ -28,7 +28,7 @@ from avo.bancs.skillexec.score import Releve
 from avo.config import Config, ModeContexte
 from avo.context.contexte import Contexte
 from avo.llm.client import LLMClient
-from avo.loop.boucle import BoucleAgent
+from avo.loop.boucle import Bilan, BoucleAgent
 from avo.loop.etats import Evenement
 from avo.memory.notes import (
     SCHEMA_NOTE_READ,
@@ -252,8 +252,33 @@ def jouer_episode(
         jeu=f"skillexec-entrepot-{seed}",
     )
     debut = time.monotonic()
-    bilan = boucle.executer(tours_max or 4 * horizon)
-    releve = moteur.releve
+    try:
+        bilan = boucle.executer(tours_max or 4 * horizon)
+    except Exception as erreur:
+        # Relevé d'incident (§S5.3) : l'épisode est perdu, pas sa mesure — les
+        # compteurs valent ce qui a réellement été consommé, `arret` nomme
+        # l'incident, et l'erreur remonte inchangée (aucun masquage).
+        _ecrire_releve(
+            moteur.releve,
+            boucle.bilan,
+            config,
+            workspace,
+            debut,
+            arret=f"incident : {type(erreur).__name__}: {erreur}",
+        )
+        raise
+    return _ecrire_releve(moteur.releve, bilan, config, workspace, debut, arret=bilan.arret)
+
+
+def _ecrire_releve(
+    releve: Releve,
+    bilan: Bilan,
+    config: Config,
+    workspace: Workspace,
+    debut: float,
+    arret: str,
+) -> Releve:
+    """Complète le relevé depuis le bilan de boucle et l'écrit dans `banc.json` (§S5.3)."""
     releve.duree_secondes = round(time.monotonic() - debut, 3)
     releve.tokens_consommes = bilan.tokens_prompt + bilan.tokens_generes
     appels = len(bilan.tours) + bilan.retries_patch
@@ -266,7 +291,7 @@ def jouer_episode(
             "banc": "skillexec",
             "environnement": "entrepot",
             "mode_contexte": config.contexte_mode.value,
-            "arret": bilan.arret,
+            "arret": arret,
             "tours": len(bilan.tours),
             "retries_patch": bilan.retries_patch,
             "redemandes_gardes": bilan.redemandes_gardes,

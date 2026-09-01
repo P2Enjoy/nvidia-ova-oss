@@ -37,7 +37,7 @@ from avo.bancs.skillexec.adaptateur import (
 from avo.bancs.skillexec.entrepot import EnvironnementEntrepot
 from avo.bancs.skillexec.generation import generer_episode
 from avo.config import Config, Mode, charger
-from avo.llm.client import LLMClient, ReponseHTTP
+from avo.llm.client import LLMClient, ReponseHTTP, ServerError
 from avo.loop.etats import Evenement
 from avo.memory.workspace import Workspace
 from tests.e2e.scenarios_banc import actions_parfaites, contenu_pas
@@ -249,6 +249,53 @@ class TestEpisodeJoue(unittest.TestCase):
         self.assertEqual(releve.score, 1.0)
         self.assertEqual(releve.champs_libres["tours"], HORIZON + 1)
         self.assertGreater(releve.champs_libres["redemandes_gardes"], 0)
+
+    def test_incident_ecrit_le_releve_partiel_et_remonte(self) -> None:
+        """§S5.3 : un épisode interrompu laisse un relevé d'incident, jamais rien.
+
+        Mesuré le 2026-09-01 (journal, suite 16) : une panne d'endpoint plus
+        longue que les relances §H4.5 perdait l'épisode ET sa mesure — aucun
+        `banc.json` écrit. Le relevé d'incident porte les compteurs réellement
+        consommés, `arret` nomme l'incident, et l'erreur remonte inchangée.
+        """
+        config = _config()
+        actions = actions_parfaites(generer_episode(SEED, HORIZON))
+        contenus = iter([contenu_pas(action) for action in actions[:2]])
+
+        def transport(url: str, corps: bytes, entetes: Any, timeout: float) -> ReponseHTTP:
+            try:
+                contenu = next(contenus)
+            except StopIteration:
+                return ReponseHTTP(500, b"panne")
+            reponse = {
+                "model": config.modele,
+                "created_at": "x",
+                "message": {"role": "assistant", "content": contenu},
+                "done": True,
+                "done_reason": "stop",
+                "prompt_eval_count": 100,
+                "eval_count": 50,
+                "total_duration": 1_000_000,
+            }
+            return ReponseHTTP(200, json.dumps(reponse).encode())
+
+        dossier = tempfile.TemporaryDirectory()
+        self.addCleanup(dossier.cleanup)
+        espace = Workspace.ouvrir(config, "banc-incident", racine=Path(dossier.name))
+        with self.assertRaises(ServerError):
+            jouer_episode(
+                config,
+                espace,
+                seed=SEED,
+                horizon=HORIZON,
+                client_llm=LLMClient(config, transport=transport, dormir=lambda _: None),
+            )
+        ecrit = json.loads((espace.chemin / "banc.json").read_text(encoding="utf-8"))
+        self.assertTrue(ecrit["arret"].startswith("incident : ServerError"))
+        self.assertEqual(ecrit["correctes"], 2)
+        self.assertEqual(ecrit["evenements_consommes"], 2)
+        self.assertLess(ecrit["evenements_consommes"], HORIZON)
+        self.assertEqual(ecrit["tokens_consommes"], 150 * 2)
 
     def test_action_incorrecte_paye_au_score(self) -> None:
         """§S5.2 : valide-mais-autre vaut 0 — l'épisode, lui, avance.
