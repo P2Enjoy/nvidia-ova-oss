@@ -120,6 +120,8 @@ Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors d
 | `ARC_BASE_URL` | Base de l'API ARC-AGI-3. En mode rejeu, elle pointe la pile locale et le client **refuse** tout autre hôte : les tests ne peuvent pas publier de scorecard par accident | URL `https://hôte[:port]` | non (défaut selon le mode) | `http://127.0.0.1:8765` |
 | `AVO_RUNS_DIR` | Racine des workspaces de run (artefacts) | chemin | non (défaut `runs/`) | `runs/` |
 | `AVO_CONTEXT_MODE` | Mode de contexte de la boucle : `transcript` (historique complet, H5) ou `state` (état structuré Σ borné en O(1) par tour, H15) | `transcript` \| `state` | non (défaut `transcript`) | `transcript` |
+| `AVO_GARDES` | Gardes de méthode dans les phases (H16) : artefact documentaire avant l'action, prédiction requise, verdict exigé, persistance aux événements | booléen | non (défaut `true`) | `true` |
+| `AVO_GARDE_RETRIES` | Redemandes d'une même garde dans un même tour, avant l'issue écrite en H16 (tour clos sans action, ou verdict réputé contredit) | entier | non (défaut `2`) | `2` |
 
 Trois variables d'**outillage** sont lues dans l'environnement du shell par `make` et les scripts — pas dans `.env` (`make` ne le lit pas) : `AVO_NO_DOCKER` (mode dégradé sans Docker, stdlib seule), `AVO_PORT_LLM_REPLAY` (défaut `11435`) et `AVO_PORT_ARC_REPLAY` (défaut `8765`), ports publiés de la pile locale.
 

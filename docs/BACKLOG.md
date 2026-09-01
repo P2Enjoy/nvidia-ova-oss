@@ -709,12 +709,11 @@ f)`, la base de connaissances K est une entrée de première classe ; VISTA :
 prédiction avant action, changements observés après, GUIDE/WORKING ; SKILL.state :
 Σ structuré). Ce lot MÉCANISE ces règles, il n'en invente aucune.
 
-## U30 — Spécification H16 et gardes de méthode dans les phases `[~]`
+## U30 — Spécification H16 et gardes de méthode dans les phases `[x]`
 
-`@spec` H16 — chapitre ÉCRIT ET COMMITTÉ (2026-08-31, avant le code, précédent
-U26) : gardes H16.1–H16.4, principes H16.0 (jamais fatales, bornées, débrayables
-par `AVO_GARDES`, artefacts bornés), observabilité H16.5. Reste à livrer : le code
-des gardes et leurs preuves. H16 spécifie, générique et sans indice de jeu :
+`@spec` H16 — chapitre écrit et committé avant le code (2026-08-31), gardes
+livrées et intégralement prouvées le 2026-09-01. H16 spécifie, générique et sans
+indice de jeu :
 
 1. **Garde documentaire, à l'entrée de Planning** : le harnais compose K — le
    contexte de tâche fourni (protocole de la tâche, documentation d'API donnée par
@@ -741,3 +740,19 @@ zéro indice de jeu (§A5, balayage exécutable inchangé).
   quand il est là) ; intégration sur `cible` (partie jouée sous gardes, artefacts
   dans le workspace) ; E2E rejeu ; comparaison avant/après gardes sur `cible`
   (comportement observé du harnais — jamais un jeu officiel particulier).
+- **Livré et intégralement vérifié le 2026-09-01.** Les quatre gardes dans
+  `avo.loop.boucle` (verrou Planning→Implementation, verdict exigé, portage au
+  mode `state` par lignes `PREDICTION:`/`VERDICT:` et champ `hypotheses` de Σ),
+  paramètre `prediction` requis sur les outils d'action (`avo.arc.interface`)
+  acheminé tronqué vers `reasoning` du fil (`avo.arc.client`), compteur
+  d'écritures monotone des notes, `AVO_GARDES`/`AVO_GARDE_RETRIES` (`avo.config`),
+  prompts v1.1. Correction liée : une action refusée par un outil ne relit plus
+  l'issue précédente (comparaison d'identité dans `_jouer_action`). Preuves :
+  17 unitaires boucle + 6 unitaires interface + compteur de notes ; intégration
+  sur `cible` sous gardes (partie parfaite 76 actions, RHAE 100.00, WORKING/GUIDE
+  présents, zéro événement de garde au nominal) et A/B avant/après gardes (mêmes
+  issues, mêmes appels, artefacts en plus) ; cassettes E2E régénérées sous gardes
+  (mêmes 228/241/76 échanges) et 4 E2E verts sur pile fraîche ; campagne complète
+  verte (lint, mypy strict, 499 unitaires, 142 intégration, 4 E2E, build).
+  Les preuves antérieures de la mécanique hors gardes sont épinglées
+  `AVO_GARDES=false` (§H16.0.4).

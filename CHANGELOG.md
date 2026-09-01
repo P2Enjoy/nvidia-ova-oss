@@ -2,6 +2,34 @@
 
 ## [Non publié]
 
+### 2026-09-01 — U30 : gardes de méthode dans les phases (spéc H16 + implémentation)
+
+- `docs/SPEC_HARNAIS.md` §H16 : la structure impose ce que le prompt conseille —
+  quatre gardes à l'intérieur des phases P→I→E→B, jamais de nouvelle phase,
+  jamais fatales, bornées, débrayables (`AVO_GARDES`, défaut actif ;
+  `AVO_GARDE_RETRIES`, défaut 2), valables dans les deux modes de contexte.
+- Garde documentaire (H16.1) : les outils d'action restent verrouillés tant que
+  `WORKING.md` est vide (mode `state` : champ `hypotheses` de Σ) ; le premier
+  Planning compose K (contexte de tâche + notes durables) avec la demande
+  « ce que je sais / ce que j'ignore / comment le découvrir ».
+- Garde de prédiction (H16.2) : chaque outil d'action exige un paramètre
+  `prediction` ; l'appel sans prédiction est une erreur d'outil, l'action n'est
+  pas jouée et rien n'est compté (correction au passage : une action refusée par
+  un outil ne relit plus l'issue précédente). La prédiction part tronquée dans le
+  champ `reasoning` du fil officiel — auditable dans le scorecard. En mode
+  `state`, ligne `PREDICTION:` extraite avant que le raisonnement ne soit jeté.
+- Garde d'évaluation (H16.3) : l'invite présente prédit-contre-observé et exige
+  `VERDICT: confirmee|contredite` ; sans verdict après redemandes, la prédiction
+  est réputée contredite. Le verdict remplace l'heuristique de sous-chaîne.
+- Garde de persistance (H16.4) : complétion, game over ou intervention du
+  superviseur exigent une écriture de `GUIDE.md` avant la prochaine action
+  (compteur d'écritures monotone des notes, jamais une comparaison de contenu).
+- Preuves : 17 unitaires boucle + 6 unitaires interface + compteur de notes,
+  intégration sur `cible` (partie parfaite sous gardes, artefacts exigés
+  présents, zéro événement de garde au nominal) et A/B avant/après gardes
+  (mêmes issues, mêmes appels, artefacts en plus) ; cassettes E2E régénérées
+  sous gardes — mêmes 228/241/76 échanges ; prompts version 1.1.
+
 ### 2026-08-31 — Arrêt de la boucle sur l'état terminal du jeu (préalable de U24)
 
 - La boucle agent s'arrête dès que l'environnement déclare un état terminal

@@ -94,6 +94,15 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
   et départagée par mesure, pas par principe (A/B sur rejeu livré par U27,
   `docs/rapports/ab_mode_contexte.md` ; A/B en conditions réelles restant le
   périmètre de U28, `[LIVE]`).
+- Gardes de méthode dans les phases (H16, U30) : la structure impose ce que le
+  prompt conseille — artefact documentaire (`WORKING.md`, ou `hypotheses` de Σ)
+  avant de déverrouiller l'action, prédiction requise par le schéma des outils
+  d'action et acheminée vers `reasoning` du fil officiel, verdict
+  confirmé/contredit exigé à l'évaluation, écriture de `GUIDE.md` exigée aux
+  complétions, game over et interventions. Jamais fatales, bornées
+  (`AVO_GARDE_RETRIES`), débrayables (`AVO_GARDES`), valables dans les deux modes
+  de contexte ; A/B sur `cible` : aucune action ni aucun appel de plus sur
+  politique conforme.
 - Lignée = git jetable par run, jamais le dépôt projet (H9.3).
 - Instanciation ARC du couple (xᵢ, f) : connaissance validée / (niveaux, −actions)
   — décision documentée H9.2, les sources ne publiant pas ce détail.

@@ -1102,3 +1102,47 @@ persistance dans P→I→E→B ; bornage des artefacts ; valable `transcript` et
 `state` ; zéro indice de jeu), puis les gardes et leurs preuves, A/B sur
 `cible`. Ensuite U24 (campagne pilote, plafonds obligatoires), puis préparation
 du lancement live pour le rejeu du responsable (2026-09-01).
+
+---
+
+## 2026-09-01 — U30 livrée : les gardes de méthode dans les phases (spéc H16 puis code, tout vert)
+
+**Session planifiée.** Unité : U30, deuxième point de l'ordre révisé de la
+suite 3 du 2026-08-31 (spéc H16 d'abord, puis les gardes).
+
+**Spécifié d'abord.** §H16 écrit et committé avant toute ligne de code :
+principes H16.0 (le prompt conseille, la structure impose ; jamais fatales ;
+bornées ; débrayables `AVO_GARDES` ; artefacts bornés), quatre gardes H16.1–H16.4,
+observabilité H16.5 ; `AVO_GARDES`/`AVO_GARDE_RETRIES` en H3.1.
+
+**Livré.** Verrou Planning→Implementation (WORKING vide ou GUIDE dû = outils
+d'action verrouillés, redemandes bornées, tour clos sans action au budget
+épuisé) ; paramètre `prediction` requis sur les outils d'action, acheminé
+tronqué (2000 car.) vers `reasoning` du fil officiel ; invite d'évaluation
+prédit-contre-observé avec `VERDICT:` exigé (issue prudente : réputé contredit) ;
+persistance par compteur d'écritures monotone des notes ; portage au mode
+`state` (lignes `PREDICTION:`/`VERDICT:` extraites avant que Rₜ soit jeté,
+`hypotheses` de Σ comme artefact documentaire, action retenue gratuite).
+Correction liée, mesurée en écrivant la garde : une action refusée par un outil
+(arguments invalides, prédiction absente) relisait l'issue PRÉCÉDENTE et comptait
+une action jamais jouée — `_jouer_action` compare maintenant l'identité de
+l'issue avant/après.
+
+**Prouvé.** 17 unitaires boucle (les quatre gardes, deux modes, débrayage,
+issue prudente), 6 unitaires interface (schéma, troncature, RESET sans
+reasoning), intégration sur `cible` sous gardes (76 actions, RHAE 100.00,
+artefacts présents, zéro événement de garde au nominal) + A/B avant/après
+gardes (mêmes issues, mêmes appels sur politique conforme, artefacts en plus).
+Cassettes E2E régénérées sous gardes : mêmes 228/241/76 échanges — la méthode ne
+coûte rien quand les artefacts arrivent du premier coup. Campagne complète
+INTÉGRALEMENT VERTE : lint, `ruff format --check`, mypy strict, 499 unitaires
+(+23), 142 intégration (+2), 4 E2E sur pile fraîche, `make build`.
+
+**Où reprendre.** Ordre de la suite 3 : points 1 et 2 faits. Maintenant U24
+(campagne pilote par le harnais, [LIVE], plafonds §A7.1 OBLIGATOIRES, garde de
+publication levée par l'autorisation du 2026-08-30), puis préparation du
+lancement live pour le rejeu du responsable avec `qwen3.6:35b` (`run-arc --mode
+live` prêt : plafonds documentés, artefacts lisibles, reprise sûre). Les gardes
+sont actives par défaut : le rejeu du responsable les exercera ; leur effet réel
+sur un modèle vivant se lira dans `reasoning` des scorecards et les métriques
+`garde`.
