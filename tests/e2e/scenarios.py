@@ -38,6 +38,10 @@ DOSSIER_CASSETTES = Path("tests/fixtures/llm/cassettes")
 
 #: Environnement épinglé (§A8.5) : tous les champs qui entrent dans les corps de
 #: requête ou gouvernent le déroulé, fixés pour neutraliser tout `.env` local.
+#: Le mode de contexte est épinglé `transcript` : les cassettes de ces scénarios
+#: encodent ce chemin, quel que soit le défaut du produit (prouvé par
+#: tests/unit/test_config.py) ; le chemin `state` le surcharge explicitement
+#: (générateur d'état, rapport A/B).
 ENV_EPINGLE: dict[str, str] = {
     "OLLAMA_CONTEXT_LENGTH": "229376",
     "AVO_MODEL": "qwen3.6:35b",
@@ -47,6 +51,7 @@ ENV_EPINGLE: dict[str, str] = {
     "AVO_TOOL_STEPS_MAX": "40",
     "AVO_SUP_STALL_ACTIONS": "60",
     "AVO_SUP_COOLDOWN": "30",
+    "AVO_CONTEXT_MODE": "transcript",
 }
 
 #: Plafonds communs aux deux scénarios : au-dessus des 80 actions du plus long.

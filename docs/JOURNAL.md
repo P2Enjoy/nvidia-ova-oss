@@ -1472,3 +1472,29 @@ suite 8 est donc LEVÉ :
 **Où reprendre.** La prochaine session planifiée exécute U31 : ouvrir la campagne
 au périmètre U25 (mode `state`) et jouer la première tranche, puis observer et
 améliorer sur les mesures.
+
+---
+
+## 2026-09-01 (suite 10) — Bascule `state` par défaut livrée et prouvée, U28 close
+
+**Livré** : défaut `AVO_CONTEXT_MODE=state` (`avo.config`), spéc §H15.0 réécrite
+(les deux modes livrés, `state` défaut sur mesures) et §H15.7 alignée, README, DAT
+et CHANGELOG dans le même geste. **Preuves révisées, pas contournées** (règle
+« preuve rougie par changement de règle ») : le test du défaut affirme désormais
+`state` et un test `transcript` explicite est ajouté ; les bancs dont les cassettes
+et réponses scriptées encodent le chemin `transcript` épinglent leur mode
+(`test_gardes.py`, `test_boucle_complete.py`, `test_campagne_sur_rejeu.py`,
+`test_gardes_sur_cible.py`, `test_interface_sur_arc_replay.py`, `ENV_EPINGLE` des
+E2E) — même famille que l'incident du test CLI de campagne (2026-09-01). Constat
+utile : sous le nouveau défaut, l'E2E victoire s'appariait par accident à la
+cassette `state` (même discriminant 4096) pendant que l'E2E échec rougissait —
+l'épinglage rétablit l'intention des deux.
+
+**Campagne complète verte** : lint, ruff format, mypy strict (97 fichiers),
+508 unitaires, 145 intégration, 4 E2E sur pile fraîche, build. **U28 passe à
+`[x]`.**
+
+**Où reprendre.** La prochaine session planifiée exécute U31 (mission permanente) :
+ouvrir la campagne au périmètre U25 — tous les jeux de `/api/games`, plafonds
+80/300/1 200 s/1,5 M tokens/400 tours, défaut `state` désormais actif — et jouer
+la première tranche, puis observer et améliorer sur les mesures.

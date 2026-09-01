@@ -692,7 +692,7 @@ retries de patch.
   actions identiques dans les deux modes ; `state` : 120 appels contre 316 en
   `transcript` (le mode ne dégrade pas la partie jouée).
 
-## U28 — A/B des deux modes en conditions réelles `[~]` **[LIVE]**
+## U28 — A/B des deux modes en conditions réelles `[x]` **[LIVE]**
 
 `@spec` H15, A7. En session interactive, après U24 : rejouer le périmètre pilote de
 U24 en mode `state` sur l'endpoint réel et l'API réelle (mêmes jeux, mêmes
@@ -711,11 +711,13 @@ Rapport comparatif committé ; recommandation du mode par défaut pour U25 arrê
   prompt borné 8 890–9 223 tokens (O(1) constaté), 0 continuation, 1 retry de
   patch corrigé, ~15× moins de tokens de prompt par action ; recommandation
   consignée (mode `state` par défaut pour U25).
-- **Décision rendue le 2026-09-01 (session interactive, journal suite 9)** : le
-  responsable suit la recommandation — `state` devient le mode par défaut. La
-  bascule du défaut `AVO_CONTEXT_MODE` (spéc §H15.7 amendée, `avo.config`,
-  README, CHANGELOG) s'applique dans la même session ; l'unité passe à `[x]`
-  quand cette bascule est prouvée (tests ciblés + campagne complète).
+- **Décision rendue et appliquée le 2026-09-01 (session interactive, journal
+  suites 9–10)** : le responsable suit la recommandation — `state` est le mode
+  par défaut. Bascule livrée : spéc §H15.0/§H15.7 amendées, défaut dans
+  `avo.config`, README/DAT/CHANGELOG alignés, preuve du défaut révisée et bancs
+  à cassettes `transcript` épinglés sur leur mode. Campagne complète verte
+  (lint, mypy strict, 508 unitaires, 145 intégration, 4 E2E, build). Unité
+  close.
 
 ## U29 — Benchmarks interactifs complémentaires `[ ]` **(hors périmètre — arbitrage requis)**
 
