@@ -1283,3 +1283,43 @@ c (cd82-fb555c5d, 80 actions/niveau, 300 actions/jeu, 1 500 000 tokens/jeu,
 400 tours, fenêtre 98 304, gardes actives, mode transcript) SAUF budget temps
 réduit à 1 200 s/jeu pour tenir dans la session — point tranché : un pilote
 borné et terminé vaut mieux qu'un pilote interrompu par la fin de machine.
+
+---
+
+## 2026-09-01 (suite 5) — U24 CLOSE : pilote d mené à terme, réconciliation exacte
+
+**Mesuré sur `pilote-u24d` (cd82-fb555c5d, fenêtre 98 304, budget 1 200 s)** :
+
+- le jeu est joué JUSQU'AU PLAFOND de temps, arrêt propre « budget de temps du
+  jeu épuisé », scorecard `3b34284d…` fermé, résumé persisté, réconciliation
+  locale/API EXACTE (6 actions = 6, `divergences: []`) ;
+- la recette fenêtre courte FONCTIONNE : 2 continuations en contexte frais,
+  prompt maximal 73 180 tokens — la zone de casse (~120 k) n'est jamais
+  approchée ; l'hypothèse « casse à ~48 k » du pilote c est REQUALIFIÉE : c'était
+  une panne transitoire de l'endpoint, pas un seuil — le pilote d a franchi 46 k
+  puis 73 k sans encombre sous retries patients ;
+- retries patients (§H4.5 six requêtes) : tous les `500` absorbés, zéro fatal ;
+- débits réels qwen3.6:35b via le pont : 28 appels, 1 105 505 tokens de prompt,
+  7 874 générés, 554,6 s d'inférence, ~3,7 min par action jouée ;
+- comportement : 6 actions, 0/6 niveaux en 20 min — l'exploration est lente,
+  dominée par le préremplissage ; RHAE 0.00 par plafond de complétion (§A6.1).
+- la section Coûts du rapport porte la dépense réelle (correctif A7.3 de cette
+  session, constaté en conditions réelles).
+
+**Corrigé en cours de session (général)** : l'A/B sur rejeu épinglait un
+environnement incomplet — le `.env` local (fenêtre 98 304) fuyait dans
+`options.num_ctx`, le rejoueur rendait `599`, les deux mini-campagnes étaient
+refusées et le rapport A/B tombait à zéro. Épinglage complet aligné sur
+`tests/e2e/scenarios.ENV_EPINGLE` ; les 4 E2E repassent en 30 s.
+
+**U24 passe à `[x]`** : toutes ses preuves sont réunies (rapport et scorecard
+référencés, réconciliation exacte, limites énoncées). Point tranché : la mention
+« en session interactive » de la spéc visait l'accord du responsable, donné le
+2026-08-30 pour les sessions planifiées.
+
+**Où reprendre.** Ordre du plan : U25 (campagne étendue et rapport final) — son
+périmètre s'arrête AVEC le responsable au vu de U24 (cas d'arbitrage 3 si rien
+au dépôt ne le fixe ; relire A7 et la dernière entrée avant de lancer quoi que
+ce soit). Les scorecards `2abc230e…`, `b59c1306…` (2026-09-01, investigation) et
+`pilote-u24b` restent ouverts côté ARC, non refermables (cookies des conteneurs
+défunts) — limite connue, sans action possible depuis ici.

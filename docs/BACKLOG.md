@@ -521,15 +521,27 @@ d'accord A7.2, reprise sans rejouer les jeux terminés, `report.md` complet A7.3
   rapport lu, arborescence du run observée, et les trois refus vus au terminal.
   Campagne complète verte le 2026-08-28 : 550 tests, mypy strict sur 85 fichiers.
 
-## U24 — Campagne pilote `[ ]` **[LIVE]**
+## U24 — Campagne pilote `[x]` **[LIVE]**
 
-`@spec` A7. En session interactive : périmètre serré (1–2 jeux courts, plafonds
+`@spec` A7. Périmètre serré (1–2 jeux courts, plafonds
 stricts) consigné au journal avant lancement, endpoint réel + API réelle, scorecard
 fermé, rapport committé sous `docs/rapports/`, enseignements (débits réels, coûts,
 comportement du modèle) au journal.
 
 - Preuves : rapport et scorecard référencés ; réconciliation compteurs locale/API
   exacte ; limites énoncées.
+- Fait le 2026-09-01, quatrième tentative (`pilote-u24d`, autorisation du
+  responsable du 2026-08-30 pour la session planifiée — point tranché : la
+  mention « en session interactive » visait l'accord du responsable, donné) :
+  jeu `cd82-fb555c5d` joué jusqu'au plafond de temps (1 200 s consignées avant
+  lancement), scorecard `3b34284d…` fermé, réconciliation locale/API EXACTE
+  (6 = 6, aucune divergence), rapport committé `docs/rapports/pilote-u24d.md`.
+  Enseignements au journal : fenêtre courte 98 304 → 2 continuations, prompt max
+  73 180 (zone de casse jamais approchée) ; retries patients → zéro `500` fatal ;
+  débits réels 28 appels / 1,1 M tokens de prompt / 6 actions en 20 min.
+  Les pilotes a–c (avortés) ont produit les correctifs généraux : pot de cookies
+  partagé, refus nommé, échec d'inférence nommé, coûts depuis les métriques,
+  retries patients — tous committés avec leurs preuves.
 - Préalable livré le 2026-08-31 : l'arrêt de la boucle sur l'état terminal du jeu
   (§H8.3, §A5.4) — plus aucun appel d'inférence après la victoire, motif d'arrêt
   « victoire » dans le rapport (défaut du registre du 2026-08-30, corrigé et

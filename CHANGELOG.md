@@ -2,6 +2,27 @@
 
 ## [Non publié]
 
+### 2026-09-01 — U24 : campagne pilote live menée à terme, robustesse générale du harnais
+
+- Campagne pilote `pilote-u24d` jouée à terme sur l'API ARC officielle
+  (`cd82-fb555c5d`, plafonds §A7.1) : scorecard `3b34284d…` fermé,
+  réconciliation compteurs locale/API exacte, rapport committé
+  (`docs/rapports/pilote-u24d.md`, pilote c avorté documenté dans
+  `docs/rapports/pilote-u24c.md`).
+- Rapport de campagne (§A7.3 amendé) : les lignes d'inférence de la section
+  Coûts viennent des métriques du run — un jeu clos en échec nommé garde sa
+  dépense réelle (tokens, appels, durée d'inférence) au lieu d'un zéro
+  mensonger ; l'écart actions/tours des jeux refusés est nommé.
+- Transport (§H4.5 amendé) : retries étendus à six requêtes (paliers 45 s et
+  90 s) — à travers le pont, chaque tentative échouée réchauffe le cache de
+  préfixe ; une panne transitoire de quelques minutes devient un retard au lieu
+  de clore le jeu.
+- A/B des modes de contexte : le générateur épingle l'environnement complet des
+  scénarios E2E — un `.env` local à fenêtre différente changeait
+  `options.num_ctx` et faisait refuser les deux mini-campagnes par le rejoueur.
+- mypy strict rétabli sur les scénarios de campagne (socle partagé hérité au
+  lieu d'un emprunt de méthodes inter-classes).
+
 ### 2026-09-01 — U30 : gardes de méthode dans les phases (spéc H16 + implémentation)
 
 - `docs/SPEC_HARNAIS.md` §H16 : la structure impose ce que le prompt conseille —
