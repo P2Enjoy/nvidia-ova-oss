@@ -174,8 +174,7 @@ class TestBancDepotParCliReelle(unittest.TestCase):
         )
         self.assertEqual(execution.returncode, 0, execution.stderr)
         self.assertIn(
-            f"seed {SCENARIO_DEPOT.seed}, horizon {SCENARIO_DEPOT.horizon}, "
-            "bruit 0 — score 1.00",
+            f"seed {SCENARIO_DEPOT.seed}, horizon {SCENARIO_DEPOT.horizon}, bruit 0 — score 1.00",
             execution.stdout,
         )
         self.assertIn(

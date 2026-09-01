@@ -298,22 +298,19 @@ class EnvironnementBancDepot(_EnvironnementBancCommun[EnvironnementDepot]):
             ),
             self._outil(
                 "create_pr",
-                "Ouvre une PR pour une branche existante qui n'en a pas : "
-                "create_pr(branche).",
+                "Ouvre une PR pour une branche existante qui n'en a pas : create_pr(branche).",
                 ("branche",),
                 self._create_pr,
             ),
             self._outil(
                 "merge",
-                "Fusionne une PR ouverte dans master et supprime sa branche : "
-                "merge(pr).",
+                "Fusionne une PR ouverte dans master et supprime sa branche : merge(pr).",
                 ("pr",),
                 self._merge,
             ),
             self._outil(
                 "fix_ci",
-                "Corrige le défaut d'une branche dont la CI est rouge : "
-                "fix_ci(branche).",
+                "Corrige le défaut d'une branche dont la CI est rouge : fix_ci(branche).",
                 ("branche",),
                 self._fix_ci,
             ),

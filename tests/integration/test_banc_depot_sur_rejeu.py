@@ -88,9 +88,7 @@ class TestBancDepotSurRejeu(unittest.TestCase):
 
         def transport(url: str, corps: bytes, entetes: Any, timeout: float) -> ReponseHTTP:
             corps_emis.append(json.loads(corps))
-            reponse = reponse_pas(
-                self.gabarit, self.actions[len(corps_emis) - 1], HYPOTHESE_DEPOT
-            )
+            reponse = reponse_pas(self.gabarit, self.actions[len(corps_emis) - 1], HYPOTHESE_DEPOT)
             return ReponseHTTP(200, json.dumps(reponse).encode())
 
         config = self._config("http://capture.invalide")

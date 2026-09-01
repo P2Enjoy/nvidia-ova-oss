@@ -153,10 +153,7 @@ def main() -> int:
         contenu = generer(scenario)
         chemin = DOSSIER_CASSETTES / scenario.cassette
         chemin.write_text(contenu, encoding="utf-8")
-        print(
-            f"  {scenario.cassette} : {contenu.count(chr(10))} échanges, "
-            "régénération vérifiée"
-        )
+        print(f"  {scenario.cassette} : {contenu.count(chr(10))} échanges, régénération vérifiée")
     return 0
 
 

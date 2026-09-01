@@ -207,9 +207,7 @@ class TestEpisodeJoue(unittest.TestCase):
 
     def test_jeu_parfait_score_1_resolution_1_et_releve_exact(self) -> None:
         actions = actions_parfaites_depot(generer_episode_depot(SEED, HORIZON))
-        releve, espace = self._jouer(
-            [contenu_pas(action, HYPOTHESE_DEPOT) for action in actions]
-        )
+        releve, espace = self._jouer([contenu_pas(action, HYPOTHESE_DEPOT) for action in actions])
         self.assertEqual(releve.score, 1.0)
         self.assertEqual(releve.correctes, HORIZON)
         ecrit = json.loads((espace.chemin / "banc.json").read_text(encoding="utf-8"))
@@ -264,9 +262,7 @@ class TestEpisodeJoue(unittest.TestCase):
         # l'obligation est `merge 1`, `wait` est valide mais jamais correct ici.
         self.assertTrue(actions[-1].startswith("merge"))
         actions[-1] = "wait"
-        releve, espace = self._jouer(
-            [contenu_pas(action, HYPOTHESE_DEPOT) for action in actions]
-        )
+        releve, espace = self._jouer([contenu_pas(action, HYPOTHESE_DEPOT) for action in actions])
         self.assertEqual(releve.correctes, HORIZON - 1)
         self.assertEqual(releve.incorrectes, 1)
         ecrit = json.loads((espace.chemin / "banc.json").read_text(encoding="utf-8"))
