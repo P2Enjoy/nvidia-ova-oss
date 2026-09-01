@@ -647,7 +647,13 @@ le module `avo.context.etat` restant inchangé et pur :
   lues dans l'ORDRE des paramètres requis déclarés par le schéma de l'outil, et
   coercées selon leur type JSON déclaré (entier, nombre, chaîne) — jamais un nom
   d'action ni un nombre de paramètres codé en dur, pour rester valable sur
-  n'importe quel jeu (interdiction de benchmaxing, `CLAUDE_PROJECT.md`). Le nom
+  n'importe quel jeu (interdiction de benchmaxing, `CLAUDE_PROJECT.md`). Le jeton
+  de nom est NORMALISÉ avant la recherche : la ponctuation traînante (virgule,
+  point, point-virgule, deux-points) en est retirée — bruit de format des modèles
+  open-weight, mesuré en conditions réelles (run `ab-u28-state`, 2026-09-01 : un
+  tour perdu sur « action1, ») et cohérent avec la taxonomie d'erreurs de
+  SKILL.state ; la normalisation ne touche que la ponctuation de bord du jeton,
+  jamais les valeurs ni le sens. Le nom
   résolu est exécuté par le registre comme n'importe quel outil d'action
   (§H8.1 : « c'est le registre qui l'exécute ») ; un nom inconnu ou des valeurs en
   nombre incorrect produisent l'erreur d'outil habituelle (§H7.4), jamais fatale.
