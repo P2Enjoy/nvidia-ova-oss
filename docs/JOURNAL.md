@@ -1615,3 +1615,72 @@ Moyenne h10 : **0,73** — sous la fourchette de référence §S5.4
 portent : plus aucun tour perdu en résolution d'action (contre 11/30 au relevé
 d'hier soir) ; les pertes restantes sont des choix d'action erronés, pas du bruit
 de format.
+
+---
+
+## 2026-09-01 (suite 15) — U31/U29a2 livrée et close : adaptateur + CLI `banc`, premier relevé live, deux corrections génériques désignées par la mesure
+
+Session planifiée — celle-là même qui a écrit la suite 13 et livré le code ; la suite 14 ci-dessus est une session parallèle (démarrage horaire suivant) qui a joué son propre relevé h10 (seeds 1–3) pendant que celui-ci s'exécutait, et confirme indépendamment l'effet des normalisations. **Livré et intégralement vérifié** :
+
+- **U29a2** : adaptateur du banc a (`src/avo/bancs/skillexec/adaptateur.py` —
+  contrat `Environnement`, quatre outils `action` avec `prediction`, contexte de
+  tâche §S6.2 donné en message système, issue de la dernière action composée
+  dans l'observation, relevé `banc.json`), sous-commande CLI `banc` générique
+  (dispatch sous `avo.bancs`, aucun mot de banc dans le noyau), §H15.8 amendé :
+  le mode `state` emploie le message système du contexte monté (défaut
+  `prompts.SYSTEME`, ARC inchangé). Preuves : 18 + 8 unitaires, intégration en
+  rejeu HTTP réel, cassette E2E `e2e_banc_entrepot.jsonl` (6 échanges, double
+  génération comparée) + scénario CLI réelle contre la pile. Campagne complète
+  verte deux fois (finale : lint, format, mypy strict 111 fichiers,
+  562 unitaires, 148 intégration, 5 E2E, build).
+- **Correction générique 1 (transport)** : une coupure de connexion avant les
+  premiers en-têtes (`RemoteDisconnected`, reset nu pendant le handshake) levait
+  une exception NON TYPÉE qui arrêtait le run — mesurée deux fois sur le pont
+  443 au premier essai de relevé. Typée `TransportError`, donc retentée (§H4.5) ;
+  défaut reproduit sur ligne de base avant correction, 2 unitaires ajoutés.
+  Vérifiée en réel : les coupures suivantes ont été absorbées par retry.
+- **Correction générique 2 (résolution d'action, §H15.8 amendé avant code)** :
+  le modèle écrit `wait()`, `store(article_1, etagere_2)` ou des valeurs
+  séparées par des espaces — 21 tours perdus sur l'épisode h25-s101. Normalisées
+  (syntaxe d'appel de fonction, repli par espaces quand les virgules ne rendent
+  pas le compte), 8 unitaires + 1 intégration. Vérifiée en réel : 0 refus de
+  résolution sur les deux épisodes h25 joués après le correctif.
+
+**Premier relevé live du banc a** (Entrepôt, bruit 0, mode `state`, gardes
+actives, `qwen3.6:35b` via le pont 443 ; runs `banc-live-*`, non committés) :
+
+| h  | seed | score | corr/inc/inv | tours | tokens | s |
+|----|------|-------|--------------|-------|--------|---|
+| 10 | 101  | 0,70  | 7/1/2        | 14    | 17 486 | 346 |
+| 10 | 102  | 0,70  | 7/3/0        | 22    | 25 049 | 561 |
+| 10 | 103  | 0,70  | 7/1/2        | 22    | 29 206 | 644 |
+| 25 | 101  | 0,88  | 22/2/1       | 62    | 80 447 | 1 908 |
+| 25 | 102  | 0,56  | 14/4/7       | 32    | 37 515 | 1 105 |
+| 25 | 103  | 0,64  | 16/3/6       | 34    | 43 688 | 791 |
+
+Moyennes : **h10 = 0,700**, **h25 = 0,693** (3 seeds chacun). Références §S5.4
+(runtime SKILL.state) : h10 ∈ [0,94 ; 0,98], h25 ∈ [0,76 ; 0,84] — le harnais est
+SOUS la fourchette du déclencheur U25 sur les deux horizons : l'affinage continue.
+Homogénéité : h10×3 et h25-s101 joués AVANT la correction 2, h25-s102/s103 APRÈS
+(chaque épisode est un processus neuf) ; h25-s103 est un rejeu après un
+`ServerError HTTP 500` persistant (6 tentatives) — panne serveur, arrêt propre.
+
+**Observations pour la suite** (mesures, pas encore d'unité) : les pertes
+restantes sont de vraies erreurs de TENUE D'ÉTAT (6–7 invalides par épisode
+h25 : mauvais article ou mauvaise étagère référencés après divergence) — le cœur
+de ce que le banc mesure ; 4 patchs refusés sur clés `essais`/`objet` montrent
+que le schéma Σ « arc-v1 » (§H15.6) est imposé à un banc qui n'est pas ARC —
+piste générique : le schéma de Σ fourni par l'adaptateur de tâche, à SPÉCIFIER
+avant tout code ; le superviseur est intervenu 1× (Bug-Fixing en rafale) : la
+pile harnais entière fonctionne sur le banc.
+
+**Environnement worker, mesuré** : pour tout run live Python, exporter
+`SSL_CERT_FILE=/root/.ccr/ca-bundle.crt` (le proxy TLS interpose son autorité ;
+`urllib` ne lit pas la configuration de curl) ET recharger `.env` explicitement
+(`set -a; . ./.env; set +a`) : l'environnement du conteneur porte des `OLLAMA_*`
+périmés (origine hors 443, plafond 114688) qui priment sur `.env` (§H3.1).
+
+**Où reprendre.** U31 → U29a3 : environnement Dépôt logiciel — écrire d'abord le
+détail exécutable de §S4 (dans ce chapitre), puis `depot.py` et ses preuves.
+L'amélioration « schéma Σ par adaptateur » attend une spécification dédiée si la
+prochaine mesure la confirme ; le relevé du déclencheur U25 s'étoffe en U29a4.

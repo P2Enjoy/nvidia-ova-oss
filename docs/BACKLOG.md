@@ -768,9 +768,20 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   `src/avo/bancs/` » vide, campagne complète verte (lint, mypy strict
   103 fichiers, 534 unitaires, 145 intégration, 4 E2E, build). L'intégration et
   l'E2E du banc appartiennent à U29a2 (§S7), qui branche l'adaptateur.
-- **U29a2 `[ ]`** — adaptateur harnais + CLI `banc` (§S6) : boucle complète en
+- **U29a2 `[x]`** — adaptateur harnais + CLI `banc` (§S6) : boucle complète en
   rejeu, cassette, intégration + E2E, premier relevé live (3 seeds, horizons 10
-  et 25) au journal.
+  et 25) au journal. **Livré et vérifié le 2026-09-01** :
+  `src/avo/bancs/skillexec/adaptateur.py` (contrat `Environnement`, outils
+  `action` avec `prediction`, contexte de tâche en message système — §H15.8
+  amendé pour que le mode `state` honore le message système du contexte monté),
+  sous-commande CLI `banc` générique (dispatch sous `avo.bancs`), 18 unitaires +
+  8 unitaires de résolution, intégration en rejeu HTTP réel, cassette E2E
+  `e2e_banc_entrepot.jsonl` + scénario CLI réelle, campagne complète verte
+  (lint, mypy strict 111 fichiers, 562 unitaires, 148 intégration, 5 E2E,
+  build). Relevé live consigné au journal (2026-09-01 suite 14) ; il a désigné
+  et fait livrer deux corrections génériques : coupure de connexion typée
+  `TransportError` (§H4.4) et normalisation de la syntaxe d'appel de fonction
+  dans la résolution d'action (§H15.8).
 - **U29a3 `[ ]`** — environnement Dépôt logiciel (§S4, détail exécutable écrit
   d'abord), preuves unitaires, score §S4.4.
 - **U29a4 `[ ]`** — bruit et récupération d'état en campagne de banc, relevés
