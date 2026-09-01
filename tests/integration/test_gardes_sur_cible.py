@@ -6,6 +6,8 @@
           §H16.3 (verdict à chaque évaluation), §H16.4 (GUIDE écrit aux
           complétions), §H16.5 (chemin nominal : aucun événement de garde)
 @verifies docs/SPEC_ARCAGI3.md §A8.2 (rejeu ARC local), §A3.2 (jeu `cible`)
+@verifies docs/SPEC_HARNAIS.md §H16.0.4 (comparaison avant/après gardes sur `cible` :
+          mêmes issues et mêmes appels sur politique conforme, artefacts en plus)
 
 L'agent complet joue le jeu `cible` de bout en bout, gardes ACTIVES (défaut de la
 configuration), avec une politique scriptée qui satisfait chaque garde du premier
@@ -54,17 +56,23 @@ class TestPartieSousGardes(unittest.TestCase):
         self.serveur.server_close()
         self.fil.join(timeout=5)
 
-    def _repondre(self, corps: dict[str, Any], rang_action: int) -> tuple[dict[str, Any], bool]:
-        """Politique conforme aux gardes, pilotée par l'invite reçue (§H16)."""
+    def _repondre(
+        self, corps: dict[str, Any], rang_action: int, avec_prediction: bool = True
+    ) -> tuple[dict[str, Any], bool]:
+        """Politique conforme aux gardes, pilotée par l'invite reçue (§H16).
+
+        `avec_prediction` suit le mode de l'interface : sans gardes, l'outil ne
+        déclare pas le paramètre et un argument inconnu serait refusé (§H7.4).
+        """
         reponse = copy.deepcopy(self.gabarit)
         dernier = str(corps["messages"][-1]["content"])
         appels: list[dict[str, Any]] = []
         if "[IMPLEMENTATION]" in dernier:
             nom, arguments = self.actions[min(rang_action, len(self.actions) - 1)]
+            if avec_prediction:
+                arguments = {**arguments, "prediction": PREDICTION}
             reponse["message"]["content"] = "je joue la commande annoncée"
-            reponse["message"]["tool_calls"] = [
-                {"function": {"name": nom, "arguments": {**arguments, "prediction": PREDICTION}}}
-            ]
+            reponse["message"]["tool_calls"] = [{"function": {"name": nom, "arguments": arguments}}]
             return reponse, True
         if "WORKING.md" in dernier and "[GARDE]" in dernier:
             appels.append(
@@ -97,34 +105,44 @@ class TestPartieSousGardes(unittest.TestCase):
             reponse["message"].pop("tool_calls", None)
         return reponse, False
 
-    def test_partie_parfaite_sous_gardes_artefacts_presents(self) -> None:
+    def _jouer_campagne(self, gardes: str, run_id: str, dossier: Path) -> tuple[Any, Workspace]:
         environnement = {
             "OLLAMA_HOST": "http://capture.invalide",
             "OLLAMA_API_KEY": "sk-cle-gardes-cible",
             "ARC_BASE_URL": self.base_arc,
             "ARC_API_KEY": "cle-de-test",
+            "AVO_GARDES": gardes,
         }
         config = charger(Mode.REJEU, env=environnement, racine=Path("/inexistant"))
-        self.assertTrue(config.gardes, "les gardes sont le défaut (§H16.0)")
-
         rang = 0
 
         def transport(url: str, corps: bytes, entetes: Any, timeout: float) -> ReponseHTTP:
             nonlocal rang
-            reponse, avance = self._repondre(json.loads(corps), rang)
+            reponse, avance = self._repondre(json.loads(corps), rang, avec_prediction=config.gardes)
             if avance:
                 rang += 1
             return ReponseHTTP(200, json.dumps(reponse).encode())
 
+        workspace = Workspace.ouvrir(config, run_id, racine=dossier)
+        resultat = executer_campagne(
+            config,
+            workspace,
+            Plafonds(actions_niveau=100, actions_jeu=200, tours_max=120),
+            jeux=[JEU],
+            client_llm=LLMClient(config, transport=transport, dormir=lambda _: None),
+        )
+        return resultat, workspace
+
+    @staticmethod
+    def _appels_llm(workspace: Workspace) -> int:
+        metriques = (workspace.chemin / "metrics.jsonl").read_text(encoding="utf-8")
+        return sum(
+            1 for ligne in metriques.splitlines() if ligne and json.loads(ligne)["type"] == "llm"
+        )
+
+    def test_partie_parfaite_sous_gardes_artefacts_presents(self) -> None:
         with tempfile.TemporaryDirectory() as dossier:
-            workspace = Workspace.ouvrir(config, "gardes-cible", racine=Path(dossier))
-            resultat = executer_campagne(
-                config,
-                workspace,
-                Plafonds(actions_niveau=100, actions_jeu=200, tours_max=120),
-                jeux=[JEU],
-                client_llm=LLMClient(config, transport=transport, dormir=lambda _: None),
-            )
+            resultat, workspace = self._jouer_campagne("true", "gardes-cible", Path(dossier))
 
             jeu = resultat.jeux[0]
             self.assertEqual(jeu.niveaux_completes, 3)
@@ -145,6 +163,28 @@ class TestPartieSousGardes(unittest.TestCase):
                 if ligne and json.loads(ligne).get("type") == "garde"
             ]
             self.assertEqual(evenements_garde, [], "artefacts présents du premier coup")
+
+    def test_avant_apres_gardes_memes_issues_artefacts_en_plus(self) -> None:
+        """A/B sur `cible` (§H16.0.4) : les gardes ne coûtent ni action ni appel
+        sur politique conforme ; leur effet observable est l'artefact exigé."""
+        with tempfile.TemporaryDirectory() as dossier:
+            avec, ws_avec = self._jouer_campagne("true", "ab-avec", Path(dossier))
+            sans, ws_sans = self._jouer_campagne("false", "ab-sans", Path(dossier))
+
+            self.assertEqual(avec.jeux[0].niveaux_completes, sans.jeux[0].niveaux_completes)
+            self.assertEqual(avec.jeux[0].actions, sans.jeux[0].actions)
+            self.assertEqual(avec.score_global, sans.score_global)
+            self.assertEqual(
+                self._appels_llm(ws_avec),
+                self._appels_llm(ws_sans),
+                "sur politique conforme, la méthode ne coûte aucun appel (§H16.0)",
+            )
+            self.assertTrue((ws_avec.chemin / "notes" / "GUIDE.md").exists())
+            guide_sans = ws_sans.chemin / "notes" / "GUIDE.md"
+            self.assertFalse(
+                guide_sans.exists() and guide_sans.read_text(encoding="utf-8").strip(),
+                "sans gardes, rien n'exige l'écriture : l'artefact n'apparaît pas",
+            )
 
 
 if __name__ == "__main__":
