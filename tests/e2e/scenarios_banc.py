@@ -1,8 +1,10 @@
 """Décor partagé des preuves du banc a : politique parfaite et pas scriptés.
 
-@verifies docs/BACKLOG.md U29a2 — adaptateur harnais + CLI `banc`
-@verifies docs/SPEC_BANCS.md §S3.5 (obligations : la politique parfaite les rejoue
-          exactement), §S6.4 (preuves du banc : rejeu déterministe, score exact)
+@verifies docs/BACKLOG.md U29a2 — adaptateur harnais + CLI `banc` ; U29a4 —
+          branchement du Dépôt logiciel (politique parfaite §S4.5)
+@verifies docs/SPEC_BANCS.md §S3.5 et §S4.5 (obligations : les politiques
+          parfaites les rejouent exactement), §S6.4 (preuves du banc : rejeu
+          déterministe, score exact)
 @verifies docs/SPEC_HARNAIS.md §H15.8 (forme textuelle du champ `action`),
           §H16.2 et §H16.3 (lignes PREDICTION/VERDICT des pas scriptés)
 
@@ -19,6 +21,14 @@ import copy
 import json
 from typing import Any
 
+from avo.bancs.skillexec.depot import (
+    AFFECTATION,
+    ECHEC_CI,
+    REVUE,
+    EpisodeDepot,
+    nom_branche,
+    nom_fichier,
+)
 from avo.bancs.skillexec.generation import (
     COMMANDE,
     NB_ETAGERES,
@@ -30,12 +40,18 @@ from tests.e2e.scenarios import ENV_EPINGLE, JETON, gabarit_reponse
 
 __all__ = [
     "ENV_EPINGLE_BANC",
+    "HYPOTHESE_DEPOT",
     "JETON",
     "actions_parfaites",
+    "actions_parfaites_depot",
     "contenu_pas",
     "gabarit_reponse",
     "reponse_pas",
 ]
+
+#: Hypothèse des pas scriptés du Dépôt logiciel (§H16.1) — le décor de l'Entrepôt
+#: garde la sienne par défaut, la cassette existante restant appariable.
+HYPOTHESE_DEPOT = "je tiens l'état exact du dépôt"
 
 #: Environnement épinglé du banc (§A8.5, même principe que `scenarios.ENV_EPINGLE`) :
 #: le mode `state` est celui du produit par défaut, épinglé ici pour que la cassette
@@ -88,7 +104,29 @@ def _plus_petite_vide(etageres: dict[str, str]) -> str:
     raise AssertionError("aucune étagère vide — épisode impossible sur 500 étagères")
 
 
-def contenu_pas(action: str) -> str:
+def actions_parfaites_depot(episode: EpisodeDepot) -> list[str]:
+    """Le jeu parfait sur un épisode du Dépôt logiciel (§S4.5), textes §H15.8.
+
+    Sous jeu parfait, l'état réel reste identique au nominal : les numéros de PR
+    des événements sont exactement ceux que la politique a ouverts, chaque
+    obligation est jouable, et `wait` n'est jamais dû.
+    """
+    actions: list[str] = []
+    for evenement in episode.evenements:
+        if evenement.type == AFFECTATION:
+            actions.append(
+                f"commit {nom_branche(evenement.demande)}, {nom_fichier(evenement.demande)}"
+            )
+        elif evenement.type == REVUE:
+            actions.append(f"create_pr {nom_branche(evenement.demande)}")
+        elif evenement.type == ECHEC_CI:
+            actions.append(f"fix_ci {nom_branche(evenement.demande)}")
+        else:
+            actions.append(f"merge {evenement.pr}")
+    return actions
+
+
+def contenu_pas(action: str, hypothese: str = "je tiens l'état exact de l'entrepôt") -> str:
     """Le texte d'un pas scripté conforme aux gardes (§H16.2, §H16.3, §H15.1).
 
     La ligne VERDICT est inutile au premier pas (aucune prédiction antérieure)
@@ -96,7 +134,7 @@ def contenu_pas(action: str) -> str:
     cassette déterministe (§A8.5).
     """
     charge = {
-        "state_patch": {"hypotheses": ["je tiens l'état exact de l'entrepôt"]},
+        "state_patch": {"hypotheses": [hypothese]},
         "action": action,
     }
     return (
@@ -107,9 +145,13 @@ def contenu_pas(action: str) -> str:
     )
 
 
-def reponse_pas(gabarit: dict[str, Any], action: str) -> dict[str, Any]:
+def reponse_pas(
+    gabarit: dict[str, Any],
+    action: str,
+    hypothese: str = "je tiens l'état exact de l'entrepôt",
+) -> dict[str, Any]:
     """Un corps de réponse du vrai serveur, au contenu scripté (§H4.7)."""
     reponse = copy.deepcopy(gabarit)
-    reponse["message"]["content"] = contenu_pas(action)
+    reponse["message"]["content"] = contenu_pas(action, hypothese)
     reponse["message"].pop("tool_calls", None)
     return reponse

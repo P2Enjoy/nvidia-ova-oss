@@ -1,6 +1,7 @@
 """Environnement Dépôt logiciel : demandes, branches, PR, CI, générateur, résolution.
 
-@spec docs/BACKLOG.md U29a3 — environnement Dépôt logiciel du banc a
+@spec docs/BACKLOG.md U29a3 — environnement Dépôt logiciel du banc a ; U29a4 —
+      branchement à l'adaptateur (le numéro de PR de `merge` arrive en texte)
 @spec docs/SPEC_BANCS.md §S4.1 (état de vérité : master, branches, PR, CI,
       demandes — jamais montré à l'agent), §S4.2 (actions, validité, effets ;
       une action invalide rend une erreur nommée et ne change pas l'état ;
@@ -330,13 +331,24 @@ class EnvironnementDepot:
         correcte = evenement.type == ECHEC_CI and branche == nom_branche(evenement.demande)
         return self._consommer(True, correcte, f"Succès : CI de {branche} corrigée.")
 
-    def merge(self, numero: int) -> IssueBanc:
+    def merge(self, numero: int | str) -> IssueBanc:
         """`merge <pr>` (§S4.2) : valide dès que la PR est ouverte ; une fusion
-        en CI rouge CASSE la CI — l'issue le nomme, la résolution le paie."""
+        en CI rouge CASSE la CI — l'issue le nomme, la résolution le paie.
+
+        Le numéro arrive en texte depuis les outils du banc (U29a4) : « 3 » et
+        « #3 » se lisent ; un numéro imprenable est une action invalide NOMMÉE
+        qui consomme l'événement, comme toute action (§S4.6) — jamais une
+        erreur obscure avant l'environnement.
+        """
         self._preparer()
         evenement = self._evenement_courant()
         if evenement is None:
             return IssueBanc(f"error: {MOTIF_EPUISE}", valide=False, correcte=False)
+        if isinstance(numero, str):
+            try:
+                numero = int(numero.strip().lstrip("#"))
+            except ValueError:
+                return self._consommer(False, False, f"error: numéro de PR invalide : {numero}.")
         branche = self._prs.get(numero)
         if branche is None:
             return self._consommer(False, False, f"error: PR #{numero} n'est pas ouverte.")

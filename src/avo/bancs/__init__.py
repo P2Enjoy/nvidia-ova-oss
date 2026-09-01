@@ -1,7 +1,7 @@
 """Bancs d'affinage du harnais : terrains de mesure déterministes, hors noyau §H.
 
 @spec docs/BACKLOG.md U29 — Benchmarks interactifs complémentaires ; U29a2 —
-      adaptateur harnais + CLI `banc`
+      adaptateur harnais + CLI `banc` ; U29a4 — branchement du Dépôt logiciel
 @spec docs/SPEC_BANCS.md §S1 (cadre commun : adaptateurs minces, noyau agnostique),
       §S6.3 (CLI : la sous-commande `banc` monte la boucle complète et écrit le
       relevé §S5.3)
@@ -55,10 +55,9 @@ def executer_banc(
 
     if nom != "skillexec":
         raise BancInconnu(f"banc inconnu : « {nom} ». Disponibles : skillexec.")
-    if environnement != "entrepot":
+    if environnement not in ("entrepot", "depot"):
         raise BancInconnu(
-            f"environnement inconnu : « {environnement} ». Disponibles : entrepot "
-            "(depot : adaptateur branché en U29a4, docs/BACKLOG.md)."
+            f"environnement inconnu : « {environnement} ». Disponibles : entrepot, depot."
         )
     config = charger(mode)
     identifiant = run_id or nouveau_run_id(suffixe="banc")
@@ -71,5 +70,6 @@ def executer_banc(
         horizon=horizon,
         bruit=bruit,
         tours_max=tours_max,
+        environnement=environnement,
     )
     return SortieBanc(run_id=identifiant, releve=releve, chemin_releve=espace.chemin / "banc.json")
