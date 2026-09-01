@@ -4,6 +4,9 @@
 @verifies docs/SPEC_ARCAGI3.md §A7.1 (plafonds obligatoires en live), §A7.2 (garde
           d'accord de publication), §A7.4 (structures, état de campagne, refus)
 @verifies docs/SPEC_HARNAIS.md §H13.2 (reprise de run)
+@verifies docs/BACKLOG.md U24 — réconciliation compteurs locale/API sur le résumé
+          de scorecard (§A5.3 : champ présent qui diffère = divergence, champ
+          absent = rien ; §A1.4 : forme du résumé mesurée)
 """
 
 from __future__ import annotations
@@ -19,6 +22,7 @@ from avo.arc.campagne import (
     EtatCampagne,
     Plafonds,
     ResultatJeu,
+    reconcilier,
     valider,
 )
 from avo.arc.rhae import NiveauJoue, rhae_jeu
@@ -190,6 +194,57 @@ class TestEtatDeCampagne(unittest.TestCase):
     def test_l_etat_est_ecrit_dans_le_workspace_du_run(self) -> None:
         self._etat().ecrire(self.espace)
         self.assertTrue((self.espace.chemin / ETAT).exists())
+
+
+class TestReconciliation(unittest.TestCase):
+    """§A5.3 : la réconciliation ne juge que ce que le résumé porte, sans rien masquer."""
+
+    def test_resume_officiel_concordant_aucune_divergence(self) -> None:
+        resume = {
+            "environments": [
+                {
+                    "id": "cible",
+                    "levels_completed": 1,
+                    "runs": [
+                        {
+                            "guid": "g-1",
+                            "actions": 43,
+                            "levels_completed": 1,
+                            "level_actions": [39, 4, 0],
+                        }
+                    ],
+                }
+            ]
+        }
+        self.assertEqual(reconcilier(resume, _resultat()), [])
+
+    def test_chaque_ecart_present_est_nomme(self) -> None:
+        resume = {
+            "environments": [
+                {
+                    "id": "cible",
+                    "runs": [
+                        {
+                            "guid": "g-1",
+                            "actions": 44,
+                            "levels_completed": 2,
+                            "level_actions": [39, 5, 0],
+                        }
+                    ],
+                }
+            ]
+        }
+        divergences = reconcilier(resume, _resultat())
+        champs = sorted(d["champ"] for d in divergences)
+        self.assertEqual(champs, ["actions", "level_actions[1]", "levels_completed"])
+
+    def test_resume_partiel_du_rejeu_local_ne_juge_que_ses_champs(self) -> None:
+        resume = {"environments": [{"id": "cible", "levels_completed": 1, "state": "GAME_OVER"}]}
+        self.assertEqual(reconcilier(resume, _resultat()), [])
+
+    def test_environnement_absent_est_une_divergence(self) -> None:
+        divergences = reconcilier({"environments": []}, _resultat())
+        self.assertEqual(divergences[0]["champ"], "environnement")
 
 
 if __name__ == "__main__":  # pragma: no cover

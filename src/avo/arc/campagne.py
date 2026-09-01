@@ -10,6 +10,10 @@
       nécessaire au rapport comparatif A/B des deux modes de contexte
 @spec docs/BACKLOG.md U30 — câblage de la garde de prédiction sur l'interface
       (§H16.2 : requise en `transcript`, optionnelle en `state`)
+@spec docs/BACKLOG.md U24 — persistance du résumé de scorecard à la fermeture et
+      réconciliation compteurs locale/API (§A5.3 : le résumé est la SEULE source
+      des compteurs officiels ; §A1.4 : un scorecard fermé n'est plus relisible ;
+      divergence journalisée et remontée, jamais masquée)
 
 Le même chemin de code sert en rejeu et en live : seul l'hôte change. Une branche
 live jamais éprouvée serait une branche fausse le jour où elle compte.
@@ -265,6 +269,53 @@ class ResultatCampagne:
         }
 
 
+def reconcilier(resume: dict[str, Any], jeu: ResultatJeu) -> list[dict[str, Any]]:
+    """Réconcilie les compteurs locaux d'un jeu avec le résumé de scorecard (§A5.3).
+
+    Fonction pure. Le résumé officiel porte, par environnement puis par run :
+    `levels_completed`, `actions`, `level_actions[]` (§A1.4) ; le rejeu local n'en
+    porte qu'une partie. La comparaison ne juge que les champs que le résumé porte
+    réellement : un champ absent n'est pas une divergence, un champ présent qui
+    diffère en est toujours une — jamais masquée (§A5.3).
+    """
+    environnement = next(
+        (env for env in resume.get("environments", ()) if env.get("id") == jeu.game_id), None
+    )
+    if environnement is None:
+        return [{"champ": "environnement", "local": jeu.game_id, "officiel": None}]
+    officiel: dict[str, Any] = environnement
+    for run in environnement.get("runs", ()):
+        if run.get("guid") == jeu.guid:
+            officiel = run
+            break
+    divergences: list[dict[str, Any]] = []
+    if "levels_completed" in officiel and officiel["levels_completed"] != jeu.niveaux_completes:
+        divergences.append(
+            {
+                "champ": "levels_completed",
+                "local": jeu.niveaux_completes,
+                "officiel": officiel["levels_completed"],
+            }
+        )
+    if "actions" in officiel and officiel["actions"] != jeu.actions:
+        divergences.append(
+            {"champ": "actions", "local": jeu.actions, "officiel": officiel["actions"]}
+        )
+    if "level_actions" in officiel:
+        locales = [niveau.actions for niveau in jeu.niveaux]
+        for index, valeur in enumerate(officiel["level_actions"]):
+            locale = locales[index] if index < len(locales) else 0
+            if valeur != locale:
+                divergences.append(
+                    {
+                        "champ": f"level_actions[{index}]",
+                        "local": locale,
+                        "officiel": valeur,
+                    }
+                )
+    return divergences
+
+
 def valider(config: Config, plafonds: Plafonds | None, autorise_publication: bool) -> None:
     """Refus de campagne, nommés (§A7.1, §A7.2).
 
@@ -483,7 +534,26 @@ def executer_campagne(
         )
         etat.ecrire(workspace)
 
-    fabriquer().close_scorecard(etat.card_id)
+    resume_scorecard = fabriquer().close_scorecard(etat.card_id)
+    # Le résumé de fermeture est la SEULE source des compteurs officiels (§A5.3)
+    # et le scorecard fermé n'est plus relisible (§A1.4) : il se persiste ICI,
+    # dans le workspace, sinon la preuve de réconciliation est perdue.
+    (workspace.chemin / "scorecard.json").write_text(
+        json.dumps(resume_scorecard, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    for jeu_joue in etat.resultats:
+        divergences = reconcilier(resume_scorecard, jeu_joue)
+        workspace.metrique(
+            "reconciliation",
+            jeu=jeu_joue.game_id,
+            exacte=not divergences,
+            divergences=divergences,
+        )
+        if divergences:
+            _journal.warning(
+                "divergence compteurs locale/API",
+                extra={"jeu": jeu_joue.game_id, "divergences": divergences},
+            )
     jeux_joues = tuple(etat.resultats)
     resultat = ResultatCampagne(
         run_id=etat.run_id,
