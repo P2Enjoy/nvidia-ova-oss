@@ -778,7 +778,7 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   8 unitaires de résolution, intégration en rejeu HTTP réel, cassette E2E
   `e2e_banc_entrepot.jsonl` + scénario CLI réelle, campagne complète verte
   (lint, mypy strict 111 fichiers, 562 unitaires, 148 intégration, 5 E2E,
-  build). Relevé live consigné au journal (2026-09-01 suite 14) ; il a désigné
+  build). Relevé live consigné au journal (2026-09-01, suites 14–15) ; il a désigné
   et fait livrer deux corrections génériques : coupure de connexion typée
   `TransportError` (§H4.4) et normalisation de la syntaxe d'appel de fonction
   dans la résolution d'action (§H15.8).
