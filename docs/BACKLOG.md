@@ -756,6 +756,21 @@ benchmaxing inchangée — aucune adaptation à un défi particulier.
 - Preuves : fixées par la spécification à écrire ; rejeu déterministe pour les
   tests (garde A2.3 : aucun appel réseau externe depuis les tests).
 
+**Spécification écrite le 2026-09-01** : `docs/SPEC_BANCS.md` (§S1–§S7), scores
+de référence consignés (§S5.4). Le banc a se découpe en unités d'une session
+(§S7) :
+
+- **U29a1 `[~]`** — spécification S1+ (faite) + environnement Entrepôt :
+  `src/avo/bancs/skillexec/{entrepot,generation,score}.py`, preuves unitaires de
+  §S6.4 (générateur, transitions, score, bruit). Sans adaptateur ni CLI.
+- **U29a2 `[ ]`** — adaptateur harnais + CLI `banc` (§S6) : boucle complète en
+  rejeu, cassette, intégration + E2E, premier relevé live (3 seeds, horizons 10
+  et 25) au journal.
+- **U29a3 `[ ]`** — environnement Dépôt logiciel (§S4, détail exécutable écrit
+  d'abord), preuves unitaires, score §S4.4.
+- **U29a4 `[ ]`** — bruit et récupération d'état en campagne de banc, relevés
+  multi-seeds, alimentation du déclencheur U25.
+
 ## Lot H — La méthode dans la structure
 
 Source : instruction du responsable (2026-08-31, session interactive). Les règles de
