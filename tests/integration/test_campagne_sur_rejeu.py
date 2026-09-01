@@ -105,13 +105,15 @@ class _SocleCampagneSurRejeu(unittest.TestCase):
         return charger(
             Mode.REJEU,
             # Mécanique de campagne hors gardes (§H16.0.4) ; les gardes ont
-            # leurs propres preuves (test_gardes*, U30).
+            # leurs propres preuves (test_gardes*, U30). Mode épinglé : les
+            # cassettes de ce banc encodent le chemin `transcript`.
             env={
                 "ARC_BASE_URL": self.base_arc,
                 "ARC_API_KEY": "cle-de-test",
                 "OLLAMA_HOST": base_llm,
                 "OLLAMA_API_KEY": CLE,
                 "AVO_GARDES": "false",
+                "AVO_CONTEXT_MODE": "transcript",
             },
             racine=Path("/inexistant"),
         )

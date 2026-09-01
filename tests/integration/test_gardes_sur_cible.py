@@ -106,12 +106,15 @@ class TestPartieSousGardes(unittest.TestCase):
         return reponse, False
 
     def _jouer_campagne(self, gardes: str, run_id: str, dossier: Path) -> tuple[Any, Workspace]:
+        # Mode épinglé : les réponses scriptées de ce banc encodent le chemin
+        # `transcript` (le défaut du produit est prouvé par test_config.py).
         environnement = {
             "OLLAMA_HOST": "http://capture.invalide",
             "OLLAMA_API_KEY": "sk-cle-gardes-cible",
             "ARC_BASE_URL": self.base_arc,
             "ARC_API_KEY": "cle-de-test",
             "AVO_GARDES": gardes,
+            "AVO_CONTEXT_MODE": "transcript",
         }
         config = charger(Mode.REJEU, env=environnement, racine=Path("/inexistant"))
         rang = 0

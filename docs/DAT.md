@@ -88,12 +88,12 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
 - Surface Ollama **native** plutôt qu'OpenAI `/v1` (contrôle `think`, `num_ctx`,
   compteurs) derrière une interface remplaçable (H4.1).
 - `think:false` par défaut, raisonnement en clair dans le contenu (H12).
-- Historique append-only + continuation en contexte frais à la VISTA (H5), défaut
-  toujours actif ; alternative à état structuré (SKILL.state, H15, `AVO_CONTEXT_MODE`)
-  branchée dans la boucle (U26 primitives, U27 branchement — un pas = un tour, H15.8)
-  et départagée par mesure, pas par principe (A/B sur rejeu livré par U27,
-  `docs/rapports/ab_mode_contexte.md` ; A/B en conditions réelles restant le
-  périmètre de U28, `[LIVE]`).
+- Deux modes de contexte exclusifs par run (`AVO_CONTEXT_MODE`, H15.7) : état
+  structuré Σ (SKILL.state, H15 — **défaut** depuis la décision du 2026-09-01) et
+  historique append-only + continuation en contexte frais à la VISTA (H5),
+  activable explicitement. Départage fait par mesure, pas par principe : A/B sur
+  rejeu (U27, `docs/rapports/ab_mode_contexte.md`) puis A/B en conditions réelles
+  (U28, `docs/rapports/ab-u28-state.md`).
 - Gardes de méthode dans les phases (H16, U30) : la structure impose ce que le
   prompt conseille — artefact documentaire (`WORKING.md`, ou `hypotheses` de Σ)
   avant de déverrouiller l'action, prédiction requise par le schéma des outils

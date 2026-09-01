@@ -62,8 +62,9 @@ class Mode(StrEnum):
 class ModeContexte(StrEnum):
     """Mode de composition du contexte (§H15.7, §H15.8). Exclusif par segment/run.
 
-    `TRANSCRIPT` (défaut) : historique append-only (§H5). `ETAT` : état structuré Σ,
-    prompt borné en O(1) par tour (§H15).
+    `ETAT` (défaut, décision du responsable du 2026-09-01 sur l'A/B réel de U28,
+    §H15.0) : état structuré Σ, prompt borné en O(1) par tour (§H15).
+    `TRANSCRIPT` : historique append-only (§H5).
     """
 
     TRANSCRIPT = "transcript"
@@ -328,7 +329,7 @@ def charger(
             source.texte("ARC_BASE_URL", "https://three.arcprize.org" if live else ARC_REJEU),
         ),
         contexte_mode=_valider_contexte_mode(
-            source.texte("AVO_CONTEXT_MODE", ModeContexte.TRANSCRIPT.value)
+            source.texte("AVO_CONTEXT_MODE", ModeContexte.ETAT.value)
         ),
         gardes=source.booleen("AVO_GARDES", True),
         garde_retries=source.entier("AVO_GARDE_RETRIES", 2),

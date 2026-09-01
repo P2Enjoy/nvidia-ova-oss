@@ -252,10 +252,21 @@ class TestBudget(unittest.TestCase):
 
 
 class TestModeContexteVariable(unittest.TestCase):
-    """§H15.7 : `AVO_CONTEXT_MODE`, défaut `transcript`, jamais une valeur devinée."""
+    """§H15.7 : `AVO_CONTEXT_MODE`, défaut `state`, jamais une valeur devinée.
 
-    def test_defaut_est_transcript(self) -> None:
+    Preuve révisée le 2026-09-01 : le défaut passe de `transcript` à `state` par
+    décision du responsable sur l'A/B réel de U28 (§H15.0, journal suite 9) — la
+    règle a changé par arbitrage, le contrat testé change avec elle.
+    """
+
+    def test_defaut_est_state(self) -> None:
         config = charger(Mode.REJEU, env={}, racine=Path("/inexistant"))
+        self.assertIs(config.contexte_mode, ModeContexte.ETAT)
+
+    def test_transcript_est_reconnu(self) -> None:
+        config = charger(
+            Mode.REJEU, env={"AVO_CONTEXT_MODE": "transcript"}, racine=Path("/inexistant")
+        )
         self.assertIs(config.contexte_mode, ModeContexte.TRANSCRIPT)
 
     def test_state_est_reconnu(self) -> None:

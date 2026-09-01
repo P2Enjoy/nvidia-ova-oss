@@ -149,7 +149,7 @@ TLS.
 | `AVO_SUP_STALL_ACTIONS` | actions sans progrès avant intervention du superviseur (H10.2) | `60` |
 | `AVO_SUP_COOLDOWN` | actions minimales entre deux interventions (H10.3) | `30` |
 | `AVO_RUNS_DIR` | racine des artefacts | `runs/` |
-| `AVO_CONTEXT_MODE` | mode de contexte, `transcript` ou `state` (§H15.7) | `transcript` |
+| `AVO_CONTEXT_MODE` | mode de contexte, `transcript` ou `state` (§H15.7) | `state` |
 | `AVO_GARDES` | gardes de méthode dans les phases (§H16) | `true` |
 | `AVO_GARDE_RETRIES` | redemandes d'une même garde par tour (§H16.0) | `2` |
 | `ARC_API_KEY` | API ARC Prize (SPEC_ARCAGI3) | requis pour le live uniquement |
@@ -501,14 +501,16 @@ boucle). Source : papier SKILL.state, arXiv:2608.26263, §3 (contrat), §5.7
 (taxonomie d'erreurs), §7 (limites) — export intégral dans
 `knowledge/arxiv-2608.26263-skill-state-long-horizon-agent-skills.md`.
 
-**H15.0 — Statut : alternative configurable, pas un remplacement.** H5 (transcript
-append-only) reste le mode par défaut et le seul livré avant cette unité ; la
-décision de le retenir tient à une contrainte mesurée sur l'endpoint (préremplissage
-dominant, cache de préfixe — journal du 2026-08-27 suite 2), que le mode `state`
-n'élimine pas nécessairement puisqu'il représmplit `(P, Σₜ, Oₜ)` à chaque tour. Le
-départage se fait par la mesure (U27 : A/B sur rejeu ; U28 : A/B en réel), jamais sur
-le papier. H15 spécifie le mode comme une alternative activable, exclusive avec H5
-pour un même segment (H15.7).
+**H15.0 — Statut : les deux modes sont livrés, `state` est le défaut.** Les deux
+modes coexistent, exclusifs pour un même segment (H15.7) ; aucun ne remplace
+l'autre. Le départage s'est fait par la mesure, jamais sur le papier : A/B sur
+rejeu (U27, `docs/rapports/ab_mode_contexte.md`) puis A/B en conditions réelles
+(U28, `docs/rapports/ab-u28-state.md` — à budget de temps égal, 33 actions contre
+6 et ~15× moins de tokens de prompt par action, prompt borné O(1) constaté). Sur
+ces mesures, le responsable a arrêté `state` comme mode par défaut (décision du
+2026-09-01, journal suite 9) ; `transcript` (H5) reste activable par
+`AVO_CONTEXT_MODE=transcript`, notamment là où le cache de préfixe rend
+l'append-only avantageux (contrainte mesurée du 2026-08-27 suite 2).
 
 **H15.1 — Contrat d'exécution d'un pas.** En mode `state`, chaque pas est défini par
 `(P, Σₜ, Oₜ)` (papier §3, éq. 2) : la spécification procédurale (le prompt système,
@@ -591,8 +593,8 @@ modèle, seul le runtime le fait évoluer (schéma v2 hypothétique, hors périm
 - **H5 (mode exclusif par segment).** Un segment est soit en mode `transcript`
   (H5, historique complet renvoyé), soit en mode `state` (Σ + observation courante
   seuls) — jamais les deux à la fois. `AVO_CONTEXT_MODE` (U27) fixe le mode pour tout
-  le run, défaut `transcript` : aucun comportement existant ne change tant que U27
-  n'est pas prise.
+  le run, défaut `state` (décision du responsable du 2026-09-01 sur l'A/B réel de
+  U28, §H15.0) ; `transcript` reste activable explicitement.
 - **H6.2 (notes).** `GUIDE.md`/`WORKING.md` restent la mémoire durable **trans-niveaux** ;
   Σ est l'état opérationnel du niveau courant. Les notes ne sont pas remplacées par
   Σ : un `RESET` de niveau réinitialise Σ (H15.6) mais pas les notes.

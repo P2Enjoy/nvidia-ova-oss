@@ -2,6 +2,15 @@
 
 ## [Non publié]
 
+### 2026-09-01 — Le mode de contexte `state` devient le défaut (décision du responsable)
+
+- `AVO_CONTEXT_MODE` passe de `transcript` à `state` par défaut, sur décision du
+  responsable du 2026-09-01 au vu de l'A/B en conditions réelles
+  (`docs/rapports/ab-u28-state.md` : 33 actions contre 6 à budget de temps égal,
+  ~15× moins de tokens de prompt par action). Le mode `transcript` reste
+  activable explicitement. Spéc §H15.0/§H15.7 amendées, README et DAT alignés,
+  preuve du défaut révisée (`tests/unit/test_config.py`).
+
 ### 2026-09-01 — U28 : A/B transcript/state en conditions réelles, robustesse de la résolution d'action
 
 - A/B des deux modes de contexte sur l'API ARC officielle à périmètre constant
@@ -9,7 +18,7 @@
   exacte) : rapport comparatif committé (`docs/rapports/ab-u28-state.md`) —
   33 actions contre 6 à budget de temps égal, prompt borné (max 9 223 tokens),
   0 continuation ; recommandation `state` par défaut pour U25 consignée,
-  décision du responsable attendue.
+  suivie par la décision du responsable du 2026-09-01 (entrée ci-dessus).
 - Résolution générique d'action (§H15.8) : la ponctuation traînante du jeton de
   nom est normalisée (bruit de format mesuré en réel), test d'intégration rouge
   avant correction.

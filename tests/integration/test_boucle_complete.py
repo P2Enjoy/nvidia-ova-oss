@@ -177,8 +177,16 @@ class TestBoucleComplete(unittest.TestCase):
     def _config(self, base: str, **surcharges: str) -> Config:
         # Ces preuves éprouvent la mécanique de la boucle hors gardes ; §H16.0.4 :
         # `AVO_GARDES=false` restitue exactement le comportement antérieur. Les
-        # gardes ont leurs propres preuves (test_gardes*, U30).
-        env = {"OLLAMA_HOST": base, "OLLAMA_API_KEY": CLE, "AVO_GARDES": "false", **surcharges}
+        # gardes ont leurs propres preuves (test_gardes*, U30). Le mode est
+        # épinglé : les cassettes de ce banc encodent le chemin `transcript`
+        # (le défaut du produit est prouvé par tests/unit/test_config.py).
+        env = {
+            "OLLAMA_HOST": base,
+            "OLLAMA_API_KEY": CLE,
+            "AVO_GARDES": "false",
+            "AVO_CONTEXT_MODE": "transcript",
+            **surcharges,
+        }
         return charger(Mode.REJEU, env=env, racine=Path("/inexistant"))
 
     def _boucle_scriptee(
@@ -223,6 +231,7 @@ class TestBoucleComplete(unittest.TestCase):
                 "OLLAMA_HOST": "http://capture.invalide",
                 "OLLAMA_API_KEY": CLE,
                 "AVO_GARDES": "false",
+                "AVO_CONTEXT_MODE": "transcript",
                 **surcharges,
             },
             racine=Path("/inexistant"),

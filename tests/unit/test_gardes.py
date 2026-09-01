@@ -35,9 +35,18 @@ CLE = "sk-cle-gardes"
 
 
 def _config(**env: str) -> Config:
+    # Le mode est épinglé : les scénarios scriptés ci-dessous encodent les
+    # échanges du chemin `transcript` ; les preuves du portage `state` le
+    # surchargent explicitement. Le défaut du produit est prouvé par
+    # tests/unit/test_config.py, pas ici.
     return charger(
         Mode.REJEU,
-        env={"OLLAMA_HOST": "http://capture.invalide", "OLLAMA_API_KEY": CLE, **env},
+        env={
+            "OLLAMA_HOST": "http://capture.invalide",
+            "OLLAMA_API_KEY": CLE,
+            "AVO_CONTEXT_MODE": "transcript",
+            **env,
+        },
         racine=Path("/inexistant"),
     )
 

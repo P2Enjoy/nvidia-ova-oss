@@ -274,10 +274,16 @@ class TestAgentSurInterface(unittest.TestCase, _PileArc):
 
     def _config_llm(self, base: str) -> Config:
         # Mécanique de l'agent sur l'interface hors gardes (§H16.0.4) ; les gardes
-        # ont leurs propres preuves (test_gardes*, U30).
+        # ont leurs propres preuves (test_gardes*, U30). Mode épinglé : les
+        # cassettes de ce banc encodent le chemin `transcript`.
         return charger(
             Mode.REJEU,
-            env={"OLLAMA_HOST": base, "OLLAMA_API_KEY": CLE, "AVO_GARDES": "false"},
+            env={
+                "OLLAMA_HOST": base,
+                "OLLAMA_API_KEY": CLE,
+                "AVO_GARDES": "false",
+                "AVO_CONTEXT_MODE": "transcript",
+            },
             racine=Path("/inexistant"),
         )
 
@@ -307,6 +313,7 @@ class TestAgentSurInterface(unittest.TestCase, _PileArc):
                 "OLLAMA_HOST": "http://capture.invalide",
                 "OLLAMA_API_KEY": CLE,
                 "AVO_GARDES": "false",
+                "AVO_CONTEXT_MODE": "transcript",
             },
             racine=Path("/inexistant"),
         )
