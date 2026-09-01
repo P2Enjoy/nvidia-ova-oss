@@ -1585,3 +1585,33 @@ Trois points d'implémentation tranchés, persistés ici avant la première lign
 La sous-commande `banc` du noyau reste générique : `cli.py` délègue à
 `avo.bancs.executer_banc` sans nommer aucun banc ni environnement (balayage
 « zéro indice » préservé sur le noyau).
+
+---
+
+## 2026-09-01 (suite 14) — U29a2 : premier relevé live du banc a (reprise et clôture)
+
+Session planifiée. La session précédente (suite 13) a livré et poussé TOUT le code
+de U29a2 — adaptateur, CLI `banc`, intégration, E2E, documentation — plus deux
+améliorations générales désignées par son relevé live (retry `RemoteDisconnected`
+§H4.4-4.5 ; normalisation de la syntaxe d'appel de fonction et repli par espaces
+§H15.8), mais a été interrompue avant la consignation du relevé, le journal et le
+backlog. Cette session reprend : relevé live (3 seeds × horizons 10 et 25), puis
+clôture.
+
+Pile montée et seedée (CA du proxy déposé dans `certs/`, dockerd manuel),
+`make smoke-live` tout vert (qwen3.6:35b servi à travers le pont 443).
+
+**Relevé live, horizon 10** (`python -m avo banc skillexec --env entrepot
+--seed S --horizon 10 --mode live`, défaut `state`, bruit 0, gardes actives) :
+
+| seed | score | correctes | incorrectes | invalides | tours | tokens | durée |
+|---|---|---|---|---|---|---|---|
+| 1 | 0,80 | 8 | 1 | 1 | 13 | 18 500 | 536 s |
+| 2 | 0,80 | 8 | 1 | 1 | 13 | 17 262 | 333 s |
+| 3 | 0,60 | 6 | 3 | 1 | 14 | 16 718 | 314 s |
+
+Moyenne h10 : **0,73** — sous la fourchette de référence §S5.4
+(Qwen-3-8B 0,94 ; Gemma-4-31B 0,98). Les normalisations §H15.8 de la suite 13
+portent : plus aucun tour perdu en résolution d'action (contre 11/30 au relevé
+d'hier soir) ; les pertes restantes sont des choix d'action erronés, pas du bruit
+de format.
