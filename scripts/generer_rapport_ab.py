@@ -24,6 +24,7 @@ from pathlib import Path
 from avo.arc.campagne import EtatCampagne
 from avo.arc.rapport_ab import MesureMode, rapport
 from avo.memory.workspace import Workspace
+from tests.e2e.scenarios import ENV_EPINGLE
 
 #: Jeu et plafonds identiques à ceux des cassettes E2E scénarisées (§A8.5).
 JEU = "cible-synthetique"
@@ -47,6 +48,11 @@ def jouer(mode_contexte: str, runs_dir: Path) -> MesureMode:
     run_id = f"ab-{mode_contexte}"
     environnement = {
         **os.environ,
+        # Même épinglage complet que les scénarios E2E : un `.env` local qui porte
+        # un `OLLAMA_CONTEXT_LENGTH` différent de celui des cassettes changerait
+        # `options.num_ctx` et ferait rendre 599 au rejoueur (mesuré 2026-09-01,
+        # `.env` à 98 304 contre cassettes à 229 376 — deux refus, rapport à zéro).
+        **ENV_EPINGLE,
         "AVO_CONTEXT_MODE": mode_contexte,
         "AVO_RUNS_DIR": str(runs_dir),
         "OLLAMA_HOST": HOTE_LLM_REJEU,
