@@ -58,7 +58,7 @@ def executer_banc(
     if environnement != "entrepot":
         raise BancInconnu(
             f"environnement inconnu : « {environnement} ». Disponibles : entrepot "
-            "(depot : U29a3, docs/BACKLOG.md)."
+            "(depot : adaptateur branché en U29a4, docs/BACKLOG.md)."
         )
     config = charger(mode)
     identifiant = run_id or nouveau_run_id(suffixe="banc")

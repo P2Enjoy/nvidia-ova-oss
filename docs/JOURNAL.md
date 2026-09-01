@@ -1692,7 +1692,8 @@ Session planifiée, démarrée au créneau horaire suivant la suite 14 et jouée
 PARALLÈLE de la suite 15 ci-dessus (constaté au push : la suite 15 avait déjà
 clos U29a2). Cette session avait repris la consigne de la suite 14 — compléter le
 relevé h25 (3 seeds) — et l'a exécutée sur les seeds 1–3 : mesure INDÉPENDANTE du
-relevé 101–103 de la suite 15, consignée plus bas dans cette entrée. Pile montée
+relevé 101–103 de la suite 15 — la session a été interrompue avant de consigner
+ce relevé, qui est donc perdu (constat en suite 17). Pile montée
 et seedée (dockerd manuel, CA du proxy dans `certs/`), `make smoke-live` tout
 vert.
 
@@ -1713,3 +1714,40 @@ Issue écartée : élever le plafond de relances §H4.5 — une panne peut durer
 arbitrairement et ce plafond protège la latence de TOUS les appels ; l'invariant
 est « aucune perte silencieuse », pas « attendre indéfiniment ». Le seed 2 sera
 rejoué après le seed 3 pour compléter le relevé.
+
+---
+
+## 2026-09-01 (suite 17) — U31/U29a3 livrée et close : environnement Dépôt logiciel (§S4)
+
+Session planifiée. Pile montée et seedée (dockerd manuel, CA du proxy dans
+`certs/`), reprise désignée par la suite 15 : U29a3.
+
+**Spécifié d'abord.** Détail exécutable de §S4 écrit et committé avant le code
+(commit `3257a6f`) : la source (annexe B.1) ne donnant aucun algorithme pour cet
+environnement, le patron mesuré de l'Entrepôt est transposé — état nominal,
+événements référençant le nominal, une obligation par événement. Points tranchés
+notables : cycle affectation → revue → [échec CI si défaut tiré, équiprobable] →
+CI verte ; `merge` sur CI rouge VALIDE et cassant (donne son sens au « sans
+casser la CI » de B.1 ; l'issue nomme la casse) ; demandes JUGÉES = celles dont
+le `ci_verte` nominal est dans l'épisode, `resolution` nulle à dénominateur nul.
+
+**Livré.** `src/avo/bancs/skillexec/depot.py` (commit `adf3989`) : générateur
+déterministe, transitions `commit`/`create_pr`/`merge`/`fix_ci`/`wait`,
+résolution au relevé. 30 unitaires (`tests/unit/test_banc_depot.py`), partie
+parfaite h60 à score 1,0 et résolution 1,0, `wait` dû sur les trois divergences,
+bruit C.3 sans effet sur les événements. Balayage « mots du banc hors
+`src/avo/bancs/` » : vide (seuls faux positifs génériques `demande_outil`,
+`lire_fichier_env`). Campagne complète verte : lint, mypy strict 112 fichiers,
+592 unitaires, 148 intégration, 5 E2E, build.
+
+**Tranché à la clôture.** Le branchement adaptateur+CLI du dépôt appartient à
+U29a4, premier consommateur (campagne de banc) — §S7 amendé, message du dispatch
+`avo.bancs` mis au vrai. Le relevé h25 seeds 1–3 de la suite 16 a été perdu
+(session interrompue avant consignation) ; il n'est PAS repris : la suite 15
+porte déjà un relevé 3 seeds, et les relevés suivants viennent de U29a4
+(multi-seeds, les deux environnements).
+
+**Où reprendre.** U31 → U29a4 : brancher le Dépôt logiciel à l'adaptateur et à
+la CLI (§S6 : outils, contexte de tâche, dispatch, intégration + E2E), puis
+campagne de banc — bruit, récupération d'état, relevés multi-seeds sur les deux
+environnements, alimentation du déclencheur U25.

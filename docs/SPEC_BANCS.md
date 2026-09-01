@@ -356,5 +356,9 @@ du produit.
   journal.
 - **U29a3** — `depot.py` : environnement Dépôt logiciel (détail exécutable de §S4
   écrit d'abord), preuves unitaires, score §S4.4.
-- **U29a4** — conditions de bruit et de récupération d'état en campagne de banc,
-  relevés multi-seeds consignés, alimentation du déclencheur U25.
+- **U29a4** — branchement du Dépôt logiciel à l'adaptateur et à la CLI (§S6 :
+  outils, contexte de tâche, dispatch — POINT TRANCHÉ à la clôture de U29a3 : le
+  branchement appartient à l'unité de campagne, qui en est le premier
+  consommateur ; U29a3 reste l'environnement et ses preuves propres), puis
+  conditions de bruit et de récupération d'état en campagne de banc, relevés
+  multi-seeds consignés, alimentation du déclencheur U25.

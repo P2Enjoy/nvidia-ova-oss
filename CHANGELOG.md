@@ -2,6 +2,25 @@
 
 ## [Non publié]
 
+### 2026-09-01 — U29a3 : environnement Dépôt logiciel du banc a (§S4)
+
+- Détail exécutable de §S4 écrit et committé avant le code : cycle des demandes
+  (affectation → revue → [échec CI] → CI verte), générateur nominal seedé,
+  validité des cinq actions, `merge` sur CI rouge VALIDE et cassant (le critère
+  B.1 « sans casser la CI » y prend son sens), résolution
+  `demandes correctement résolues / demandes jugées`, obligations évaluées sur
+  l'état réel avec `wait` dû en divergence.
+- `src/avo/bancs/skillexec/depot.py` : générateur d'épisodes déterministe
+  (mêmes garanties que l'Entrepôt : bruit sur flux séparé, événements
+  référençant le nominal), état de vérité master/branches/PR/CI, transitions
+  `commit`/`create_pr`/`merge`/`fix_ci`/`wait`, résolution portée au relevé
+  (`resolution`, `demandes_resolues`, `demandes_jugees`).
+- Preuves : 30 unitaires (`tests/unit/test_banc_depot.py`), balayage « mots du
+  banc hors `src/avo/bancs/` » vide, campagne complète verte (lint, mypy strict
+  112 fichiers, 592 unitaires, 148 intégration, 5 E2E, build). Le branchement
+  adaptateur+CLI du dépôt arrive avec U29a4 (§S7) ; le message du dispatch
+  `avo.bancs` le dit désormais.
+
 ### 2026-09-01 — Relevé d'incident du banc (§S5.3)
 
 - `banc.json` s'écrit désormais MÊME quand l'épisode est interrompu par une

@@ -782,9 +782,21 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   et fait livrer deux corrections génériques : coupure de connexion typée
   `TransportError` (§H4.4) et normalisation de la syntaxe d'appel de fonction
   dans la résolution d'action (§H15.8).
-- **U29a3 `[ ]`** — environnement Dépôt logiciel (§S4, détail exécutable écrit
-  d'abord), preuves unitaires, score §S4.4.
-- **U29a4 `[ ]`** — bruit et récupération d'état en campagne de banc, relevés
+- **U29a3 `[x]`** — environnement Dépôt logiciel (§S4, détail exécutable écrit
+  d'abord), preuves unitaires, score §S4.4. **Livré et vérifié le 2026-09-01** :
+  détail exécutable de §S4.1–§S4.6 écrit et committé avant le code (cycle des
+  demandes, générateur nominal, validité des actions, `merge` cassant sur CI
+  rouge, résolution B.1, obligations et divergence) ;
+  `src/avo/bancs/skillexec/depot.py` (générateur seedé, transitions
+  commit/create_pr/merge/fix_ci/wait, résolution au relevé), 30 unitaires
+  (`tests/unit/test_banc_depot.py` : déterminisme, cycle nominal, chaque
+  validité/refus, partie parfaite score 1,0 et résolution 1,0, `wait` dû en
+  divergence, bruit C.3), balayage « mots du banc hors `src/avo/bancs/` » vide,
+  campagne complète verte (lint, mypy strict 112 fichiers, 592 unitaires,
+  148 intégration, 5 E2E, build). Le branchement adaptateur+CLI du dépôt
+  appartient à U29a4 (§S7, point tranché à la clôture).
+- **U29a4 `[ ]`** — branchement du Dépôt logiciel à l'adaptateur et à la CLI
+  (§S6), puis bruit et récupération d'état en campagne de banc, relevés
   multi-seeds, alimentation du déclencheur U25.
 
 ## Lot H — La méthode dans la structure
