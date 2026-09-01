@@ -1323,3 +1323,36 @@ au dépôt ne le fixe ; relire A7 et la dernière entrée avant de lancer quoi q
 ce soit). Les scorecards `2abc230e…`, `b59c1306…` (2026-09-01, investigation) et
 `pilote-u24b` restent ouverts côté ARC, non refermables (cookies des conteneurs
 défunts) — limite connue, sans action possible depuis ici.
+
+---
+
+## 2026-09-01 (suite 6) — U28 : lancement de l'A/B réel, mode `state`, périmètre consigné avant lancement
+
+**Choix d'unité (point tranché).** L'ordre du plan désigne U25, mais sa spécification
+arrête son périmètre AVEC le responsable au vu de U24 (cas d'arbitrage 3 : ni la
+demande, ni le journal, ni la spécification ne fixent jeux/plafonds/budget de la
+campagne étendue, et deux périmètres raisonnables donnent deux rapports finaux
+différents ; cas 2 en sus : la dépense d'inférence engagée est substantielle).
+L'arbitrage est demandé au responsable ; **ce qui reste livrable sans la réponse est
+U28**, dont le périmètre est entièrement fixé par le dépôt (rejeu du périmètre
+pilote U24d en mode `state`) et dont la mesure ALIMENTE la décision U25
+(recommandation du mode par défaut). Le point « en session interactive » de U28 est
+couvert par le point tranché de U24 (autorisation du 2026-08-30 pour les sessions
+planifiées).
+
+**Vérifié avant lancement (lecture seule)** : `cd82-fb555c5d` est listé par
+`/api/games` aujourd'hui, baselines [55, 8, 41, 21, 23, 23] (somme 171),
+identiques au pilote U24d — la comparaison A/B est à baseline constante.
+
+**Périmètre `ab-u28-state`, consigné avant lancement** : mêmes jeu et plafonds que
+`pilote-u24d` — `cd82-fb555c5d`, 80 actions/niveau, 300 actions/jeu, 1 200 s/jeu,
+1 500 000 tokens/jeu, 400 tours, fenêtre `OLLAMA_CONTEXT_LENGTH=98304` (recette du
+2026-09-01), gardes H16 actives — SAUF `AVO_CONTEXT_MODE=state` (l'objet même de
+U28, §H15.8) ; `run-id: ab-u28-state`, commande :
+`make run-arc ARGS="--mode live --games cd82-fb555c5d --actions-max-niveau 80
+--actions-max-jeu 300 --budget-secondes-jeu 1200 --budget-tokens-jeu 1500000
+--tours-max 400 --run-id ab-u28-state --j-autorise-la-publication"`.
+
+Attendu : mesures en main contre `docs/rapports/pilote-u24d.md` (RHAE, actions,
+tokens prépremplis/générés, appels, incidents `413`/retries de patch, effet du
+cache de préfixe) ; rapport comparatif committé sous `docs/rapports/`.
