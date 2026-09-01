@@ -1498,3 +1498,26 @@ l'épinglage rétablit l'intention des deux.
 ouvrir la campagne au périmètre U25 — tous les jeux de `/api/games`, plafonds
 80/300/1 200 s/1,5 M tokens/400 tours, défaut `state` désormais actif — et jouer
 la première tranche, puis observer et améliorer sur les mesures.
+
+---
+
+## 2026-09-01 (suite 11) — U29 ouverte comme terrain d'affinage, campagne ARC mise sous déclencheur
+
+Session interactive, instruction du responsable : le harnais s'AFFINE d'abord sur
+les trois bancs proposés (a : patron SkillExecBench ; b : InterCode CTF ; c :
+τ-Bench), et la campagne ARC ne se (re)jouera que lorsqu'il aura des résultats
+intéressants — scores comparables aux modèles de taille similaire, ou score qui a
+cessé de progresser.
+
+**Persisté** : U29 ouverte (ordre a → b → c, spécification S1+ d'abord, scores de
+référence des modèles open-weight comparables à consigner par la spéc depuis
+l'export SKILL.state) ; U25 gardée par le déclencheur (plateau opérationnalisé par
+défaut, révisable : trois itérations d'amélioration successives sans gain sur le
+banc concerné) ; U31 réécrite — la cible d'évaluation courante est U29 tant que le
+déclencheur n'est pas atteint, la campagne ARC ensuite ; `CLAUDE_PROJECT.md`
+(« Mission permanente ») et `MASTER_PLAN` §2/§7 alignés.
+
+**Où reprendre.** La prochaine session planifiée exécute U31 avec pour cible U29 :
+écrire et committer la spécification S1+ du banc a (patron SkillExecBench —
+générateurs seedés déterministes, score continu, scores de référence consignés),
+puis coder par unités d'une session.

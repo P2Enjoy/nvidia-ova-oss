@@ -563,6 +563,14 @@ committé, CHANGELOG et README mis à jour.
   rouvre l'arbitrage de dépense. Exécution par tranches reprenables (A7,
   granularité jeu) au fil des sessions planifiées, dans le cadre de la mission
   permanente U31.
+- **Déclencheur (décision du responsable, 2026-09-01, journal suite 11)** : la
+  campagne ne se (re)joue que lorsque le harnais, affiné sur les bancs U29,
+  atteint des résultats intéressants — scores comparables aux références
+  publiées des modèles de taille similaire sur les bancs publics (consignées par
+  la spécification U29), OU score qui a cessé de progresser (par défaut,
+  révisable : trois itérations d'amélioration successives sans gain sur le banc
+  concerné). La session qui constate le déclencheur le consigne au journal avec
+  ses mesures, puis ouvre la campagne.
 - Preuves : rapport final, scorecards, coûts mesurés ; écarts au périmètre nommés.
 
 ## Lot G — Contexte à état structuré (SKILL.state)
@@ -719,21 +727,34 @@ Rapport comparatif committé ; recommandation du mode par défaut pour U25 arrê
   (lint, mypy strict, 508 unitaires, 145 intégration, 4 E2E, build). Unité
   close.
 
-## U29 — Benchmarks interactifs complémentaires `[ ]` **(hors périmètre — arbitrage requis)**
+## U29 — Benchmarks interactifs complémentaires : terrain d'affinage du harnais `[ ]`
 
-Le périmètre d'évaluation est ARC-AGI-3 seul (décision du 2026-08-27). Le papier
-SKILL.state fournit deux benchmarks interactifs publics réutilisables avec le même
-harnais — InterCode CTF (100 défis bash en conteneurs, pass@1) et Sierra τ-Bench
-(workflows outillés Retail/Airline, évaluateur officiel) — et le patron d'un banc
-diagnostique déterministe type SkillExecBench (générateurs seedés Warehouse /
-Software Repository), utile pour éprouver les longues horizons hors ARC. **Cette
-unité n'entre pas dans l'ordre d'exécution** tant que le responsable n'a pas élargi
-le périmètre ; si elle est retenue, elle commence par sa spécification (chapitres
-S1+) puis se redécoupe en unités d'une session.
+**Ouverte par le responsable le 2026-09-01** (session interactive, journal
+suite 11) : le harnais s'AFFINE sur ces bancs avant de rejouer la campagne ARC
+(déclencheur consigné dans U25). Les trois bancs du papier SKILL.state, dans cet
+ordre :
 
-- Preuves (si retenue) : fixées par la spécification à écrire.
-- Détails fournis au responsable le 2026-09-01 (session interactive, journal
-  suite 9) ; décision toujours ouverte — l'unité reste hors périmètre.
+- **a) patron SkillExecBench** — banc diagnostique déterministe à générateurs
+  seedés (Warehouse : 500 étagères indépendantes, Store/Ship/Move/Wait ;
+  Software Repository : graphe branches/commits/PR/CI, CherryPick/Merge/RunTests/
+  Rollback), score continu actions correctes / événements, entièrement local et
+  rejouable par cassettes — c'est aussi le mètre hors ligne des améliorations
+  U31 ;
+- **b) InterCode CTF** — 100 défis bash en conteneurs Docker (rétro-ingénierie,
+  forensique, crypto, exploitation), pass@1 sur drapeau vérifié ;
+- **c) Sierra τ-Bench** — workflows client Retail/Airline, utilisateur simulé
+  par un second LLM, bases SQLite outillées, évaluateur officiel sur l'état
+  final.
+
+L'unité commence par sa spécification (chapitres S1+, committée avant le code),
+qui consigne notamment les scores de référence publiés des modèles open-weight de
+taille comparable (source : export SKILL.state), puis se redécoupe en unités d'une
+session. Le noyau §H reste agnostique de la tâche : chaque banc n'ajoute qu'un
+adaptateur mince (outils + prompt), comme §A pour ARC ; interdiction de
+benchmaxing inchangée — aucune adaptation à un défi particulier.
+
+- Preuves : fixées par la spécification à écrire ; rejeu déterministe pour les
+  tests (garde A2.3 : aucun appel réseau externe depuis les tests).
 
 ## Lot H — La méthode dans la structure
 
@@ -798,13 +819,15 @@ zéro indice de jeu (§A5, balayage exécutable inchangé).
 
 ## Lot I — Concours permanent
 
-Source : instruction du responsable (2026-09-01, session interactive). La raison
-d'être de la boucle planifiée devient RÉUSSIR ARC Prize avec le harnais : chaque
-itération exécute le harnais sur le concours, observe les résultats, puis améliore
-ou corrige le fonctionnement GÉNÉRAL du harnais d'après ces mesures. L'interdiction
-de benchmaxing (`CLAUDE_PROJECT.md`) s'applique sans exception ; le budget
-d'inférence est illimité tant que le modèle est `qwen3.6:35b` et que l'inférence
-passe par le gateway LLM du responsable.
+Source : instructions du responsable (2026-09-01, session interactive, journal
+suites 9 et 11). La raison d'être de la boucle planifiée est de RÉUSSIR ARC Prize
+avec le harnais — en deux temps : le harnais s'AFFINE d'abord sur les bancs
+génériques U29 (jouer, observer, améliorer), puis, quand le déclencheur consigné
+dans U25 est atteint (scores comparables aux modèles de taille similaire, ou
+plateau), la campagne ARC se joue. L'interdiction de benchmaxing
+(`CLAUDE_PROJECT.md`) s'applique sans exception ; le budget d'inférence est
+illimité tant que le modèle est `qwen3.6:35b` et que l'inférence passe par le
+gateway LLM du responsable.
 
 ## U31 — Boucle permanente de concours : jouer, observer, améliorer `[~]` **[LIVE]** (permanente)
 
@@ -814,13 +837,17 @@ PERMANENTE : elle ne passe jamais à `[x]`, et la boucle planifiée ne s'arrête
 tant qu'elle est active (MASTER_PLAN §7). Chaque session planifiée, dans cet
 ordre :
 
-1. **Jouer** : poursuivre la campagne en cours (`python -m avo resume <run_id>`)
-   ou en ouvrir une au périmètre U25 (tous les jeux de `/api/games`, plafonds
-   80 actions/niveau, 300 actions/jeu, 1 200 s/jeu, 1 500 000 tokens/jeu,
-   400 tours, mode `state`), par tranches reprenables (A7, granularité jeu).
-2. **Observer** : dépouiller les artefacts du run (rapport, RHAE, incidents,
-   interventions du superviseur, retries de patch, coûts) et consigner les
-   mesures au journal.
+1. **Jouer** — sur la cible d'évaluation COURANTE :
+   - tant que le déclencheur U25 n'est pas atteint, la cible est U29 : construire
+     le prochain banc dans l'ordre a → b → c (spécification d'abord), puis faire
+     jouer le harnais sur les bancs livrés et relever les scores ;
+   - une fois le déclencheur constaté et consigné, la cible est la campagne ARC
+     au périmètre U25 (`python -m avo resume <run_id>` ou ouverture), par
+     tranches reprenables (A7, granularité jeu).
+2. **Observer** : dépouiller les artefacts du run (rapport, scores, RHAE le cas
+   échéant, incidents, interventions du superviseur, retries de patch, coûts) et
+   consigner les mesures au journal — y compris la progression du score par banc,
+   qui alimente le déclencheur U25.
 3. **Améliorer ou corriger** : sur ces mesures uniquement, une amélioration
    GÉNÉRIQUE du harnais (boucle, prompts, outils, mémoire, superviseur) ou une
    correction de défaut — spécifiée, codée et prouvée dans la même session ;
@@ -828,7 +855,7 @@ ordre :
    Pas de mesure fraîche qui désigne une amélioration : pas d'amélioration
    inventée.
 
-- Preuves par itération : la tranche de campagne jouée et réconciliée (scorecard
-  fermé quand la campagne se clôt), l'analyse consignée au journal, et pour toute
-  modification du harnais ses preuves propres plus la campagne complète
+- Preuves par itération : le run joué et réconcilié (scorecard fermé quand une
+  campagne ARC se clôt), l'analyse et les scores consignés au journal, et pour
+  toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
