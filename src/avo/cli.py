@@ -1,10 +1,12 @@
 """Point d'entrée en ligne de commande du harnais AVO.
 
-@spec docs/BACKLOG.md U3 — Squelette Python et outillage, U23 — Runner de campagne
+@spec docs/BACKLOG.md U3 — Squelette Python et outillage, U23 — Runner de campagne,
+      U29a2 — sous-commande `banc` (générique : le dispatch vit sous `avo.bancs`)
 @spec docs/SPEC_HARNAIS.md §H2.2 (``cli.py`` : point d'entrée ``python -m avo``),
       §H2.3 (contrat des commandes), §H13.2 (reprise de run)
 @spec docs/SPEC_ARCAGI3.md §A7.1 (surface du runner et plafonds), §A7.2 (garde
       d'accord de publication), §A7.4 (contrat d'implémentation de la CLI)
+@spec docs/SPEC_BANCS.md §S6.3 (CLI `banc` : boucle complète, relevé §S5.3)
 @spec docs/MASTER_PLAN.md §5 (produit CLI : la vérification utilisateur passe par ces commandes)
 
 Les sous-commandes du contrat sont déclarées ici dès maintenant afin que
@@ -87,6 +89,25 @@ def _build_parser() -> argparse.ArgumentParser:
     reprise = sub.add_parser("resume", help="reprend un run existant (docs/SPEC_HARNAIS.md §H13.2)")
     reprise.add_argument("run_id", help="identifiant du run à reprendre")
     reprise.add_argument("--mode", choices=("replay", "live"), default="replay")
+
+    # La CLI du noyau reste générique : aucun nom de banc ni d'environnement ici —
+    # le dispatch et ses mots vivent sous `src/avo/bancs/` (docs/SPEC_BANCS.md §S6.3).
+    banc = sub.add_parser(
+        "banc", help="joue un épisode de banc d'affinage (docs/SPEC_BANCS.md §S6)"
+    )
+    banc.add_argument("nom", help="nom du banc (voir docs/SPEC_BANCS.md)")
+    banc.add_argument("--env", required=True, help="environnement du banc")
+    banc.add_argument("--seed", type=int, required=True, help="seed de l'épisode (§S2.2)")
+    banc.add_argument("--horizon", type=int, required=True, help="événements actionnables (§S2.2)")
+    banc.add_argument("--bruit", type=int, default=0, help="lignes de télémétrie par observation")
+    banc.add_argument("--mode", choices=("replay", "live"), default="replay")
+    banc.add_argument("--run-id", default=None, help="identifiant du run (défaut : horodaté)")
+    banc.add_argument(
+        "--tours-max",
+        type=int,
+        default=None,
+        help="tours de boucle au plus (défaut : 4 × horizon)",
+    )
     return parser
 
 
@@ -141,6 +162,35 @@ def _reprendre(args: argparse.Namespace) -> int:
     return _annoncer(resultat, espace.rapport)
 
 
+def _executer_banc(args: argparse.Namespace) -> int:
+    """Joue un épisode de banc et annonce le relevé (docs/SPEC_BANCS.md §S6.3)."""
+    from avo.bancs import BancInconnu, executer_banc
+
+    try:
+        sortie = executer_banc(
+            nom=args.nom,
+            environnement=args.env,
+            seed=args.seed,
+            horizon=args.horizon,
+            bruit=args.bruit,
+            mode=args.mode,
+            run_id=args.run_id,
+            tours_max=args.tours_max,
+        )
+    except BancInconnu as erreur:
+        print(f"avo: banc refusé — {erreur}", file=sys.stderr)
+        return 2
+    releve = sortie.releve
+    print(
+        f"épisode terminé : seed {releve.seed}, horizon {releve.horizon}, "
+        f"bruit {releve.bruit} — score {releve.score:.2f} "
+        f"({releve.correctes} correctes, {releve.incorrectes} incorrectes, "
+        f"{releve.invalides} invalides)"
+    )
+    print(f"relevé : {sortie.chemin_releve}")
+    return 0
+
+
 def _annoncer(resultat: ResultatCampagne, chemin_rapport: Path) -> int:
     """Ce que l'opérateur lit dans son terminal (MASTER_PLAN §5)."""
     from avo.arc.rapport import formater
@@ -175,6 +225,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.commande == "resume":
         return _reprendre(args)
+
+    if args.commande == "banc":
+        return _executer_banc(args)
 
     if args.commande in _A_VENIR:
         unite, objet = _A_VENIR[args.commande]

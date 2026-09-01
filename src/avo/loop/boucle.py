@@ -622,8 +622,11 @@ class BoucleAgent:
                 f"Ta réponse précédente était invalide : {erreur_precedente}\n"
                 f"Corrige et réponds à nouveau selon le protocole ci-dessous.\n\n{contenu}"
             )
+        # §H15.8 : le message système est celui du contexte monté par l'appelant
+        # (défaut `prompts.SYSTEME`) — même surface qu'en mode `transcript`, et la
+        # seule par laquelle un adaptateur fournit son contexte de tâche (§H16.1).
         return [
-            {"role": "system", "content": prompts.SYSTEME},
+            {"role": "system", "content": self.contexte.systeme},
             {"role": "user", "content": contenu},
         ]
 
