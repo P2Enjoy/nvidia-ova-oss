@@ -2,6 +2,20 @@
 
 ## [Non publié]
 
+### 2026-09-02 — U31 : le vidage d'« hypotheses » se conserve au lieu d'invalider le patch (H16.1 révisé)
+
+- Un patch qui vide le champ commun `hypotheses` alors qu'il est non vide
+  (liste vide ou `null`) n'est plus un `EtatInvalide` à rollback-retry : le
+  champ est conservé, le reste du patch s'applique, l'action du pas joue, et
+  la ligne d'archive du pas porte `hypotheses_conservees: true` (§H15.10).
+- Motif mesuré (ligne de base h25 bruit 0, code suite 21+22) : traité en
+  retry, le vidage a tué en `RetriesEpuises` un run dont toutes les actions
+  étaient correctes (s1) et coûté 12 relances sur un autre (s2, 11 vidages) —
+  dans un mode sans mémoire, la relance n'enseigne rien d'un tour à l'autre.
+- Preuves : unitaires du runtime (conservation par liste vide et par `null`,
+  reste du patch appliqué), intégration en HTTP réel (action jouée, Σ
+  conservé, archive), lint, mypy strict.
+
 ### 2026-09-02 — U29a4 : client streamé livré (`stream: true`, cassettes régénérées, lecture partagée des deux formes)
 
 - La requête `/api/chat` part désormais en `stream: true` (§H4.2) : les
