@@ -103,7 +103,11 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
   complétions, game over et interventions. Jamais fatales, bornées
   (`AVO_GARDE_RETRIES`), débrayables (`AVO_GARDES`), valables dans les deux modes
   de contexte ; A/B sur `cible` : aucune action ni aucun appel de plus sur
-  politique conforme.
+  politique conforme. En mode `state`, un refus de garde est un pas blanc
+  ATOMIQUE — le patch du pas refusé est annulé avec l'action (Σ ne ment jamais
+  sur une action non jouée), et le champ commun `hypotheses` ne se vide pas en
+  cours de run (vidage = `EtatInvalide`, retry immédiat) — H16.1, mesures au
+  journal (suite 21).
 - Lignée = git jetable par run, jamais le dépôt projet (H9.3).
 - Instanciation ARC du couple (xᵢ, f) : connaissance validée / (niveaux, −actions)
   — décision documentée H9.2, les sources ne publiant pas ce détail.

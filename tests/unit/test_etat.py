@@ -197,6 +197,35 @@ class TestDecoderPasJsonMalforme(unittest.TestCase):
         self.assertEqual(pas.action, "MOVE_UP")
 
 
+class TestHypothesesNonVidables(unittest.TestCase):
+    """§H16.1 : le champ commun `hypotheses` ne se vide pas en cours de run.
+
+    @verifies docs/SPEC_HARNAIS.md §H16.1 (`hypotheses` non vidable : liste vide et
+              null refusés quand le champ est non vide, ouverture vide → vide permise)
+    """
+
+    def test_vider_hypotheses_non_vides_par_liste_vide_est_refuse(self) -> None:
+        etat = Etat.initial().fusionner({"hypotheses": ["le levier ouvre la trappe"]})
+        with self.assertRaises(EtatInvalide) as capture:
+            etat.fusionner({"hypotheses": []})
+        self.assertIn("hypotheses", str(capture.exception))
+        self.assertIn("remplace", str(capture.exception))
+
+    def test_vider_hypotheses_non_vides_par_null_est_refuse(self) -> None:
+        etat = Etat.initial().fusionner({"hypotheses": ["le levier ouvre la trappe"]})
+        with self.assertRaises(EtatInvalide):
+            etat.fusionner({"hypotheses": None})
+
+    def test_remplacer_des_hypotheses_reste_permis(self) -> None:
+        etat = Etat.initial().fusionner({"hypotheses": ["le levier ouvre la trappe"]})
+        revise = etat.fusionner({"hypotheses": ["le levier est sans effet sur la trappe"]})
+        self.assertEqual(revise.en_dict()["hypotheses"], ["le levier est sans effet sur la trappe"])
+
+    def test_l_ouverture_vide_vers_vide_reste_permise(self) -> None:
+        self.assertEqual(Etat.initial().fusionner({"hypotheses": []}).en_dict()["hypotheses"], [])
+        self.assertEqual(Etat.initial().fusionner({"hypotheses": None}).en_dict()["hypotheses"], [])
+
+
 class TestAppliquer(unittest.TestCase):
     """Décodage + fusion en un seul appel, sans gestion de nouvelle tentative."""
 

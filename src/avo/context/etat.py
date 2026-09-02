@@ -7,7 +7,8 @@
       runtime), §H15.4 (rollback-retry borné), §H15.5 (sérialisation aller-retour),
       §H15.6 (schéma ARC v1, défaut du noyau), §H15.9 (schéma déclaré par le
       domaine : genres génériques du noyau, champ commun `hypotheses`, fusion clé
-      par clé du genre dictionnaire)
+      par clé du genre dictionnaire), §H16.1 (`hypotheses` ne se vide pas en
+      cours de run)
 
 Module **pur** : aucune entrée-sortie, aucun réseau, aucun appel LLM. Il reçoit un
 état et un texte de modèle, et rend soit un nouvel état et une action, soit une
@@ -268,6 +269,16 @@ class Etat:
         for cle, valeur in patch.items():
             champ = self.schema.champ(cle)
             assert champ is not None
+            # §H16.1 : le champ commun `hypotheses` ne se vide pas en cours de
+            # run — une hypothèse périmée se remplace par sa révision. Vider par
+            # liste vide ou par `null` réarmait la garde documentaire au pas
+            # suivant (mesuré : jusqu'à 11 refus sur 25 appels d'un même run).
+            # L'ouverture (vide → vide) reste permise.
+            if cle == CHAMP_HYPOTHESES and nouveaux[cle] and valeur in (None, [], ()):
+                raise EtatInvalide(
+                    f"« {CHAMP_HYPOTHESES} » : ce champ ne se vide pas — remplace ou "
+                    "révise tes hypothèses au lieu de les retirer (§H16.1)"
+                )
             if valeur is None:
                 nouveaux[cle] = _figer(_DEFAUTS_GENRE[champ.genre])
                 continue

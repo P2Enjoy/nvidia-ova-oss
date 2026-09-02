@@ -10,7 +10,7 @@
 @spec docs/SPEC_ARCAGI3.md §A5.1 (direct-interaction : aucune règle de jeu fournie)
 @spec docs/BACKLOG.md U27 — mode `state` de la boucle (§H15.7, §H15.8)
 @spec docs/BACKLOG.md U31 — archive des pas du mode `state` (§H15.10), schéma de Σ du
-      contexte monté (§H15.9)
+      contexte monté (§H15.9), refus de garde = pas blanc atomique (§H16.1)
 @spec docs/BACKLOG.md U30 — gardes de méthode dans les phases (§H16.1 garde
       documentaire, §H16.2 garde de prédiction, §H16.3 garde d'évaluation,
       §H16.4 garde de persistance, §H16.5 observabilité)
@@ -849,22 +849,29 @@ class BoucleAgent:
             self._metrique("depassement", phase="state", plafond=erreur.max_context_tokens)
             raise
 
+        etat_avant = self.etat
         self.etat = nouvel_etat
-        if self.workspace is not None:
-            self.workspace.ecrire_etat(self.etat)
 
-        # Gardes du mode `state` (§H16.1–§H16.3) : le patch est acquis (la
-        # connaissance est gardée), mais l'action est retenue tant que les
-        # artefacts manquent — gratuite, l'erreur nommée revient au pas suivant.
+        # Gardes du mode `state` (§H16.1–§H16.3) : un refus est un pas blanc
+        # ATOMIQUE — le patch est annulé avec l'action (Σ revient à sa valeur
+        # d'avant le pas, le workspace ne voit jamais l'état intermédiaire), car
+        # patch et action forment un seul pas et le patch porte souvent l'effet
+        # attendu d'une action qui n'a pas été jouée. Le pas suivant ré-émet tout
+        # depuis le même (Σ, O) ; le patch annulé reste lisible dans l'archive
+        # des pas (§H15.10).
         verdict: str | None = None
         prediction: str | None = None
         if self.config.gardes:
             refus, verdict, prediction = self._gardes_etat(resultat.content or "")
             if refus is not None:
+                self.etat = etat_avant
                 self._erreur_action_precedente = refus
                 self._archiver_pas(numero, compteur.consommees, None, refus=refus)
                 tour.phase_finale = Phase.PLANNING
                 return tour
+
+        if self.workspace is not None:
+            self.workspace.ecrire_etat(self.etat)
 
         appel = self._resoudre_action(action_texte)
         actions_valides = {

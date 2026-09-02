@@ -930,6 +930,15 @@ ordre :
 génériques désignées par la mesure de la suite 19, livrées et prouvées
 (`make check` vert, cassettes régénérées) : H15.9 schéma de Σ déclaré par le
 domaine (`f6a8619`, `7adb063`) et H15.10 archive des pas du mode `state`
-(`cc1d6ac`). A/B live sous le schéma du domaine : `[~]` — endpoint dégradé
-(HTTP 500), un seul point partiel ; à relever quand l'endpoint est stable
-(journal, suite 20, « Où reprendre »).
+(`cc1d6ac`).
+
+**Itération du 2026-09-02 (suite 21, session planifiée)** — dépouillement des
+`pas.jsonl` (le premier objet désigné par la suite 20) et correction générique
+livrée : H16.1 révisé — refus de garde = pas blanc atomique (le patch du pas
+refusé est annulé avec l'action) et `hypotheses` non vidable en cours de run
+(vidage = `EtatInvalide`, protocole 1.3 énonce la règle). Preuves : 642
+unitaires, 151 intégration, 6 E2E, cassettes régénérées. A/B live sous schéma
+du domaine : toujours sans mesure complète — endpoint instable les deux
+sessions (rafales de 500 du pont plus longues que l'échelle de relances,
+défaut consigné au registre) ; les prochaines lignes de base live se relèvent
+sous le code de la suite 21.

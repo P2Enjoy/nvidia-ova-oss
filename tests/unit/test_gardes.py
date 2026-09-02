@@ -476,6 +476,33 @@ class TestGardesModeEtat(unittest.TestCase):
         self.assertEqual(second.action, "avance")
         self.assertIn("hypotheses", transport.invite(1), "l'erreur nommée revient au pas suivant")
 
+    def test_le_patch_du_pas_refuse_est_annule_avec_l_action(self) -> None:
+        """§H16.1 : refus de garde = pas blanc atomique — Σ ne garde rien du pas refusé.
+
+        Mesuré (journal 2026-09-02, suite 21) : le patch d'un pas retenu porte
+        l'effet ATTENDU de l'action jamais jouée ; l'acquérir fait mentir Σ et
+        les pas suivants en découlent (un `wait` indu, une action invalide).
+        """
+        boucle, _transport = self._boucle(
+            [
+                self._pas("PREDICTION: l'objet se déplace", {"position": {"x": 1, "y": 2}}),
+                self._pas(
+                    "PREDICTION: l'objet se déplace",
+                    {
+                        "hypotheses": ["la commande déplace un objet"],
+                        "position": {"x": 1, "y": 2},
+                    },
+                ),
+            ]
+        )
+        premier = boucle.jouer_tour(1)
+        self.assertIsNone(premier.action)
+        assert boucle.etat is not None
+        self.assertIsNone(boucle.etat.champs["position"], "le patch du pas refusé n'atteint pas Σ")
+        second = boucle.jouer_tour(2)
+        self.assertEqual(second.action, "avance")
+        self.assertEqual(dict(boucle.etat.champs["position"]), {"x": 1, "y": 2})
+
     def test_prediction_ligne_manquante_retient_puis_accompagne_l_action(self) -> None:
         boucle, transport = self._boucle(
             [

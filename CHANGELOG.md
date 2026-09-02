@@ -2,6 +2,24 @@
 
 ## [Non publié]
 
+### 2026-09-02 — U31 : refus de garde = pas blanc atomique, `hypotheses` non vidable (H16.1)
+
+- Mode `state` : quand une garde retient l'action d'un pas, le `state_patch` du
+  même pas est ANNULÉ avec elle — Σ et le workspace reviennent à l'état d'avant
+  le pas. Motif mesuré (`pas.jsonl`, journal suite 21) : le patch d'un pas
+  retenu porte l'effet attendu d'une action jamais jouée ; l'acquérir faisait
+  mentir Σ et coûtait les pas suivants (un `wait` indu puis une action
+  invalide sur le seul run archivé).
+- Le champ commun `hypotheses` ne se vide plus en cours de run : liste vide ou
+  `null` sur un champ non vide est un `EtatInvalide` nommé (retry immédiat de
+  §H15.4, gratuit en événements) ; l'ouverture (vide → vide) reste permise.
+  Motif mesuré : le modèle « nettoyait » ses hypothèses caduques par `[]`, ce
+  qui réarmait la garde documentaire — jusqu'à 11 refus sur 25 appels d'un run.
+- Le protocole engendré énonce la règle (« remplace une hypothèse périmée par
+  sa révision ») — prompts 1.3, cassettes E2E régénérées.
+- Preuves : 642 unitaires (dont vidage refusé, remplacement permis, annulation
+  du patch sous refus), 151 intégration, 6 E2E, lint, mypy.
+
 ### 2026-09-02 — U31 : le schéma de Σ est déclaré par le domaine (H15.9)
 
 - Le noyau ne possède plus la liste des champs de Σ : il possède les GENRES

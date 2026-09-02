@@ -136,6 +136,11 @@ class TestProtocoleEngendre(unittest.TestCase):
         self.assertIn("clé par clé", texte)
         self.assertTrue(texte.startswith(prompts.PROTOCOLE_ETAT_FORMAT))
 
+    def test_le_protocole_enonce_que_hypotheses_ne_se_vide_pas(self) -> None:
+        """§H16.1 : le prompt conseille ce que la structure impose (vidage refusé)."""
+        for texte in (prompts.PROTOCOLE_ETAT, prompts.protocole_etat(SCHEMA)):
+            self.assertIn("ne se vide jamais", texte)
+
 
 class TestSchemasDuBanc(unittest.TestCase):
     """§S6.5 : les deux domaines déclarent un schéma valide, avec le champ commun."""
