@@ -2143,11 +2143,11 @@ révision » ; cassettes E2E régénérées (`make seed-e2e`), pile relancée.
 **Campagne complète (fin de session).** `make check` VERT : lint (117 fichiers),
 mypy (116 fichiers), 642 unitaires (dont 5 nouveaux : vidage refusé ×2,
 remplacement permis, ouverture permise, annulation du patch sous refus ; et le
-protocole énonce la règle), 151 intégration, 6 E2E. `make build` : ÉCHEC
-d'environnement, `429 Too Many Requests` de docker.io sur `python:3.13-slim`
-(limite de tirage, étrangère au produit ; l'image dev s'est construite au
-démarrage de session) — retenté, à re-vérifier en prochaine session si le 429
-persiste.
+protocole énonce la règle), 151 intégration, 6 E2E. `make build` VERT au second essai (le premier a
+rencontré un `429 Too Many Requests` transitoire de docker.io sur
+`python:3.13-slim`). Campagne REJOUÉE en entier après synchronisation avec les
+commits de la session interactive (assemblage `/api/chat`, `5a728e3`) : verte
+— 651 unitaires, 151 intégration, 6 E2E, lint, mypy.
 
 **Où reprendre.** U31, dans l'ordre : (a) NE PAS jouer de live tant que le
 client streamé (§H4.7, spécifié par la session interactive, commit `e22afd7`)
