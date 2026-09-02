@@ -694,6 +694,53 @@ le module `avo.context.etat` restant inchangé et pur :
   (`bilan.depassements`, métrique `depassement`) puis propagé tel quel : c'est une
   erreur fatale explicite (§H13.1), jamais une absorption silencieuse.
 
+**H15.9 — Schéma de Σ déclaré par le domaine, validé par le noyau.** Source :
+papier §3.1 — « the state … is represented using a structured schema defined for
+the domain. Schemas are authored once per domain rather than per task » — et
+l'exemple B.3, où l'entrepôt se tient dans `inventory: {shelf_42: …}`. Mesure qui
+désigne la règle (journal 2026-09-02, suite 20) : sur le banc a, le schéma ARC v1
+imposé à tout domaine n'offre au modèle aucun champ où écrire « tel article sur
+telle étagère » ; il range l'information dans `description` ou la perd, et paie au
+pas suivant (5 actions invalides sur 10 au seed 2 de l'Entrepôt, toutes des
+erreurs de tenue d'état sur un fait qu'il avait lui-même produit).
+
+Règle : le schéma de Σ est une DONNÉE fournie par l'adaptateur de tâche, comme son
+contexte de tâche (§H16.1) et ses outils (§H7) — la même répartition que dans un
+harnais de code généraliste, où le noyau reste agnostique et reçoit sa structure
+de la tâche. Le noyau possède la VALIDATION (§H15.3, inchangé : type, forme,
+valeurs admissibles, refus nommé), l'opérateur `⊕` (§H15.2), la persistance
+(§H15.5) et la génération du protocole (§H15.8) ; il ne possède plus la LISTE des
+champs.
+
+- **Déclaration.** Un schéma nomme ses champs, chacun d'un GENRE générique du
+  noyau — `position` (`{"x": int, "y": int}` ou `null`), `entier_positif`
+  (entier ≥ 1), `liste_chaines`, `liste_objets` (objets à `id` et `description`
+  au moins) ou `dictionnaire` (clé → valeur JSON) —, son défaut, et un rôle en
+  une phrase que le protocole cite. Les genres sont ceux du noyau : un domaine ne
+  définit jamais un validateur.
+- **Champ commun obligatoire.** Tout schéma porte `hypotheses` (`liste_chaines`) :
+  la garde documentaire du mode `state` (§H16.1) l'exige. Un schéma qui ne le
+  porte pas est refusé à sa construction, par une erreur nommée.
+- **Genre `dictionnaire` : fusion clé par clé.** C'est l'opérateur du papier
+  (§3.2, « dictionary merge operator with null-deletion semantics », exemple B.3) :
+  une clé présente dans le patch remplace l'entrée, une clé à `null` la RETIRE,
+  une clé absente la laisse — le modèle n'a jamais à réémettre le dictionnaire
+  entier, ce qui est exactement le mode d'erreur dominant du papier (§5.7, 68 % :
+  omission de clés existantes). Le champ entier à `null` revient à son défaut
+  (§H15.2, inchangé pour les autres genres).
+- **Défaut du noyau.** `arc-v1` (§H15.6) reste le schéma par défaut : sans
+  déclaration, tout se comporte comme avant — mêmes champs, même protocole
+  octet pour octet, mêmes cassettes.
+- **Surface.** Le schéma voyage avec le contexte monté (`Contexte.schema_etat`,
+  §H15.8) — la seule surface par laquelle un adaptateur parle au noyau —, le
+  protocole du pas est ENGENDRÉ depuis le schéma (`prompts.protocole_etat`), Σ
+  persisté se relit avec le schéma qui l'a produit, et le relevé du run nomme le
+  schéma sous lequel il a été obtenu.
+- **Ce que la règle interdit.** Aucun champ propre à un jeu ou à un épisode : le
+  schéma se déclare par DOMAINE (une fois pour l'Entrepôt, une fois pour le
+  Dépôt logiciel, une fois pour les grilles ARC), jamais par défi — un schéma est
+  une forme de représentation, pas une règle ni un indice (§A5.1 inchangé).
+
 ## H16. Gardes de méthode dans les phases — la structure impose ce que le prompt conseille
 
 Chapitre couvrant U30. Source : instruction du responsable (2026-08-31, journal

@@ -413,6 +413,25 @@ du produit.
 - balayage « zéro indice de jeu » (§A5) inchangé sur le noyau : les mots du banc
   ne doivent apparaître que sous `src/avo/bancs/`.
 
+**S6.5 — Schéma de Σ des deux domaines** (§H15.9 : déclaré par le domaine,
+validé par le noyau ; papier §3.1 et B.3). L'adaptateur déclare, une fois par
+environnement, la forme dans laquelle l'agent tient son état — une documentation
+d'API au même titre que le contexte de tâche (§S1.3, §S6.2), jamais une règle ni
+une solution :
+
+| Domaine | Champ | Genre | Rôle cité au protocole |
+|---|---|---|---|
+| Entrepôt | `hypotheses` | liste de chaînes | ce que tu tiens pour vrai |
+| Entrepôt | `inventaire` | dictionnaire | étagère → article qu'elle porte |
+| Entrepôt | `en_attente` | liste de chaînes | articles livrés non encore rangés |
+| Dépôt | `hypotheses` | liste de chaînes | ce que tu tiens pour vrai |
+| Dépôt | `branches` | dictionnaire | branche → ce que tu en sais (fichiers, CI, PR) |
+| Dépôt | `prs` | dictionnaire | numéro de PR → branche, tant qu'elle est ouverte |
+
+Le relevé §S5.3 porte `schema_etat` (le nom du schéma) : deux relevés ne se
+comparent qu'à schéma égal. Les schémas nomment des CONTENANTS, pas des
+contenus : rien n'y dit quelle action jouer ni quand.
+
 ## S7. Découpage en unités d'une session
 
 - **U29a1** — la présente spécification, puis `entrepot.py` + `generation.py` +
