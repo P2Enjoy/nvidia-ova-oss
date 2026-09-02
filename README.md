@@ -135,6 +135,8 @@ Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors d
 | `AVO_CONTEXT_MODE` | Mode de contexte de la boucle : `state` (état structuré Σ borné en O(1) par tour, H15 ; schéma de Σ déclaré par le domaine de tâche, H15.9) ou `transcript` (historique complet, H5) | `transcript` \| `state` | non (défaut `state`, décision du 2026-09-01 sur l'A/B réel de U28) | `state` |
 | `AVO_GARDES` | Gardes de méthode dans les phases (H16) : artefact documentaire avant l'action, prédiction requise, verdict exigé, persistance aux événements | booléen | non (défaut `true`) | `true` |
 | `AVO_GARDE_RETRIES` | Redemandes d'une même garde dans un même tour, avant l'issue écrite en H16 (tour clos sans action, ou verdict réputé contredit) | entier | non (défaut `2`) | `2` |
+| `AVO_LLM_MAX_CONCURRENT` | Plafond de requêtes LLM simultanées par endpoint (H4.9) : l'excédent patiente au lieu d'échouer ; `0` désactive | entier ≥ 0 | non (défaut `3`, limite du port public) | `3` |
+| `AVO_LLM_SLOTS_DIR` | Répertoire des jetons de concurrence (H4.9) ; pointer un chemin réellement partagé pour coordonner plusieurs processus ou sessions | chemin | non (défaut `<AVO_RUNS_DIR>/.llm-slots`) | `runs/.llm-slots` |
 
 Trois variables d'**outillage** sont lues dans l'environnement du shell par `make` et les scripts — pas dans `.env` (`make` ne le lit pas) : `AVO_NO_DOCKER` (mode dégradé sans Docker, stdlib seule), `AVO_PORT_LLM_REPLAY` (défaut `11435`) et `AVO_PORT_ARC_REPLAY` (défaut `8765`), ports publiés de la pile locale.
 

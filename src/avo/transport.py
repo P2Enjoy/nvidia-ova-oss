@@ -3,6 +3,7 @@
 @spec docs/BACKLOG.md U17 — Client API ARC
 @spec docs/SPEC_HARNAIS.md §H4.5 (retries bornés avec jitter), §H4.6 (sans secret)
 @spec docs/SPEC_ARCAGI3.md §A2.1 (« mêmes règles transport que H4.5/H4.6 »)
+@spec docs/BACKLOG.md U32 — attente minimale `Retry-After` honorée (§H4.9)
 
 La spécification du client ARC exige les **mêmes** règles que celles du client
 d'inférence. Deux implémentations parallèles finiraient par diverger sans que rien
@@ -58,6 +59,11 @@ def avec_retries(
             if tentative == len(ATTENTES_RETRY):
                 break
             delai = attente(tentative, alea)
+            # §H4.9 : un serveur qui met en file d'attente peut demander une
+            # attente minimale (Retry-After) ; elle prime quand elle est plus longue.
+            minimale = getattr(erreur, "attente_minimale_s", None)
+            if isinstance(minimale, (int, float)) and minimale > delai:
+                delai = float(minimale)
             if journal is not None:
                 journal.info(
                     "nouvelle tentative",

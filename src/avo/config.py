@@ -6,6 +6,7 @@
 @spec docs/SPEC_HARNAIS.md §H4.6 (aucun secret journalisé)
 @spec docs/BACKLOG.md U27 — `AVO_CONTEXT_MODE` (§H15.7, §H15.8)
 @spec docs/BACKLOG.md U30 — `AVO_GARDES`, `AVO_GARDE_RETRIES` (§H16.0)
+@spec docs/BACKLOG.md U32 — `AVO_LLM_MAX_CONCURRENT`, `AVO_LLM_SLOTS_DIR` (§H4.9)
 
 Deux principes gouvernent ce module :
 
@@ -130,6 +131,19 @@ class _Source:
             raise ConfigInvalide(f"{nom} : entier strictement positif attendu, reçu {valeur}.")
         return valeur
 
+    def entier_nul_ou_positif(self, nom: str, defaut: int) -> int:
+        """Comme `entier`, mais zéro est admis : il signifie « désactivé » (§H4.9)."""
+        brut = self.brut(nom)
+        if brut is None:
+            return defaut
+        try:
+            valeur = int(brut)
+        except ValueError as erreur:
+            raise ConfigInvalide(f"{nom} : entier attendu, valeur reçue « {brut} ».") from erreur
+        if valeur < 0:
+            raise ConfigInvalide(f"{nom} : entier positif ou nul attendu, reçu {valeur}.")
+        return valeur
+
     def reel(self, nom: str, defaut: float, mini: float, maxi: float) -> float:
         brut = self.brut(nom)
         if brut is None:
@@ -200,6 +214,8 @@ class Config:
     contexte_mode: ModeContexte
     gardes: bool
     garde_retries: int
+    llm_max_concurrent: int
+    llm_slots_dir: Path
 
     @property
     def budget_prompt(self) -> int:
@@ -249,6 +265,8 @@ class Config:
             "contexte_mode": self.contexte_mode.value,
             "gardes": self.gardes,
             "garde_retries": self.garde_retries,
+            "llm_max_concurrent": self.llm_max_concurrent,
+            "llm_slots_dir": str(self.llm_slots_dir),
             "ollama_api_key": "<masquée>",
             "arc_api_key": "<masquée>" if self.arc_api_key else None,
         }
@@ -303,6 +321,7 @@ def charger(
         contexte = source.entier("OLLAMA_CONTEXT_LENGTH", CONTEXTE_DEFAUT_REJEU)
         arc = source.brut("ARC_API_KEY")
 
+    runs_dir = Path(source.texte("AVO_RUNS_DIR", "runs"))
     config = Config(
         mode=mode_resolu,
         ollama_host=_valider_url("OLLAMA_HOST", hote),
@@ -319,7 +338,7 @@ def charger(
         actions_max_jeu=source.entier("AVO_ACTIONS_MAX_JEU", 5000),
         sup_stall_actions=source.entier("AVO_SUP_STALL_ACTIONS", 60),
         sup_cooldown=source.entier("AVO_SUP_COOLDOWN", 30),
-        runs_dir=Path(source.texte("AVO_RUNS_DIR", "runs")),
+        runs_dir=runs_dir,
         arc_api_key=arc,
         # En mode rejeu, la base ARC pointe la pile locale : le mode ne requiert
         # aucun secret et ne doit surtout atteindre aucun service qui publierait
@@ -333,6 +352,8 @@ def charger(
         ),
         gardes=source.booleen("AVO_GARDES", True),
         garde_retries=source.entier("AVO_GARDE_RETRIES", 2),
+        llm_max_concurrent=source.entier_nul_ou_positif("AVO_LLM_MAX_CONCURRENT", 3),
+        llm_slots_dir=Path(source.texte("AVO_LLM_SLOTS_DIR", str(runs_dir / ".llm-slots"))),
     )
 
     if config.think and config.num_predict < NUM_PREDICT_MIN_AVEC_THINK:

@@ -4,6 +4,8 @@
 @spec docs/SPEC_HARNAIS.md §H4.1 (surface native, interface remplaçable), §H4.2 (requête),
       §H4.3 (réponse typée), §H4.4 (erreurs typées), §H4.5 (retries), §H4.6 (sans secret)
 @spec docs/SPEC_HARNAIS.md §H12 (politique de raisonnement, via la configuration)
+@spec docs/BACKLOG.md U32 — limitation de concurrence par endpoint (§H4.9 :
+      jeton avant chaque tentative, `429` → `RateLimited` retentée)
 
 Le client ne connaît ni la boucle agent ni les outils : il traduit un échange de
 messages en un appel HTTP et rend un résultat typé. Le transport est injectable, ce
@@ -20,10 +22,12 @@ import time
 import urllib.error
 import urllib.request
 from collections.abc import Callable, Mapping, Sequence
+from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
-from avo.config import Config
+from avo.config import Config, Mode
+from avo.llm.concurrence import LimiteurConcurrence, dossier_endpoint
 from avo.transport import attente, avec_retries
 
 _journal = logging.getLogger("avo.llm")
@@ -65,6 +69,16 @@ class ServerError(LLMError):
     def __init__(self, message: str, status: int) -> None:
         super().__init__(message)
         self.status = status
+
+
+class RateLimited(ServerError):
+    """429 : l'endpoint met en file d'attente (§H4.9). Retentée comme une panne
+    serveur, mais l'attente honore `Retry-After` quand il dépasse le palier."""
+
+    def __init__(self, message: str, retry_after_s: float | None = None) -> None:
+        super().__init__(message, status=429)
+        #: Lu par `avec_retries` (§H4.5) : attente minimale demandée par le serveur.
+        self.attente_minimale_s = retry_after_s
 
 
 class TransportError(LLMError):
@@ -149,6 +163,9 @@ class ReponseHTTP:
 
     status: int
     body: bytes
+    #: Valeur en secondes de l'en-tête `Retry-After` (forme entière uniquement),
+    #: quand le serveur l'a envoyée (§H4.9).
+    retry_after_s: float | None = None
 
 
 class Transport(Protocol):
@@ -157,6 +174,19 @@ class Transport(Protocol):
     def __call__(
         self, url: str, corps: bytes, entetes: Mapping[str, str], timeout: float
     ) -> ReponseHTTP: ...
+
+
+def _retry_after(entetes: Any) -> float | None:
+    """Lit `Retry-After` sous sa forme entière en secondes ; toute autre forme
+    (date HTTP, valeur non numérique) est ignorée (§H4.9)."""
+    brut = entetes.get("Retry-After") if entetes is not None else None
+    if brut is None:
+        return None
+    try:
+        valeur = float(str(brut))
+    except ValueError:
+        return None
+    return valeur if valeur >= 0 else None
 
 
 def transport_urllib(
@@ -174,9 +204,9 @@ def transport_urllib(
         requete.add_header(nom, valeur)
     try:
         with urllib.request.urlopen(requete, timeout=timeout) as reponse:  # noqa: S310
-            return ReponseHTTP(int(reponse.status), reponse.read())
+            return ReponseHTTP(int(reponse.status), reponse.read(), _retry_after(reponse.headers))
     except urllib.error.HTTPError as erreur:
-        return ReponseHTTP(int(erreur.code), erreur.read())
+        return ReponseHTTP(int(erreur.code), erreur.read(), _retry_after(erreur.headers))
     except urllib.error.URLError as erreur:
         raise TransportError(f"endpoint injoignable : {erreur.reason}") from erreur
     except TimeoutError as erreur:
@@ -374,6 +404,17 @@ class LLMClient:
         self._transport: Transport = transport or transport_urllib
         self._dormir = dormir
         self._alea = alea
+        # Limitation de concurrence par endpoint (§H4.9) : en mode live seulement —
+        # le rejeu local n'a pas de ressource partagée à protéger.
+        self._limiteur: LimiteurConcurrence | None = None
+        if config.mode is Mode.LIVE and config.llm_max_concurrent > 0:
+            self._limiteur = LimiteurConcurrence(
+                dossier=dossier_endpoint(config.llm_slots_dir, config.ollama_host),
+                plafond=config.llm_max_concurrent,
+                timeout_s=float(config.timeout_s),
+                dormir=dormir,
+                alea=alea,
+            )
 
     @property
     def url_chat(self) -> str:
@@ -386,6 +427,12 @@ class LLMClient:
             "Authorization": f"Bearer {self.config.ollama_api_key}",
         }
 
+    def _jeton(self) -> AbstractContextManager[None]:
+        """Jeton de concurrence par endpoint (§H4.9) ; sans limiteur, sans effet."""
+        if self._limiteur is None:
+            return nullcontext()
+        return self._limiteur.jeton()
+
     def _attente(self, tentative: int) -> float:
         """Attente avec jitter borné à ±25 % (§H4.5)."""
         return attente(tentative, self._alea)
@@ -395,6 +442,11 @@ class LLMClient:
             raise AuthError(
                 f"authentification refusée par l'endpoint (HTTP {reponse.status}) — "
                 "vérifier OLLAMA_API_KEY"
+            )
+        if reponse.status == 429:
+            raise RateLimited(
+                "l'endpoint met la requête en file d'attente (HTTP 429)",
+                retry_after_s=reponse.retry_after_s,
             )
         if reponse.status == 413:
             corps = self._corps_json(reponse, tolerant=True)
@@ -480,7 +532,8 @@ class LLMClient:
 
         def tenter() -> ChatResult:
             debut = time.monotonic()
-            reponse = self._transport(self.url_chat, corps, entetes, self.config.timeout_s)
+            with self._jeton():
+                reponse = self._transport(self.url_chat, corps, entetes, self.config.timeout_s)
             resultat = self._classer(reponse)
             _journal.info(
                 "inférence aboutie",

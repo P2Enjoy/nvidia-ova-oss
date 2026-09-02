@@ -2,6 +2,23 @@
 
 ## [Non publié]
 
+### 2026-09-02 — U32 : limitation de concurrence des requêtes LLM par endpoint (§H4.9)
+
+- Le harnais impose lui-même le plafond de requêtes simultanées que tolère le
+  port public de l'endpoint (instruction du responsable : 3) : jetons de
+  fichiers par endpoint (`avo.llm.concurrence`), un jeton tenu par tentative
+  HTTP, l'excédent PATIENTE (scrutation avec jitter, bornée par `AVO_TIMEOUT_S`)
+  au lieu d'échouer en rafales de 500 ; jeton d'un occupant mort repris après
+  péremption. Actif en mode live uniquement ; `AVO_LLM_MAX_CONCURRENT=0`
+  désactive, `AVO_LLM_SLOTS_DIR` pointe un chemin partagé pour coordonner
+  plusieurs processus ou sessions d'un même hôte.
+- `HTTP 429` devient `RateLimited`, retentée comme une panne serveur en
+  honorant `Retry-After` quand il dépasse le palier §H4.5 — prêt pour une file
+  d'attente côté serveur ; la garantie entre machines isolées reste côté
+  serveur (nommé hors périmètre en U32).
+- Preuves : 20 unitaires (`test_llm_concurrence`), 1 intégration (jeton tenu
+  pendant la requête HTTP réelle contre le rejeu), campagne complète.
+
 ### 2026-09-02 — U31 : action refusée par l'environnement = patch annulé (§H15.8, drapeau `refusee`)
 
 - L'issue d'une action peut désormais déclarer `refusee` (faux par défaut,

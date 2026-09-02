@@ -16,7 +16,7 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 | Composant | Spéc. | Rôle |
 |---|---|---|
 | `avo.config` | H3 | configuration (env puis `.env`), validation nommée, modes rejeu/live, budget dérivé du plafond par clé |
-| `avo.llm` | H4 | client d'inférence (Ollama natif `/api/chat`), erreurs typées, retries bornés, transport injectable |
+| `avo.llm` | H4 | client d'inférence (Ollama natif `/api/chat`), erreurs typées, retries bornés, transport injectable ; limiteur de concurrence par endpoint à jetons de fichiers (`concurrence.py`, §H4.9 — mode live uniquement, 429 patienté) |
 | `avo.context` | H5, H15 | transcript append-only, comptabilité calibrée, budget et continuation en contexte frais ; état d'exécution structuré Σ (mode `state`, U26) — patch validé par le runtime, sérialisation ; schéma de Σ DÉCLARÉ PAR LE DOMAINE et validé par le noyau (H15.9, U31 : genres génériques, champ commun `hypotheses`, dictionnaire fusionné clé par clé, `arc-v1` par défaut, protocole engendré depuis le schéma) |
 | `avo.memory` | H6 | workspace de run (manifeste, métriques, transcripts, frames, rapport) et notes persistantes GUIDE/WORKING |
 | `avo.tools` | H7 | registre d'outils, exposition filtrée par état, groupe synchronisable sur l'environnement, routage, garde par tour |
