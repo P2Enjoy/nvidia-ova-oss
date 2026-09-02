@@ -137,7 +137,7 @@ class TestProtocoleEngendre(unittest.TestCase):
         self.assertTrue(texte.startswith(prompts.PROTOCOLE_ETAT_FORMAT))
 
     def test_le_protocole_enonce_que_hypotheses_ne_se_vide_pas(self) -> None:
-        """§H16.1 : le prompt conseille ce que la structure impose (vidage refusé)."""
+        """§H16.1 : le prompt dit comment se conformer à l'invariant que la structure impose."""
         for texte in (prompts.PROTOCOLE_ETAT, prompts.protocole_etat(SCHEMA)):
             self.assertIn("ne se vide jamais", texte)
 

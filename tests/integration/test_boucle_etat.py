@@ -265,6 +265,37 @@ class TestBoucleEtat(unittest.TestCase):
         self.assertEqual(boucle.etat.en_dict()["hypotheses"], ["h1"])
         self.assertEqual(boucle.etat.en_dict()["essai"], 2)
 
+    def test_le_vidage_d_hypotheses_est_sans_effet_et_archive(self) -> None:
+        """§H16.1 : un patch qui vide « hypotheses » non vide s'applique avec le
+        champ conservé — le reste du patch et l'action jouent, l'écart est
+        archivé (`hypotheses_conservees`, §H15.10).
+
+        Mesuré (journal 2026-09-02, suite 23) : traité en `EtatInvalide` à
+        rollback-retry, le vidage tuait en `RetriesEpuises` un run dont toutes
+        les actions étaient correctes.
+        """
+        espace = Workspace.ouvrir(
+            self._config("http://inutilise.invalide"), "run-vidage", racine=self.racine / "ws4"
+        )
+        boucle, environnement, _ = self._boucle_scriptee(
+            [
+                _bloc_json({"hypotheses": ["h1"]}, "avance"),
+                _bloc_json({"hypotheses": [], "essai": 2}, "avance"),
+            ],
+            [Evenement.PREDICTION_CONFIRMEE] * 2,
+            tours_max=2,
+            workspace=espace,
+        )
+        bilan = boucle.executer(tours_max=2)
+        self.assertEqual(bilan.retries_patch, 0, "le vidage n'est plus une tentative refusée")
+        self.assertEqual(len(environnement.jouees), 2, "les deux actions jouent")
+        assert boucle.etat is not None
+        self.assertEqual(boucle.etat.en_dict()["hypotheses"], ["h1"])
+        self.assertEqual(boucle.etat.en_dict()["essai"], 2)
+        pas = espace.lire_pas()
+        self.assertNotIn("hypotheses_conservees", pas[0])
+        self.assertTrue(pas[1]["hypotheses_conservees"])
+
     def test_un_patch_malforme_est_retente_puis_reussit(self) -> None:
         """§H15.4 : rollback-retry, Σ n'est jamais modifié par la tentative refusée."""
         boucle, environnement, journal = self._boucle_scriptee(

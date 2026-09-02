@@ -200,21 +200,26 @@ class TestDecoderPasJsonMalforme(unittest.TestCase):
 class TestHypothesesNonVidables(unittest.TestCase):
     """§H16.1 : le champ commun `hypotheses` ne se vide pas en cours de run.
 
-    @verifies docs/SPEC_HARNAIS.md §H16.1 (`hypotheses` non vidable : liste vide et
-              null refusés quand le champ est non vide, ouverture vide → vide permise)
+    @verifies docs/SPEC_HARNAIS.md §H16.1 (`hypotheses` non vidable : le vidage par
+              liste vide ou null est sans effet sur le champ, le reste du patch
+              s'applique ; ouverture vide → vide permise)
     """
 
-    def test_vider_hypotheses_non_vides_par_liste_vide_est_refuse(self) -> None:
+    def test_vider_hypotheses_non_vides_par_liste_vide_conserve_le_champ(self) -> None:
         etat = Etat.initial().fusionner({"hypotheses": ["le levier ouvre la trappe"]})
-        with self.assertRaises(EtatInvalide) as capture:
-            etat.fusionner({"hypotheses": []})
-        self.assertIn("hypotheses", str(capture.exception))
-        self.assertIn("remplace", str(capture.exception))
+        conserve = etat.fusionner({"hypotheses": []})
+        self.assertEqual(conserve.en_dict()["hypotheses"], ["le levier ouvre la trappe"])
 
-    def test_vider_hypotheses_non_vides_par_null_est_refuse(self) -> None:
+    def test_vider_hypotheses_non_vides_par_null_conserve_le_champ(self) -> None:
         etat = Etat.initial().fusionner({"hypotheses": ["le levier ouvre la trappe"]})
-        with self.assertRaises(EtatInvalide):
-            etat.fusionner({"hypotheses": None})
+        conserve = etat.fusionner({"hypotheses": None})
+        self.assertEqual(conserve.en_dict()["hypotheses"], ["le levier ouvre la trappe"])
+
+    def test_le_reste_du_patch_s_applique_malgre_le_vidage_ignore(self) -> None:
+        etat = Etat.initial().fusionner({"hypotheses": ["le levier ouvre la trappe"]})
+        apres = etat.fusionner({"hypotheses": [], "essai": 2})
+        self.assertEqual(apres.en_dict()["hypotheses"], ["le levier ouvre la trappe"])
+        self.assertEqual(apres.en_dict()["essai"], 2)
 
     def test_remplacer_des_hypotheses_reste_permis(self) -> None:
         etat = Etat.initial().fusionner({"hypotheses": ["le levier ouvre la trappe"]})

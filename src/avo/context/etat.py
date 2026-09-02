@@ -270,15 +270,13 @@ class Etat:
             champ = self.schema.champ(cle)
             assert champ is not None
             # §H16.1 : le champ commun `hypotheses` ne se vide pas en cours de
-            # run — une hypothèse périmée se remplace par sa révision. Vider par
-            # liste vide ou par `null` réarmait la garde documentaire au pas
-            # suivant (mesuré : jusqu'à 11 refus sur 25 appels d'un même run).
+            # run — le vidage (liste vide ou `null`) est SANS EFFET sur le champ,
+            # le reste du patch s'applique. Refuser le patch entier en
+            # `EtatInvalide` faisait mourir des runs en `RetriesEpuises` : dans un
+            # mode sans mémoire, la relance n'enseigne rien d'un tour à l'autre.
             # L'ouverture (vide → vide) reste permise.
             if cle == CHAMP_HYPOTHESES and nouveaux[cle] and valeur in (None, [], ()):
-                raise EtatInvalide(
-                    f"« {CHAMP_HYPOTHESES} » : ce champ ne se vide pas — remplace ou "
-                    "révise tes hypothèses au lieu de les retirer (§H16.1)"
-                )
+                continue
             if valeur is None:
                 nouveaux[cle] = _figer(_DEFAUTS_GENRE[champ.genre])
                 continue

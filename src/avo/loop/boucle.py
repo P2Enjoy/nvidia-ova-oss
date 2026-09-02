@@ -822,12 +822,23 @@ class BoucleAgent:
                 resultat = self._appeler_etat(self._messages_etat(erreur_precedente))
                 try:
                     nouvel_etat, action_texte = appliquer_pas(self.etat, resultat.content)
+                    patch = dict(decoder_pas(resultat.content).patch)
+                    # §H16.1 : un vidage d'« hypotheses » resté sans effet est un
+                    # écart nommé, jamais silencieux — il s'archive (§H15.10).
+                    conservation: dict[str, Any] = (
+                        {"hypotheses_conservees": True}
+                        if "hypotheses" in patch
+                        and not patch["hypotheses"]
+                        and self.etat.champs.get("hypotheses")
+                        else {}
+                    )
                     self._archiver_pas(
                         numero,
                         compteur.consommees,
                         resultat.content,
-                        patch=dict(decoder_pas(resultat.content).patch),
+                        patch=patch,
                         action=action_texte,
+                        **conservation,
                     )
                     break
                 except (PatchMalforme, EtatInvalide) as erreur:
