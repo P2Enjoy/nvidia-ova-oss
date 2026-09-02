@@ -2,6 +2,25 @@
 
 ## [Non publié]
 
+### 2026-09-02 — U31 : le schéma de Σ est déclaré par le domaine (H15.9)
+
+- Le noyau ne possède plus la liste des champs de Σ : il possède les GENRES
+  (`position`, `entier_positif`, `liste_chaines`, `liste_objets`,
+  `dictionnaire`), leur validation, l'opérateur ⊕ et la persistance ; chaque
+  domaine déclare son schéma une fois (`SchemaEtat`, papier SKILL.state §3.1),
+  porté par `Contexte.schema_etat`. `arc-v1` reste le défaut sans déclaration.
+- Genre `dictionnaire` fusionné clé par clé avec retrait sur `null` — l'opérateur
+  du papier (§3.2, exemple B.3) : le modèle n'a plus à réémettre l'objet entier.
+- Le protocole du pas est engendré depuis le schéma (`prompts.protocole_etat`,
+  prompts 1.2) ; Σ persisté se relit sous son schéma ; le relevé `banc.json`
+  porte `schema_etat`.
+- Banc a : schémas `banc-entrepot-v1` (`inventaire`, `en_attente`) et
+  `banc-depot-v1` (`branches`, `prs`) déclarés par l'adaptateur (§S6.5). Motif
+  mesuré (journal, suite 20) : sous le schéma ARC imposé, le modèle n'avait
+  aucun champ où tenir « tel article sur telle étagère ».
+- Preuves : 12 unitaires (`test_etat_schema.py`), intégration (Σ du banc sous son
+  schéma), cassettes E2E régénérées (ARC `state` et banc), campagne complète.
+
 ### 2026-09-02 — U29a4 : dérive d'état et mesure de récupération (condition 3)
 
 - Le banc a porte la condition 3 de la source (Experiment 3, « state

@@ -741,6 +741,24 @@ champs.
   Dépôt logiciel, une fois pour les grilles ARC), jamais par défi — un schéma est
   une forme de représentation, pas une règle ni un indice (§A5.1 inchangé).
 
+**H15.10 — Archive des pas : jetée du prompt, jamais du workspace.** Le mode
+`state` jette `Rₜ` du PROMPT (§H15.1, papier §3.2) — il ne dit rien de l'archive.
+Mesure qui désigne la règle (journal 2026-09-02, suite 20) : un run de banc a
+consommé 25 appels pour 8 actions, 17 fois retenu par une garde, et RIEN dans le
+workspace ne permet de lire ce que le modèle avait répondu — le transcript du mode
+`state` ne porte que les issues d'outils, les métriques que des compteurs. Un
+harnais qu'on ne peut pas dépouiller ne s'améliore pas (U31, « observer »).
+
+Règle : chaque appel du mode `state` écrit UNE ligne JSON dans
+`runs/<run_id>/state/pas.jsonl` — `tour`, `tentative`, la réponse brute du modèle
+(`contenu`), puis selon l'issue : `patch` et `action` décodés, ou `erreur` (patch
+malformé ou invalide, §H15.4), et `refus` quand une garde retient l'action
+(§H16). Cette archive est le pendant des frames ARC (§A4, §H15.7) : un filet
+sans perte pour le diagnostic et pour retrouver après coup ce que Σ n'a pas
+projeté. Elle n'entre JAMAIS dans un prompt : la propriété O(1) de §H15.1 est
+intacte, et le préremplissage ne la voit pas. Sans workspace (boucle éprouvée sur
+un environnement factice), rien n'est écrit.
+
 ## H16. Gardes de méthode dans les phases — la structure impose ce que le prompt conseille
 
 Chapitre couvrant U30. Source : instruction du responsable (2026-08-31, journal

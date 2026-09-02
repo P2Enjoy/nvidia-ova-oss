@@ -2,7 +2,8 @@
 
 @spec docs/BACKLOG.md U8 — Comptabilité, journalisation, workspace de run
 @spec docs/SPEC_HARNAIS.md §H6.1 (arborescence du run), §H11.2 (métriques),
-      §H11.3 (transcripts), §H4.6 (aucun secret persisté)
+      §H11.3 (transcripts), §H4.6 (aucun secret persisté), §H15.10 (archive des pas
+      du mode `state`)
 @spec docs/BACKLOG.md U27 — persistance de Σ (§H15.5, §H15.8)
 
 Un run doit pouvoir être audité sans le dépôt : le manifeste porte la configuration
@@ -119,6 +120,24 @@ class Workspace:
         """Persiste Σ après un pas validé, aller-retour exact (§H15.5, §H15.8)."""
         self.etat_json.parent.mkdir(parents=True, exist_ok=True)
         self.etat_json.write_text(etat.vers_json() + "\n", encoding="utf-8")
+
+    @property
+    def pas_jsonl(self) -> Path:
+        """Archive des pas du mode `state` (§H15.10), à côté de Σ."""
+        return self.chemin / "state" / "pas.jsonl"
+
+    def ecrire_pas(self, ligne: Mapping[str, Any]) -> None:
+        """Ajoute un pas à l'archive (§H15.10) : jamais relu par la boucle."""
+        self.pas_jsonl.parent.mkdir(parents=True, exist_ok=True)
+        with self.pas_jsonl.open("a", encoding="utf-8") as flux:
+            flux.write(json.dumps(ligne, ensure_ascii=False, default=str) + "\n")
+
+    def lire_pas(self) -> list[dict[str, Any]]:
+        """Relit l'archive des pas — pour les preuves et le dépouillement, jamais la boucle."""
+        if not self.pas_jsonl.exists():
+            return []
+        lignes = self.pas_jsonl.read_text(encoding="utf-8").splitlines()
+        return [json.loads(ligne) for ligne in lignes if ligne]
 
     def lire_etat(self, schema: SchemaEtat = ARC_V1) -> Etat | None:
         """Relit Σ s'il existe déjà — reprise au niveau où U27 la supporte (§H15.5),

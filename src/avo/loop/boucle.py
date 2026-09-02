@@ -9,6 +9,8 @@
       §H12 (politique de raisonnement portée par la configuration)
 @spec docs/SPEC_ARCAGI3.md §A5.1 (direct-interaction : aucune règle de jeu fournie)
 @spec docs/BACKLOG.md U27 — mode `state` de la boucle (§H15.7, §H15.8)
+@spec docs/BACKLOG.md U31 — archive des pas du mode `state` (§H15.10), schéma de Σ du
+      contexte monté (§H15.9)
 @spec docs/BACKLOG.md U30 — gardes de méthode dans les phases (§H16.1 garde
       documentaire, §H16.2 garde de prédiction, §H16.3 garde d'évaluation,
       §H16.4 garde de persistance, §H16.5 observabilité)
@@ -29,7 +31,13 @@ from typing import Any, Final, Protocol
 
 from avo.config import Config, ModeContexte
 from avo.context.contexte import INVITATION_CONTINUATION, Contexte
-from avo.context.etat import CompteurRetries, EtatInvalide, PatchMalforme, RetriesEpuises
+from avo.context.etat import (
+    CompteurRetries,
+    EtatInvalide,
+    PatchMalforme,
+    RetriesEpuises,
+    decoder_pas,
+)
 from avo.context.etat import Etat as EtatStructure
 from avo.context.etat import appliquer as appliquer_pas
 from avo.lineage import Lignee
@@ -598,6 +606,22 @@ class BoucleAgent:
         return tour
 
     # --------------------------------------------------------------- mode state
+    def _archiver_pas(self, tour: int, tentative: int, contenu: str | None, **issue: Any) -> None:
+        """Archive un appel du mode `state` dans le workspace (§H15.10).
+
+        Jamais relue par la boucle ni réinjectée dans un prompt : la réponse brute
+        (`contenu`) et son issue — patch/action, erreur de patch, ou refus d'une
+        garde (ligne sans contenu, l'appel étant déjà archivé) — servent au
+        dépouillement seul. Sans workspace, rien n'est écrit.
+        """
+        if self.workspace is None:
+            return
+        ligne: dict[str, Any] = {"tour": tour, "tentative": tentative}
+        if contenu is not None:
+            ligne["contenu"] = contenu
+        ligne.update(issue)
+        self.workspace.ecrire_pas(ligne)
+
     def _messages_etat(self, erreur_precedente: str | None) -> list[dict[str, str]]:
         """Compose le prompt d'un pas : (P, Σₜ, Oₜ) + notes, O(1) par tour (§H15.1).
 
@@ -798,8 +822,18 @@ class BoucleAgent:
                 resultat = self._appeler_etat(self._messages_etat(erreur_precedente))
                 try:
                     nouvel_etat, action_texte = appliquer_pas(self.etat, resultat.content)
+                    self._archiver_pas(
+                        numero,
+                        compteur.consommees,
+                        resultat.content,
+                        patch=dict(decoder_pas(resultat.content).patch),
+                        action=action_texte,
+                    )
                     break
                 except (PatchMalforme, EtatInvalide) as erreur:
+                    self._archiver_pas(
+                        numero, compteur.consommees, resultat.content, erreur=str(erreur)
+                    )
                     if compteur.epuise:
                         raise RetriesEpuises(
                             f"tour {numero} : budget de tentatives de patch épuisé "
@@ -828,6 +862,7 @@ class BoucleAgent:
             refus, verdict, prediction = self._gardes_etat(resultat.content or "")
             if refus is not None:
                 self._erreur_action_precedente = refus
+                self._archiver_pas(numero, compteur.consommees, None, refus=refus)
                 tour.phase_finale = Phase.PLANNING
                 return tour
 

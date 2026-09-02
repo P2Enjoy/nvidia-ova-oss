@@ -335,6 +335,29 @@ class TestBoucleEtat(unittest.TestCase):
         assert relu is not None
         self.assertEqual(relu.en_dict()["essai"], 4)
 
+    def test_chaque_appel_est_archive_dans_pas_jsonl(self) -> None:
+        """§H15.10 : la réponse brute et son issue sont archivées à chaque appel —
+        patch malformé compris —, sans jamais entrer dans un prompt."""
+        espace = Workspace.ouvrir(
+            self._config("http://inutilise.invalide"), "run-archive", racine=self.racine / "ws3"
+        )
+        boucle, _, _ = self._boucle_scriptee(
+            ["aucun bloc json ici", _bloc_json({"essai": 4}, "avance")],
+            [Evenement.PREDICTION_CONFIRMEE],
+            workspace=espace,
+        )
+        boucle.executer(tours_max=1)
+        pas = espace.lire_pas()
+        self.assertEqual([p["tour"] for p in pas], [1, 1])
+        self.assertEqual(pas[0]["contenu"], "aucun bloc json ici")
+        self.assertIn("erreur", pas[0])
+        self.assertEqual(pas[1]["tentative"], 1)
+        self.assertEqual(pas[1]["patch"], {"essai": 4})
+        self.assertEqual(pas[1]["action"], "avance")
+        # L'archive ne remonte pas dans le prompt : le second appel ne cite pas
+        # la réponse brute du premier, seulement l'erreur nommée (§H15.8).
+        self.assertNotIn("aucun bloc json ici", boucle.contexte.systeme)
+
     def test_un_workspace_avec_etat_existant_est_recharge(self) -> None:
         espace = Workspace.ouvrir(
             self._config("http://inutilise.invalide"), "run-reprise", racine=self.racine / "ws2"
