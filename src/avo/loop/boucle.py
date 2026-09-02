@@ -740,6 +740,13 @@ class BoucleAgent:
             )
         arguments: dict[str, Any] = {}
         for cle, brut in zip(requis, valeurs, strict=True):
+            # §H15.8 : la syntaxe d'argument nommé — « cle=valeur » où « cle »
+            # est exactement le paramètre requis que la position destine — est un
+            # bruit de format des modèles open-weight (mesuré : banc dépôt h25
+            # bruit 5, 2026-09-02). Toute autre égalité reste une valeur.
+            prefixe = f"{cle}="
+            if brut.startswith(prefixe):
+                brut = brut[len(prefixe) :].strip()
             type_attendu = proprietes.get(cle, {}).get("type")
             try:
                 if type_attendu == "integer":

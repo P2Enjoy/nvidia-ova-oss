@@ -2,6 +2,24 @@
 
 ## [Non publié]
 
+### 2026-09-02 — U31 : la résolution du dépôt instruite — le moteur lit sa propre notation de PR (§S4.2) et « cle=valeur » est normalisé (§H15.8)
+
+- Mesuré (série live dépôt h25 bruit 5, seeds 1–2) : les 9 actions invalides des
+  deux runs sont TOUTES des `merge` joués au bon événement sur la bonne PR,
+  refusés sur la seule notation du numéro — le modèle recopie la notation que
+  l'environnement affiche (« PR #3 », « PR 5 ») ou emploie la syntaxe d'argument
+  nommé (« pr=2 »). La résolution basse du dépôt (0–0,4) n'était ni un `merge`
+  prématuré ni une `ci_verte` manquée.
+- Moteur du dépôt (§S4.2, point tranché) : `merge` lit désormais la notation que
+  l'environnement émet lui-même — entier nu, « #k », préfixe « PR » à casse
+  indifférente avec ou sans espace ni croisillon ; toute autre forme reste une
+  action invalide nommée qui consomme l'événement.
+- Noyau (§H15.8) : quatrième bruit de format normalisé — une valeur
+  « cle=valeur » dont « cle » est exactement le paramètre requis que sa position
+  destine se lit comme « valeur » ; toute autre égalité reste une valeur.
+- Preuves : 3 unitaires de résolution + 2 unitaires du moteur (5 formes lues,
+  3 restant invalides nommées), suites concernées vertes.
+
 ### 2026-09-02 — U31 : la redemande de garde du mode `state` énonce la forme complète attendue (§H16.0.6)
 
 - Mesuré (journal, suite 24) : quand un pas devait porter les deux lignes

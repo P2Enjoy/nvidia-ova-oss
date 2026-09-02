@@ -5,9 +5,10 @@
 @verifies docs/SPEC_BANCS.md §S6.1 (contrat `Environnement`, outils étiquetés
           `action` avec `prediction`), §S6.2 (contexte de tâche : protocole
           §S4.2/§S4.5 donné, jamais l'état de vérité ni la suite d'événements),
-          §S4.2 (`merge` reçoit son numéro en texte : « 3 » et « #3 » se
-          lisent, un numéro imprenable est une action invalide nommée qui
-          consomme l'événement), §S4.4 (résolution B.1 portée au relevé),
+          §S4.2 (`merge` reçoit son numéro en texte et lit la notation que
+          l'environnement émet — entier nu, « #3 », préfixe « PR » à casse
+          indifférente ; un numéro imprenable est une action invalide nommée
+          qui consomme l'événement), §S4.4 (résolution B.1 portée au relevé),
           §S5.2 (première action comparée à l'obligation), §S5.3 (relevé
           `banc.json`), §S6.3 (CLI : dispatch du dépôt, refus nommés)
 @verifies docs/SPEC_HARNAIS.md §H8.2 (contrat `Environnement`), §H15.8 (message
@@ -169,6 +170,28 @@ class TestNumeroDePrEnTexte(unittest.TestCase):
         issue = self.moteur.merge("#1")
         self.assertFalse(issue.valide)
         self.assertIn("PR #1 n'est pas ouverte", issue.observation)
+
+    def test_notation_emise_par_l_environnement_se_lit(self) -> None:
+        """§S4.2 (point tranché du 2026-09-02) : le moteur lit la notation qu'il
+        émet lui-même — « PR #k », « PR#k », « PR k », casse indifférente.
+        Mesuré : 9 invalides sur 9 dans la série live h25 bruit 5, seeds 1–2,
+        toutes des fusions au bon moment refusées sur cette seule notation."""
+        for forme in ("PR #1", "PR#1", "PR 1", "pr 1", "pr #1"):
+            with self.subTest(forme=forme):
+                issue = EnvironnementDepot(generer_episode_depot(SEED, HORIZON)).merge(forme)
+                self.assertFalse(issue.valide)
+                self.assertIn("PR #1 n'est pas ouverte", issue.observation)
+
+    def test_notation_etrangere_reste_invalide_nommee(self) -> None:
+        """« pr:1 », « pr=1 » et « PR » seul ne sont pas la notation émise :
+        l'action reste invalide, l'erreur reste nommée, l'événement consommé."""
+        for forme in ("pr:1", "pr=1", "PR"):
+            with self.subTest(forme=forme):
+                moteur = EnvironnementDepot(generer_episode_depot(SEED, HORIZON))
+                issue = moteur.merge(forme)
+                self.assertFalse(issue.valide)
+                self.assertIn("numéro de PR invalide", issue.observation)
+                self.assertEqual(moteur.releve.evenements_consommes, 1)
 
 
 class TestContexteTache(unittest.TestCase):

@@ -4,8 +4,9 @@
           générique sur mesures (relevé live du banc, 2026-09-01)
 @verifies docs/SPEC_HARNAIS.md §H15.8 (résolution générique : ordre des paramètres
           requis du schéma, coercition par type déclaré, normalisation de la
-          ponctuation traînante, de la syntaxe d'appel de fonction et repli de
-          découpage par espaces — jamais un nom ni un compte codés en dur)
+          ponctuation traînante, de la syntaxe d'appel de fonction, de la syntaxe
+          d'argument nommé « cle=valeur » et repli de découpage par espaces —
+          jamais un nom ni un compte codés en dur)
 
 La résolution est une fonction de parsing pure : elle s'éprouve directement, sans
 appel LLM ni environnement réel. Les bruits de format couverts ici sont tous
@@ -137,6 +138,26 @@ class TestResolutionAction(unittest.TestCase):
         appel = self._resoudre("poser cle_1, quatre")
         self.assertFalse(appel.valide)
         self.assertIn("integer", appel.erreur_arguments or "")
+
+    def test_argument_nomme_se_lit_comme_sa_valeur(self) -> None:
+        """Mesuré : deux tours perdus sur « pr=2 »/« pr=4 » (banc dépôt h25
+        bruit 5, 2026-09-02) — « cle=valeur » se lit « valeur » quand « cle »
+        est exactement le paramètre requis que la position destine."""
+        appel = self._resoudre("poser objet=cle_1, case=4")
+        self.assertTrue(appel.valide)
+        self.assertEqual(appel.arguments, {"objet": "cle_1", "case": 4})
+
+    def test_argument_nomme_en_syntaxe_d_appel_de_fonction(self) -> None:
+        appel = self._resoudre("poser(objet=cle_1, case=4)")
+        self.assertTrue(appel.valide)
+        self.assertEqual(appel.arguments, {"objet": "cle_1", "case": 4})
+
+    def test_egalite_etrangere_reste_une_valeur(self) -> None:
+        """Une clé qui n'est pas le paramètre attendu ne se retire pas : la
+        valeur peut contenir un « = » légitime."""
+        appel = self._resoudre("poser case=cle_1, 4")
+        self.assertTrue(appel.valide)
+        self.assertEqual(appel.arguments, {"objet": "case=cle_1", "case": 4})
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -415,18 +415,24 @@ class EnvironnementDepot:
         """`merge <pr>` (§S4.2) : valide dès que la PR est ouverte ; une fusion
         en CI rouge CASSE la CI — l'issue le nomme, la résolution le paie.
 
-        Le numéro arrive en texte depuis les outils du banc (U29a4) : « 3 » et
-        « #3 » se lisent ; un numéro imprenable est une action invalide NOMMÉE
-        qui consomme l'événement, comme toute action (§S4.6) — jamais une
-        erreur obscure avant l'environnement.
+        Le numéro arrive en texte depuis les outils du banc (U29a4) et se lit
+        dans la notation que l'environnement émet lui-même (§S4.2, point tranché
+        du 2026-09-02) : l'entier nu, « #3 », et le préfixe « PR » à casse
+        indifférente avec ou sans espace ni croisillon (« PR #3 », « PR#3 »,
+        « PR 3 »). Un numéro imprenable est une action invalide NOMMÉE qui
+        consomme l'événement, comme toute action (§S4.6) — jamais une erreur
+        obscure avant l'environnement.
         """
         self._preparer()
         evenement = self._evenement_courant()
         if evenement is None:
             return IssueBanc(f"error: {MOTIF_EPUISE}", valide=False, correcte=False)
         if isinstance(numero, str):
+            texte = numero.strip()
+            if texte[:2].lower() == "pr":
+                texte = texte[2:].lstrip()
             try:
-                numero = int(numero.strip().lstrip("#"))
+                numero = int(texte.lstrip("#").lstrip())
             except ValueError:
                 return self._consommer(False, False, f"error: numéro de PR invalide : {numero}.")
         branche = self._prs.get(numero)
