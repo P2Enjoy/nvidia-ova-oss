@@ -5,27 +5,6 @@ registre devient vide, le fichier lui-même est supprimé du dépôt (CLAUDE.md 
 
 ## Ouverts
 
-### 2026-09-02 — Les générations longues meurent au pont 443 (`stream: false` × limite de 40 s)
-
-- **Constat.** Le pont coupe à 40 s avant premiers en-têtes ; en
-  `stream: false`, l'origine ne rend ses en-têtes qu'à la FIN de la
-  génération — toute génération de plus de 40 s meurt donc en HTTP 500
-  (« the edge function timed out »), et les relances §H4.5 rejouent la même
-  génération longue et butent au même mur, quelle que soit la longueur de
-  l'échelle.
-- **Mesures.** 2026-09-02 : quatre épisodes de la série dérive dépôt h25
-  (session interactive, journal suite 20) et le run
-  `s20-derive-entrepot-h10-s1` de la session planifiée (cinq relances
-  épuisées, mort à 2/10 événements, `arret: incident`) — dans tous les cas au
-  voisinage des pas où le modèle réfléchit le plus longtemps ; sonde directe
-  pendant la fenêtre : 500 en ~36 s alors que `/api/version` répond en 0,5 s
-  et que le modèle est chargé.
-- **Issue retenue.** Client H4 en `stream: true` avec assemblage des
-  fragments — spécification amendée (§H4.2, §H4.3, §H4.7) par la session qui
-  a isolé la cause, code à venir dans son séquencement (assemblage
-  rétrocompatible d'abord, bascule et cassettes ensuite). Étranger à l'unité
-  H16.1 de la session planifiée : comportement laissé inchangé ici.
-
 ### 2026-09-01 — `scripts/smoke_pile.sh` : le contrôle `RESET` ne suit plus le contrat du rejoueur ARC
 
 - **Constat.** Le script de fumée envoie `POST /api/cmd/RESET` avec un corps `{}`

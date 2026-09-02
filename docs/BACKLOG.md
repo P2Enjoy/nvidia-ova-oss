@@ -817,10 +817,19 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   624 unitaires, 151 intégration, 6 E2E, build). Relevés live consignés
   (journal, suite 19) : dérive h10 seeds 1–3 sur les deux environnements, six
   épisodes récupérés en 0–3 pas.
+  **Livré et vérifié le 2026-09-02 (suite 22)** : client streamé (§H4.2/§H4.3/
+  §H4.7) — `stream: true` sur `/api/chat` (cadrage HTTP contre la coupe du pont
+  à 40 s, transport et interface inchangés), cassettes régénérées par les
+  commandes du dépôt (`make seed-e2e` à double génération vérifiée,
+  `make record-llm` réussi en streaming sur le vrai endpoint), assemblage
+  extrait en `fusionner_fragments` et lecture partagée des conversations
+  enregistrées sous les deux formes (six décors dédupliqués) ; 657 unitaires,
+  151 intégration, 6 E2E sur pile relancée, lint, mypy strict.
   **Reste à livrer** : campagne de banc systématique — bruit aux niveaux de
   référence (0/5/20/50) et horizons 25+ multi-seeds (3 seeds minimum par point,
   §S5.4) sur les deux environnements, dérive aux horizons 25+, alimentation du
-  déclencheur U25 avec ces séries.
+  déclencheur U25 avec ces séries ; lignes de base h10/h25 sous le code
+  suite 21+22 (H15.9 + H16.1 + streaming ensemble).
 
 ## Lot H — La méthode dans la structure
 

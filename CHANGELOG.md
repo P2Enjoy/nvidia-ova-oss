@@ -2,6 +2,26 @@
 
 ## [Non publié]
 
+### 2026-09-02 — U29a4 : client streamé livré (`stream: true`, cassettes régénérées, lecture partagée des deux formes)
+
+- La requête `/api/chat` part désormais en `stream: true` (§H4.2) : les
+  en-têtes arrivent au premier fragment et la limite de 40 s du pont 443 ne
+  s'applique plus à la durée de génération. Cadrage HTTP uniquement — le
+  transport lit toujours le corps jusqu'au bout, l'interface `LLMClient.chat`
+  et la boucle sont inchangées.
+- Cassettes régénérées par les commandes du dépôt (§H4.7) : `make seed-e2e`
+  (double génération vérifiée) et `make record-llm` sur le vrai endpoint — les
+  corps 2xx de conversation y sont désormais du NDJSON servi tel quel, les
+  erreurs 401/413 sont inchangées, aucun secret.
+- L'assemblage des fragments est extrait en `fusionner_fragments` (§H4.3,
+  une seule implémentation) et le module cassette sait lire une conversation
+  enregistrée sous les deux formes (`enveloppe_conversation`,
+  `premiere_conversation`) : six décors de test dédupliqués, rejeu comparé
+  sur les octets servis, détection de dérive live étendue aux corps streamés.
+- Preuves : 657 unitaires (6 nouveaux sur la lecture des deux formes),
+  151 intégration, 6 E2E sur pile relancée, lint, mypy strict ;
+  enregistrement live du contrat réussi en streaming (7 échanges).
+
 ### 2026-09-02 — U29a4 : corps `/api/chat` assemblé en deux formes, préalable du client streamé (H4.2/H4.3)
 
 - Le client assemble désormais un corps 2xx en `ChatResult` sous DEUX formes :
