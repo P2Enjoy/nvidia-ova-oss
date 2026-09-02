@@ -1938,3 +1938,35 @@ niveaux de référence (0/5/20/50) et horizons 25+ multi-seeds (3 minimum par
 point, §S5.4) sur les deux environnements, dérive aux horizons 25+, alimentation
 du déclencheur U25 avec ces séries. La condition 3 est livrée et mesurable :
 les prochaines sessions n'ont plus que du relevé à produire sur ce volet.
+
+---
+
+## 2026-09-02 (suite 20) — U29a4 : campagne de banc systématique, séries h25
+
+Session planifiée. Pile montée et seedée (dockerd manuel, CA du proxy dans
+`certs/`), `make smoke-live` tout vert, reprise désignée par la suite 19 :
+U29a4, campagne de banc — relevés uniquement, la condition 3 étant livrée.
+Point tranché (ordre de campagne, motif : chaque série de 3 seeds est
+consignable seule, l'ordre maximise la valeur en cas d'interruption) :
+1) dépôt h25 bruit 0 — le point 25+ manquant du second environnement ;
+2) dérive h25 sur les deux environnements ; 3) bruit 5/20/50 à h25.
+Constat d'ouverture : `make smoke-pile` rouge sur `RESET` sans `game_id` —
+défaut préexistant DÉJÀ consigné au registre (entrée du 2026-09-01), étranger
+au banc (llm-replay vert) ; rien de neuf à consigner, comportement inchangé.
+
+**Relevé live dépôt h25, bruit 0** (`python -m avo banc skillexec --env depot
+--seed S --horizon 25 --mode live`, `state`, gardes actives) :
+
+| seed | score | corr/inc/inv | évts | résolution | tokens | durée |
+|---|---|---|---|---|---|---|
+| 1 | 0,80 | 20/1/4 | 25/25 | 0,0 (0/5) | 61 142 | 424 s |
+| 2 | 0,68 | 17/1/7 | 25/25 | 0,0 (0/7) | 55 578 | 329 s |
+| 3 | 0,80 | 20/0/5 | 25/25 | 0,0 (0/5) | 58 545 | 422 s |
+
+Moyenne h25 dépôt : **0,76** — au niveau de l'entrepôt h25 bruit 0 (0,88/0,56/
+0,64 suite 15 ; 0,84/—/0,44 suite 16), l'état intriqué du dépôt ne dégrade
+plus le score à cet horizon. Fait saillant : **résolution 0/17 au cumul** —
+aucune demande jugée n'est résolue à h25, alors que h10 en résolvait jusqu'à
+1/2. À investiguer AVANT toute correction : part du comportement modèle
+(`merge` prématuré, `ci_verte` manquée) vs artefact de mesure ; piste générale,
+aucune adaptation au banc.
