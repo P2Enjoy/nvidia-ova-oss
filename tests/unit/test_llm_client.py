@@ -77,7 +77,7 @@ class TestConstructionDuCorps(unittest.TestCase):
     def test_champs_obligatoires_presents(self) -> None:
         corps = construire_corps(_config(), _MESSAGES)
         self.assertEqual(corps["model"], "qwen3.6:35b")
-        self.assertFalse(corps["stream"])
+        self.assertTrue(corps["stream"])
         self.assertFalse(corps["think"])
         self.assertEqual(corps["messages"], _MESSAGES)
         self.assertEqual(set(corps["options"]), {"num_ctx", "num_predict", "temperature"})

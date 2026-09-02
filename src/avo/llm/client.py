@@ -208,7 +208,11 @@ def construire_corps(
     """
     corps: dict[str, Any] = {
         "model": config.modele,
-        "stream": False,
+        # `stream: true` est un cadrage HTTP, pas une API incrémentale (§H4.2) :
+        # le pont 443 coupe à 40 s sans premiers en-têtes, et en mode non streamé
+        # l'origine ne les rend qu'à la FIN de la génération — toute génération
+        # longue mourait en 500. Le transport lit toujours le corps jusqu'au bout.
+        "stream": True,
         "think": config.think,
         "options": {
             "num_ctx": config.contexte_demande if num_ctx is None else num_ctx,
