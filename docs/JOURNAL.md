@@ -2328,3 +2328,20 @@ perd l'autre (s2, tours 30–33 : quatre redemandes alternées). Vu aussi
 « VERDICT: non applicable », non reconnu. Piste générique : la redemande doit
 énoncer la forme COMPLÈTE attendue (les deux lignes puis le bloc), pas la
 seule ligne manquante.
+
+**Vérification live du correctif (mêmes seeds, code §H15.8).** s1 : 0,48 →
+**0,76** (19/3/3 — les 3 refus restants ont chacun leur patch ANNULÉ, la
+cascade ne se forme plus) ; s3 : 0,52 → **1,00** (25/0/0, épisode parfait,
+294 s). Sur les deux pires runs de la série, les invalides passent de 10 et 11
+à 3 et 0. Relevés complets (25/25), rafales `TransportError` du pont absorbées
+(jusqu'à 4 tentatives).
+
+**Où reprendre.** U29a4/U31, dans l'ordre : (a) instruire l'amélioration
+« redemande à forme complète » du ping-pong PREDICTION/VERDICT (mesure
+ci-dessus : la redemande ne nomme que la ligne manquante et le modèle perd
+l'autre ; 2–9 redemandes par run) — spécification d'abord ; (b) compléter la
+campagne systématique : h25 depot, points de bruit 5/20/50, dérive h25,
+multi-seeds (§S5.4) — les h25 entrepot bruit 0 se relèvent désormais sous le
+code §H15.8 (les scores suite 23/24 pré-correctif restent la trace de
+l'ancienne référence) ; (c) registre : une seule entrée ouverte (fumée
+`RESET`), étrangère à U29a4.
