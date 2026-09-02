@@ -2,6 +2,24 @@
 
 ## [Non publié]
 
+### 2026-09-02 — U29a4 : dérive d'état et mesure de récupération (condition 3)
+
+- Le banc a porte la condition 3 de la source (Experiment 3, « state
+  recovery ») : `python -m avo banc skillexec … --derive` place UNE dérive
+  d'état externe dans l'épisode — Entrepôt : un opérateur externe déplace un
+  article (§S3.8) ; Dépôt : un commit direct casse la CI d'une branche prête à
+  fusionner (§S4.7) — signalée par une alerte non structurée sous
+  `--- ALERTE EXTERNE ---`, seul canal qui dise la vérité au pas porteur.
+- Le relevé `banc.json` mesure la récupération (§S5.5) : `derive_evenement`,
+  `pas_de_recuperation` (0 = récupération immédiate, null = jamais récupéré),
+  `recupere` ; la CLI l'annonce en fin d'épisode.
+- Les contextes de tâche nomment le canal d'alerte (§S6.2) ; les cassettes E2E
+  du banc sont régénérées en conséquence (double génération vérifiée).
+- Preuves : 14 unitaires (génération, application réelle, divergence, mesure),
+  intégration en rejeu HTTP (politique parfaite lisant l'alerte, récupération
+  0), campagne complète verte. Premiers relevés live consignés au journal
+  (6 épisodes h10, deux environnements, tous récupérés en 0 à 3 pas).
+
 ### 2026-09-01 — U29a4 : le Dépôt logiciel branché à l'adaptateur et à la CLI (§S6)
 
 - L'adaptateur du banc a joue désormais les DEUX environnements :

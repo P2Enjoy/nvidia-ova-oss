@@ -807,10 +807,20 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   149 intégration, 6 E2E, build). Relevés live consignés (journal, suite 18) :
   dépôt h10 seeds 1–3 bruit 0 (0,60 / 0,80 / 0,60), premier point bruit 5 sur
   les deux environnements.
+  **Livré et vérifié le 2026-09-02 (suite 19)** : condition 3 « récupération
+  d'état » sur les deux environnements — spécification d'abord (§S3.8, §S4.7,
+  §S5.5), dérive unique seedée à génération, application réelle au pas porteur,
+  alerte non structurée `--- ALERTE EXTERNE ---`, événement forcé testant la
+  lecture de l'alerte, mesure `pas_de_recuperation`/`recupere` au relevé, CLI
+  `--derive` ; 14 unitaires, intégration en rejeu HTTP (récupération 0),
+  cassettes E2E régénérées, campagne complète verte (lint, mypy strict,
+  624 unitaires, 151 intégration, 6 E2E, build). Relevés live consignés
+  (journal, suite 19) : dérive h10 seeds 1–3 sur les deux environnements, six
+  épisodes récupérés en 0–3 pas.
   **Reste à livrer** : campagne de banc systématique — bruit aux niveaux de
-  référence (0/5/20/50) et récupération d'état sur les deux environnements,
-  relevés multi-seeds aux horizons 25+ (3 seeds minimum par point, §S5.4),
-  alimentation du déclencheur U25 avec ces séries.
+  référence (0/5/20/50) et horizons 25+ multi-seeds (3 seeds minimum par point,
+  §S5.4) sur les deux environnements, dérive aux horizons 25+, alimentation du
+  déclencheur U25 avec ces séries.
 
 ## Lot H — La méthode dans la structure
 

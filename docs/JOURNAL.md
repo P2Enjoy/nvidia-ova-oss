@@ -1881,3 +1881,60 @@ divergence, `merge` d'une PR jamais ouverte) — aucune anomalie du harnais ; le
 niveaux de référence (0/5/20/50) et récupération d'état sur les DEUX
 environnements, relevés multi-seeds aux horizons 25+ (3 seeds minimum par
 point), alimentation du déclencheur U25 avec ces séries.
+
+---
+
+## 2026-09-02 (suite 19) — U29a4 : condition 3 livrée (dérive d'état), premiers relevés de récupération
+
+Session planifiée. Pile montée et seedée (dockerd manuel, CA du proxy dans
+`certs/`), reprise désignée par la suite 18 : U29a4, campagne de banc. La
+« récupération d'état » du reste-à-livrer n'était ni spécifiée ni implémentée :
+spécification écrite et committée d'abord (§S3.8, §S4.7, §S5.5, §S6.2–§S6.4
+amendés — commit `0efb5df`), puis code.
+
+**Livré.** Condition 3 sur les deux environnements (`c38d6b6`, `fc21739`) :
+générateurs (`derive=True` : une dérive unique, rng séparé `derive-<seed>`,
+premier pas ≥ horizon//2 avec candidat, erreur nommée sinon, génération
+inchangée octet pour octet à dérive inactive), application réelle par
+l'environnement au pas porteur (Entrepôt : article déplacé s'il est réellement
+porté ; Dépôt : CI cassée si réellement verte), alerte non structurée sous
+`--- ALERTE EXTERNE ---`, événement forcé qui teste la lecture de l'alerte
+(`commande` de l'article déplacé ; `ci_verte` périmé où `wait` est dû), mesure
+§S5.5 au relevé (`derive_evenement`, `pas_de_recuperation`, `recupere`), CLI
+`--derive` avec annonce en fin d'épisode. Contextes de tâche : canal d'alerte
+nommé (§S6.2) — générique, aucun contenu d'alerte annoncé. Cassettes E2E du
+banc régénérées en conséquence (`81857d5`).
+
+**Prouvé.** 14 unitaires (`test_banc_derive.py`), intégration en rejeu HTTP
+deux passes (politique parfaite lisant l'alerte : ombre déplacée, `wait` sur
+notification périmée ; récupération 0 au relevé), campagne complète verte
+APRÈS régénération des cassettes : lint, ruff format, mypy strict, 624
+unitaires, 151 intégration, 6 E2E sur pile fraîche, build.
+
+**Relevés live de récupération** (`--derive --horizon 10 --mode live`, bruit 0,
+`state`, gardes actives) — premiers points de la condition 3 :
+
+| env | seed | score | corr/inc/inv | dérive à | récup. (pas) | tokens | durée |
+|---|---|---|---|---|---|---|---|
+| entrepot | 1 | 1,00 | 10/0/0 | 6 | 0 | 17 814 | 129 s |
+| entrepot | 2 | 0,40 | 4/1/5 | 5 | 2 | 22 042 | 189 s |
+| entrepot | 3 | 1,00 | 10/0/0 | 5 | 0 | 20 775 | 173 s |
+| depot | 1 | 0,80 | 8/1/1 | 6 | 1 | 25 515 | 164 s |
+| depot | 2 | 0,70 | 7/1/2 | 5 | 3 | 17 668 | 103 s |
+| depot | 3 | 0,80 | 8/0/2 | 5 | 1 | 24 148 | 185 s |
+
+Lecture : les SIX épisodes récupèrent (`recupere` vrai partout, retard 0–3
+pas) — le canal d'alerte est intégré par le modèle, et le mode `state` colle au
+comportement SKILL.state de la source (récupération immédiate dans 2 cas sur 6,
+lag court sinon ; la source table 3/10 donne 0 pas pour SKILL.state, 5–14 pour
+les runtimes à historique). Les pertes de score restent la tenue d'état
+ordinaire (entrepot seed 2 : 5 invalides étrangères à la dérive), pas la dérive
+elle-même. Résolution dépôt 0/jugées sur les trois seeds : à h10, le `ci_verte`
+propre de la demande dérivée tombe après l'horizon — cohérent avec la ligne de
+base bruit 0 de la suite 18.
+
+**Où reprendre.** U29a4 reste `[~]` : campagne de banc systématique — bruit aux
+niveaux de référence (0/5/20/50) et horizons 25+ multi-seeds (3 minimum par
+point, §S5.4) sur les deux environnements, dérive aux horizons 25+, alimentation
+du déclencheur U25 avec ces séries. La condition 3 est livrée et mesurable :
+les prochaines sessions n'ont plus que du relevé à produire sur ce volet.
