@@ -764,7 +764,8 @@ le module `avo.context.etat` restant inchangé et pur :
   l'observation du pas suivant, et c'est au `ΔΣ` de ce pas suivant de porter la
   révision. C'est une différence assumée avec le mode `transcript`, à départager
   par la mesure (U27 : A/B sur rejeu ; U28 : A/B en réel), pas sur le papier.
-- **Action refusée par l'environnement = patch annulé.** L'issue d'une action
+- **Action refusée par l'environnement = patch annulé, et rappelé au pas
+  suivant.** L'issue d'une action
   (contrat §H8.2) porte un drapeau `refusee`, faux par défaut : vrai quand
   l'environnement a REFUSÉ l'action — elle n'a rien exécuté et n'a rien changé à
   la tâche. Une action valide mais inopportune n'est jamais `refusee` : ses
@@ -783,6 +784,32 @@ le module `avo.context.etat` restant inchangé et pur :
   l'environnement : seul Σ est protégé. Le protocole engendré (§H15.9) énonce la
   règle. En mode `transcript`, sans patch, le drapeau est sans effet sur la
   boucle ; un environnement qui ne le déclare pas se comporte comme avant.
+
+  **Le patch annulé n'est jamais perdu en silence : il est RAPPELÉ, verbatim, dans
+  le prompt du pas suivant.** Le prompt du mode `state` étant recomposé à neuf à
+  chaque tour (§H15.1), le modèle ne conserve aucune trace de sa propre réponse
+  annulée : tout ce que le patch portait AU-DELÀ de l'effet attendu de l'action
+  refusée — typiquement la correction de Σ que le refus précédent exigeait —
+  disparaissait de son contexte de travail avec l'annulation. Mesuré (journal
+  2026-09-02, suite 30, Entrepôt h25 bruit 20 seed 2 v2, cascade de 9 invalides) :
+  à t04 le modèle range un article sans l'inscrire dans Σ ; à t08 il rejoue une
+  action refusée en corrigeant Σ dans le même pas — l'annulation atomique jette
+  la correction avec l'action, et la boucle qu'elle devait casser se ré-enseigne
+  (8 refus « occupée » sur le même point). Le rappel : quand le pas précédent a
+  été annulé pour refus, le message du pas courant contient, avant l'invite
+  habituelle, le nom de l'action refusée et le patch annulé tel quel (JSON), avec
+  l'instruction générique de réinscrire dans le prochain patch ce qui y décrit la
+  situation indépendamment de l'action refusée, et de ne pas y reprendre l'effet
+  de cette action. Le rappel est borné (un patch, un paragraphe), n'apparaît que
+  sur le pas qui suit un refus, et est omis quand le patch annulé était vide
+  (rien à rappeler). C'est le MODÈLE qui décide de ce qui survit : le harnais ne
+  distingue jamais lui-même les clés « correction » des clés « effet » — deux
+  issues écartées pour ce motif : n'annuler que les clés que la prédiction de
+  l'action engageait (exigerait du harnais une interprétation sémantique d'un
+  texte libre) ; conserver le patch quand le pas suivant rejoue la même action
+  (récompense la répétition de l'action refusée et perd la correction précisément
+  quand le modèle joue autre chose). L'invariant appliqué est celui du
+  responsable : aucune perte silencieuse — un écart nommé plutôt que masqué.
 - **Persistance (§H15.5).** Σ est écrit dans `runs/<run_id>/state/etat.json` après
   chaque tour réussi (`Workspace.ecrire_etat`). La reprise au niveau où l'existant
   la supporte réellement est **par jeu**, pas par tour (§A7.4 : un jeu entamé est
