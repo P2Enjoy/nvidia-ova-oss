@@ -2,6 +2,23 @@
 
 ## [Non publié]
 
+### 2026-09-03 — U31 : le patch annulé d'une action refusée est rappelé verbatim au pas suivant (§H15.8)
+
+- Mesuré (série live h25 bruit 20, dépôt s2-v2, cascade de 9 invalides) : le
+  modèle rejoue une action refusée en corrigeant Σ dans le même pas, et
+  l'annulation atomique (§H15.8, suite 24) jette la correction avec l'action —
+  la boucle qu'elle devait casser se ré-enseigne (8 refus « occupée »).
+- §H15.8 (point tranché) : l'annulation reste — Σ n'enregistre jamais l'effet
+  d'une action non exécutée — mais le prompt du pas suivant rappelle le patch
+  annulé verbatim (action nommée, JSON tel quel) avec l'instruction générique de
+  réinscrire ce qui y décrit la situation indépendamment de l'action refusée.
+  C'est le modèle qui décide de ce qui survit, jamais le harnais. Rappel borné,
+  omis sur patch vide, présent au seul pas qui suit le refus. Prompts v1.7.
+- Preuves : 4 unitaires dédiés (rappel verbatim au pas suivant, omission sur
+  patch vide, non-survie au-delà d'un pas, remplacement par un nouveau refus) ;
+  cassettes E2E inchangées et vertes — le rappel n'apparaît sur aucun chemin
+  nominal.
+
 ### 2026-09-02 — U31 : la garde d'évaluation lit la qualification réellement exprimée (§H16.3 : trois issues dont « caduque ») et le dépôt lit la notation `PR_k` (§S4.2)
 
 - Mesuré (série live h25 bruit 20, 5 runs complets) : 18 refus de verdict dont

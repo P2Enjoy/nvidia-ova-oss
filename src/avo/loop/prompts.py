@@ -24,7 +24,7 @@ from avo.context.etat import ARC_V1, CHAMP_HYPOTHESES, DICTIONNAIRE, FORMES, Sch
 
 #: Version des prompts. Change dès qu'un texte change : le rapport d'une campagne
 #: doit pouvoir dire sous quelle formulation ses résultats ont été obtenus.
-VERSION: Final = "1.6"
+VERSION: Final = "1.7"
 
 #: Contrat de tâche, posé une fois en tête de segment (§A5.1, calqué sur VISTA).
 SYSTEME: Final = """Tu joues à un jeu inconnu, tour par tour, sur une grille de
@@ -156,6 +156,25 @@ choisie. Si le message te présente une prédiction antérieure à qualifier, aj
 aussi une ligne « VERDICT: confirmee », « VERDICT: contredite » ou
 « VERDICT: caduque » (caduque : un événement postérieur l'a rendue sans
 objet)."""
+
+
+def rappel_patch_annule(action: str, patch_json: str) -> str:
+    """Rappel du pas suivant un refus d'environnement (§H15.8) : le patch annulé, verbatim.
+
+    Le prompt du mode `state` est recomposé à neuf à chaque tour : sans ce rappel,
+    ce que le patch annulé portait AU-DELÀ de l'effet de l'action refusée — la
+    correction de Σ qu'un refus précédent exigeait — disparaît du contexte de
+    travail du modèle avec l'annulation (mesuré : journal 2026-09-02, suite 30,
+    cascade de 8 refus sur le même point). C'est le modèle qui décide de ce qui
+    survit, jamais le harnais.
+    """
+    return (
+        f"Ton action précédente « {action} » a été refusée par l'environnement : "
+        f"le patch du même pas a été annulé, Σ n'en garde rien. Patch annulé : "
+        f"{patch_json}. Réinscris dans ton prochain patch ce qui y décrit la "
+        "situation indépendamment de l'action refusée ; n'y reprends pas l'effet "
+        "de cette action."
+    )
 
 
 def forme_pas_attendue(verdict_attendu: bool) -> str:

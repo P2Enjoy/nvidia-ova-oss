@@ -23,6 +23,7 @@ s'y glisser.
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 from collections.abc import Callable, Sequence
@@ -258,6 +259,10 @@ class BoucleAgent:
         #: Erreur de résolution d'action du tour précédent, à faire lire au modèle
         #: au tour suivant faute d'historique où l'inscrire (§H15.8).
         self._erreur_action_precedente: str | None = None
+        #: Rappel du patch annulé au pas précédent pour refus d'environnement
+        #: (§H15.8) : le prompt étant recomposé à neuf, la correction de Σ que ce
+        #: patch portait disparaîtrait en silence sans ce rappel au pas suivant.
+        self._rappel_patch_annule: str | None = None
         #: Prédiction de la dernière action jouée (§H16.2), conservée jusqu'à sa
         #: qualification par la garde d'évaluation (§H16.3).
         self._prediction_courante: str | None = None
@@ -650,7 +655,9 @@ class BoucleAgent:
         ligne.update(issue)
         self.workspace.ecrire_pas(ligne)
 
-    def _messages_etat(self, erreur_precedente: str | None) -> list[dict[str, str]]:
+    def _messages_etat(
+        self, erreur_precedente: str | None, rappel_annulation: str | None = None
+    ) -> list[dict[str, str]]:
         """Compose le prompt d'un pas : (P, Σₜ, Oₜ) + notes, O(1) par tour (§H15.1).
 
         Sous gardes (§H16.2, §H16.3), le protocole exige la ligne `PREDICTION:` et,
@@ -675,6 +682,11 @@ class BoucleAgent:
                 f"Ta réponse précédente était invalide : {erreur_precedente}\n"
                 f"Corrige et réponds à nouveau selon le protocole ci-dessous.\n\n{contenu}"
             )
+        # §H15.8 : le patch annulé au pas précédent est rappelé verbatim — sans ce
+        # rappel, la correction de Σ qu'il portait au-delà de l'effet de l'action
+        # refusée serait perdue en silence, le prompt étant recomposé à neuf.
+        if rappel_annulation is not None:
+            contenu = f"{rappel_annulation}\n\n{contenu}"
         # §H15.8 : le message système est celui du contexte monté par l'appelant
         # (défaut `prompts.SYSTEME`) — même surface qu'en mode `transcript`, et la
         # seule par laquelle un adaptateur fournit son contexte de tâche (§H16.1).
@@ -863,9 +875,13 @@ class BoucleAgent:
         compteur = CompteurRetries()
         erreur_precedente = self._erreur_action_precedente
         self._erreur_action_precedente = None
+        rappel_annulation = self._rappel_patch_annule
+        self._rappel_patch_annule = None
         try:
             while True:
-                resultat = self._appeler_etat(self._messages_etat(erreur_precedente))
+                resultat = self._appeler_etat(
+                    self._messages_etat(erreur_precedente, rappel_annulation)
+                )
                 try:
                     nouvel_etat, action_texte = appliquer_pas(self.etat, resultat.content)
                     patch = dict(decoder_pas(resultat.content).patch)
@@ -961,6 +977,13 @@ class BoucleAgent:
                 self.workspace.ecrire_etat(self.etat)
             self._archiver_pas(numero, compteur.consommees, None, patch=patch, patch_annule=True)
             self._metrique("patch_annule", action=appel.nom)
+            # §H15.8 : le pas suivant reçoit le patch annulé verbatim — c'est le
+            # modèle qui décide de ce qui y survit, jamais le harnais. Un patch
+            # vide n'a rien à rappeler.
+            if patch:
+                self._rappel_patch_annule = prompts.rappel_patch_annule(
+                    appel.nom, json.dumps(patch, ensure_ascii=False, sort_keys=True)
+                )
         tour.action = appel.nom
         # La prédiction accompagne l'action jouée (§H16.2) et attend sa
         # qualification au pas suivant (§H16.3).

@@ -7,7 +7,9 @@
 @verifies docs/SPEC_HARNAIS.md §H15.8 (drapeau `refusee` de l'issue : patch du
           pas annulé, Σ et workspace revenus à l'avant-pas, archive `patch_annule`,
           environnement sans drapeau inchangé ; protocole engendré énonçant la
-          règle), §H15.10 (archive des pas)
+          règle ; rappel verbatim du patch annulé au pas suivant — mesure suite 30,
+          cascade s2-v2 : la correction de Σ portée par le pas refusé disparaissait
+          avec l'annulation), §H15.10 (archive des pas)
 @verifies docs/SPEC_BANCS.md §S6.1 (l'adaptateur expose `refusee = not valide`)
 
 Aucun réseau : client au transport scripté (forme des corps §H4.3), environnement
@@ -102,10 +104,12 @@ class _EnvironnementRefusant:
 class _TransportScripte:
     def __init__(self, reponses: list[dict[str, Any]]) -> None:
         self.reponses = list(reponses)
+        self.corps: list[dict[str, Any]] = []
 
     def __call__(self, url: str, corps: bytes, entetes: Any, timeout: float) -> ReponseHTTP:
         if not self.reponses:
             raise AssertionError("plus de réponse scriptée : appel LLM de trop")
+        self.corps.append(json.loads(corps))
         return ReponseHTTP(200, json.dumps(self.reponses.pop(0)).encode())
 
 
@@ -156,7 +160,8 @@ class TestPatchAnnuleSousActionRefusee(unittest.TestCase):
             ]
         )
         workspace = Workspace.ouvrir(config, "run-test", racine=self.racine)
-        client = LLMClient(config, transport=_TransportScripte(reponses), dormir=lambda _: None)
+        self.transport = _TransportScripte(reponses)
+        client = LLMClient(config, transport=self.transport, dormir=lambda _: None)
         contexte = Contexte(config=config, systeme=prompts.SYSTEME, schema_etat=_SCHEMA)
         boucle = BoucleAgent(
             config,
@@ -217,6 +222,79 @@ class TestPatchAnnuleSousActionRefusee(unittest.TestCase):
             {"x": 5, "y": 6},
             "sans drapeau déclaré, le patch est conservé : comportement inchangé",
         )
+
+    def test_le_pas_suivant_recoit_le_rappel_du_patch_annule(self) -> None:
+        """§H15.8 : le patch annulé est rappelé verbatim au pas qui suit le refus."""
+        environnement = _EnvironnementRefusant(refus=[True, False])
+        boucle, _workspace = self._boucle(
+            environnement,
+            [
+                _pas({"hypotheses": ["h"], "position": {"x": 3, "y": 4}}),
+                _pas({"position": {"x": 3, "y": 4}}),
+            ],
+        )
+        boucle.jouer_tour(1)
+        boucle.jouer_tour(2)
+        prompt_pas_2 = self.transport.corps[1]["messages"][1]["content"]
+        self.assertIn("Patch annulé", prompt_pas_2, "le rappel figure au pas suivant (§H15.8)")
+        self.assertIn("« avance »", prompt_pas_2, "le rappel nomme l'action refusée")
+        self.assertIn(
+            '"position": {"x": 3, "y": 4}',
+            prompt_pas_2,
+            "le patch annulé est rappelé verbatim — le modèle décide de ce qui survit",
+        )
+        self.assertIn(
+            "indépendamment de l'action refusée",
+            prompt_pas_2,
+            "le rappel instruit de réinscrire ce qui décrit la situation, pas l'effet",
+        )
+
+    def test_le_rappel_est_omis_quand_le_patch_annule_etait_vide(self) -> None:
+        """§H15.8 : un patch annulé vide n'a rien à rappeler."""
+        environnement = _EnvironnementRefusant(refus=[True, False])
+        boucle, _workspace = self._boucle(
+            environnement,
+            [_pas({}), _pas({"hypotheses": ["h"]})],
+        )
+        boucle.jouer_tour(1)
+        boucle.jouer_tour(2)
+        prompt_pas_2 = self.transport.corps[1]["messages"][1]["content"]
+        self.assertNotIn("Patch annulé", prompt_pas_2)
+
+    def test_le_rappel_ne_survit_pas_au_pas_qui_le_recoit(self) -> None:
+        """§H15.8 : le rappel n'apparaît que sur le pas qui suit le refus."""
+        environnement = _EnvironnementRefusant(refus=[True, False, False])
+        boucle, _workspace = self._boucle(
+            environnement,
+            [
+                _pas({"hypotheses": ["h"], "position": {"x": 3, "y": 4}}),
+                _pas({"position": {"x": 3, "y": 4}}),
+                _pas({}),
+            ],
+        )
+        boucle.jouer_tour(1)
+        boucle.jouer_tour(2)
+        boucle.jouer_tour(3)
+        prompt_pas_3 = self.transport.corps[2]["messages"][1]["content"]
+        self.assertNotIn("Patch annulé", prompt_pas_3)
+
+    def test_un_nouveau_refus_remplace_le_rappel(self) -> None:
+        """§H15.8 : chaque refus rappelle SON patch — le dernier fait foi."""
+        environnement = _EnvironnementRefusant(refus=[True, True, False])
+        boucle, _workspace = self._boucle(
+            environnement,
+            [
+                _pas({"hypotheses": ["h"], "position": {"x": 1, "y": 1}}),
+                _pas({"position": {"x": 7, "y": 8}}),
+                _pas({}),
+            ],
+        )
+        boucle.jouer_tour(1)
+        boucle.jouer_tour(2)
+        boucle.jouer_tour(3)
+        prompt_pas_3 = self.transport.corps[2]["messages"][1]["content"]
+        self.assertIn('"position": {"x": 7, "y": 8}', prompt_pas_3)
+        self.assertNotIn('"position": {"x": 1, "y": 1}', prompt_pas_3)
 
     def test_le_protocole_engendre_enonce_la_regle(self) -> None:
         self.assertIn(
