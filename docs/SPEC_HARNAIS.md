@@ -709,6 +709,25 @@ le module `avo.context.etat` restant inchangé et pur :
   l'observation du pas suivant, et c'est au `ΔΣ` de ce pas suivant de porter la
   révision. C'est une différence assumée avec le mode `transcript`, à départager
   par la mesure (U27 : A/B sur rejeu ; U28 : A/B en réel), pas sur le papier.
+- **Action refusée par l'environnement = patch annulé.** L'issue d'une action
+  (contrat §H8.2) porte un drapeau `refusee`, faux par défaut : vrai quand
+  l'environnement a REFUSÉ l'action — elle n'a rien exécuté et n'a rien changé à
+  la tâche. Une action valide mais inopportune n'est jamais `refusee` : ses
+  effets sont réels. En mode `state`, quand l'action d'un pas revient `refusee`,
+  le `state_patch` du même pas est ANNULÉ : Σ et le workspace reviennent à leur
+  valeur d'avant le pas, la ligne d'archive (§H15.10) porte le patch annulé avec
+  `patch_annule: true`, et le pas suivant lit le refus dans l'issue rappelée de
+  l'observation. Même motif que le pas blanc des gardes (§H16.1) : dans la
+  source, le patch écrit l'effet ATTENDU de l'action du même pas (exemple B.3) ;
+  l'acquérir quand l'action n'a pas eu lieu fait mentir Σ. Mesuré (journal
+  2026-09-02, suite 24, Entrepôt h25 bruit 0) : les 10 refus du seed 1 gravitent
+  autour d'un même faux fait d'inventaire, 9 portent un patch qui inscrit
+  l'effet de l'action refusée, et chaque faux fait cause l'erreur suivante
+  (score 0,48) ; l'unique refus du seed 2 porte le même patch acquis. La
+  consommation de l'événement, le score et le comptage restent l'affaire de
+  l'environnement : seul Σ est protégé. Le protocole engendré (§H15.9) énonce la
+  règle. En mode `transcript`, sans patch, le drapeau est sans effet sur la
+  boucle ; un environnement qui ne le déclare pas se comporte comme avant.
 - **Persistance (§H15.5).** Σ est écrit dans `runs/<run_id>/state/etat.json` après
   chaque tour réussi (`Workspace.ecrire_etat`). La reprise au niveau où l'existant
   la supporte réellement est **par jeu**, pas par tour (§A7.4 : un jeu entamé est

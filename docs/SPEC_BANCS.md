@@ -380,7 +380,10 @@ comprise.
 **S6.1 — Environnement de boucle.** `adaptateur.py` implémente le contrat §H8.2 :
 `observation()` rend l'observation courante (événement + bruit),
 `actions_disponibles()` la liste des commandes, `derniere_issue()` l'issue de la
-dernière action, `etat_terminal()` le motif de fin (§S3.7). Les outils portent
+dernière action, `etat_terminal()` le motif de fin (§S3.7). L'issue exposée à la
+boucle porte `refusee = not valide` (§S3.2, §S4.2 : une action invalide ne change
+rien à l'environnement) — c'est le drapeau du contrat §H15.8, qui protège Σ du
+patch d'une action refusée. Les outils portent
 l'étiquette `action`, le paramètre `prediction` (§H16.2) et des descriptions qui
 énoncent la COMMANDE et sa SYNTAXE — le protocole étant donné (§S1.3), la
 description peut nommer l'effet, contrairement à ARC.
