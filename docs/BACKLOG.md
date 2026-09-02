@@ -844,10 +844,15 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   la série portaient un patch inscrivant l'effet d'une action jamais exécutée).
   6 preuves unitaires, cassettes régénérées, campagne complète verte (lint,
   mypy strict, 664 unitaires, 152 intégration, 6 E2E, build).
-  **Reste à livrer** : campagne de banc systématique — h25 depot, bruit aux
-  niveaux de référence (5/20/50) et horizons 25+ multi-seeds (3 seeds minimum
-  par point, §S5.4) sur les deux environnements, dérive aux horizons 25+,
-  alimentation du déclencheur U25 avec ces séries.
+  **Livré et vérifié le 2026-09-02 (suite 27)** : h25 dépôt bruit 0 seeds 1–3
+  relevés sous le code courant (§H15.8 + §H16.0.6) : 0,88 / 0,80 / 0,80
+  (moyenne 0,827 ; référence pré-correctifs : 0,76), zéro action incorrecte
+  sur les trois runs, résolution cumulée 4/17 (avant : 0/17), aucun refus de
+  garde consécutif (le ping-pong PREDICTION/VERDICT de la suite 24 a disparu).
+  **Reste à livrer** : campagne de banc systématique — bruit aux niveaux de
+  référence (5/20/50) à horizons 25+ multi-seeds (3 seeds minimum par point,
+  §S5.4) sur les deux environnements, dérive h25 dépôt, alimentation du
+  déclencheur U25 avec ces séries.
 
 ## Lot H — La méthode dans la structure
 
@@ -993,6 +998,17 @@ suivante (cascades de 9–11 invalides dans les mauvais runs) ; améliorer :
 Friction n° 2 instruite au journal : le ping-pong des lignes PREDICTION/VERDICT
 (la redemande ne nomme que la ligne manquante) — prochaine amélioration
 candidate.
+
+**Itération du 2026-09-02 (suite 27, session planifiée)** — améliorer : la
+friction n° 2 de la suite 24 corrigée — §H16.0.6 (spec `7cc9b1e` avant le code),
+le refus des gardes du mode `state` se clôt par la forme complète attendue
+(`prompts.forme_pas_attendue`, v1.4, code `b89c5eb`, 2 unitaires) ; jouer :
+h25 dépôt bruit 0 seeds 1–3 sous le code courant (0,88 / 0,80 / 0,80, moyenne
+0,827 contre 0,76 pré-correctifs, zéro incorrecte, résolution 4/17) ;
+observer : aucun refus de garde consécutif sur les trois archives `pas.jsonl` —
+le ping-pong a disparu ; friction suivante instruite : résolution des demandes
+du dépôt basse (0–0,4), part du comportement modèle à établir sur les
+transcripts avant toute correction.
 
 ## U32 — Limitation de concurrence des requêtes LLM par endpoint `[x]`
 

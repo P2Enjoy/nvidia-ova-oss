@@ -2411,3 +2411,51 @@ créé, zéro jeton résiduel). **U32 `[x]`.**
 **Où reprendre.** Inchangé : U31 → U29a4 (suite 24). Si le responsable veut la
 garantie inter-machines, une unité « file d'attente côté pont » (infra/llm-proxy,
 `429 Retry-After`) se spécifie — le client est déjà prêt à la consommer (§H4.9).
+
+---
+
+## 2026-09-02 (suite 27, session planifiée) — U31 : redemande à forme complète (§H16.0.6) livrée, série h25 dépôt rejouée sous le code courant
+
+**Unité.** U31 (itération jouer/observer/améliorer), amélioration désignée par
+la mesure de la suite 24 : le ping-pong PREDICTION/VERDICT — la redemande ne
+nommait que la ligne manquante, le modèle produisait celle-là et perdait
+l'autre (4 redemandes alternées sur un tour, 2–9 par run).
+
+**Spécifié d'abord** (`7cc9b1e`, avant le code) : §H16.0.6 — le message de
+refus des gardes du mode `state` se clôt TOUJOURS par la forme complète de la
+réponse attendue (ligne `VERDICT:` quand une prédiction attend sa
+qualification, avec ses deux seules valeurs reconnues ; ligne `PREDICTION:` ;
+bloc JSON à deux clés), les manques restant nommés en tête.
+
+**Livré** (`b89c5eb`) : `prompts.forme_pas_attendue` (v1.4), clôture du refus
+dans `_gardes_etat` ; 2 unitaires dédiés (forme entière avec verdict dû, forme
+sans verdict quand aucune prédiction n'attend), suite gardes 20/20, CHANGELOG.
+
+**Jouer : h25 dépôt bruit 0, seeds 1–3, live** — première série du dépôt sous
+le code §H15.8 (patch annulé sur refus, suite 24) + §H16.0.6 :
+
+| seed | score | corr/inc/inv | résolution | redemandes | tokens | durée |
+|---|---|---|---|---|---|---|
+| 1 | 0,88 | 22/0/3 | 0,40 (2/5) | 8 | 52 637 | 269 s |
+| 2 | 0,80 | 20/0/5 | 0,29 (2/7) | 3 | 44 310 | 204 s |
+| 3 | 0,80 | 20/0/5 | 0,00 (0/5) | 4 | 48 559 | 255 s |
+
+Moyenne **0,827** (référence pré-§H15.8 : 0,76 — 0,80/0,68/0,80), **zéro
+incorrecte** sur les trois runs (avant : 1/1/0), résolution cumulée **4/17**
+(avant : 0/17 — le « 0 résolution à h25 » de la suite 22 recule). Effet direct
+de §H16.0.6, mesuré sur les archives `pas.jsonl` : **aucun refus de garde
+consécutif** sur les trois runs (tours refusés tous isolés) — chaque redemande
+à forme complète est satisfaite au pas suivant, le ping-pong a disparu.
+
+**Campagne complète (fin de session).** `make check` VERT : lint, format
+(121 fichiers), mypy strict (120), 686 unitaires, 153 intégration, 6 E2E ;
+`make build` VERT. Environnement : deux `429 Too Many Requests` transitoires
+de docker.io au `make up` (passés au retry) ; CA du proxy déposé dans `certs/`
+(procédure du dépôt, jamais committé).
+
+**Où reprendre.** U31 → U29a4, campagne systématique restante : bruit aux
+niveaux de référence (5/20/50) à h25 multi-seeds sur les deux environnements,
+dérive h25 dépôt. Friction suivante à instruire AVANT correction : la
+résolution des demandes du dépôt reste basse (0–0,4 ; piste des suites 22 :
+`merge` prématuré vs `ci_verte` manquée — part du comportement modèle à
+établir sur les transcripts avant toute idée générique).
