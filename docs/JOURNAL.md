@@ -2274,3 +2274,57 @@ suivante ; (c) compléter la campagne systématique : h25 depot, points de bruit
 5/20/50, dérive h25, multi-seeds (§S5.4) — les h25 entrepot bruit 0 sous code
 suite 23 sont la nouvelle référence ; (d) registre : une seule entrée ouverte
 (fumée `RESET`), étrangère à U29a4.
+
+---
+
+## 2026-09-02 (suite 24, session planifiée) — U31 : le patch d'une action refusée par l'environnement est annulé (§H15.8), sur mesure d'une réplication h25
+
+**Relevé — réplication indépendante h25 bruit 0 entrepot seeds 1–3, code
+suite 23** (série lancée avant l'arrivée du push suite 23, même protocole ;
+runs `*-banc`, non committés) : s1 0,48 (12/3/10), s2 0,96 (24/0/1), s3 0,52
+(13/1/11) — moyenne 0,653, sous la moyenne 0,77 de la série suite 23 : la
+variance inter-runs est forte, et les mauvais runs sont TOUS des cascades
+d'invalides. Six relevés complets (25/25), aucun incident ; rafales
+`TransportError` du pont absorbées par l'échelle de relances (1–4 tentatives).
+
+**Dépouillement — la désynchronisation de Σ désignée par la suite 23,
+mécanisme identifié.** Corrélation `pas.jsonl` × issues des transcripts sur
+les trois runs : **21 des 22 actions refusées par l'environnement portaient un
+patch acquis inscrivant dans Σ l'effet attendu de l'action refusée** (s1 9/10,
+s2 1/1, s3 11/11). La cascade type (s1) : t8 le modèle range article_2 sans
+l'inscrire ; t10 son `store` est refusé (« occupée ») mais le patch écrit
+article_4 sur l'étagère ; t12 il expédie sur la foi de ce faux fait, refusé ;
+son patch « corrige » en déclarant l'étagère vide ; et ainsi de suite — chaque
+faux fait cause l'erreur suivante, 9 à 11 invalides par run. Même mécanisme
+que le pas blanc des gardes (H16.1, suite 21), cette fois sous refus de
+l'ENVIRONNEMENT.
+
+**Décision (point tranché, spec committée avant le code, `ca7dc1f`).**
+§H15.8 : l'issue d'une action peut déclarer `refusee` (faux par défaut,
+contrat §H8.2) ; en mode `state`, le patch d'un pas dont l'action revient
+`refusee` est ANNULÉ — Σ et workspace à l'avant-pas, archive `patch_annule`
+avec le patch (§H15.10), refus lisible dans l'issue rappelée du pas suivant.
+§S6.1 : l'adaptateur du banc expose `refusee = not valide`. Issues écartées :
+n'annuler que les clés contredites (complexité, et le pas suivant peut
+réécrire une vraie correction depuis le même Σ) ; un signal textuel
+(« error: » interprété) — le drapeau est structurel, jamais une lecture du
+texte. La consommation d'événement et le score restent à l'environnement.
+
+**Livré (commits `2fe6141`, `4ce01f7`, `d1671bc`).** Boucle (annulation +
+métrique `patch_annule`), adaptateur banc, `IssueArc.refusee = False` (le fil
+ARC ne refuse pas), protocole engendré énonçant la règle, 6 preuves unitaires
+(`tests/unit/test_pas_refuse.py`), cassettes E2E régénérées, CHANGELOG.
+
+**Campagne complète (fin de session).** `make check` VERT : lint (118
+fichiers), mypy strict (117), 664 unitaires, 152 intégration, 6 E2E (pile
+relancée sur les nouvelles cassettes) ; `make build` VERT (un `429` transitoire
+de docker.io au premier essai de `make up`, passé ensuite).
+
+**Friction n° 2 confirmée (à instruire, mesure à l'appui).** Les redemandes de
+format PREDICTION/VERDICT (s1 2, s2 9, s3 6) montrent un PING-PONG précis :
+quand un verdict est attendu, le modèle écrit l'une des deux lignes et omet
+l'autre ; la redemande ne nomme que la ligne manquante, il produit celle-là et
+perd l'autre (s2, tours 30–33 : quatre redemandes alternées). Vu aussi
+« VERDICT: non applicable », non reconnu. Piste générique : la redemande doit
+énoncer la forme COMPLÈTE attendue (les deux lignes puis le bloc), pas la
+seule ligne manquante.

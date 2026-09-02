@@ -836,6 +836,14 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   0,44, moyenne 0,77 — dans la fourchette de référence [0,76 ; 0,84]**
   (§S5.4). Six relevés complets, aucun incident. Campagne complète verte
   (lint, mypy strict, 658 unitaires, 152 intégration, 6 E2E, build).
+  **Livré et vérifié le 2026-09-02 (suite 24)** : réplication indépendante des
+  h25 bruit 0 entrepot seeds 1–3 (0,48 / 0,96 / 0,52, moyenne 0,653 — forte
+  variance inter-runs, mauvais runs = cascades d'invalides) et correction
+  générique désignée par cette mesure : §H15.8, le patch d'une action refusée
+  par l'environnement est annulé (drapeau `refusee` de l'issue, 21/22 refus de
+  la série portaient un patch inscrivant l'effet d'une action jamais exécutée).
+  6 preuves unitaires, cassettes régénérées, campagne complète verte (lint,
+  mypy strict, 664 unitaires, 152 intégration, 6 E2E, build).
   **Reste à livrer** : campagne de banc systématique — h25 depot, bruit aux
   niveaux de référence (5/20/50) et horizons 25+ multi-seeds (3 seeds minimum
   par point, §S5.4) sur les deux environnements, dérive aux horizons 25+,
@@ -973,3 +981,15 @@ comparaison atteint ; les autres séries de la campagne systématique restent à
 relever). Frictions suivantes désignées par la mesure : désynchronisation de Σ
 après action invalide (s3), redemandes de format PREDICTION/VERDICT (5–7 par
 run).
+
+**Itération du 2026-09-02 (suite 24, session planifiée)** — jouer : réplication
+indépendante des h25 bruit 0 entrepot seeds 1–3 (0,48 / 0,96 / 0,52, moyenne
+0,653) ; observer : le mécanisme de la désynchronisation de Σ identifié —
+21/22 actions refusées de la série portaient un patch acquis inscrivant dans Σ
+l'effet attendu d'une action jamais exécutée, chaque faux fait causant l'erreur
+suivante (cascades de 9–11 invalides dans les mauvais runs) ; améliorer :
+§H15.8, le patch d'une action refusée par l'environnement est annulé (drapeau
+`refusee` de l'issue, `ca7dc1f` spec, `2fe6141` code, cassettes `4ce01f7`).
+Friction n° 2 instruite au journal : le ping-pong des lignes PREDICTION/VERDICT
+(la redemande ne nomme que la ligne manquante) — prochaine amélioration
+candidate.
