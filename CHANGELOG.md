@@ -2,6 +2,21 @@
 
 ## [Non publié]
 
+### 2026-09-02 — U29a4 : corps `/api/chat` assemblé en deux formes, préalable du client streamé (H4.2/H4.3)
+
+- Le client assemble désormais un corps 2xx en `ChatResult` sous DEUX formes :
+  objet JSON unique (réponse non streamée) ou lignes NDJSON (réponse streamée) —
+  `content`/`reasoning` concaténés, `tool_calls` collectés, compteurs du fragment
+  final. Un flux sans fragment final ou tronqué est une `TransportError` retentée ;
+  un fragment portant `error` est une `ServerError` retentée.
+- Motif mesuré (campagne de banc h25, 2026-09-02) : le pont 443 coupe à 40 s
+  avant premiers en-têtes ; en `stream: false` toute génération dépassant 40 s
+  meurt en 500 et ses relances butent au même mur (reproduit quatre fois au pas
+  de dérive du Dépôt logiciel). La bascule `stream: true` (§H4.2 amendé) suit,
+  avec régénération des cassettes.
+- Preuves : 9 unitaires d'assemblage (fragments, formes uniques, troncatures,
+  erreur en cours de flux, retry), lint, mypy strict.
+
 ### 2026-09-02 — U31 : refus de garde = pas blanc atomique, `hypotheses` non vidable (H16.1)
 
 - Mode `state` : quand une garde retient l'action d'un pas, le `state_patch` du
