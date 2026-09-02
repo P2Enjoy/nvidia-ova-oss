@@ -859,10 +859,15 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   0,987), zéro invalide, résolution **16/17** (série pré-correctif : 0,84 et
   5/17, trace de l'ancienne référence). Campagne complète verte (lint, mypy
   strict 120 fichiers, 691 unitaires, 153 intégration, 6 E2E, build).
-  **Reste à livrer** : campagne de banc systématique — bruit 5 h25 entrepot,
-  bruit 20/50 à h25 multi-seeds (3 seeds minimum par point, §S5.4) sur les deux
-  environnements, dérive h25 dépôt, alimentation du déclencheur U25 avec ces
-  séries.
+  **Livré et vérifié le 2026-09-02 (suite 29)** : point bruit 5 h25 entrepôt
+  seeds 1–3 relevé sous prompts v1.4 (0,92 / 0,40 / 0,52, moyenne 0,613 — le
+  bruit 5 dégrade l'entrepôt, contrairement au dépôt) puis rejoué sous le
+  correctif §H16.0.7 (0,92 / 0,64 / 0,80, moyenne 0,787, invalides 17 → 10,
+  plus aucun couple patch+action refusé deux fois). Campagne complète verte
+  (lint, mypy strict, 693 unitaires, 153 intégration, 6 E2E, build).
+  **Reste à livrer** : campagne de banc systématique — bruit 20/50 à h25
+  multi-seeds (3 seeds minimum par point, §S5.4) sur les deux environnements,
+  dérive h25 dépôt, alimentation du déclencheur U25 avec ces séries.
 
 ## Lot H — La méthode dans la structure
 
@@ -1019,6 +1024,18 @@ observer : aucun refus de garde consécutif sur les trois archives `pas.jsonl` �
 le ping-pong a disparu ; friction suivante instruite : résolution des demandes
 du dépôt basse (0–0,4), part du comportement modèle à établir sur les
 transcripts avant toute correction.
+
+**Itération du 2026-09-02 (suite 29, session planifiée)** — jouer : h25
+entrepôt bruit 5 seeds 1–3 (0,92 / 0,40 / 0,52, moyenne 0,613 — le bruit 5
+dégrade l'entrepôt) ; observer : les deux motifs instruits sur les `pas.jsonl` —
+3/3 runs perdent leur premier pas sur la garde documentaire jamais annoncée, et
+17 invalides répètent des refus jamais répercutés dans Σ (patch identique
+refusé trois fois, fait démenti ré-affirmé six tours après) ; améliorer :
+§H16.0.7 (spec `938c4dc` avant code `bf53c96`), le protocole annonce d'emblée
+l'exigence documentaire et l'enseignement d'un refus (prompts v1.5) ; série
+rejouée sous code corrigé : 0,92 / 0,64 / 0,80 (moyenne 0,787, invalides
+17 → 10, plus aucun refus répété). Frictions suivantes : verdicts
+manquants/hors-jetons, divergences de Σ restantes à bruit 5.
 
 **Itération du 2026-09-02 (suite 28, session planifiée)** — jouer : h25 dépôt
 bruit 5 seeds 1–3 (0,88 / 0,76 / 0,88, résolution 5/17) ; observer : friction

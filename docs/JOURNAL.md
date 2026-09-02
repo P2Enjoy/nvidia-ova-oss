@@ -2528,3 +2528,74 @@ ENTREPOT seeds 1–3, bruit 20 et 50 à h25 sur les deux environnements, dérive
 h25 dépôt. Friction suivante à instruire : les redemandes de garde restent
 4–8 par run (pas blancs qui coûtent des tours) ; dépouiller leur motif dominant
 sur les `pas.jsonl` avant toute idée.
+
+---
+
+## 2026-09-02 (suite 29, session planifiée) — U31 : le protocole du mode `state` annonce ce que la structure impose (§H16.0.7) ; h25 entrepôt bruit 5 relevé (0,613 → 0,787 sous code corrigé)
+
+**Unité.** U31 (jouer/observer/améliorer), reprise de la suite 28 : campagne
+systématique U29a4 (bruit 5 h25 ENTREPOT seeds 1–3) et friction « redemandes de
+garde 4–8 par run » à instruire sur les `pas.jsonl` avant toute idée.
+
+**Jouer (série d'instruction) : h25 entrepôt bruit 5, seeds 1–3, live** — sous
+le code de la suite 28 (prompts v1.4) :
+
+| seed | score | corr/inc/inv | redemandes | tokens | durée |
+|---|---|---|---|---|---|
+| 1 | 0,92 | 23/2/0 | 6 | 45 487 | 268 s |
+| 2 | 0,40 | 10/4/11 | 1 | 41 452 | 276 s |
+| 3 | 0,52 | 13/6/6 | 6 | 46 698 | 365 s |
+
+Moyenne **0,613** (bruit 0 : 0,77 suite 23, 0,653 suite 24) : contrairement au
+dépôt (0,987 à bruit 5), le bruit 5 dégrade l'entrepôt à h25 — via les
+cascades d'invalides des mauvais runs, pas via les redemandes.
+
+**Observer : les deux motifs instruits sur les `pas.jsonl`.**
+
+1. *Redemandes (13 sur 3 runs)* : 3 amorçages documentaires — **3/3 runs
+   perdent leur premier pas** parce que l'exigence « hypotheses non vide avant
+   d'agir » n'était annoncée que par le message de refus lui-même ; 8 verdicts
+   (4 lignes réellement absentes, 4 valeurs hors-jetons : « non applicable »,
+   « infirmée », prose) ; 2 prédictions (couplées).
+2. *Cascades d'invalides (17 sur seeds 2–3)* : réplique déterministe — tous les
+   refus sont « etagere occupée » / « ne porte pas » : le refus contredit Σ mais
+   n'y est jamais répercuté. Un même couple patch+action refusé TROIS fois
+   (s3, t14/t16/t26) ; un fait démenti par un refus (s2 t13 « etagere_1 ne
+   porte pas article_1 ») ré-affirmé tel quel six tours plus tard (t19). Le
+   protocole disait l'annulation du patch (§H15.8) mais pas ce qu'un refus
+   enseigne.
+
+**Améliorer (spécifié d'abord, `938c4dc` avant le code `bf53c96`)** : §H16.0.7 —
+le protocole engendré (§H15.9) annonce d'emblée ce que la structure impose :
+l'exigence documentaire (« tant que « hypotheses » est vide, aucune action n'est
+jouée — ta première réponse écrit au moins une hypothèse ») et l'enseignement
+d'un refus (« un refus nomme le point sur lequel Σ est faux — le patch du pas
+suivant corrige Σ d'après ce message »). Prompts v1.5, aucun terme
+d'environnement (balayage « zéro indice » vert). Preuves : 2 unitaires dédiés,
+cassettes E2E régénérées, 6 E2E verts.
+
+**Jouer (série propre) : même point rejoué sous le code corrigé** :
+
+| seed | score | corr/inc/inv | redemandes | tokens | durée |
+|---|---|---|---|---|---|
+| 1 | 0,92 | 23/2/0 | 5 | 49 934 | 359 s |
+| 2 | 0,64 | 16/3/6 | 3 | 48 675 | 384 s |
+| 3 | 0,80 | 20/1/4 | 5 | 48 645 | 270 s |
+
+Moyenne **0,787** (pré-correctif : 0,613), invalides 17 → 10, **plus aucun
+couple patch+action refusé deux fois** sur les trois archives. Réserve : trois
+seeds de part et d'autre, la variance inter-runs du banc reste forte (0,40–0,96
+observés au même point). L'amorçage documentaire persiste sur 2 runs sur 3
+(l'annonce est nécessaire, pas suffisante — comportement modèle) ; les
+redemandes résiduelles sont des verdicts (4/2/4 par run).
+
+**Campagne complète (fin de session).** `make check` VERT : lint, ruff format
+(121 fichiers), mypy strict (120), 693 unitaires, 153 intégration, 6 E2E ;
+`make build` VERT. Contrainte 4 respectée : une exécution live à la fois.
+
+**Où reprendre.** U31 → U29a4, campagne systématique restante : bruit 20 et 50
+à h25 sur les deux environnements, dérive h25 dépôt. Frictions suivantes à
+instruire sur les prochains relevés : verdicts manquants ou hors-jetons
+(motif résiduel dominant des redemandes) ; divergences de Σ restantes à bruit 5
+(s2-v2 : 6 invalides malgré l'enseignement du refus — regarder si le modèle
+corrige Σ mais choisit mal, ou ignore l'instruction).
