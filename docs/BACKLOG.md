@@ -993,3 +993,27 @@ suivante (cascades de 9–11 invalides dans les mauvais runs) ; améliorer :
 Friction n° 2 instruite au journal : le ping-pong des lignes PREDICTION/VERDICT
 (la redemande ne nomme que la ligne manquante) — prochaine amélioration
 candidate.
+
+## U32 — Limitation de concurrence des requêtes LLM par endpoint `[ ]`
+
+`@spec` docs/SPEC_HARNAIS.md §H4.9 (jetons de fichiers, attente bornée, jeton
+périmé, `429`/`RateLimited`, activation live uniquement), §H3.1
+(`AVO_LLM_MAX_CONCURRENT`, `AVO_LLM_SLOTS_DIR`). Instruction du responsable
+(2026-09-02) : l'endpoint public tolère au plus 3 requêtes en parallèle — le
+harnais impose ce plafond lui-même et fait patienter l'excédent au lieu
+d'échouer (contrainte 4 de `CLAUDE_PROJECT.md`).
+
+- Module `avo.llm` : limiteur à jetons de fichiers (répertoire par empreinte
+  d'endpoint), acquisition avant chaque tentative HTTP, libération en `finally`,
+  reprise des jetons périmés, attente scrutée avec jitter bornée par
+  `AVO_TIMEOUT_S` ; erreur explicite à l'épuisement de la patience.
+- Client : `429` → `RateLimited`, retentée (§H4.5) en honorant `Retry-After`.
+- Configuration : deux variables, validation, résumé journalisable sans secret.
+- Preuves : unitaires (acquisition/libération, plafond tenu sous fils
+  concurrents, jeton périmé repris, patience épuisée nommée, `429` avec et sans
+  `Retry-After`, désactivation `0`, rejeu inactif) ; intégration (le client réel
+  sous limiteur en rejeu HTTP n'acquiert qu'un jeton à la fois) ; campagne
+  complète.
+- Hors périmètre, nommé : la garantie inter-machines isolées relève d'une
+  limitation côté serveur (pont/origine) — suivie séparément si le responsable
+  la demande ; en attendant, une exécution live au plus par session planifiée.

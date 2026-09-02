@@ -150,6 +150,8 @@ TLS.
 | `AVO_SUP_COOLDOWN` | actions minimales entre deux interventions (H10.3) | `30` |
 | `AVO_RUNS_DIR` | racine des artefacts | `runs/` |
 | `AVO_CONTEXT_MODE` | mode de contexte, `transcript` ou `state` (§H15.7) | `state` |
+| `AVO_LLM_MAX_CONCURRENT` | plafond de requêtes LLM simultanées par endpoint (§H4.9) ; `0` désactive | `3` |
+| `AVO_LLM_SLOTS_DIR` | répertoire des jetons de concurrence (§H4.9) | `<AVO_RUNS_DIR>/.llm-slots` |
 | `AVO_GARDES` | gardes de méthode dans les phases (§H16) | `true` |
 | `AVO_GARDE_RETRIES` | redemandes d'une même garde par tour (§H16.0) | `2` |
 | `ARC_API_KEY` | API ARC Prize (SPEC_ARCAGI3) | requis pour le live uniquement |
@@ -273,6 +275,51 @@ commandes du dépôt (`make record-llm`, `make seed-e2e`), jamais à la main.
 **H4.8 — `make smoke-live`.** Vérification manuelle hors campagne : version, modèles,
 une complétion courte, un tool-call. Exige `.env` ; jamais exécutée par les tests ni
 par le worker.
+
+**H4.9 — Limitation de concurrence par endpoint.** Instruction du responsable
+(2026-09-02) : l'endpoint public tolère au plus **3 requêtes en parallèle** —
+au-delà, `HTTP 500` ou timeouts (mesuré le 2026-09-01 au soir : trois sessions
+parallèles, rafales de `500`, épisodes morts en série). Le harnais impose donc ce
+plafond lui-même, côté client, et fait PATIENTER l'appel excédentaire au lieu de
+le laisser échouer.
+
+- **Mécanisme : jetons de fichiers.** Un répertoire de jetons par endpoint —
+  `AVO_LLM_SLOTS_DIR/<empreinte de OLLAMA_HOST>/` — contient au plus
+  `AVO_LLM_MAX_CONCURRENT` fichiers `slot-<n>`. Avant CHAQUE tentative HTTP
+  (retries §H4.5 compris), le client réclame un jeton par création exclusive
+  (`O_CREAT|O_EXCL`, le fichier porte pid, hôte et horodatage) ; il le libère
+  dans un `finally`, que la tentative aboutisse ou non. Le même mécanisme
+  sérialise les processus d'un même hôte de session (plusieurs conteneurs sur
+  le même volume monté) et les fils d'un même processus : un seul comportement,
+  partout.
+- **Attente (« en queue »).** Aucun jeton libre → le client attend et réessaie,
+  par scrutation à intervalle court avec jitter (mêmes injections `dormir`/`alea`
+  que §H4.5 : les tests n'attendent pas réellement). L'attente est bornée par
+  `AVO_TIMEOUT_S` : au-delà, erreur explicite nommant le répertoire et les
+  occupants — jamais un blocage silencieux.
+- **Jeton périmé.** Un occupant qui meurt sans libérer laisserait sa place
+  perdue : un jeton dont l'âge dépasse `AVO_TIMEOUT_S + 60 s` (plus long que la
+  plus longue requête légitime) est réputé abandonné et repris (suppression puis
+  nouvelle création exclusive). La course résiduelle entre deux repreneurs peut
+  brièvement dépasser le plafond d'une unité : acceptée et documentée, le
+  serveur reste protégé par ses propres erreurs et les retries §H4.5.
+- **Portée et limites, nommées.** Les jetons coordonnent tout ce qui partage le
+  répertoire : les fils d'un processus, les conteneurs d'une même session (le
+  défaut vit sous `AVO_RUNS_DIR`, monté dans chacun), et des sessions distinctes
+  UNIQUEMENT si `AVO_LLM_SLOTS_DIR` pointe un chemin réellement partagé. Des
+  machines isolées ne peuvent pas se coordonner par fichiers : la garantie
+  globale inter-machines relève d'une limitation côté serveur (pont ou origine),
+  hors du périmètre du client ; en attendant, une exécution live au plus par
+  session planifiée (CLAUDE_PROJECT, contrainte 4).
+- **`HTTP 429` = file d'attente serveur.** Si l'endpoint ou le pont répond
+  `429`, le client le traite comme « patienter » : erreur typée `RateLimited`,
+  retentée comme `ServerError` (§H4.5) mais dont l'attente honore l'en-tête
+  `Retry-After` quand il est présent et supérieur au palier courant. Jamais
+  fatale, jamais comptée comme panne du produit.
+- **Activation.** Le plafond s'applique en mode `live` uniquement : le rejeu
+  local (§H4.7) n'a pas de ressource partagée à protéger et les tests restent
+  hors réseau et sans attente. `AVO_LLM_MAX_CONCURRENT=0` désactive
+  explicitement (répertoire non créé).
 
 ## H5. Contexte : transcript append-only, budget, continuation
 
