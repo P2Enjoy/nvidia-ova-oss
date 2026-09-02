@@ -1039,6 +1039,16 @@ le ping-pong a disparu ; friction suivante instruite : résolution des demandes
 du dépôt basse (0–0,4), part du comportement modèle à établir sur les
 transcripts avant toute correction.
 
+**Itération du 2026-09-02 (suite 31, session planifiée, parallèle à la
+suite 30)** — jouer : série propre v1.6 tentée sur le même créneau, arrêtée par
+la même panne d'endpoint (entrepôt s1 mort en 500 à 21/25 — partiel 0,68,
+17/3/1 ; s2 en 500 au premier appel) ; indisponibilité de l'origine mesurée en
+continu ~22:40 → 23:45+ (pont 443 vivant, relais sans réponse) ; observer
+(partiel, recoupe la suite 30) : §H16.3 opère — 10 verdicts `caduque` tracés,
+zéro `garde_forcee` ; améliorer : aucune mesure complète, rien d'inventé ;
+vérifié : validation indépendante du push `0ba239d` — `make check` et `make
+build` VERTS (699 unitaires, 153 intégration, 6 E2E) sur machine distincte.
+
 **Itération du 2026-09-02 (suite 30, session planifiée)** — jouer : premier
 point bruit 20 h25 seeds 1–3 sur les DEUX environnements (entrepôt moyenne
 0,96, dépôt 0,92, trois épisodes parfaits) ; observer : 17 des 18 refus de

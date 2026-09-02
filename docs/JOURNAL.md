@@ -2686,3 +2686,44 @@ sur les deux environnements et dérive h25 dépôt. Frictions à instruire sur c
 relevés : la tension §H15.8 ci-dessus (annulation atomique contre correction
 portée par le pas refusé) ; l'amorçage documentaire du premier pas (persiste :
 1 refus t01 sur 2 des 6 runs d'instruction).
+
+---
+
+## 2026-09-02 (suite 31, session planifiée) — U31 : l'indisponibilité de l'endpoint traverse la session ; un point de série propre v1.6 tenté (entrepôt s1 partiel), campagne hors ligne verte en validation indépendante
+
+**Unité.** U31 (jouer/observer/améliorer), reprise de la suite 29 — la clôture
+de la suite 30 (47d1b30) est arrivée EN COURS de cette session : les deux ont
+travaillé en parallèle sur le même créneau, cette entrée consigne ce que la
+suite 31 apporte EN PROPRE.
+
+**Jouer : série propre v1.6 tentée, arrêtée sur la même panne.** Sous
+`0ba239d`, h25 bruit 20 : entrepôt s1 MORT en `ServerError: HTTP 500` à 21/25
+(rafale > 8 min, relances §H4.5 épuisées ; partiel non comparable : 0,68,
+17/3/1, 47 661 tokens, 818 s) ; s2 en 500 dès sa première inférence ; série
+suspendue (précédent suite 21). Sondes ensuite : indisponibilité CONTINUE de
+~22:40 à plus de 23:45 — timeout ≥ 20 s sans un octet sur `/api/version` et
+`/v1/models`, pont 443 vivant (racine 404 en 0,4 s) → l'origine ne répond pas.
+NOTE sur la lecture « une seule session live » de la suite 30 : les runs de la
+suite 31 ont tourné de 22:35 à 22:50 sur le même endpoint — DEUX sessions live
+se chevauchaient au début de la panne, plafond de 3 non dépassé.
+
+**Observer (partiel s1, indicatif — recoupe la suite 30).** §H16.3 opère :
+10 verdicts `caduque` tracés dans `metrics.jsonl`, zéro `garde_forcee`,
+redemandes documentaires réduites aux 2 de l'amorçage.
+
+**Vérifié (hors ligne, validation indépendante du push 0ba239d).** `make
+check` VERT — lint, ruff format (121 fichiers), mypy strict (120),
+699 unitaires, 153 intégration, 6 E2E — et `make build` VERT, sur une machine
+et un cache distincts de ceux de la suite 30.
+
+**Aucun commit de code** : l'endpoint indisponible a bloqué toute exécution
+live (blocage réel), et aucune mesure complète ne désigne d'amélioration.
+
+**Où reprendre.** Inchangé par rapport à la suite 30 : rejouer sous v1.6 les
+points morts (entrepôt s2–s3, dépôt s1–s3, h25 bruit 20 — le s1 entrepôt 0,92
+de la suite 30 est complet), puis bruit 50 h25 et dérive h25 dépôt ; frictions
+désignées : tension §H15.8 (annulation atomique contre correction portée par le
+pas refusé — à spécifier posément) et amorçage documentaire du premier pas.
+VÉRIFIER EN OUVERTURE que l'endpoint répond (`/api/version` en 200) avant de
+lancer une série live ; si la panne persiste sur plusieurs sessions, le serveur
+d'inférence relève du responsable (arbitrage cas 4, accès externe).
