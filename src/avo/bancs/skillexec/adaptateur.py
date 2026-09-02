@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from typing import Any, Final, Generic, Protocol, TypeVar
 
 from avo.bancs.skillexec.depot import EnvironnementDepot, generer_episode_depot
-from avo.bancs.skillexec.entrepot import EnvironnementEntrepot
+from avo.bancs.skillexec.entrepot import EnvironnementEntrepot, IssueBanc
 from avo.bancs.skillexec.generation import generer_episode
 from avo.bancs.skillexec.score import Releve
 from avo.config import Config, ModeContexte
@@ -159,11 +159,14 @@ class IssueBoucle:
 
     Le banc n'a ni niveaux ni game over (§S3.7) : l'événement est toujours
     `PREDICTION_CONFIRMEE`, la contradiction restant tranchée par la garde
-    d'évaluation (§H16.3) sur le texte du pas.
+    d'évaluation (§H16.3) sur le texte du pas. `refusee` porte le drapeau du
+    contrat §H15.8 (`refusee = not valide`, §S6.1) : une action refusée n'a
+    rien changé à l'environnement, et la boucle annule le patch du même pas.
     """
 
     observation: str
     evenement: Evenement
+    refusee: bool = False
 
 
 class MoteurBanc(Protocol):
@@ -218,10 +221,19 @@ class _EnvironnementBancCommun(Generic[TMoteur]):
         return self.moteur.etat_terminal()
 
     # ------------------------------------------------------------------ mécanique
-    def _absorber(self, observation: str) -> str:
-        """Conserve l'issue pour la boucle (§H8.2) et la rend au modèle (§H7.4)."""
-        self._issue = IssueBoucle(observation=observation, evenement=Evenement.PREDICTION_CONFIRMEE)
-        return observation
+    def _absorber(self, issue: IssueBanc) -> str:
+        """Conserve l'issue pour la boucle (§H8.2) et rend l'observation (§H7.4).
+
+        `refusee = not valide` (§S6.1) : le moteur sait si la transition a été
+        acceptée (§S3.2, §S4.2), et la boucle protège Σ du patch d'une action
+        refusée (§H15.8). Les verdicts du relevé, eux, ne passent jamais ici.
+        """
+        self._issue = IssueBoucle(
+            observation=issue.observation,
+            evenement=Evenement.PREDICTION_CONFIRMEE,
+            refusee=not issue.valide,
+        )
+        return issue.observation
 
     def _outil(
         self,
@@ -290,18 +302,18 @@ class EnvironnementBancEntrepot(_EnvironnementBancCommun[EnvironnementEntrepot])
 
     # ------------------------------------------------------------------ actions
     def _store(self, article: str, etagere: str, prediction: str | None = None) -> str:
-        return self._absorber(self.moteur.store(article, etagere).observation)
+        return self._absorber(self.moteur.store(article, etagere))
 
     def _ship(self, article: str, etagere: str, prediction: str | None = None) -> str:
-        return self._absorber(self.moteur.ship(article, etagere).observation)
+        return self._absorber(self.moteur.ship(article, etagere))
 
     def _move(
         self, article: str, source: str, destination: str, prediction: str | None = None
     ) -> str:
-        return self._absorber(self.moteur.move(article, source, destination).observation)
+        return self._absorber(self.moteur.move(article, source, destination))
 
     def _wait(self, prediction: str | None = None) -> str:
-        return self._absorber(self.moteur.wait().observation)
+        return self._absorber(self.moteur.wait())
 
 
 class EnvironnementBancDepot(_EnvironnementBancCommun[EnvironnementDepot]):
@@ -350,19 +362,19 @@ class EnvironnementBancDepot(_EnvironnementBancCommun[EnvironnementDepot]):
 
     # ------------------------------------------------------------------ actions
     def _commit(self, branche: str, fichier: str, prediction: str | None = None) -> str:
-        return self._absorber(self.moteur.commit(branche, fichier).observation)
+        return self._absorber(self.moteur.commit(branche, fichier))
 
     def _create_pr(self, branche: str, prediction: str | None = None) -> str:
-        return self._absorber(self.moteur.create_pr(branche).observation)
+        return self._absorber(self.moteur.create_pr(branche))
 
     def _merge(self, pr: str, prediction: str | None = None) -> str:
-        return self._absorber(self.moteur.merge(pr).observation)
+        return self._absorber(self.moteur.merge(pr))
 
     def _fix_ci(self, branche: str, prediction: str | None = None) -> str:
-        return self._absorber(self.moteur.fix_ci(branche).observation)
+        return self._absorber(self.moteur.fix_ci(branche))
 
     def _wait(self, prediction: str | None = None) -> str:
-        return self._absorber(self.moteur.wait().observation)
+        return self._absorber(self.moteur.wait())
 
 
 def jouer_episode(

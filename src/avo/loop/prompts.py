@@ -79,7 +79,8 @@ def protocole_etat(schema: SchemaEtat = ARC_V1) -> str:
 
     Le noyau ne connaît que les genres (§H15.9) ; les champs, leur ordre et leur
     rôle viennent du schéma déclaré par le domaine. Aucune règle de tâche ici : le
-    texte cite des contenants, jamais des contenus (§A5.1).
+    texte cite des contenants, jamais des contenus (§A5.1). Le protocole énonce
+    aussi l'annulation du patch sous action refusée (§H15.8).
     """
     champs = ", ".join(
         f"« {champ.nom} » ({FORMES[champ.genre]}{' : ' + champ.role if champ.role else ''})"
@@ -100,6 +101,10 @@ def protocole_etat(schema: SchemaEtat = ARC_V1) -> str:
     texte += (
         f" Le champ « {CHAMP_HYPOTHESES} » ne se vide jamais : remplace une hypothèse "
         "périmée par sa révision."
+    )
+    texte += (
+        " Si l'environnement refuse ton action, le patch du même pas est annulé "
+        "avec elle : Σ n'enregistre que ce qui a réellement eu lieu."
     )
     return texte + " N'inclus dans le patch que ce qui change réellement."
 

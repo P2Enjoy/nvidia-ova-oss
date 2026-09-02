@@ -94,7 +94,13 @@ def _prediction_dans(texte: str) -> str | None:
 
 
 class Issue(Protocol):
-    """Ce qu'une action d'environnement rend en retour."""
+    """Ce qu'une action d'environnement rend en retour.
+
+    Une issue PEUT en outre déclarer `refusee` (bool, faux par défaut, §H15.8) :
+    vrai quand l'environnement a refusé l'action — elle n'a rien exécuté. La
+    boucle la lit par `getattr`, si bien qu'un environnement qui ne la déclare
+    pas se comporte comme avant.
+    """
 
     @property
     def observation(self) -> str: ...
@@ -902,6 +908,19 @@ class BoucleAgent:
         if issue is None:
             tour.phase_finale = Phase.PLANNING
             return tour
+        # §H15.8 : une action REFUSÉE par l'environnement n'a rien exécuté — le
+        # patch du même pas, qui écrit son effet attendu (exemple B.3), est
+        # annulé avec elle : Σ et le workspace reviennent à l'état d'avant le
+        # pas, l'archive garde le patch annulé, et le pas suivant lit le refus
+        # dans l'issue rappelée de l'observation. L'événement consommé et le
+        # score restent l'affaire de l'environnement. Un environnement qui ne
+        # déclare pas `refusee` se comporte comme avant (défaut faux).
+        if getattr(issue, "refusee", False):
+            self.etat = etat_avant
+            if self.workspace is not None:
+                self.workspace.ecrire_etat(self.etat)
+            self._archiver_pas(numero, compteur.consommees, None, patch=patch, patch_annule=True)
+            self._metrique("patch_annule", action=appel.nom)
         tour.action = appel.nom
         # La prédiction accompagne l'action jouée (§H16.2) et attend sa
         # qualification au pas suivant (§H16.3).

@@ -68,10 +68,15 @@ class CoordonneesInvalides(ValueError):
 
 @dataclass(frozen=True)
 class IssueArc:
-    """Ce qu'une action rend à la boucle (§H8.2)."""
+    """Ce qu'une action rend à la boucle (§H8.2).
+
+    `refusee` reste faux sur le fil ARC (§H15.8) : toute commande acceptée par
+    l'API produit une frame — le fil ne refuse pas d'action, il en rend l'effet.
+    """
 
     observation: str
     evenement: Evenement
+    refusee: bool = False
 
 
 @dataclass
