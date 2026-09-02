@@ -912,6 +912,23 @@ phase.
    message. La forme est une constante de `prompts.py` (règle 5). En mode
    `transcript`, la redemande de verdict (§H16.3) attend une réponse à une
    seule ligne : elle énonce déjà la forme complète.
+7. **Le protocole annonce d'emblée ce que la structure imposera.** Une garde ou
+   un invariant dont la seule annonce vit dans son message de refus coûte un pas
+   blanc par run : le modèle ne l'apprend qu'en le violant. Mesuré (journal
+   2026-09-02, suite 29, entrepôt h25 bruit 5) : 3 runs sur 3 perdent leur
+   premier pas sur la garde documentaire du mode `state`, dont l'exigence
+   « champ de connaissances non vide avant d'agir » n'était annoncée nulle
+   part ; et 17 actions invalides sur deux runs répètent des refus jamais
+   répercutés dans Σ — un même couple patch+action refusé trois fois dans un
+   run, un fait démenti par un refus ré-affirmé six tours plus tard — le
+   protocole disant l'annulation du patch (§H15.8) mais pas ce qu'un refus
+   enseigne. Le protocole engendré (§H15.9) énonce donc, outre les règles déjà
+   annoncées : l'exigence documentaire — tant que le champ de connaissances est
+   vide, aucune action n'est jouée, la première réponse écrit au moins une
+   hypothèse dans son patch (§H16.1) — et l'enseignement d'un refus — un refus
+   nomme le point sur lequel Σ est faux, le patch du pas suivant corrige Σ
+   d'après ce message avant de rejouer (§H15.8). Constantes de `prompts.py`,
+   versionnées (règle 5) ; aucun terme d'environnement (règle 3).
 
 **H16.1 — Garde documentaire, à l'entrée de Planning.** Le réflexe « chercher
 l'information avant d'agir », mécanisé : les outils d'action ne se déverrouillent
