@@ -24,7 +24,7 @@ from avo.context.etat import ARC_V1, CHAMP_HYPOTHESES, DICTIONNAIRE, FORMES, Sch
 
 #: Version des prompts. Change dès qu'un texte change : le rapport d'une campagne
 #: doit pouvoir dire sous quelle formulation ses résultats ont été obtenus.
-VERSION: Final = "1.4"
+VERSION: Final = "1.5"
 
 #: Contrat de tâche, posé une fois en tête de segment (§A5.1, calqué sur VISTA).
 SYSTEME: Final = """Tu joues à un jeu inconnu, tour par tour, sur une grille de
@@ -102,9 +102,19 @@ def protocole_etat(schema: SchemaEtat = ARC_V1) -> str:
         f" Le champ « {CHAMP_HYPOTHESES} » ne se vide jamais : remplace une hypothèse "
         "périmée par sa révision."
     )
+    # §H16.0.7 : les exigences que la structure impose s'annoncent d'emblée —
+    # une règle apprise par son seul message de refus coûte un pas blanc par run.
+    texte += (
+        f" Tant que « {CHAMP_HYPOTHESES} » est vide, aucune action n'est jouée : "
+        "ta première réponse écrit au moins une hypothèse dans son patch."
+    )
     texte += (
         " Si l'environnement refuse ton action, le patch du même pas est annulé "
         "avec elle : Σ n'enregistre que ce qui a réellement eu lieu."
+    )
+    texte += (
+        " Un refus te renseigne : il nomme le point sur lequel Σ est faux — le "
+        "patch de ton pas suivant corrige Σ d'après ce message avant de rejouer."
     )
     return texte + " N'inclus dans le patch que ce qui change réellement."
 

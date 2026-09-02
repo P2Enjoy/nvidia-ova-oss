@@ -141,6 +141,22 @@ class TestProtocoleEngendre(unittest.TestCase):
         for texte in (prompts.PROTOCOLE_ETAT, prompts.protocole_etat(SCHEMA)):
             self.assertIn("ne se vide jamais", texte)
 
+    def test_le_protocole_annonce_l_exigence_documentaire(self) -> None:
+        """§H16.0.7 : l'exigence « connaissances non vides avant d'agir » s'annonce
+        d'emblée — mesuré, sa seule annonce en message de refus coûtait le premier
+        pas de chaque run (3/3, journal 2026-09-02 suite 29)."""
+        for texte in (prompts.PROTOCOLE_ETAT, prompts.protocole_etat(SCHEMA)):
+            self.assertIn("aucune action n'est jouée", texte)
+            self.assertIn("au moins une hypothèse", texte)
+
+    def test_le_protocole_enonce_l_enseignement_d_un_refus(self) -> None:
+        """§H16.0.7 : un refus nomme le point sur lequel Σ est faux — le protocole
+        commande de corriger Σ d'après ce message (mesuré : 17 invalides répétant
+        des refus jamais répercutés dans Σ, journal 2026-09-02 suite 29)."""
+        for texte in (prompts.PROTOCOLE_ETAT, prompts.protocole_etat(SCHEMA)):
+            self.assertIn("Un refus te renseigne", texte)
+            self.assertIn("corrige Σ d'après ce message", texte)
+
 
 class TestSchemasDuBanc(unittest.TestCase):
     """§S6.5 : les deux domaines déclarent un schéma valide, avec le champ commun."""

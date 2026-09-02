@@ -2,6 +2,22 @@
 
 ## [Non publié]
 
+### 2026-09-02 — U31 : le protocole du mode `state` annonce d'emblée l'exigence documentaire et l'enseignement d'un refus (§H16.0.7)
+
+- Mesuré (série live entrepôt h25 bruit 5, seeds 1–3) : 3 runs sur 3 perdent
+  leur premier pas sur la garde documentaire — l'exigence « hypotheses non vide
+  avant d'agir » n'était annoncée que par le message de refus ; et 17 actions
+  invalides sur deux runs répètent des refus jamais répercutés dans Σ (un même
+  couple patch+action refusé trois fois ; un fait démenti par un refus
+  ré-affirmé six tours plus tard).
+- Le protocole engendré (§H15.9) énonce désormais les deux règles : « tant que
+  « hypotheses » est vide, aucune action n'est jouée — ta première réponse
+  écrit au moins une hypothèse » ; « un refus te renseigne : il nomme le point
+  sur lequel Σ est faux — le patch du pas suivant corrige Σ d'après ce
+  message ». Prompts v1.5, aucun terme d'environnement.
+- Preuves : 2 unitaires dédiés (`test_etat_schema`), suite unitaire complète
+  verte (693), cassettes E2E régénérées, 6 E2E verts.
+
 ### 2026-09-02 — U31 : la résolution du dépôt instruite — le moteur lit sa propre notation de PR (§S4.2) et « cle=valeur » est normalisé (§H15.8)
 
 - Mesuré (série live dépôt h25 bruit 5, seeds 1–2) : les 9 actions invalides des
