@@ -34,7 +34,14 @@ from avo.config import Config, Mode, charger
 from avo.llm.client import LLMClient, ReponseHTTP
 from avo.loop import prompts
 from avo.memory.workspace import Workspace
-from llm_replay.cassette import AUTH_VALIDE, Cassette, Exchange, RequestRecord, ResponseRecord
+from llm_replay.cassette import (
+    AUTH_VALIDE,
+    Cassette,
+    Exchange,
+    RequestRecord,
+    ResponseRecord,
+    premiere_conversation,
+)
 from llm_replay.server import creer_serveur as creer_serveur_llm
 
 CASSETTE_REELLE = Path("tests/fixtures/llm/cassettes/contrat_endpoint.jsonl")
@@ -95,11 +102,7 @@ class _SocleCampagneSurRejeu(unittest.TestCase):
     # -- décor -----------------------------------------------------------------
     @staticmethod
     def _gabarit() -> dict[str, Any]:
-        for echange in Cassette.lire(CASSETTE_REELLE):
-            corps = echange.response.body
-            if echange.response.status == 200 and isinstance(corps, dict) and "message" in corps:
-                return copy.deepcopy(corps)
-        raise AssertionError("aucune réponse de conversation dans la cassette réelle")
+        return premiere_conversation(Cassette.lire(CASSETTE_REELLE))
 
     def _config(self, base_llm: str) -> Config:
         return charger(

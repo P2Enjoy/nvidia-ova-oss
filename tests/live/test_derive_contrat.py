@@ -15,7 +15,7 @@ import unittest
 from pathlib import Path
 
 from avo.config import Config, Mode, charger
-from llm_replay.cassette import Cassette
+from llm_replay.cassette import Cassette, enveloppe_conversation
 from llm_replay.record import SCENARIOS, enregistrer_scenario
 
 CASSETTE = Path("tests/fixtures/llm/cassettes/contrat_endpoint.jsonl")
@@ -66,8 +66,16 @@ class TestDeriveDuContrat(unittest.TestCase):
                 if isinstance(attendu.response.body, dict) and isinstance(
                     obtenu.response.body, dict
                 ):
-                    cles_attendues = set(attendu.response.body) - CHAMPS_VOLATILS
-                    cles_obtenues = set(obtenu.response.body) - CHAMPS_VOLATILS
+                    forme_attendue: dict[str, object] | None = attendu.response.body
+                    forme_obtenue: dict[str, object] | None = obtenu.response.body
+                else:
+                    # Corps streamés (NDJSON, §H4.2) : la forme se compare sur
+                    # l'enveloppe assemblée par le client, la même des deux côtés.
+                    forme_attendue = enveloppe_conversation(attendu)
+                    forme_obtenue = enveloppe_conversation(obtenu)
+                if forme_attendue is not None and forme_obtenue is not None:
+                    cles_attendues = set(forme_attendue) - CHAMPS_VOLATILS
+                    cles_obtenues = set(forme_obtenue) - CHAMPS_VOLATILS
                     self.assertEqual(
                         cles_attendues,
                         cles_obtenues,

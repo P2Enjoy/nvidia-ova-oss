@@ -30,7 +30,14 @@ from avo.loop.boucle import OUTILS_PAR_PHASE, BoucleAgent
 from avo.loop.etats import Evenement, Phase
 from avo.memory.notes import SCHEMA_NOTE_WRITE, Notes, note_write
 from avo.tools.registre import Outil, RegistreOutils, outil_depuis_schema
-from llm_replay.cassette import AUTH_VALIDE, Cassette, Exchange, RequestRecord, ResponseRecord
+from llm_replay.cassette import (
+    AUTH_VALIDE,
+    Cassette,
+    Exchange,
+    RequestRecord,
+    ResponseRecord,
+    premiere_conversation,
+)
 from llm_replay.server import creer_serveur
 
 CASSETTE_REELLE = Path("tests/fixtures/llm/cassettes/contrat_endpoint.jsonl")
@@ -39,11 +46,7 @@ CLE = "sk-cle-de-rejeu-de-la-boucle"
 
 def _gabarit_de_reponse() -> dict[str, Any]:
     """Corps de réponse RÉEL, qui sert de moule aux réponses scriptées."""
-    for echange in Cassette.lire(CASSETTE_REELLE):
-        corps = echange.response.body
-        if echange.response.status == 200 and isinstance(corps, dict) and "message" in corps:
-            return copy.deepcopy(corps)
-    raise AssertionError("aucune réponse de conversation dans la cassette réelle")
+    return premiere_conversation(Cassette.lire(CASSETTE_REELLE))
 
 
 @dataclass

@@ -20,7 +20,13 @@ from pathlib import Path
 from typing import Any
 
 from avo.config import Mode, charger
-from llm_replay.cassette import AUTH_ABSENTE, AUTH_INVALIDE, AUTH_VALIDE, Cassette
+from llm_replay.cassette import (
+    AUTH_ABSENTE,
+    AUTH_INVALIDE,
+    AUTH_VALIDE,
+    Cassette,
+    enveloppe_conversation,
+)
 from llm_replay.record import CLE_INVALIDE, SCENARIOS
 from llm_replay.server import creer_serveur
 
@@ -55,7 +61,10 @@ class TestCassetteReelle(unittest.TestCase):
         cls.serveur.server_close()
         cls.fil.join(timeout=5)
 
-    def _jouer(self, method: str, chemin: str, auth: str, corps: Any) -> tuple[int, Any]:
+    def _jouer(self, method: str, chemin: str, auth: str, corps: Any) -> tuple[int, bytes]:
+        """Rend le statut et le corps OCTETS servis : un corps streamé (NDJSON)
+        n'est pas un document JSON unique, la comparaison se fait donc sur les
+        octets que le rejeu sert, jamais sur une forme re-décodée (§H4.7)."""
         donnees = json.dumps(corps).encode() if corps is not None else None
         requete = urllib.request.Request(self.base + chemin, data=donnees, method=method)  # noqa: S310
         if donnees is not None:
@@ -66,9 +75,9 @@ class TestCassetteReelle(unittest.TestCase):
             requete.add_header("Authorization", f"Bearer {CLE_INVALIDE}")
         try:
             with urllib.request.urlopen(requete, timeout=30) as reponse:  # noqa: S310
-                return int(reponse.status), json.loads(reponse.read())
+                return int(reponse.status), reponse.read()
         except urllib.error.HTTPError as erreur:
-            return int(erreur.code), json.loads(erreur.read())
+            return int(erreur.code), erreur.read()
 
     def test_les_sept_scenarios_enregistres_se_rejouent_a_l_identique(self) -> None:
         self.assertEqual(len(self.enregistre), len(SCENARIOS))
@@ -87,12 +96,12 @@ class TestCassetteReelle(unittest.TestCase):
                     scenario.construire(_CONFIG_SCENARIOS),
                 )
                 self.assertEqual(statut, attendu.response.status)
-                self.assertEqual(corps, attendu.response.body)
+                self.assertEqual(corps, attendu.response.corps_octets())
 
     def test_le_refus_sans_cle_est_bien_celui_du_vrai_serveur(self) -> None:
         statut, corps = self._jouer("GET", "/api/version", AUTH_ABSENTE, None)
         self.assertEqual(statut, 401)
-        self.assertIn("error", corps)
+        self.assertIn("error", json.loads(corps))
 
     def test_le_413_porte_le_plafond_par_cle_dont_le_harnais_depend(self) -> None:
         """H3.2 et H5.4 budgètent sur ces champs : ils doivent exister dans le contrat."""
@@ -108,8 +117,8 @@ class TestCassetteReelle(unittest.TestCase):
         avec_outils = self.enregistre.apparier(
             "POST", "/api/chat", AUTH_VALIDE, SCENARIOS[4].construire(_CONFIG_SCENARIOS)
         )
-        corps = avec_outils.response.body
-        assert isinstance(corps, dict)
+        corps = enveloppe_conversation(avec_outils)
+        assert corps is not None, "réponse de conversation attendue pour le scénario outillé"
         self.assertIn("tool_calls", corps["message"])
         self.assertTrue(corps["message"]["tool_calls"])
 

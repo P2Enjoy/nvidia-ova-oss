@@ -22,6 +22,8 @@ from llm_replay.cassette import (
     RequestRecord,
     RequeteInconnue,
     ResponseRecord,
+    enveloppe_conversation,
+    premiere_conversation,
 )
 
 _CORPS = {"model": "m", "messages": [{"role": "user", "content": "bonjour"}]}
@@ -136,6 +138,75 @@ class TestAllerRetour(unittest.TestCase):
             Cassette([_echange()]).ecrire(racine / "a.jsonl")
             Cassette([_echange(auth=AUTH_ABSENTE)]).ecrire(racine / "b.jsonl")
             self.assertEqual(len(Cassette.lire_dossier(racine)), 2)
+
+
+class TestEnveloppeConversation(unittest.TestCase):
+    """§H4.7 : la lecture d'une conversation enregistrée assemble le NDJSON
+    exactement comme le client (§H4.3), jamais par une seconde implémentation.
+
+    @verifies docs/BACKLOG.md U29a4 — client streamé
+    @verifies docs/SPEC_HARNAIS.md §H4.2 (stream), §H4.3 (assemblage), §H4.7 (rejeu)
+    """
+
+    @staticmethod
+    def _streamee(texte: str, status: int = 200) -> Exchange:
+        return Exchange(
+            request=RequestRecord.depuis("POST", "/api/chat", AUTH_VALIDE, _CORPS),
+            response=ResponseRecord(
+                status=status, headers={"content-type": "application/x-ndjson"}, text=texte
+            ),
+            recorded_at="2026-09-02T00:00:00+00:00",
+            duration_ms=12,
+        )
+
+    def test_objet_unique_rendu_tel_quel(self) -> None:
+        echange = Exchange(
+            request=RequestRecord.depuis("POST", "/api/chat", AUTH_VALIDE, _CORPS),
+            response=ResponseRecord(status=200, body={"message": {"content": "OK"}, "done": True}),
+            recorded_at="2026-09-02T00:00:00+00:00",
+            duration_ms=12,
+        )
+        enveloppe = enveloppe_conversation(echange)
+        assert enveloppe is not None
+        self.assertEqual(enveloppe["message"]["content"], "OK")
+
+    def test_ndjson_assemble_contenu_et_fragment_final(self) -> None:
+        texte = "\n".join(
+            json.dumps(fragment)
+            for fragment in (
+                {"message": {"content": "O"}, "done": False},
+                {"message": {"content": "K"}, "done": False},
+                {"message": {"content": ""}, "done": True, "done_reason": "stop", "eval_count": 7},
+            )
+        )
+        enveloppe = enveloppe_conversation(self._streamee(texte))
+        assert enveloppe is not None
+        self.assertEqual(enveloppe["message"]["content"], "OK")
+        self.assertEqual(enveloppe["done_reason"], "stop")
+        self.assertEqual(enveloppe["eval_count"], 7)
+
+    def test_flux_sans_fragment_final_ne_rend_pas_d_enveloppe(self) -> None:
+        texte = json.dumps({"message": {"content": "coupé"}, "done": False})
+        self.assertIsNone(enveloppe_conversation(self._streamee(texte)))
+
+    def test_un_statut_non_200_ne_rend_pas_d_enveloppe(self) -> None:
+        self.assertIsNone(enveloppe_conversation(_echange(status=401)))
+
+    def test_premiere_conversation_saute_les_echanges_sans_message(self) -> None:
+        cassette = Cassette(
+            [
+                _echange(status=401),
+                self._streamee(
+                    json.dumps({"message": {"content": "OK"}, "done": True, "done_reason": "stop"})
+                ),
+            ]
+        )
+        self.assertEqual(premiere_conversation(cassette)["message"]["content"], "OK")
+
+    def test_premiere_conversation_sans_conversation_leve_une_erreur_explicite(self) -> None:
+        with self.assertRaises(RequeteInconnue) as constat:
+            premiere_conversation(Cassette([_echange(status=401)]))
+        self.assertIn("record-llm", str(constat.exception))
 
 
 if __name__ == "__main__":  # pragma: no cover

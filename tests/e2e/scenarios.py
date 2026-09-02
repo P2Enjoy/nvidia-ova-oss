@@ -22,7 +22,7 @@ from typing import Any
 
 from arc_replay.jeu_cible import CLIC, DEPART, EtatPartie, JeuCible
 from avo.loop import prompts
-from llm_replay.cassette import Cassette
+from llm_replay.cassette import Cassette, premiere_conversation
 
 #: Jeu servi par arc-replay (§A3.2).
 JEU = "cible-synthetique"
@@ -154,14 +154,8 @@ SCENARIOS = (VICTOIRE, ECHEC)
 
 def gabarit_reponse() -> dict[str, Any]:
     """Enveloppe de réponse réelle : première conversation 200 de la cassette du
-    contrat. Aucune forme n'est inventée (§H4.7)."""
-    for echange in Cassette.lire(CASSETTE_CONTRAT):
-        corps = echange.response.body
-        if echange.response.status == 200 and isinstance(corps, dict) and "message" in corps:
-            return copy.deepcopy(corps)
-    raise AssertionError(
-        "aucune réponse de conversation dans la cassette du contrat — lancer « make record-llm »"
-    )
+    contrat, assemblée si elle est streamée. Aucune forme n'est inventée (§H4.7)."""
+    return premiere_conversation(Cassette.lire(CASSETTE_CONTRAT))
 
 
 def repondre(

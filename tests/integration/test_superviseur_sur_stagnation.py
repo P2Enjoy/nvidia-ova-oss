@@ -11,7 +11,6 @@ un appel LLM séparé, avec son propre contexte, comme en production.
 
 from __future__ import annotations
 
-import copy
 import json
 import tempfile
 import threading
@@ -27,7 +26,14 @@ from avo.llm.client import LLMClient, ReponseHTTP
 from avo.memory.notes import GUIDE, Notes, note_write
 from avo.memory.workspace import Workspace
 from avo.supervisor import BALISE, Superviseur
-from llm_replay.cassette import AUTH_VALIDE, Cassette, Exchange, RequestRecord, ResponseRecord
+from llm_replay.cassette import (
+    AUTH_VALIDE,
+    Cassette,
+    Exchange,
+    RequestRecord,
+    ResponseRecord,
+    premiere_conversation,
+)
 from llm_replay.server import creer_serveur
 
 CASSETTE_REELLE = Path("tests/fixtures/llm/cassettes/contrat_endpoint.jsonl")
@@ -36,11 +42,7 @@ DIRECTIVE = "Tu répètes la même action : explore le bord opposé de la grille
 
 
 def _gabarit() -> dict[str, Any]:
-    for echange in Cassette.lire(CASSETTE_REELLE):
-        corps = echange.response.body
-        if echange.response.status == 200 and isinstance(corps, dict) and "message" in corps:
-            return copy.deepcopy(corps)
-    raise AssertionError("aucune réponse de conversation dans la cassette réelle")
+    return premiere_conversation(Cassette.lire(CASSETTE_REELLE))
 
 
 class TestSuperviseurSurStagnation(unittest.TestCase):

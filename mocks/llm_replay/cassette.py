@@ -11,12 +11,15 @@ plutôt que silencieusement absorbée.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from avo.llm.client import fusionner_fragments
 
 #: Au-delà de cette taille, le corps de requête n'est pas stocké : seule son
 #: empreinte l'est. Évite d'alourdir le dépôt avec les prompts volumineux (le
@@ -141,6 +144,48 @@ class Exchange:
             recorded_at=donnees["recorded_at"],
             duration_ms=donnees["duration_ms"],
         )
+
+
+def enveloppe_conversation(echange: Exchange) -> dict[str, Any] | None:
+    """Enveloppe d'objet unique d'une réponse de conversation 200, ou `None`.
+
+    Un corps enregistré en objet JSON est rendu tel quel ; un corps streamé
+    (NDJSON, §H4.2) est assemblé par `fusionner_fragments` — l'assemblage MÊME
+    du client (§H4.3), jamais une seconde implémentation. Sert de moule aux
+    décors de test qui scriptent des réponses sous l'enveloppe réelle.
+    """
+    if echange.response.status != 200:
+        return None
+    corps = echange.response.body
+    if isinstance(corps, dict):
+        return copy.deepcopy(corps) if "message" in corps else None
+    texte = echange.response.text
+    if not texte:
+        return None
+    try:
+        fragments = [json.loads(ligne) for ligne in texte.splitlines() if ligne.strip()]
+    except json.JSONDecodeError:
+        return None
+    if not fragments or not isinstance(fragments[-1], dict) or not fragments[-1].get("done"):
+        return None
+    fusion = fusionner_fragments(fragments)
+    return fusion if "message" in fusion else None
+
+
+def premiere_conversation(cassette: Cassette) -> dict[str, Any]:
+    """Première réponse de conversation 200 de la cassette, en objet unique.
+
+    Lève une erreur explicite plutôt que d'inventer une forme (§H4.7) : la
+    cassette du contrat se régénère par « make record-llm », jamais à la main.
+    """
+    for echange in cassette:
+        enveloppe = enveloppe_conversation(echange)
+        if enveloppe is not None:
+            return enveloppe
+    raise RequeteInconnue(
+        "aucune réponse de conversation dans la cassette — lancer « make record-llm » "
+        "plutôt que d'inventer une réponse (docs/SPEC_HARNAIS.md §H4.7)."
+    )
 
 
 class RequeteInconnue(LookupError):

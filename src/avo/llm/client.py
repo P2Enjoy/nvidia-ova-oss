@@ -302,9 +302,20 @@ def analyser_corps_chat(reponse: ReponseHTTP) -> ChatResult:
         fragments.append(charge)
     if len(fragments) == 1:
         return analyser_reponse(fragments[0])
-    final = fragments[-1]
-    if not final.get("done"):
+    if not fragments[-1].get("done"):
         raise TransportError("flux interrompu avant le fragment final (done absent)")
+    return analyser_reponse(fusionner_fragments(fragments))
+
+
+def fusionner_fragments(fragments: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Fusionne les fragments NDJSON d'un flux `/api/chat` en l'enveloppe de
+    l'objet unique (§H4.3) : `content` et `reasoning` concaténés, `tool_calls`
+    collectés, le fragment final porte compteurs, durées et `done_reason`.
+
+    Seule implémentation de l'assemblage : le rejeu (§H4.7) la réutilise pour
+    lire une cassette streamée sous la même forme que le client.
+    """
+    final = fragments[-1]
     contenu: list[str] = []
     raisonnement: list[str] = []
     appels: list[Any] = []
@@ -323,7 +334,7 @@ def analyser_corps_chat(reponse: ReponseHTTP) -> ChatResult:
         "reasoning": "".join(raisonnement),
         "tool_calls": appels,
     }
-    return analyser_reponse(fusion)
+    return fusion
 
 
 def analyser_reponse(charge: Mapping[str, Any]) -> ChatResult:
