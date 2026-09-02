@@ -28,6 +28,7 @@ from avo.llm.client import (
     ReponseHTTP,
     ServerError,
     TransportError,
+    analyser_corps_chat,
     analyser_reponse,
     construire_corps,
     transport_urllib,
@@ -93,6 +94,110 @@ class TestConstructionDuCorps(unittest.TestCase):
     def test_think_suit_la_configuration(self) -> None:
         corps = construire_corps(_config(AVO_THINK="true", AVO_NUM_PREDICT="8192"), _MESSAGES)
         self.assertTrue(corps["think"])
+
+
+class TestAssemblageDuFlux(unittest.TestCase):
+    """§H4.3 : le corps 2xx admet deux formes — objet unique ou lignes NDJSON.
+
+    @verifies docs/BACKLOG.md U29a4 — campagne de banc (correctif transport désigné
+              par la mesure du 2026-09-02 : générations longues coupées par le pont)
+    @verifies docs/SPEC_HARNAIS.md §H4.2 (stream), §H4.3 (assemblage des fragments)
+    """
+
+    def _ndjson(self, *fragments: dict[str, Any]) -> ReponseHTTP:
+        corps = "\n".join(json.dumps(fragment) for fragment in fragments)
+        return ReponseHTTP(200, corps.encode())
+
+    def test_fragments_assembles_contenu_raisonnement_et_compteurs(self) -> None:
+        resultat = analyser_corps_chat(
+            self._ndjson(
+                {"model": "m", "message": {"content": "", "thinking": "je "}, "done": False},
+                {"model": "m", "message": {"content": "O", "thinking": "réfléchis"}, "done": False},
+                {"model": "m", "message": {"content": "K"}, "done": False},
+                {
+                    "model": "m",
+                    "message": {"content": ""},
+                    "done": True,
+                    "done_reason": "stop",
+                    "prompt_eval_count": 24,
+                    "eval_count": 218,
+                    "total_duration": 6_600_000_000,
+                },
+            )
+        )
+        self.assertEqual(resultat.content, "OK")
+        self.assertEqual(resultat.reasoning, "je réfléchis")
+        self.assertEqual(resultat.done_reason, "stop")
+        self.assertEqual(resultat.prompt_eval_count, 24)
+        self.assertEqual(resultat.eval_count, 218)
+        self.assertEqual(resultat.total_duration_ms, 6600)
+
+    def test_appels_d_outil_collectes_sur_les_fragments(self) -> None:
+        resultat = analyser_corps_chat(
+            self._ndjson(
+                {
+                    "message": {
+                        "content": "",
+                        "tool_calls": [{"function": {"name": "agir", "arguments": {"a": 1}}}],
+                    },
+                    "done": False,
+                },
+                {"message": {"content": ""}, "done": True, "done_reason": "stop"},
+            )
+        )
+        self.assertTrue(resultat.demande_outil)
+        self.assertEqual(resultat.tool_calls[0].nom, "agir")
+        self.assertEqual(resultat.tool_calls[0].arguments, {"a": 1})
+
+    def test_objet_unique_reste_la_forme_non_streamee(self) -> None:
+        resultat = analyser_corps_chat(
+            ReponseHTTP(200, json.dumps({"message": {"content": "OK"}, "done": True}).encode())
+        )
+        self.assertEqual(resultat.content, "OK")
+
+    def test_flux_sans_fragment_final_est_une_panne_de_transport(self) -> None:
+        with self.assertRaises(TransportError):
+            analyser_corps_chat(
+                self._ndjson(
+                    {"message": {"content": "dé"}, "done": False},
+                    {"message": {"content": "but"}, "done": False},
+                )
+            )
+
+    def test_fragment_final_tronque_est_une_panne_de_transport(self) -> None:
+        corps = json.dumps({"message": {"content": "dé"}, "done": False}) + '\n{"message": {"con'
+        with self.assertRaises(TransportError):
+            analyser_corps_chat(ReponseHTTP(200, corps.encode()))
+
+    def test_erreur_en_cours_de_flux_est_une_panne_serveur(self) -> None:
+        with self.assertRaises(ServerError):
+            analyser_corps_chat(
+                self._ndjson(
+                    {"message": {"content": "dé"}, "done": False},
+                    {"error": "le serveur a déchargé le modèle"},
+                )
+            )
+
+    def test_premiere_ligne_non_json_reste_une_erreur_de_protocole(self) -> None:
+        with self.assertRaises(ProtocolError):
+            analyser_corps_chat(ReponseHTTP(200, b"<html>panne</html>"))
+
+    def test_corps_vide_est_une_erreur_de_protocole(self) -> None:
+        with self.assertRaises(ProtocolError):
+            analyser_corps_chat(ReponseHTTP(200, b""))
+
+    def test_flux_tronque_est_retente_par_le_client(self) -> None:
+        """§H4.5 : la troncature en cours de flux se retente comme toute panne."""
+        tronque = ReponseHTTP(200, b'{"message": {"content": "d\\u00e9"}, "done": false}')
+        complet = ReponseHTTP(200, b'{"message": {"content": "OK"}, "done": true}')
+        # Un seul fragment sans done est la forme « objet unique » : pour éprouver le
+        # retry, le flux tronqué porte DEUX fragments sans fragment final.
+        corps_tronque = tronque.body + b"\n" + tronque.body
+        transport = _TransportScripte(ReponseHTTP(200, corps_tronque), complet)
+        client = LLMClient(_config(), transport=transport, dormir=lambda _s: None)
+        resultat = client.chat(_MESSAGES)
+        self.assertEqual(resultat.content, "OK")
+        self.assertEqual(len(transport.appels), 2)
 
 
 class TestAnalyseDeLaReponse(unittest.TestCase):

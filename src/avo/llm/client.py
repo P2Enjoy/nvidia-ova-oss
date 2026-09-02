@@ -264,6 +264,64 @@ def _analyser_tool_calls(brut: Any) -> tuple[ToolCall, ...]:
     return tuple(appels)
 
 
+def analyser_corps_chat(reponse: ReponseHTTP) -> ChatResult:
+    """Assemble un corps 2xx de `/api/chat` en `ChatResult` (§H4.3).
+
+    Le corps admet DEUX formes : un objet JSON unique (réponse non streamée) ou
+    une suite de lignes NDJSON (réponse streamée) — `content` et `reasoning` se
+    concatènent, `tool_calls` se collectent, le fragment final `done: true` porte
+    compteurs et durées. Un flux sans fragment final est une réponse tronquée :
+    `TransportError`, retentée (§H4.5) ; un fragment portant `error` est une
+    panne serveur en cours de flux : `ServerError`, retentée.
+    """
+    lignes = [ligne for ligne in reponse.body.splitlines() if ligne.strip()]
+    if not lignes:
+        raise ProtocolError(f"réponse HTTP {reponse.status} vide")
+    fragments: list[dict[str, Any]] = []
+    for indice, ligne in enumerate(lignes):
+        try:
+            charge = json.loads(ligne)
+        except json.JSONDecodeError as erreur:
+            if indice == 0:
+                raise ProtocolError(
+                    f"réponse HTTP {reponse.status} non JSON : {erreur}"
+                ) from erreur
+            raise TransportError(
+                "flux interrompu : fragment JSON incomplet en fin de corps"
+            ) from erreur
+        if not isinstance(charge, dict):
+            raise ProtocolError(f"réponse HTTP {reponse.status} : objet JSON attendu")
+        if charge.get("error"):
+            raise ServerError(
+                f"erreur serveur en cours de flux : {charge['error']}", status=reponse.status
+            )
+        fragments.append(charge)
+    if len(fragments) == 1:
+        return analyser_reponse(fragments[0])
+    final = fragments[-1]
+    if not final.get("done"):
+        raise TransportError("flux interrompu avant le fragment final (done absent)")
+    contenu: list[str] = []
+    raisonnement: list[str] = []
+    appels: list[Any] = []
+    for fragment in fragments:
+        message = fragment.get("message")
+        if not isinstance(message, dict):
+            continue
+        contenu.append(str(message.get("content") or ""))
+        raisonnement.append(str(message.get("reasoning") or message.get("thinking") or ""))
+        brut = message.get("tool_calls")
+        if isinstance(brut, list):
+            appels.extend(brut)
+    fusion = dict(final)
+    fusion["message"] = {
+        "content": "".join(contenu),
+        "reasoning": "".join(raisonnement),
+        "tool_calls": appels,
+    }
+    return analyser_reponse(fusion)
+
+
 def analyser_reponse(charge: Mapping[str, Any]) -> ChatResult:
     """Normalise une réponse `/api/chat` en `ChatResult` (§H4.3)."""
     message = charge.get("message")
@@ -337,7 +395,7 @@ class LLMClient:
             raise ProtocolError(
                 f"requête refusée (HTTP {reponse.status}) : {corps.get('error') or 'sans détail'}"
             )
-        return analyser_reponse(self._corps_json(reponse, tolerant=False))
+        return analyser_corps_chat(reponse)
 
     @staticmethod
     def _corps_json(reponse: ReponseHTTP, tolerant: bool) -> dict[str, Any]:
