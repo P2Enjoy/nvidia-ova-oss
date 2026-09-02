@@ -740,8 +740,16 @@ le module `avo.context.etat` restant inchangé et pur :
   de fonction — « nom(v1, v2) » et « nom() » se lisent comme « nom v1,v2 » et
   « nom » — et, lorsque le découpage des valeurs par virgules ne rend pas le
   compte de paramètres requis mais que le découpage par espaces le rend, ce
-  dernier fait foi. Ces normalisations sont purement syntaxiques et valent pour
-  tout environnement : aucun nom d'action ni compte de paramètres n'y est codé.
+  dernier fait foi. Un quatrième bruit de format des mêmes modèles, mesuré en
+  conditions réelles (banc dépôt h25 bruit 5, 2026-09-02 : deux tours perdus sur
+  « pr=2 » et « pr=4 »), est normalisé au même titre : la syntaxe d'argument
+  nommé — une valeur écrite « cle=valeur » dont « cle » est EXACTEMENT le nom du
+  paramètre requis auquel sa position la destine se lit comme « valeur » ; si
+  « cle » diffère du paramètre attendu, la valeur reste inchangée (elle peut
+  contenir un « = » légitime). Ces normalisations sont purement syntaxiques et
+  valent pour tout environnement : aucun nom d'action ni compte de paramètres
+  n'y est codé — le nom de paramètre comparé vient du schéma déclaré par
+  l'outil, jamais d'une liste écrite dans le noyau.
   Le nom
   résolu est exécuté par le registre comme n'importe quel outil d'action
   (§H8.1 : « c'est le registre qui l'exécute ») ; un nom inconnu ou des valeurs en

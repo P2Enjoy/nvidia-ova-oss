@@ -239,6 +239,21 @@ refusé — c'est ce qui donne son sens au « sans casser la CI » du critère B
 l'issue nomme la casse, aucune perte silencieuse. `fix_ci` prend la branche
 (signature B.1), même quand l'événement d'échec CI référence une PR.
 
+POINT TRANCHÉ (2026-09-02, mesure : série live h25 bruit 5, seeds 1–2 — les
+9 invalides des deux runs sont toutes des `merge` joués au bon événement sur la
+bonne PR, refusés sur la seule notation du numéro) : le moteur lit le numéro de
+PR de `merge` dans **la notation que l'environnement émet lui-même** — ses
+événements et ses issues écrivent « PR #k ». Formes lues : l'entier nu (`3`),
+`#3`, et le préfixe `PR` à casse indifférente, avec ou sans espace ni croisillon
+(`PR #3`, `PR#3`, `PR 3`, `pr 3`). Un environnement qui refuse la notation qu'il
+affiche enseigne une règle fausse (deux parcours identiques doivent se lire de la
+même façon) ; l'issue écartée — garder la lecture stricte « 3 »/« #3 » — mesurait
+la ponctuation du modèle, pas sa tenue d'état. Toute autre forme (`pr:3`,
+`pr=3` hors normalisation §H15.8) reste une action invalide NOMMÉE qui consomme
+l'événement (§S4.6). Les relevés antérieurs à cette lecture restent la trace de
+l'ancienne référence et ne se comparent pas aux relevés postérieurs sur la
+résolution.
+
 **S4.3 — Cycle d'une demande et générateur.** Les demandes de fonctionnalité
 sont l'unité de travail (B.1 : « feature requests »). La demande d'indice N
 (croissant depuis 0) porte le fichier `fichier_N` et la branche `branche_N`. Son
