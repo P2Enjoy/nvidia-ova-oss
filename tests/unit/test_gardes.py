@@ -6,7 +6,9 @@
           §H16.2 (garde de prédiction : refus nommé sans prédiction, aucune
           action dépensée), §H16.3 (verdict exigé, issue prudente), §H16.4
           (garde de persistance armée par complétion et game over), §H16.5
-          (redemandes comptées au bilan) — dans les deux modes de contexte
+          (redemandes comptées au bilan), §H16.0.6 (la redemande du mode
+          `state` énonce la forme complète attendue) — dans les deux modes de
+          contexte
 @verifies docs/SPEC_HARNAIS.md §H3.1 (`AVO_GARDES`, `AVO_GARDE_RETRIES`)
 
 Le transport du client est injecté (aucun réseau, aucune cassette) : chaque test
@@ -526,6 +528,48 @@ class TestGardesModeEtat(unittest.TestCase):
             "la grille change", transport.invite(2), "la prédiction à qualifier est présentée"
         )
         self.assertIs(troisieme.evenement, Evenement.PREDICTION_CONFIRMEE)
+
+    def test_le_refus_enonce_la_forme_complete_verdict_du(self) -> None:
+        """§H16.0.6 : le refus porte la forme entière, verdict compris quand il est dû.
+
+        Mesuré (journal 2026-09-02, suite 24) : une redemande qui ne nomme que
+        la ligne manquante fait produire celle-là et perdre l'autre — quatre
+        redemandes alternées sur un même tour.
+        """
+        boucle, transport = self._boucle(
+            [
+                self._pas("PREDICTION: p1", {"hypotheses": ["h"]}),
+                self._pas("VERDICT: confirmee", {"hypotheses": ["h"]}),
+                self._pas("VERDICT: confirmee\nPREDICTION: p2", {"hypotheses": ["h"]}),
+            ]
+        )
+        premier = boucle.jouer_tour(1)
+        self.assertEqual(premier.action, "avance")
+        deuxieme = boucle.jouer_tour(2)
+        self.assertIsNone(deuxieme.action, "PREDICTION manquante : action retenue")
+        troisieme = boucle.jouer_tour(3)
+        refus = transport.invite(2).splitlines()[0]
+        self.assertIn("Forme complète attendue", refus)
+        self.assertIn("VERDICT: confirmee", refus, "le verdict dû figure dans la forme")
+        self.assertIn("PREDICTION:", refus)
+        self.assertIn("state_patch", refus, "le bloc JSON figure dans la forme")
+        self.assertEqual(troisieme.action, "avance", "la forme complète est rejouable telle quelle")
+
+    def test_le_refus_sans_prediction_courante_n_exige_pas_de_verdict(self) -> None:
+        """§H16.0.6 : sans prédiction à qualifier, la forme ne réclame pas de verdict."""
+        boucle, transport = self._boucle(
+            [
+                self._pas("pas de ligne de prédiction", {"hypotheses": ["h"]}),
+                self._pas("PREDICTION: p1", {"hypotheses": ["h"]}),
+            ]
+        )
+        premier = boucle.jouer_tour(1)
+        self.assertIsNone(premier.action)
+        second = boucle.jouer_tour(2)
+        refus = transport.invite(1).splitlines()[0]
+        self.assertIn("Forme complète attendue", refus)
+        self.assertNotIn("VERDICT", refus, "aucun verdict dû : la forme n'en réclame pas")
+        self.assertEqual(second.action, "avance")
 
     def test_verdict_manquant_redemande_puis_issue_prudente(self) -> None:
         boucle, _transport = self._boucle(

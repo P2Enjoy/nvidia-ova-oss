@@ -810,7 +810,14 @@ class BoucleAgent:
             self._metrique("garde", garde="prediction", issue="redemandee")
             manques.append("ligne « PREDICTION: … » manquante avant le bloc JSON")
         if manques:
-            return " ; ".join(manques), None, None
+            # §H16.0.6 : le refus se clôt TOUJOURS par la forme complète de la
+            # réponse attendue — une redemande qui ne nomme que la pièce
+            # manquante fait perdre l'autre (ping-pong mesuré, suite 24). Le pas
+            # refusé se ré-émet en entier : le verdict reste dû tant qu'une
+            # prédiction attend sa qualification, même s'il figurait déjà dans
+            # la réponse refusée.
+            forme = prompts.forme_pas_attendue(bool(self._prediction_courante))
+            return f"{' ; '.join(manques)}. {forme}", None, None
         if verdict_force:
             self._metrique("garde", garde="evaluation", issue="forcee")
         self._echecs_verdict = 0

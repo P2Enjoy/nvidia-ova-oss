@@ -2,6 +2,18 @@
 
 ## [Non publié]
 
+### 2026-09-02 — U31 : la redemande de garde du mode `state` énonce la forme complète attendue (§H16.0.6)
+
+- Mesuré (journal, suite 24) : quand un pas devait porter les deux lignes
+  `VERDICT:` puis `PREDICTION:`, la redemande ne nommait que la ligne absente —
+  le modèle produisait celle-là et perdait l'autre (quatre redemandes alternées
+  sur un même tour, 2 à 9 par run). Le message de refus des gardes du mode
+  `state` se clôt désormais TOUJOURS par la forme complète de la réponse
+  attendue (ligne `VERDICT:` quand une prédiction attend sa qualification, avec
+  ses deux seules valeurs reconnues, ligne `PREDICTION:`, bloc JSON), les
+  manques restant nommés en tête (`prompts.forme_pas_attendue`, prompts v1.4).
+- Preuves : 2 unitaires dédiés (`test_gardes`), suite gardes 20/20, lint, mypy.
+
 ### 2026-09-02 — U32 : limitation de concurrence des requêtes LLM par endpoint (§H4.9)
 
 - Le harnais impose lui-même le plafond de requêtes simultanées que tolère le

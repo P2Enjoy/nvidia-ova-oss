@@ -24,7 +24,7 @@ from avo.context.etat import ARC_V1, CHAMP_HYPOTHESES, DICTIONNAIRE, FORMES, Sch
 
 #: Version des prompts. Change dès qu'un texte change : le rapport d'une campagne
 #: doit pouvoir dire sous quelle formulation ses résultats ont été obtenus.
-VERSION: Final = "1.3"
+VERSION: Final = "1.4"
 
 #: Contrat de tâche, posé une fois en tête de segment (§A5.1, calqué sur VISTA).
 SYSTEME: Final = """Tu joues à un jeu inconnu, tour par tour, sur une grille de
@@ -143,6 +143,26 @@ PROTOCOLE_ETAT_GARDES: Final = """Fais précéder ton bloc ```json d'une ligne
 « PREDICTION: … » énonçant en une phrase l'effet que tu attends de l'action
 choisie. Si le message te présente une prédiction antérieure à qualifier, ajoute
 aussi une ligne « VERDICT: confirmee » ou « VERDICT: contredite »."""
+
+
+def forme_pas_attendue(verdict_attendu: bool) -> str:
+    """Forme complète d'un pas du mode `state` sous gardes (§H16.0.6).
+
+    Une redemande l'énonce en ENTIER, jamais la seule pièce manquante : mesuré
+    (journal 2026-09-02, suite 24), le modèle qui ne reçoit que la ligne absente
+    la produit seule et perd l'autre — quatre redemandes alternées sur un tour.
+    """
+    verdict = (
+        "la ligne « VERDICT: confirmee » ou « VERDICT: contredite » "
+        "(seules valeurs reconnues), puis "
+        if verdict_attendu
+        else ""
+    )
+    return (
+        "Forme complète attendue de ta réponse, dans cet ordre : "
+        f"{verdict}la ligne « PREDICTION: … », puis le bloc ```json "
+        "à deux clés « state_patch » et « action »."
+    )
 
 
 def evaluation_gardee(prediction: str) -> str:
