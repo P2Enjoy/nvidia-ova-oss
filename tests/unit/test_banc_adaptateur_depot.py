@@ -182,6 +182,17 @@ class TestNumeroDePrEnTexte(unittest.TestCase):
                 self.assertFalse(issue.valide)
                 self.assertIn("PR #1 n'est pas ouverte", issue.observation)
 
+    def test_notation_a_tiret_bas_se_lit(self) -> None:
+        """§S4.2 (tranché étendu le 2026-09-02) : « PR_1 » et « pr_1 » se lisent —
+        la famille de notation des propres objets de l'environnement
+        (« branche_4 »), que les clés JSON de Σ imposent au modèle. Mesuré :
+        3 des 5 invalides du run dépôt s2, série live h25 bruit 20."""
+        for forme in ("PR_1", "pr_1", "PR_ 1"):
+            with self.subTest(forme=forme):
+                issue = EnvironnementDepot(generer_episode_depot(SEED, HORIZON)).merge(forme)
+                self.assertFalse(issue.valide)
+                self.assertIn("PR #1 n'est pas ouverte", issue.observation)
+
     def test_notation_etrangere_reste_invalide_nommee(self) -> None:
         """« pr:1 », « pr=1 » et « PR » seul ne sont pas la notation émise :
         l'action reste invalide, l'erreur reste nommée, l'événement consommé."""

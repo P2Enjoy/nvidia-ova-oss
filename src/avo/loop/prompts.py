@@ -24,7 +24,7 @@ from avo.context.etat import ARC_V1, CHAMP_HYPOTHESES, DICTIONNAIRE, FORMES, Sch
 
 #: Version des prompts. Change dès qu'un texte change : le rapport d'une campagne
 #: doit pouvoir dire sous quelle formulation ses résultats ont été obtenus.
-VERSION: Final = "1.5"
+VERSION: Final = "1.6"
 
 #: Contrat de tâche, posé une fois en tête de segment (§A5.1, calqué sur VISTA).
 SYSTEME: Final = """Tu joues à un jeu inconnu, tour par tour, sur une grille de
@@ -137,14 +137,15 @@ durable. Les outils d'action restent verrouillés tant que GUIDE.md n'a pas ét�
 mis à jour."""
 
 #: Garde d'évaluation (§H16.3) : la qualification exigée, en clair.
-GARDE_VERDICT: Final = """Termine par une ligne « VERDICT: confirmee » ou
-« VERDICT: contredite » selon que l'observation confirme ou contredit ta
-prédiction."""
+GARDE_VERDICT: Final = """Termine par une ligne « VERDICT: confirmee »,
+« VERDICT: contredite » ou « VERDICT: caduque » — confirmee si l'observation
+confirme ta prédiction, contredite si elle la contredit, caduque si un
+événement postérieur l'a rendue sans objet."""
 
 #: Redemande de verdict, quand la réponse d'évaluation n'en portait pas (§H16.3).
 GARDE_VERDICT_REDEMANDE: Final = """[GARDE] Ta réponse ne qualifie pas ta
-prédiction. Réponds par une seule ligne : « VERDICT: confirmee » ou
-« VERDICT: contredite »."""
+prédiction. Réponds par une seule ligne : « VERDICT: confirmee »,
+« VERDICT: contredite » ou « VERDICT: caduque »."""
 
 #: Complément de protocole du mode `state` quand les gardes sont actives (§H16.2,
 #: §H16.3) : la prédiction et le verdict voyagent en lignes de texte, le bloc JSON
@@ -152,7 +153,9 @@ prédiction. Réponds par une seule ligne : « VERDICT: confirmee » ou
 PROTOCOLE_ETAT_GARDES: Final = """Fais précéder ton bloc ```json d'une ligne
 « PREDICTION: … » énonçant en une phrase l'effet que tu attends de l'action
 choisie. Si le message te présente une prédiction antérieure à qualifier, ajoute
-aussi une ligne « VERDICT: confirmee » ou « VERDICT: contredite »."""
+aussi une ligne « VERDICT: confirmee », « VERDICT: contredite » ou
+« VERDICT: caduque » (caduque : un événement postérieur l'a rendue sans
+objet)."""
 
 
 def forme_pas_attendue(verdict_attendu: bool) -> str:
@@ -163,8 +166,8 @@ def forme_pas_attendue(verdict_attendu: bool) -> str:
     la produit seule et perd l'autre — quatre redemandes alternées sur un tour.
     """
     verdict = (
-        "la ligne « VERDICT: confirmee » ou « VERDICT: contredite » "
-        "(seules valeurs reconnues), puis "
+        "la ligne « VERDICT: confirmee », « VERDICT: contredite » ou "
+        "« VERDICT: caduque » (les trois issues reconnues), puis "
         if verdict_attendu
         else ""
     )

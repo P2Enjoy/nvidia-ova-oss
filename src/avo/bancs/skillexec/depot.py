@@ -418,10 +418,13 @@ class EnvironnementDepot:
         Le numéro arrive en texte depuis les outils du banc (U29a4) et se lit
         dans la notation que l'environnement émet lui-même (§S4.2, point tranché
         du 2026-09-02) : l'entier nu, « #3 », et le préfixe « PR » à casse
-        indifférente avec ou sans espace ni croisillon (« PR #3 », « PR#3 »,
-        « PR 3 »). Un numéro imprenable est une action invalide NOMMÉE qui
-        consomme l'événement, comme toute action (§S4.6) — jamais une erreur
-        obscure avant l'environnement.
+        indifférente suivi d'un séparateur facultatif — espace, croisillon ou
+        tiret bas (« PR #3 », « PR#3 », « PR 3 », « PR_3 » ; le tiret bas est
+        la famille de notation des propres objets de l'environnement,
+        « branche_4 », que les clés JSON de Σ imposent au modèle). Un numéro
+        imprenable est une action invalide NOMMÉE qui consomme l'événement,
+        comme toute action (§S4.6) — jamais une erreur obscure avant
+        l'environnement.
         """
         self._preparer()
         evenement = self._evenement_courant()
@@ -430,9 +433,9 @@ class EnvironnementDepot:
         if isinstance(numero, str):
             texte = numero.strip()
             if texte[:2].lower() == "pr":
-                texte = texte[2:].lstrip()
+                texte = texte[2:]
             try:
-                numero = int(texte.lstrip("#").lstrip())
+                numero = int(texte.lstrip(" _#"))
             except ValueError:
                 return self._consommer(False, False, f"error: numéro de PR invalide : {numero}.")
         branche = self._prs.get(numero)

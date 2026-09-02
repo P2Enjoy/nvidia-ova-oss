@@ -4,7 +4,8 @@
 @verifies docs/SPEC_HARNAIS.md §H16.0 (jamais fatales, bornées, débrayables),
           §H16.1 (garde documentaire : WORKING vide verrouille l'action),
           §H16.2 (garde de prédiction : refus nommé sans prédiction, aucune
-          action dépensée), §H16.3 (verdict exigé, issue prudente), §H16.4
+          action dépensée), §H16.3 (verdict exigé, trois issues dont
+          « caduque », jetons lus où qu'ils soient, issue prudente), §H16.4
           (garde de persistance armée par complétion et game over), §H16.5
           (redemandes comptées au bilan), §H16.0.6 (la redemande du mode
           `state` énonce la forme complète attendue) — dans les deux modes de
@@ -28,7 +29,7 @@ from typing import Any
 from avo.config import Config, Mode, charger
 from avo.llm.client import LLMClient, ReponseHTTP
 from avo.loop import prompts
-from avo.loop.boucle import BoucleAgent
+from avo.loop.boucle import BoucleAgent, _verdict_dans
 from avo.loop.etats import Evenement, Phase
 from avo.memory.notes import GUIDE, SCHEMA_NOTE_WRITE, WORKING, Notes, note_write
 from avo.tools.registre import Outil, RegistreOutils, outil_depuis_schema
@@ -591,6 +592,69 @@ class TestGardesModeEtat(unittest.TestCase):
             troisieme.evenement,
             Evenement.CONTRADICTION,
             "la prédiction non qualifiée est réputée contredite (§H16.3)",
+        )
+
+    def test_verdict_caduque_satisfait_la_garde_sans_bug_fixing(self) -> None:
+        """§H16.3 : « caduque » qualifie — l'action passe, Bug-Fixing ne s'arme pas."""
+        boucle, _transport = self._boucle(
+            [
+                self._pas("PREDICTION: p1", {"hypotheses": ["h"]}),
+                self._pas("VERDICT: non applicable\nPREDICTION: p2", {"hypotheses": ["h"]}),
+            ]
+        )
+        premier = boucle.jouer_tour(1)
+        self.assertEqual(premier.action, "avance")
+        deuxieme = boucle.jouer_tour(2)
+        self.assertEqual(deuxieme.action, "avance", "caduque qualifie : l'action passe")
+        self.assertIs(
+            deuxieme.evenement,
+            Evenement.PREDICTION_CONFIRMEE,
+            "caduque ne déclenche pas Bug-Fixing (§H16.3)",
+        )
+        self.assertEqual(boucle.bilan.redemandes_gardes, 0, "aucune redemande dépensée")
+
+
+class TestLectureVerdict(unittest.TestCase):
+    """§H16.3 : trois issues, jetons lus où qu'ils soient, ambiguïté redemandée.
+
+    Mesure qui désigne la règle (journal 2026-09-02, série h25 bruit 20) : 17 des
+    18 refus de verdict portaient une qualification explicite que la lecture
+    stricte refusait — « non applicable », verdict en milieu de ligne, prose.
+    """
+
+    def test_les_trois_issues_et_leurs_familles(self) -> None:
+        self.assertEqual(_verdict_dans("VERDICT: confirmee"), "confirmee")
+        self.assertEqual(_verdict_dans("VERDICT: confirmée."), "confirmee")
+        self.assertEqual(_verdict_dans("VERDICT: contredite"), "contredite")
+        self.assertEqual(_verdict_dans("VERDICT: infirmée"), "contredite")
+        self.assertEqual(_verdict_dans("VERDICT: caduque"), "caduque")
+        self.assertEqual(_verdict_dans("VERDICT: non applicable (dépassée)"), "caduque")
+        self.assertEqual(_verdict_dans("VERDICT: non_applicable"), "caduque")
+        self.assertEqual(_verdict_dans("VERDICT: n/a"), "caduque")
+
+    def test_le_jeton_se_lit_en_milieu_de_ligne(self) -> None:
+        self.assertEqual(
+            _verdict_dans("PREDICTION: l'objet est déplacé. VERDICT: confirmee"),
+            "confirmee",
+            "un verdict présent mais mal placé n'est pas une absence de verdict",
+        )
+        self.assertEqual(
+            _verdict_dans("La prédiction était fausse. Donc VERDICT: contredite."),
+            "contredite",
+        )
+
+    def test_familles_contradictoires_ou_absence_rendent_none(self) -> None:
+        self.assertIsNone(_verdict_dans("aucune qualification ici"))
+        self.assertIsNone(
+            _verdict_dans("« VERDICT: confirmee » ou « VERDICT: contredite »"),
+            "une réponse qui recopie la forme entière est ambiguë : redemandée",
+        )
+        self.assertIsNone(_verdict_dans("VERDICT: la prédiction reste à voir"))
+
+    def test_occurrences_repetees_de_la_meme_famille_se_lisent(self) -> None:
+        self.assertEqual(
+            _verdict_dans("VERDICT: caduque\n…\nVERDICT: non applicable"),
+            "caduque",
         )
 
 

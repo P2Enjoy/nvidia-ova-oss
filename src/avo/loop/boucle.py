@@ -70,18 +70,37 @@ _LIGNE_PREDICTION: Final = re.compile(
     r"^\s*PR[ÉE]DICTION\s*:\s*(.+)$", re.IGNORECASE | re.MULTILINE
 )
 
-#: Ligne de verdict (§H16.3), tolérante à la casse et aux accents.
-_LIGNE_VERDICT: Final = re.compile(
-    r"^\s*VERDICT\s*:\s*(confirm\S*|contred\S*)", re.IGNORECASE | re.MULTILINE
+#: Jeton de verdict (§H16.3), tolérant à la casse et aux accents, lu OÙ QU'IL
+#: SOIT dans la réponse — en tête de ligne comme en milieu de phrase : refuser
+#: un verdict présent mais mal placé mesure la ponctuation, pas la
+#: qualification (mesure du 2026-09-02, série h25 bruit 20).
+_JETON_VERDICT: Final = re.compile(
+    r"VERDICT\s*:\s*(confirm\S*|contred\S*|infirm\S*|cadu[cq]\S*|non[ _-]?applicable|n/a)",
+    re.IGNORECASE,
 )
 
 
+def _canonique_verdict(jeton: str) -> str:
+    """Rapporte un jeton de verdict à son issue canonique (§H16.3)."""
+    bas = jeton.lower()
+    if bas.startswith("confirm"):
+        return "confirmee"
+    if bas.startswith(("contred", "infirm")):
+        return "contredite"
+    return "caduque"
+
+
 def _verdict_dans(texte: str) -> str | None:
-    """Rend « confirmee » ou « contredite », ou `None` si aucun verdict (§H16.3)."""
-    correspondance = _LIGNE_VERDICT.search(texte)
-    if correspondance is None:
+    """Rend « confirmee », « contredite » ou « caduque », ou `None` (§H16.3).
+
+    Toutes les occurrences sont lues ; des familles CONTRADICTOIRES (une réponse
+    qui recopie la forme annoncée entière, par exemple) rendent la qualification
+    ambiguë : aucune n'est retenue et la garde redemande.
+    """
+    issues = {_canonique_verdict(jeton) for jeton in _JETON_VERDICT.findall(texte)}
+    if len(issues) != 1:
         return None
-    return "confirmee" if correspondance.group(1).lower().startswith("confirm") else "contredite"
+    return issues.pop()
 
 
 def _prediction_dans(texte: str) -> str | None:
@@ -508,6 +527,9 @@ class BoucleAgent:
         if verdict is None:
             self._metrique("garde", garde="evaluation", issue="forcee")
             verdict = "contredite"
+        elif verdict == "caduque":
+            # §H16.3 : ni validée ni démentie — tracée à part (§H16.5).
+            self._metrique("garde", garde="evaluation", issue="caduque")
         self._prediction_courante = None
         return verdict
 
@@ -827,6 +849,10 @@ class BoucleAgent:
             return f"{' ; '.join(manques)}. {forme}", None, None
         if verdict_force:
             self._metrique("garde", garde="evaluation", issue="forcee")
+        if verdict == "caduque":
+            # §H16.3 : une prédiction rendue sans objet par un événement
+            # postérieur n'est ni validée ni démentie — tracée à part (§H16.5).
+            self._metrique("garde", garde="evaluation", issue="caduque")
         self._echecs_verdict = 0
         return None, verdict, prediction
 
@@ -1057,6 +1083,9 @@ class BoucleAgent:
         if verdict is not None:
             if verdict == "contredite":
                 return Evenement.CONTRADICTION
+            # « confirmee » comme « caduque » (§H16.3) poursuivent sans
+            # Bug-Fixing : une prédiction sans objet n'est pas un bug du modèle
+            # du monde ; la métrique `issue: "caduque"` la distingue (§H16.5).
             return Evenement.PREDICTION_CONFIRMEE
         contenu = (getattr(evaluation, "content", "") or "").lower()
         if "contredit" in contenu or "contradiction" in contenu:
