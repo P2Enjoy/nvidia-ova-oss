@@ -9,7 +9,10 @@
       l'agent), §S6.1 (contrat de boucle et outils étiquetés `action` avec
       `prediction`), §S6.2 (contexte de tâche : protocole sans état de vérité),
       §S5.3 (relevé `banc.json` écrit dans le workspace du run)
-@spec docs/SPEC_HARNAIS.md §H8.2 (contrat `Environnement`), §H7.1 (registre,
+@spec docs/SPEC_BANCS.md §S6.5 (schéma de Σ des deux domaines, relevé nommant le
+      schéma)
+@spec docs/SPEC_HARNAIS.md §H15.9 (schéma de Σ déclaré par le domaine, validé par
+      le noyau), §H8.2 (contrat `Environnement`), §H7.1 (registre,
       étiquettes), §H16.2 (paramètre `prediction` des outils d'action),
       §H15.8 (le message système du mode `state` est celui du contexte monté)
 
@@ -31,6 +34,7 @@ from avo.bancs.skillexec.generation import generer_episode
 from avo.bancs.skillexec.score import Releve
 from avo.config import Config, ModeContexte
 from avo.context.contexte import Contexte
+from avo.context.etat import CHAMP_HYPOTHESES, DICTIONNAIRE, LISTE_CHAINES, ChampEtat, SchemaEtat
 from avo.llm.client import LLMClient
 from avo.loop.boucle import Bilan, BoucleAgent
 from avo.loop.etats import Evenement
@@ -124,6 +128,29 @@ compte et mets ton état à jour.
 L'état du dépôt ne t'est jamais montré : tiens-le toi-même, exactement, car le
 score est le nombre d'événements traités par l'action correcte, et une demande
 n'est résolue que si son fichier atteint master sans casser la CI."""
+
+
+#: Schéma de Σ du domaine Entrepôt (§S6.5, §H15.9) : des contenants, jamais une
+#: règle — la forme dans laquelle l'agent tient son état, déclarée une fois par
+#: domaine comme l'entrepôt de l'exemple B.3 de la source.
+SCHEMA_ENTREPOT: Final = SchemaEtat(
+    "banc-entrepot-v1",
+    (
+        ChampEtat(CHAMP_HYPOTHESES, LISTE_CHAINES, "ce que tu tiens pour vrai"),
+        ChampEtat("inventaire", DICTIONNAIRE, "étagère → article qu'elle porte"),
+        ChampEtat("en_attente", LISTE_CHAINES, "articles livrés non encore rangés"),
+    ),
+)
+
+#: Schéma de Σ du domaine Dépôt logiciel (§S6.5, §H15.9), même principe.
+SCHEMA_DEPOT: Final = SchemaEtat(
+    "banc-depot-v1",
+    (
+        ChampEtat(CHAMP_HYPOTHESES, LISTE_CHAINES, "ce que tu tiens pour vrai"),
+        ChampEtat("branches", DICTIONNAIRE, "branche → ce que tu en sais (fichiers, CI, PR)"),
+        ChampEtat("prs", DICTIONNAIRE, "numéro de PR → branche, tant qu'elle est ouverte"),
+    ),
+)
 
 
 @dataclass(frozen=True)
@@ -364,11 +391,11 @@ def jouer_episode(
     if environnement == "entrepot":
         moteur = EnvironnementEntrepot(generer_episode(seed, horizon, bruit, derive))
         env_boucle = EnvironnementBancEntrepot(moteur, avec_prediction, prediction_requise)
-        systeme = CONTEXTE_TACHE
+        systeme, schema = CONTEXTE_TACHE, SCHEMA_ENTREPOT
     elif environnement == "depot":
         moteur = EnvironnementDepot(generer_episode_depot(seed, horizon, bruit, derive))
         env_boucle = EnvironnementBancDepot(moteur, avec_prediction, prediction_requise)
-        systeme = CONTEXTE_TACHE_DEPOT
+        systeme, schema = CONTEXTE_TACHE_DEPOT, SCHEMA_DEPOT
     else:
         raise ValueError(f"environnement inconnu : {environnement}")
     notes = Notes(workspace.notes)
@@ -390,7 +417,7 @@ def jouer_episode(
         registre,
         env_boucle,
         notes,
-        contexte=Contexte(config=config, systeme=systeme),
+        contexte=Contexte(config=config, systeme=systeme, schema_etat=schema),
         workspace=workspace,
         superviseur=Superviseur(config, client),
         jeu=f"skillexec-{environnement}-{seed}",
@@ -410,6 +437,7 @@ def jouer_episode(
             debut=debut,
             arret=f"incident : {type(erreur).__name__}: {erreur}",
             environnement=environnement,
+            schema_etat=schema.nom,
         )
         raise
     return _ecrire_releve(
@@ -420,6 +448,7 @@ def jouer_episode(
         debut=debut,
         arret=bilan.arret,
         environnement=environnement,
+        schema_etat=schema.nom,
     )
 
 
@@ -440,8 +469,13 @@ def _ecrire_releve(
     debut: float,
     arret: str,
     environnement: str,
+    schema_etat: str,
 ) -> Releve:
-    """Complète le relevé depuis le bilan de boucle et l'écrit dans `banc.json` (§S5.3)."""
+    """Complète le relevé depuis le bilan de boucle et l'écrit dans `banc.json` (§S5.3).
+
+    `schema_etat` nomme le schéma de Σ du run (§S6.5) : deux relevés ne se
+    comparent qu'à schéma égal.
+    """
     releve.duree_secondes = round(time.monotonic() - debut, 3)
     releve.tokens_consommes = bilan.tokens_prompt + bilan.tokens_generes
     appels = len(bilan.tours) + bilan.retries_patch
@@ -454,6 +488,7 @@ def _ecrire_releve(
             "banc": "skillexec",
             "environnement": environnement,
             "mode_contexte": config.contexte_mode.value,
+            "schema_etat": schema_etat,
             "arret": arret,
             "tours": len(bilan.tours),
             "retries_patch": bilan.retries_patch,

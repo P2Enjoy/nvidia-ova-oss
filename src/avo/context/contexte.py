@@ -20,6 +20,7 @@ import logging
 from dataclasses import dataclass, field
 
 from avo.config import Config
+from avo.context.etat import ARC_V1, SchemaEtat
 from avo.context.tokens import TokenLedger
 from avo.context.transcript import Transcript
 from avo.llm.client import ChatResult, ContextOverflow
@@ -69,6 +70,9 @@ class Contexte:
 
     config: Config
     systeme: str
+    #: Schéma de Σ du domaine (§H15.9) : la seule surface par laquelle un adaptateur
+    #: déclare la forme de l'état ; `arc-v1` sans déclaration.
+    schema_etat: SchemaEtat = ARC_V1
     registre: TokenLedger = field(default_factory=TokenLedger)
     transcript: Transcript = field(init=False)
     segment: int = 1

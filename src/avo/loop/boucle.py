@@ -219,8 +219,9 @@ class BoucleAgent:
         #: Σ du mode `state` (§H15.8) : `None` en mode `transcript`, où il est mort.
         self.etat: EtatStructure | None = None
         if config.contexte_mode is ModeContexte.ETAT:
-            recharge = workspace.lire_etat() if workspace is not None else None
-            self.etat = recharge if recharge is not None else EtatStructure.initial()
+            schema = self.contexte.schema_etat
+            recharge = workspace.lire_etat(schema) if workspace is not None else None
+            self.etat = recharge if recharge is not None else EtatStructure.initial(schema)
         #: Erreur de résolution d'action du tour précédent, à faire lire au modèle
         #: au tour suivant faute d'historique où l'inscrire (§H15.8).
         self._erreur_action_precedente: str | None = None
@@ -605,7 +606,7 @@ class BoucleAgent:
         `VERDICT:` — le bloc JSON à deux clés de §H15.1 reste inchangé.
         """
         assert self.etat is not None
-        protocole = prompts.PROTOCOLE_ETAT
+        protocole = prompts.protocole_etat(self.contexte.schema_etat)
         if self.config.gardes:
             protocole = f"{protocole}\n\n{prompts.PROTOCOLE_ETAT_GARDES}"
             if self._prediction_courante:

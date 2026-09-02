@@ -20,7 +20,7 @@ from typing import Any
 
 import avo
 from avo.config import Config
-from avo.context.etat import Etat
+from avo.context.etat import ARC_V1, Etat, SchemaEtat
 
 #: Sous-répertoires créés à l'ouverture d'un run (§H6.1).
 SOUS_DOSSIERS = ("transcripts", "notes", "frames", "lineage")
@@ -120,11 +120,12 @@ class Workspace:
         self.etat_json.parent.mkdir(parents=True, exist_ok=True)
         self.etat_json.write_text(etat.vers_json() + "\n", encoding="utf-8")
 
-    def lire_etat(self) -> Etat | None:
-        """Relit Σ s'il existe déjà — reprise au niveau où U27 la supporte (§H15.5)."""
+    def lire_etat(self, schema: SchemaEtat = ARC_V1) -> Etat | None:
+        """Relit Σ s'il existe déjà — reprise au niveau où U27 la supporte (§H15.5),
+        sous le schéma qui l'a produit (§H15.9)."""
         if not self.etat_json.exists():
             return None
-        return Etat.depuis_json(self.etat_json.read_text(encoding="utf-8"))
+        return Etat.depuis_json(self.etat_json.read_text(encoding="utf-8"), schema)
 
     def nouveau_segment(self) -> int:
         """Ouvre un segment de transcript et rend son numéro (§H11.3)."""

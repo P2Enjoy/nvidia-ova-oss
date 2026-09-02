@@ -5,6 +5,7 @@
 @spec docs/SPEC_ARCAGI3.md §A5.1 (contrainte direct-interaction : aucune règle de jeu)
 @spec docs/BACKLOG.md U27 — `PROTOCOLE_ETAT` (§H15.1, §H15.8)
 @spec docs/BACKLOG.md U30 — invites des gardes de méthode (§H16.1–§H16.4)
+@spec docs/BACKLOG.md U31 — `protocole_etat` engendré depuis le schéma de Σ (§H15.9)
 
 **Contrainte fondatrice, vérifiée par test** : aucun de ces textes ne décrit les
 règles, les objets ni le but d'un jeu. L'agent reçoit les actions disponibles et rien
@@ -19,9 +20,11 @@ from __future__ import annotations
 
 from typing import Final
 
+from avo.context.etat import ARC_V1, DICTIONNAIRE, FORMES, SchemaEtat
+
 #: Version des prompts. Change dès qu'un texte change : le rapport d'une campagne
 #: doit pouvoir dire sous quelle formulation ses résultats ont été obtenus.
-VERSION: Final = "1.1"
+VERSION: Final = "1.2"
 
 #: Contrat de tâche, posé une fois en tête de segment (§A5.1, calqué sur VISTA).
 SYSTEME: Final = """Tu joues à un jeu inconnu, tour par tour, sur une grille de
@@ -62,20 +65,44 @@ recommence-la."""
 BORNE_PROCHE: Final = """[BORNE] Le budget d'actions de ce niveau touche à sa fin.
 Privilégie l'action la plus décisive dont tu disposes."""
 
-#: Invite de protocole du mode `state` (§H15.1, §H15.8) : format de réponse et
-#: schéma de Σ uniquement — générique à toute grille ARC-AGI-3, aucune règle de jeu
-#: (§A5.1). Réémise à chaque tour : le mode `state` ne conserve aucun historique.
-PROTOCOLE_ETAT: Final = """Réponds en terminant TOUJOURS par un unique bloc ```json
+#: Tête de l'invite de protocole du mode `state` (§H15.1, §H15.8) : le format de
+#: réponse, identique pour tout schéma. Réémise à chaque tour : le mode `state` ne
+#: conserve aucun historique.
+PROTOCOLE_ETAT_FORMAT: Final = """Réponds en terminant TOUJOURS par un unique bloc ```json
 contenant exactement deux clés : « state_patch » (objet, peut être vide {}) et
 « action » (chaîne, le nom de l'action à jouer, éventuellement suivi d'un espace
-et des valeurs requises séparées par des virgules pour une action qui en exige).
+et des valeurs requises séparées par des virgules pour une action qui en exige)."""
 
-« state_patch » modifie Σ, ton état d'exécution structuré à quatre champs
-toujours présents : « position » ({"x": int, "y": int} ou null), « essai »
-(entier ≥ 1), « hypotheses » (liste de chaînes), « objets » (liste d'objets avec
-au moins « id » et « description »). Une clé absente du patch laisse le champ
-inchangé ; une clé présente à null réinitialise le champ à son défaut. N'inclus
-dans le patch que ce qui change réellement."""
+
+def protocole_etat(schema: SchemaEtat = ARC_V1) -> str:
+    """Invite de protocole du mode `state`, ENGENDRÉE depuis le schéma de Σ (§H15.9).
+
+    Le noyau ne connaît que les genres (§H15.9) ; les champs, leur ordre et leur
+    rôle viennent du schéma déclaré par le domaine. Aucune règle de tâche ici : le
+    texte cite des contenants, jamais des contenus (§A5.1).
+    """
+    champs = ", ".join(
+        f"« {champ.nom} » ({FORMES[champ.genre]}{' : ' + champ.role if champ.role else ''})"
+        for champ in schema.champs
+    )
+    texte = (
+        f"{PROTOCOLE_ETAT_FORMAT}\n\n« state_patch » modifie Σ, ton état d'exécution "
+        f"structuré à {len(schema.champs)} champs toujours présents : {champs}. Une clé "
+        "absente du patch laisse le champ inchangé ; une clé présente à null réinitialise "
+        "le champ à son défaut."
+    )
+    if any(champ.genre == DICTIONNAIRE for champ in schema.champs):
+        texte += (
+            " Pour un champ « objet clé → valeur », le patch fusionne clé par clé : une "
+            "entrée présente est remplacée, une entrée à null est retirée, une entrée "
+            "absente est laissée — ne réémets jamais l'objet entier."
+        )
+    return texte + " N'inclus dans le patch que ce qui change réellement."
+
+
+#: Invite de protocole du schéma ARC v1 (§H15.6) — constante pour le balayage
+#: « zéro indice » (§A5.1), qui lit les constantes de ce module.
+PROTOCOLE_ETAT: Final = protocole_etat(ARC_V1)
 
 
 #: Garde documentaire (§H16.1) : l'artefact exigé avant de déverrouiller l'action.

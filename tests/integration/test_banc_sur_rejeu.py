@@ -7,6 +7,8 @@
           écrit et exact), §S5.1–§S5.3 (score continu et relevé), §S1.4
           (déterminisme : épisode identique à seed égal), §S3.8 et §S5.5
           (épisode sous dérive : alerte lue, récupération immédiate au relevé)
+@verifies docs/SPEC_HARNAIS.md §H15.9 et docs/SPEC_BANCS.md §S6.5 (Σ tenu sous le
+          schéma du domaine, relevé nommant le schéma)
 @verifies docs/SPEC_HARNAIS.md §H15.8 (un pas = un tour, message système du
           contexte monté), §H16 (gardes actives : lignes PREDICTION/VERDICT,
           champ `hypotheses` peuplé)
@@ -151,6 +153,12 @@ class TestBancSurRejeu(unittest.TestCase):
         # une hypothèse (§H16.1).
         etat = json.loads(espace.etat_json.read_text(encoding="utf-8"))
         self.assertEqual(etat["hypotheses"], ["je tiens l'état exact de l'entrepôt"])
+        # Σ tenu sous le schéma du domaine (§H15.9, §S6.5) : les contenants de
+        # l'Entrepôt existent, à leur défaut tant que la politique ne les remplit pas.
+        self.assertEqual(etat["inventaire"], {})
+        self.assertEqual(etat["en_attente"], [])
+        self.assertNotIn("position", etat)
+        self.assertEqual(ecrit["schema_etat"], "banc-entrepot-v1")
 
     def test_episode_sous_derive_recupere_en_zero_pas(self) -> None:
         """§S3.8, §S5.5 : la boucle complète joue l'épisode à dérive en HTTP ;
