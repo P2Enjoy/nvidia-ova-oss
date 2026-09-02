@@ -865,9 +865,23 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   correctif §H16.0.7 (0,92 / 0,64 / 0,80, moyenne 0,787, invalides 17 → 10,
   plus aucun couple patch+action refusé deux fois). Campagne complète verte
   (lint, mypy strict, 693 unitaires, 153 intégration, 6 E2E, build).
-  **Reste à livrer** : campagne de banc systématique — bruit 20/50 à h25
-  multi-seeds (3 seeds minimum par point, §S5.4) sur les deux environnements,
-  dérive h25 dépôt, alimentation du déclencheur U25 avec ces séries.
+  **Livré et vérifié le 2026-09-02 (suite 30)** : point bruit 20 h25 seeds 1–3
+  relevé sur les DEUX environnements sous prompts v1.5 (entrepôt 0,96/0,92/1,00,
+  moyenne 0,96 ; dépôt 1,00/0,76/1,00, moyenne 0,92 — le bruit 20 ne dégrade pas
+  plus que le bruit 5, la variance inter-runs domine) ; frictions instruites sur
+  les archives et corrigées — §H16.3 trois issues de verdict dont « caduque »,
+  jetons lus où qu'ils soient (17/18 refus portaient une qualification explicite
+  refusée par la lecture stricte), §S4.2 notation `PR_k` à tiret bas (spec
+  `ffcfbf7`, code `0ba239d`, 6 unitaires, cassettes régénérées). Série propre
+  v1.6 INTERROMPUE par une panne d'endpoint (~22:40→23:25 : 500 soutenus de
+  l'origine) : 3 runs complets sous v1.6 seulement (redemandes 1–3 par run
+  contre 3–7 sous v1.5), relevés partiels archivés hors comparaison. Campagne
+  complète verte (lint, mypy strict, 699 unitaires, 153 intégration, 6 E2E,
+  build).
+  **Reste à livrer** : rejouer sous v1.6 les points morts de la série bruit 20
+  h25 (entrepôt s3, dépôt s1–s3) ; puis bruit 50 à h25 multi-seeds (3 seeds
+  minimum par point, §S5.4) sur les deux environnements, dérive h25 dépôt,
+  alimentation du déclencheur U25 avec ces séries.
 
 ## Lot H — La méthode dans la structure
 
@@ -1024,6 +1038,20 @@ observer : aucun refus de garde consécutif sur les trois archives `pas.jsonl` �
 le ping-pong a disparu ; friction suivante instruite : résolution des demandes
 du dépôt basse (0–0,4), part du comportement modèle à établir sur les
 transcripts avant toute correction.
+
+**Itération du 2026-09-02 (suite 30, session planifiée)** — jouer : premier
+point bruit 20 h25 seeds 1–3 sur les DEUX environnements (entrepôt moyenne
+0,96, dépôt 0,92, trois épisodes parfaits) ; observer : 17 des 18 refus de
+verdict portaient une qualification explicite refusée par la lecture stricte
+(8 « non applicable », 6 en milieu de ligne ou prose), et 3 des 5 invalides du
+dépôt s2 sont la notation `pr_3`/`PR_5` à tiret bas ; améliorer : §H16.3 trois
+issues dont « caduque » lues où qu'elles soient + §S4.2 tiret bas (spec
+`ffcfbf7` avant code `0ba239d`, prompts v1.6). Série propre v1.6 interrompue
+par une panne d'endpoint (4 runs morts en 500) ; sur les 3 runs complets sous
+v1.6, redemandes 1–3 par run contre 3–7 sous v1.5. Friction suivante
+instruite : l'annulation atomique du pas refusé (§H15.8) jette aussi la
+correction de Σ portée par ce pas (cascade s2-v2, 8 refus « occupée ») — à
+trancher posément.
 
 **Itération du 2026-09-02 (suite 29, session planifiée)** — jouer : h25
 entrepôt bruit 5 seeds 1–3 (0,92 / 0,40 / 0,52, moyenne 0,613 — le bruit 5

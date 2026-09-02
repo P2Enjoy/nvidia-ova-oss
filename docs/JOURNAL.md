@@ -2599,3 +2599,90 @@ instruire sur les prochains relevés : verdicts manquants ou hors-jetons
 (motif résiduel dominant des redemandes) ; divergences de Σ restantes à bruit 5
 (s2-v2 : 6 invalides malgré l'enseignement du refus — regarder si le modèle
 corrige Σ mais choisit mal, ou ignore l'instruction).
+
+---
+
+## 2026-09-02 (suite 30, session planifiée) — U31 : la garde d'évaluation lit la qualification exprimée (§H16.3, trois issues dont « caduque ») ; premier point bruit 20 h25 sur les deux environnements
+
+**Unité.** U31 (jouer/observer/améliorer), reprise de la suite 29 : campagne
+systématique U29a4, point bruit 20 h25 sur les deux environnements, et friction
+« verdicts manquants ou hors-jetons » à instruire sur ces relevés.
+
+**Jouer (série d'instruction) : h25 bruit 20, seeds 1–3, live, prompts v1.5** :
+
+| env | seed | score | corr/inc/inv | redemandes | arrêt |
+|---|---|---|---|---|---|
+| entrepot | 1 | 0,96 | 24/0/1 | 4 | épuisé |
+| entrepot | 2 | 0,92 | 23/2/0 | 3 | épuisé |
+| entrepot | 3 | 1,00 | 25/0/0 | 6 | épuisé |
+| depot | 1 | 1,00 | 25/0/0 | 2 | épuisé (2ᵉ tentative ; 1ʳᵉ morte en 500) |
+| depot | 2 | 0,76 | 19/1/5 | 7 | épuisé |
+| depot | 3 | 1,00 | 25/0/0 | 6 | épuisé |
+
+Moyennes : entrepôt **0,96**, dépôt **0,92**. Le bruit 20 ne dégrade pas plus
+que le bruit 5 (entrepôt 0,787 à bruit 5 ; la variance inter-runs domine le
+niveau de bruit). Trois épisodes parfaits.
+
+**Observer : les deux motifs instruits sur les archives.**
+
+1. *Verdicts (18 des 24 refus de garde)* : les `pas.jsonl` archivent la réponse
+   refusée (ligne du même tour précédant le refus) — **17 des 18 portaient une
+   qualification explicite** refusée par la lecture stricte : 8 « non
+   applicable » (l'événement suivant a rendu la prédiction sans objet), 6 en
+   milieu de ligne ou en prose, 1 faute de frappe (« confirree »), 1 seul
+   réellement absent. Le forçage « contredite » après budget falsifiait la
+   métrique et chaque refus coûtait un appel.
+2. *Invalides du dépôt s2 (5)* : 3 sont des `merge` en notation `pr_3` /
+   `PR_5` / `PR_2` — le tiret bas, forme des clés JSON du dictionnaire `prs`
+   de Σ et famille de nommage des propres objets de l'environnement
+   (`branche_4`), non lue par le tranché de la suite 28.
+
+**Améliorer (spécifié d'abord, `ffcfbf7` avant le code `0ba239d`)** :
+
+- **§H16.3 (point tranché)** — trois issues de qualification : `confirmee`,
+  `contredite` (famille `infirm*` incluse), `caduque` (`cadu[cq]*`,
+  « non applicable », « n/a ») ; jeton lu où qu'il soit dans la réponse ;
+  familles contradictoires = ambiguïté redemandée ; `caduque` ne déclenche pas
+  Bug-Fixing et se trace `issue: "caduque"` (§H16.5). Prompts v1.6 (les trois
+  valeurs annoncées d'emblée). L'issue écartée — lire la prose après
+  « VERDICT: » — inverserait les négations.
+- **§S4.2 (tranché étendu)** — le séparateur tiret bas se lit (`PR_5`, `pr_3`) ;
+  `pr:3` reste invalide nommée.
+- Preuves : 6 unitaires dédiés (lecture des familles, milieu de ligne,
+  ambiguïté, caduque sans Bug-Fixing, notation `PR_k`), cassettes E2E
+  régénérées, 6 E2E verts.
+
+**Jouer (série propre v1.6) : INTERROMPUE par une panne d'endpoint.** Entrepôt
+s1 0,92 (23/1/1, **1 redemande**), s2 0,56 (14/2/9, **2 redemandes**), puis
+panne soutenue de l'origine derrière le pont (500 et « the edge function timed
+out » de ~22:40 à après 23:25) : entrepôt s3 et dépôt s1–s3 morts en
+`ServerError: HTTP 500` (relevés partiels archivés, aucun n'entre dans une
+comparaison — §S5.3). Une seule session live tournait : ce n'est pas le plafond
+de parallélisme, c'est une indisponibilité du serveur. Sur les trois runs
+complets sous v1.6 (les deux entrepôt + le dépôt s1 de la série d'instruction
+rejoué), les redemandes tombent à **1–3 par run** contre 3–7 sous v1.5 : le
+correctif verdict porte, mesure à confirmer sur la série complète.
+
+**Friction suivante instruite (s2-v2, cascade `etagere_2`, 9 invalides)** : à
+t04 le modèle range un article sans l'inscrire dans Σ ; à t08 il rejoue une
+action refusée en CORRIGEANT Σ dans le même pas — et l'annulation atomique du
+pas refusé (§H15.8, suite 24) jette la correction avec l'action, ré-enseignant
+la boucle qu'elle devait casser (8 refus « occupée » sur le même point).
+Tension mesurée entre le motif de la suite 24 (le patch d'une action refusée
+inscrit un effet jamais exécuté → annuler) et ce cas (le patch porte la
+correction que le refus exige → annuler la perd). À trancher par une révision
+de §H15.8 spécifiée posément, pas à la hâte : candidat — n'annuler que les
+clés que la prédiction de l'action engageait, ou conserver le patch quand le
+pas suivant rejoue la même action.
+
+**Campagne complète (fin de session).** `make check` VERT : lint, ruff format
+(121 fichiers), mypy strict (120), 699 unitaires, 153 intégration, 6 E2E sur
+pile relancée ; `make build` VERT. Contrainte 4 respectée : une exécution live
+à la fois.
+
+**Où reprendre.** U31 → U29a4 : rejouer sous v1.6 les points morts (entrepôt
+s3, dépôt s1–s3, h25 bruit 20) pour clore la série propre ; puis bruit 50 h25
+sur les deux environnements et dérive h25 dépôt. Frictions à instruire sur ces
+relevés : la tension §H15.8 ci-dessus (annulation atomique contre correction
+portée par le pas refusé) ; l'amorçage documentaire du premier pas (persiste :
+1 refus t01 sur 2 des 6 runs d'instruction).
