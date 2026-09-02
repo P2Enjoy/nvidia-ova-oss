@@ -889,6 +889,21 @@ phase.
    incrémentée) ; une prédiction transmise au fil est tronquée à
    `PREDICTION_MAX_CARACTERES = 2000` caractères (constante du module, sous la
    limite mesurée de 16 Ko du champ `reasoning`, §A1.4).
+6. **Une redemande énonce la forme COMPLÈTE attendue, jamais la seule pièce
+   manquante.** Motif, mesuré (journal 2026-09-02, suite 24) : quand un pas du
+   mode `state` doit porter deux lignes (`VERDICT:` puis `PREDICTION:`) et que
+   la redemande ne nomme que la ligne absente, le modèle produit celle-là et
+   perd l'autre — quatre redemandes alternées sur un même tour (s2, tours
+   30–33), 2 à 9 redemandes par run. Le message de refus des gardes du mode
+   `state` (§H16.1–§H16.3, mécanisme d'erreur §H15.8) se clôt donc TOUJOURS
+   par la forme complète de la réponse attendue, dans l'ordre : la ligne
+   « VERDICT: confirmee » ou « VERDICT: contredite » quand une prédiction
+   attend sa qualification (les deux seules valeurs reconnues — rien d'autre,
+   pas de « non applicable »), la ligne « PREDICTION: … », puis le bloc
+   ```json à deux clés (§H15.1) ; les manques restent nommés en tête du
+   message. La forme est une constante de `prompts.py` (règle 5). En mode
+   `transcript`, la redemande de verdict (§H16.3) attend une réponse à une
+   seule ligne : elle énonce déjà la forme complète.
 
 **H16.1 — Garde documentaire, à l'entrée de Planning.** Le réflexe « chercher
 l'information avant d'agir », mécanisé : les outils d'action ne se déverrouillent
