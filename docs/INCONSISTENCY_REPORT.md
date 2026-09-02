@@ -24,6 +24,18 @@ registre devient vide, le fichier lui-même est supprimé du dépôt (CLAUDE.md 
 
 ## Traitées dans la session qui les a rencontrées
 
+### 2026-09-02 — `.env.example` annonçait `transcript` comme défaut de `AVO_CONTEXT_MODE`
+
+- **Constat.** Le bloc `AVO_CONTEXT_MODE` de `.env.example` décrivait `transcript`
+  comme défaut, alors que le défaut réel est `state` depuis la décision du
+  2026-09-01 (U28, `avo.config`, §H15.7) — README et spécification étaient à jour,
+  ce fichier avait été oublié.
+- **Mesure.** `grep AVO_CONTEXT_MODE .env.example` → « (transcript) » ;
+  `charger().contexte_mode` → `state` ; README §variables → défaut `state`.
+- **Traitement.** Défaut étranger à l'unité U32, consigné ici et corrigé dans un
+  commit dédié : le bloc décrit `state` comme défaut avec sa date de décision.
+  Aucun comportement n'est modifié.
+
 ### 2026-08-30 — MASTER_PLAN §4 annonçait `build` dans `make check`
 
 - **Constat.** MASTER_PLAN §4 décrivait `make check` comme incluant `build` ;
