@@ -1970,3 +1970,18 @@ aucune demande jugée n'est résolue à h25, alors que h10 en résolvait jusqu'�
 1/2. À investiguer AVANT toute correction : part du comportement modèle
 (`merge` prématuré, `ci_verte` manquée) vs artefact de mesure ; piste générale,
 aucune adaptation au banc.
+
+**Relevé live entrepôt h25, dérive** (`--derive --horizon 25 --mode live`,
+bruit 0, `state`, gardes actives) :
+
+| seed | score | corr/inc/inv | dérive à | récup. (pas) | tokens | durée |
+|---|---|---|---|---|---|---|
+| 1 | 0,52 | 13/5/7 | 12 | 0 | 56 510 | 827 s |
+| 2 | 0,32 | 8/6/11 | 12 | 1 | 66 057 | 1 096 s |
+| 3 | 0,52 | 13/6/6 | 12 | 0 | 51 990 | 524 s |
+
+Récupération intacte à h25 : les trois épisodes récupèrent en 0–1 pas (comme
+h10, 0–3 pas) — le canal d'alerte reste intégré aux horizons longs. Les scores
+(0,32–0,52) rejoignent la ligne de base entrepôt h25 SANS dérive (0,44–0,88,
+suites 15–16) par le bas : la perte vient de la tenue d'état ordinaire aux
+horizons longs (jusqu'à 11 invalides au seed 2), pas de la dérive elle-même.
