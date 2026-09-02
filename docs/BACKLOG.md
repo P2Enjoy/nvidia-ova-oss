@@ -849,10 +849,20 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   (moyenne 0,827 ; référence pré-correctifs : 0,76), zéro action incorrecte
   sur les trois runs, résolution cumulée 4/17 (avant : 0/17), aucun refus de
   garde consécutif (le ping-pong PREDICTION/VERDICT de la suite 24 a disparu).
-  **Reste à livrer** : campagne de banc systématique — bruit aux niveaux de
-  référence (5/20/50) à horizons 25+ multi-seeds (3 seeds minimum par point,
-  §S5.4) sur les deux environnements, dérive h25 dépôt, alimentation du
-  déclencheur U25 avec ces séries.
+  **Livré et vérifié le 2026-09-02 (suite 28)** : friction « résolution basse »
+  instruite sur transcripts (12/12 invalides = notation du numéro de `merge`
+  recopiée de l'environnement, ni fusion prématurée ni `ci_verte` manquée) et
+  corrigée — §S4.2 le moteur lit la notation de PR qu'il émet (point tranché),
+  §H15.8 la syntaxe d'argument nommé « cle=valeur » normalisée (spec `a931d4a`
+  avant code `741ab82`, 5 unitaires) ; premier point bruit de référence : h25
+  dépôt bruit 5 seeds 1–3 sous code corrigé **0,96 / 1,00 / 1,00** (moyenne
+  0,987), zéro invalide, résolution **16/17** (série pré-correctif : 0,84 et
+  5/17, trace de l'ancienne référence). Campagne complète verte (lint, mypy
+  strict 120 fichiers, 691 unitaires, 153 intégration, 6 E2E, build).
+  **Reste à livrer** : campagne de banc systématique — bruit 5 h25 entrepot,
+  bruit 20/50 à h25 multi-seeds (3 seeds minimum par point, §S5.4) sur les deux
+  environnements, dérive h25 dépôt, alimentation du déclencheur U25 avec ces
+  séries.
 
 ## Lot H — La méthode dans la structure
 
@@ -1009,6 +1019,16 @@ observer : aucun refus de garde consécutif sur les trois archives `pas.jsonl` �
 le ping-pong a disparu ; friction suivante instruite : résolution des demandes
 du dépôt basse (0–0,4), part du comportement modèle à établir sur les
 transcripts avant toute correction.
+
+**Itération du 2026-09-02 (suite 28, session planifiée)** — jouer : h25 dépôt
+bruit 5 seeds 1–3 (0,88 / 0,76 / 0,88, résolution 5/17) ; observer : friction
+« résolution basse » instruite par réplique déterministe des transcripts —
+12/12 invalides sont des `merge` au bon moment sur la bonne PR, refusés sur la
+notation du numéro (recopiée de l'environnement : « PR #k » ; ou argument
+nommé « pr=2 ») ; améliorer : §S4.2 le moteur lit la notation qu'il émet et
+§H15.8 normalise « cle=valeur » (spec `a931d4a`, code `741ab82`) ; série
+rejouée sous code corrigé : 0,96 / 1,00 / 1,00, zéro invalide, résolution
+16/17. Friction suivante instruite : 4–8 redemandes de garde par run.
 
 ## U32 — Limitation de concurrence des requêtes LLM par endpoint `[x]`
 

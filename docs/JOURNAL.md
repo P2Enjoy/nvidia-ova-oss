@@ -2459,3 +2459,72 @@ dérive h25 dépôt. Friction suivante à instruire AVANT correction : la
 résolution des demandes du dépôt reste basse (0–0,4 ; piste des suites 22 :
 `merge` prématuré vs `ci_verte` manquée — part du comportement modèle à
 établir sur les transcripts avant toute idée générique).
+
+---
+
+## 2026-09-02 (suite 28, session planifiée) — U31 : la résolution du dépôt instruite et corrigée — le moteur lit sa propre notation de PR (§S4.2), « cle=valeur » normalisé (§H15.8) ; h25 dépôt bruit 5 à 0,987 et résolution 16/17
+
+**Unité.** U31 (jouer/observer/améliorer), reprise de la suite 27 : campagne
+systématique U29a4 (bruit aux niveaux de référence) ET friction « résolution
+des demandes du dépôt basse (0–0,4) » à instruire sur transcripts avant toute
+correction.
+
+**Jouer (série d'instruction) : h25 dépôt bruit 5, seeds 1–3, live** — sous le
+code de la suite 27 :
+
+| seed | score | corr/inc/inv | résolution | tokens | durée |
+|---|---|---|---|---|---|
+| 1 | 0,88 | 22/0/3 | 0,40 (2/5) | 53 253 | 284 s |
+| 2 | 0,76 | 19/0/6 | 0,14 (1/7) | 50 236 | 237 s |
+| 3 | 0,88 | 22/0/3 | 0,40 (2/5) | 58 548 | 332 s |
+
+**Observer : la friction est instruite, et ce n'est ni un `merge` prématuré ni
+une `ci_verte` manquée.** Dépouillement par réplique déterministe de
+l'environnement (même seed, actions de `pas.jsonl` rejouées ; fidélité vérifiée
+score/résolution exacts contre `banc.json`) : les **12 invalides des trois runs
+sont TOUTES des `merge` joués au bon événement sur la bonne PR**, refusés sur la
+seule notation du numéro. Le modèle recopie la notation que l'environnement
+affiche lui-même dans ses événements (« CI verte pour PR #2 … » → `merge PR #2`,
+`PR#2`, `PR 5`) ou emploie la syntaxe d'argument nommé (`pr=2`, `pr=4`). Aucune
+fusion en CI rouge, zéro incorrecte sur les trois runs : la tenue d'état du
+dépôt est bonne, seule la ponctuation du paramètre était payée — l'environnement
+refusait la notation qu'il émet, enseignant une règle fausse.
+
+**Améliorer (spécifié d'abord, `a931d4a` avant le code `741ab82`)** :
+
+- **§S4.2 (point tranché)** — le moteur du dépôt lit le numéro de PR dans la
+  notation qu'il émet : entier nu, `#k`, préfixe `PR` à casse indifférente avec
+  ou sans espace ni croisillon ; toute autre forme (`pr:3`) reste invalide
+  nommée qui consomme. Les relevés antérieurs ne se comparent pas aux
+  postérieurs sur la résolution (ancienne référence tracée ici).
+- **§H15.8 (quatrième bruit de format, générique)** — une valeur « cle=valeur »
+  dont « cle » est exactement le paramètre requis que sa position destine se lit
+  « valeur » ; le nom comparé vient du schéma de l'outil, rien n'est codé dans
+  le noyau. Balayage « zéro indice » propre sur les fichiers touchés.
+- Preuves : 3 unitaires de résolution + 2 unitaires du moteur (5 formes lues,
+  3 invalides nommées), suites ciblées vertes (60 tests).
+
+**Jouer (série propre) : même point rejoué sous le code corrigé** :
+
+| seed | score | corr/inc/inv | résolution | tokens | durée |
+|---|---|---|---|---|---|
+| 1 | 0,96 | 24/1/0 | 0,80 (4/5) | 51 580 | 256 s |
+| 2 | 1,00 | 25/0/0 | 1,00 (7/7) | 50 328 | 251 s |
+| 3 | 1,00 | 25/0/0 | 1,00 (5/5) | 48 716 | 234 s |
+
+Moyenne **0,987** (pré-correctif : 0,84), **zéro invalide** sur les trois runs,
+résolution cumulée **16/17** (pré-correctif : 5/17 ; suite 27 bruit 0 : 4/17).
+Deux épisodes parfaits — les premiers du dépôt à h25. Résidu réel de
+comportement modèle : un seul `wait` prudent sur une `ci_verte` (s1, PR #2 non
+fusionnée). Le bruit 5 ne dégrade pas le dépôt à h25.
+
+**Campagne complète (fin de session).** `make check` VERT : lint, ruff format,
+mypy strict (120 fichiers), 691 unitaires, 153 intégration, 6 E2E ; `make
+build` VERT. Cassettes E2E inchangées (les scénarios enregistrés emploient des
+formes déjà lues). Contrainte 4 respectée : une exécution live à la fois.
+
+**Où reprendre.** U31 → U29a4, campagne systématique restante : bruit 5 h25
+ENTREPOT seeds 1–3, bruit 20 et 50 à h25 sur les deux environnements, dérive
+h25 dépôt. Friction suivante à instruire : les redemandes de garde restent
+4–8 par run (pas blancs qui coûtent des tours) ; dépouiller leur motif dominant
+sur les `pas.jsonl` avant toute idée.
