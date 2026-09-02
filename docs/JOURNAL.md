@@ -2345,3 +2345,26 @@ multi-seeds (§S5.4) — les h25 entrepot bruit 0 se relèvent désormais sous l
 code §H15.8 (les scores suite 23/24 pré-correctif restent la trace de
 l'ancienne référence) ; (c) registre : une seule entrée ouverte (fumée
 `RESET`), étrangère à U29a4.
+
+---
+
+## 2026-09-02 (suite 25, session interactive) — Instruction du responsable : plafond de 3 requêtes LLM en parallèle, persisté
+
+**Instruction reçue du responsable** : le port public de l'endpoint LLM a ses
+limites — ne jamais exécuter plus de **3 requêtes en parallèle**, sous peine
+de `HTTP 500` ou de timeouts.
+
+**Persisté** : `CLAUDE_PROJECT.md`, section « Configuration de l'endpoint
+d'inférence », contrainte 4 (la liste passe de trois à quatre contraintes).
+Portée pratique : une boucle du harnais est séquentielle, la contrainte
+gouverne donc le parallélisme GLOBAL — sessions planifiées simultanées,
+campagnes, épisodes de banc, `smoke-live` et enregistrements confondus ; une
+seule exécution live par session, trois au plus toutes sessions confondues.
+
+**Requalification** : les rafales de `HTTP 500` du 2026-09-01 au soir (suites
+14–16 : épisodes morts en série, relances §H4.5 épuisées, jusqu'à six
+lancements pour un épisode) coïncident avec trois sessions planifiées jouant
+live en parallèle. Elles sont l'effet de ce plafond de concurrence, pas une
+panne du serveur : l'hypothèse « panne d'endpoint » de ces entrées est
+remplacée par cette cause nommée. Les scores mesurés pendant ces fenêtres
+gardent leur réserve de lecture (contexte de retries, tours ralentis).
