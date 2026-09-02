@@ -1986,6 +1986,24 @@ h10, 0–3 pas) — le canal d'alerte reste intégré aux horizons longs. Les sc
 suites 15–16) par le bas : la perte vient de la tenue d'état ordinaire aux
 horizons longs (jusqu'à 11 invalides au seed 2), pas de la dérive elle-même.
 
+**Incident reproduit et cause isolée : générations longues coupées par le pont.**
+La série dérive dépôt h25 est tombée QUATRE fois (seeds 1–3 puis reprise s1-r2)
+sur `ServerError: HTTP 500` au voisinage immédiat du pas de dérive (évts 11–13),
+là où le modèle réfléchit le plus longtemps ; sonde directe pendant la fenêtre :
+`the edge function timed out` en 36 s (HTTP 500). Cause : le pont 443 coupe à
+40 s avant premiers en-têtes ; en `stream: false` l'origine ne rend ses en-têtes
+qu'à la FIN de la génération — toute génération > 40 s meurt donc au pont, et
+les relances §H4.5 rejouent la même génération longue et butent au même mur.
+Le pont, lui, transmet le NDJSON fragment par fragment (mesuré 2026-08-30).
+Correctif GÉNÉRAL tranché (aucun lien avec le contenu du banc) : client H4 en
+`stream: true` avec assemblage des fragments — spécification amendée (§H4.2,
+§H4.3, §H4.7) AVANT le code. Séquencement pour ne pas polluer la campagne en
+cours : assemblage rétrocompatible + preuves d'abord, bascule `stream` et
+régénération des cassettes APRÈS le dernier épisode de bruit, puis reprise de
+la série dérive dépôt sous streaming (changement de transport, comparabilité
+des scores préservée). Garde d'endpoint ajoutée au pilotage de campagne
+(sonde de complétion courte avant chaque épisode, attente 90 s).
+
 ---
 
 ## 2026-09-02 (suite 20, session interactive) — U31 : deux améliorations génériques désignées par la mesure

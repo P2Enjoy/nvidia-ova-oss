@@ -177,13 +177,34 @@ raisonnement (`think`), `options.num_ctx`, champ `reasoning` séparé, compteurs
 `/v1` ultérieur sans toucher la boucle.
 
 **H4.2 — Requête.** POST `$OLLAMA_HOST/api/chat`, `Authorization: Bearer`, corps :
-`model`, `messages`, `stream: false`, `think` (H12), `tools` (schémas H7),
+`model`, `messages`, `stream: true`, `think` (H12), `tools` (schémas H7),
 `options: {num_ctx, num_predict, temperature}`. Timeout `AVO_TIMEOUT_S`.
+
+Motif de `stream: true`, mesuré le 2026-09-02 (campagne de banc h25) : le pont
+HTTPS 443 coupe la requête 40 s après son envoi si l'origine n'a pas encore rendu
+ses premiers en-têtes ; en mode non streamé, l'origine ne les rend qu'à la FIN de
+la génération, donc toute génération dépassant 40 s meurt en 500 (« the edge
+function timed out ») et ses relances §H4.5 rejouent la même génération longue et
+butent au même mur — reproduit quatre fois au même pas d'épisode. En streaming,
+les en-têtes partent au premier fragment (préremplissage sous la seconde grâce au
+cache de préfixe) et la limite ne s'applique plus à la durée de génération. Le
+transport lit toujours le corps jusqu'au bout avant de rendre la main : le
+streaming est un cadrage HTTP, pas une API incrémentale — l'interface
+`LLMClient.chat` et la boucle ne changent pas.
 
 **H4.3 — Réponse.** `ChatResult` typé : `content`, `reasoning` (peut être vide),
 `tool_calls` (liste normalisée nom+arguments JSON), `done_reason`,
 `prompt_eval_count`, `eval_count`, durées. Arguments d'outil non-JSON → erreur d'outil
 renvoyée au modèle (H7.4), pas une exception fatale.
+
+Le corps 2xx admet DEUX formes, assemblées vers le même `ChatResult` :
+un objet JSON unique (réponse non streamée — cassettes antérieures, degré zéro du
+flux), ou une suite de lignes NDJSON (réponse streamée) dont `content` et
+`reasoning` se concatènent fragment par fragment, `tool_calls` se collectent sur
+tous les fragments, et le fragment final `done: true` porte `done_reason`, les
+compteurs et les durées. Un flux 2xx SANS fragment final est une réponse tronquée :
+`TransportError`, retentée (§H4.5). Un fragment 2xx portant `error` est une panne
+serveur survenue en cours de flux : `ServerError`, retentée.
 
 **Détail du contrat, mesuré le 2026-08-28 et contre-intuitif** : sur la surface
 native, un appel d'outil arrive avec `done_reason: "stop"`, et non `"tool_calls"` —
@@ -241,6 +262,13 @@ Le dispositif est un **enregistreur/rejoueur** :
 
 Le contrat servi en rejeu est donc toujours d'origine mesurée. Les tests unitaires,
 eux, ne touchent ni cassette ni réseau.
+
+Les corps streamés (H4.2) s'enregistrent et se rejouent TELS QUELS : la cassette
+capture le corps NDJSON intégral, le rejoueur le sert inchangé, et le client
+l'assemble comme il assemble la réponse du vrai serveur (H4.3). L'empreinte
+d'appariement portant sur le corps de requête canonisé, `stream` y participe comme
+tout autre champ : un changement de mode de flux régénère les cassettes par les
+commandes du dépôt (`make record-llm`, `make seed-e2e`), jamais à la main.
 
 **H4.8 — `make smoke-live`.** Vérification manuelle hors campagne : version, modèles,
 une complétion courte, un tool-call. Exige `.env` ; jamais exécutée par les tests ni
