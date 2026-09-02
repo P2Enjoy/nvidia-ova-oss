@@ -2212,3 +2212,65 @@ h25 bruit 0 entrepot seeds 1–3 sous le code suite 21+22 (les h25 des suites
 systématique ; (b) si les redemandes de format persistent sur ces séries,
 instruire la piste « ligne PREDICTION/VERDICT » sur mesure ; (c) le registre
 garde une seule entrée ouverte (fumée `RESET`), étrangère à U29a4.
+
+## 2026-09-02 (suite 23, session planifiée) — U29a4/U31 : lignes de base h25, H16.1 révisé (conservation du vidage), série rejouée dans la fourchette de référence
+
+**Relevé (a) — h25 bruit 0 entrepot seeds 1–3, code suite 21+22** (`python -m avo
+banc skillexec --env entrepot --seed S --horizon 25 --mode live`) : s1 MORT en
+`RetriesEpuises` à 4/25 événements (4 correctes, 0 fausses — toutes ses actions
+étaient bonnes), s2 0,20 (5/6/14, 12 retries de patch, 11 vidages refusés),
+s3 0,48 (12/3/10, 1 vidage). Référence S5.4 : [0,76 ; 0,84]. La cause dominante,
+lue dans `pas.jsonl` : à chaque cycle achevé (article expédié), le modèle vide
+`hypotheses` (hypothèse épuisée) ; la garde H16.1 (suite 21) refusait le patch
+ENTIER en rollback-retry — 3 échecs consécutifs tuent le run (§H15.4), et
+chaque récupération coûte 1–2 appels. Dans un mode sans mémoire, la relance
+n'enseigne rien d'un tour à l'autre : le modèle re-vide au cycle suivant.
+
+**Décision (point tranché, spec committée avant le code, `86ff3e7`).** H16.1
+révisé sur place : le vidage d'`hypotheses` non vide (liste vide ou `null`) se
+CONSERVE — le champ reste tel quel, le reste du patch s'applique, l'action du
+pas joue, et la ligne d'archive porte `hypotheses_conservees: true` (§H15.10).
+La structure impose toujours l'invariant (le champ ne se vide jamais) ; le
+protocole engendré, inchangé, dit comment s'y conformer — aucune cassette à
+régénérer. Issues écartées : relever le budget de retries (le modèle répète le
+même patch à l'identique, mesuré) ; ne conserver qu'à l'épuisement du budget
+(complexité pour garder des relances qui n'enseignent rien).
+
+**Livré (commit `aab99d5`).** `etat.py` : le vidage devient sans effet sur le
+champ (plus d'`EtatInvalide`) ; `boucle.py` : archive de l'écart ; preuves —
+unitaires du runtime (conservation par liste vide et par `null`, reste du patch
+appliqué), intégration HTTP réelle (action jouée, Σ conservé, archive), libellé
+du test de protocole aligné. CHANGELOG (`3d2cf9b`).
+
+**Relevé (a rejoué) — h25 bruit 0 entrepot seeds 1–3, code suite 23** :
+
+| seed | score | c/i/inv | retries | conservations | redemandes | durée |
+|---|---|---|---|---|---|---|
+| 1 | 0,96 | 24/0/1 | 0 | 0 | 5 | 301 s |
+| 2 | 0,92 | 23/2/0 | 0 | 2 | 7 | 714 s |
+| 3 | 0,44 | 11/5/9 | 1 | 3 | 5 | 500 s |
+
+**Moyenne 0,77 — dans la fourchette de référence [0,76 ; 0,84]** (Qwen-3-8B
+0,76, Gemma-4-31B 0,84, §S5.4), contre 0,20/0,48 + un run mort avant la
+correction. Les six relevés sont complets (25/25 événements), aucun incident.
+Friction restante, par ordre de coût mesuré : (1) s3 s'égare en milieu de run
+(un double `store` invalide à t2, puis une cascade de `move` répétés t23–t26
+sur un inventaire Σ désynchronisé — 9 invalides) ; (2) les redemandes de
+format PREDICTION/VERDICT persistent (5–7 par run, déjà notées suite 22) ;
+(3) 0–3 conservations de vidage par run, toutes sans conséquence — le
+mécanisme fait exactement ce qui était voulu.
+
+**Campagne complète (fin de session).** `make check` VERT : lint (117
+fichiers), mypy strict (116), 658 unitaires (3 revus + 1 nouveau), 152
+intégration, 6 E2E ; `make build` VERT. Cassettes inchangées (protocole
+intact).
+
+**Où reprendre.** U29a4/U31, dans l'ordre : (a) dépouiller `pas.jsonl` de
+s23b-s3 (l'égarement d'inventaire) et des prochains runs : si la
+désynchronisation de Σ après action invalide se confirme comme friction
+dominante, c'est la prochaine amélioration générique à instruire sur mesure ;
+(b) les redemandes de format PREDICTION/VERDICT (5–7 par run) restent la piste
+suivante ; (c) compléter la campagne systématique : h25 depot, points de bruit
+5/20/50, dérive h25, multi-seeds (§S5.4) — les h25 entrepot bruit 0 sous code
+suite 23 sont la nouvelle référence ; (d) registre : une seule entrée ouverte
+(fumée `RESET`), étrangère à U29a4.

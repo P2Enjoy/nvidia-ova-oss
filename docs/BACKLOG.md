@@ -828,11 +828,18 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   Lignes de base h10 dérive relevées sous ce code (journal suite 22 :
   entrepot 0,93, depot 0,77, récupération 0–2 pas, 6/6 épisodes au bout,
   refus documentaire tombé à 1 par run).
-  **Reste à livrer** : campagne de banc systématique — lignes de base h25
-  bruit 0 sous le code suite 21+22, bruit aux niveaux de référence (0/5/20/50)
-  et horizons 25+ multi-seeds (3 seeds minimum par point, §S5.4) sur les deux
-  environnements, dérive aux horizons 25+, alimentation du déclencheur U25
-  avec ces séries.
+  **Livré et vérifié le 2026-09-02 (suite 23)** : lignes de base h25 bruit 0
+  entrepot seeds 1–3 relevées — d'abord sous le code suite 21+22 (s1 mort en
+  `RetriesEpuises` sur vidage d'`hypotheses`, s2 0,20, s3 0,48), puis, après
+  révision H16.1 (le vidage se conserve au lieu d'invalider le patch, spec
+  committée avant le code), rejouées sous le code corrigé : **0,96 / 0,92 /
+  0,44, moyenne 0,77 — dans la fourchette de référence [0,76 ; 0,84]**
+  (§S5.4). Six relevés complets, aucun incident. Campagne complète verte
+  (lint, mypy strict, 658 unitaires, 152 intégration, 6 E2E, build).
+  **Reste à livrer** : campagne de banc systématique — h25 depot, bruit aux
+  niveaux de référence (5/20/50) et horizons 25+ multi-seeds (3 seeds minimum
+  par point, §S5.4) sur les deux environnements, dérive aux horizons 25+,
+  alimentation du déclencheur U25 avec ces séries.
 
 ## Lot H — La méthode dans la structure
 
@@ -954,3 +961,15 @@ du domaine : toujours sans mesure complète — endpoint instable les deux
 sessions (rafales de 500 du pont plus longues que l'échelle de relances,
 défaut consigné au registre) ; les prochaines lignes de base live se relèvent
 sous le code de la suite 21.
+
+**Itération du 2026-09-02 (suite 23, session planifiée)** — jouer : lignes de
+base h25 bruit 0 entrepot seeds 1–3 (deux séries live complètes) ; observer :
+la garde de vidage d'`hypotheses` (suite 21) tuait un run aux actions toutes
+correctes et coûtait jusqu'à 12 relances par run ; améliorer : H16.1 révisé —
+le vidage se conserve au lieu d'invalider le patch (`86ff3e7`, `aab99d5`).
+Série rejouée sous le code corrigé : 0,96 / 0,92 / 0,44, moyenne 0,77, dans la
+fourchette de référence [0,76 ; 0,84] du déclencheur U25 (premier point de
+comparaison atteint ; les autres séries de la campagne systématique restent à
+relever). Frictions suivantes désignées par la mesure : désynchronisation de Σ
+après action invalide (s3), redemandes de format PREDICTION/VERDICT (5–7 par
+run).
