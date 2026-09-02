@@ -2100,8 +2100,11 @@ dès son premier appel. Point tranché : série arrêtée, la condition « endpo
 stable » (suite 20) n'est pas remplie ; le relevé se refera sous le code corrigé
 — l'A/B pur H15.9 (suite 19 contre suite 20 à code constant) reste sans mesure
 complète et le restera, les prochaines lignes de base étant celles du code
-suite 21. Défaut de plomberie consigné au registre : l'échelle de relances est
-plus courte que la rafale mesurée.
+suite 21. Défaut de plomberie consigné au registre ; la session interactive
+concurrente (commit e22afd7, arrivé pendant cette session) en a isolé la cause
+racine — `stream: false` × limite de 40 s du pont, les générations longues
+meurent quelle que soit l'échelle de relances — et a spécifié le client streamé
+(§H4.7) : l'entrée du registre pointe cette issue.
 
 **Dépouillement (b) — `pas.jsonl` du run s1 (10 pas archivés avant l'incident,
 4 refus documentaires, score 0, 0/2 correctes).** La cause est double et NE
