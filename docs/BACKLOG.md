@@ -925,3 +925,11 @@ ordre :
   campagne ARC se clôt), l'analyse et les scores consignés au journal, et pour
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
+
+**Itération du 2026-09-02 (suite 20, session interactive)** — deux améliorations
+génériques désignées par la mesure de la suite 19, livrées et prouvées
+(`make check` vert, cassettes régénérées) : H15.9 schéma de Σ déclaré par le
+domaine (`f6a8619`, `7adb063`) et H15.10 archive des pas du mode `state`
+(`cc1d6ac`). A/B live sous le schéma du domaine : `[~]` — endpoint dégradé
+(HTTP 500), un seul point partiel ; à relever quand l'endpoint est stable
+(journal, suite 20, « Où reprendre »).

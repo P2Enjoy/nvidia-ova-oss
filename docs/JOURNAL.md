@@ -1985,3 +1985,83 @@ h10, 0–3 pas) — le canal d'alerte reste intégré aux horizons longs. Les sc
 (0,32–0,52) rejoignent la ligne de base entrepôt h25 SANS dérive (0,44–0,88,
 suites 15–16) par le bas : la perte vient de la tenue d'état ordinaire aux
 horizons longs (jusqu'à 11 invalides au seed 2), pas de la dérive elle-même.
+
+---
+
+## 2026-09-02 (suite 20, session interactive) — U31 : deux améliorations génériques désignées par la mesure
+
+Demande du responsable : « lis les papiers, inspire-toi de la façon dont Claude
+Code fonctionne, rends le harnais globalement meilleur ». Méthode U31 : partir
+des mesures de la suite 19, pas d'une idée.
+
+**Mesure de départ** (run `derive-entrepot-h10-s2`, suite 19, score 0,40) : les
+5 actions invalides sont TOUTES des erreurs de tenue d'état sur des faits que le
+modèle avait lui-même produits (`store` sur une étagère qu'il venait d'occuper,
+`ship` depuis la mauvaise étagère). Σ final :
+`objets: [{id: article_2, position: null}, …]` — le schéma ARC v1 imposé au banc
+n'offre aucun champ où écrire « article_0 sur etagere_1 » ; l'information tombe
+dans `description` ou se perd, et le prompt du pas suivant ne la porte plus.
+Papier SKILL.state §3.1 : « schemas are authored once per domain » ; exemple
+B.3 : `inventory: {shelf_42: null}`. Le noyau contredisait la source.
+
+**Livré 1 — H15.9, schéma de Σ déclaré par le domaine** (`f6a8619` spec,
+`7adb063` code). Le noyau possède les GENRES (`position`, `entier_positif`,
+`liste_chaines`, `liste_objets`, `dictionnaire`), la validation, ⊕ et la
+persistance ; le domaine déclare ses champs (`SchemaEtat`, porté par
+`Contexte.schema_etat`, `arc-v1` par défaut sans déclaration). Genre
+`dictionnaire` fusionné clé par clé avec retrait sur `null` — l'opérateur du
+papier, qui évite au modèle de réémettre l'objet entier (mode d'erreur à 68 %
+de la taxonomie §5.7). Protocole engendré depuis le schéma (prompts 1.2), Σ
+relu sous son schéma, relevé nommant `schema_etat`. Banc a : `banc-entrepot-v1`
+(`inventaire`, `en_attente`), `banc-depot-v1` (`branches`, `prs`). C'est la
+répartition de Claude Code : le harnais reste générique, la structure vient de
+la tâche (CLAUDE.md, schémas d'outils) — jamais une règle de jeu dans le noyau.
+Preuves : 12 unitaires, intégration (Σ du banc sous son schéma), cassettes E2E
+régénérées (ARC `state` et banc), lint, mypy, 636 unitaires, 151 intégration,
+6 E2E.
+
+**Livré 2 — H15.10, archive des pas** (`cc1d6ac`). En dépouillant le premier
+run A/B, constat : 25 appels pour 8 actions, 17 refus de garde (11
+« documentaire »), et RIEN dans le workspace ne dit ce que le modèle avait
+répondu — le transcript `state` ne porte que les issues d'outils. Le papier
+jette Rₜ du PROMPT, pas de l'archive ; Claude Code garde tout. Désormais chaque
+appel du mode `state` écrit `state/pas.jsonl` (réponse brute, patch/action ou
+erreur, refus de garde), jamais réinjecté. Preuve d'intégration (patch malformé
+puis valide : deux lignes, la première avec `erreur`).
+
+**A/B live, sous endpoint DÉGRADÉ** (rafales de HTTP 500, 20–35 s par appel,
+campagne h25 de la session planifiée en parallèle sur le même endpoint) — mêmes
+points que la suite 19 (`--derive --horizon 10`), schéma du domaine :
+
+| env | seed | suite 19 (arc-v1) | suite 20 (schéma domaine) |
+|---|---|---|---|
+| entrepot | 1 | 1,00 (10/0/0), récup. 0 | incident HTTP 500 au 2ᵉ tour — sans mesure |
+| entrepot | 2 | 0,40 (4/1/5), récup. 2 | incident au 8ᵉ événement : 6/0/2, récup. 0 (partiel, non comparable §S5.3) |
+| entrepot | 3 | 1,00 (10/0/0), récup. 0 | en cours à la clôture de cette entrée |
+| depot | 1–3 | 0,80 / 0,70 / 0,80 | en file (script `ab_schema.sh`, hors dépôt) |
+
+Lecture prudente : sur le seul point partiellement comparable (seed 2), les
+invalides passent de 5 à 2 sur les 8 premiers événements et la récupération de
+2 à 0 — Σ final porte bien `inventaire: {etagere_1: article_0, …}`. Mais le run
+est incomplet et l'endpoint instable : AUCUNE conclusion de score tant que trois
+seeds complets par point n'existent (§S5.4). Observé en revanche, indépendant du
+bruit d'endpoint : la garde documentaire refuse 11 fois sur 25 appels (7 sur 17
+en suite 19) — le modèle vide ou omet `hypotheses` à répétition. C'est le
+premier objet à dépouiller avec `pas.jsonl`, maintenant qu'il existe.
+
+**Points tranchés.** (1) `hypotheses` reste le champ commun obligatoire de tout
+schéma : la garde §H16.1 s'y appuie ; issue écartée : la rendre optionnelle,
+qui aurait supprimé la garde en mode `state`. (2) Les cassettes ARC `state`
+sont régénérées plutôt que de reproduire octet pour octet l'ancien texte :
+un seul générateur de protocole, pas deux parcours. (3) Le schéma se déclare
+par domaine, jamais par épisode — écrit en §H15.9.
+
+**Où reprendre.** U31, dans l'ordre : (a) relever l'A/B complet sous le schéma
+du domaine (h10 dérive seeds 1–3 × 2 env, puis h25 bruit 0 entrepot seeds 1–3
+contre les séries des suites 14–16) quand l'endpoint est stable ; (b) dépouiller
+`state/pas.jsonl` des runs sous H15.10 pour établir POURQUOI la garde
+documentaire refuse si souvent, et livrer la correction générique désignée ;
+(c) piste ouverte, non désignée par une mesure encore : garde d'ancrage —
+refuser sans consommer d'événement une action dont un argument n'a jamais
+figuré dans une observation ni dans Σ (l'analogue de « Read avant Edit »),
+à ne coder que si `pas.jsonl` montre des identifiants inventés.
