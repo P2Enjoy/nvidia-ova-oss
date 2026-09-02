@@ -2159,3 +2159,56 @@ pur H15.9 à code constant est abandonné, consigné plus haut) ; (c) dépouille
 doivent retomber à ~1 par run (ouverture seule) et les cascades « Σ ment »
 disparaître — si les refus persistent, la mesure suivante désignera la piste
 (garde d'ancrage, voir suite 20).
+
+---
+
+## 2026-09-02 (suite 22, session planifiée) — U29a4 : client streamé livré, lignes de base h10 dérive sous le code suite 21+22
+
+**Livré (client streamé, §H4.2/§H4.3/§H4.7).** (1) `stream: true` sur
+`/api/chat` (commit `96635e7`) — cadrage HTTP seul, transport et interface
+inchangés. (2) Cassettes régénérées par les commandes du dépôt : `make
+seed-e2e` (double génération vérifiée) et `make record-llm` réussi en
+streaming sur le vrai endpoint (7 échanges, conversations en NDJSON, 401/413
+inchangés, aucun secret) — commits `7237961`, `1468a8f`. (3) Assemblage
+extrait en `fusionner_fragments` (une seule implémentation) et lecture des
+conversations enregistrées sous les deux formes au module cassette
+(`enveloppe_conversation`, `premiere_conversation`) : six décors de test
+dédupliqués, rejeu comparé sur les octets servis, dérive live étendue aux
+corps streamés — commit `aa724d4`, 6 preuves unitaires. Registre : entrée
+« générations longues au pont » retirée (résolue), commit `f937028`.
+
+**Relevé (b) — lignes de base h10 dérive, seeds 1–3 × 2 env** (`python -m avo
+banc skillexec --env E --seed S --horizon 10 --derive --mode live`, state,
+gardes, schémas du domaine, code suite 21+22) :
+
+| env | s1 | s2 | s3 | moyenne | récup. (pas) | durées |
+|---|---|---|---|---|---|---|
+| entrepot | 0,90 (9/1/0) | 1,00 (10/0/0) | 0,90 (9/0/1) | **0,93** | 0/0/0 | 75–120 s |
+| depot | 0,80 (8/1/1) | 0,80 (8/1/1) | 0,70 (7/1/2) | **0,77** | 1/2/2 | 100–235 s |
+
+Aucun incident sur 6 runs — la série dépôt mourait 4× au pont sous
+`stream: false` (suite 20) ; les durées tombent de 300–540 s à 75–235 s par
+épisode. Référence suite 19 (code d'avant H15.9+H16.1) : entrepot 0,80,
+depot 0,77.
+
+**Dépouillement (c) — `pas.jsonl` des 6 runs.** Refus documentaire
+`hypotheses` : EXACTEMENT 1 par run (l'ouverture voulue) contre 4–11 avant
+H16.1 — objectif atteint, aucune cascade « Σ ment » observée ; le vidage
+d'`hypotheses` apparu 2× est devenu un retry immédiat gratuit qui aboutit au
+coup suivant. La friction dominante restante, désignée par la mesure : les
+redemandes de format « ligne PREDICTION:/VERDICT: manquante » (0–3 par run,
+11 sur depot s2 — 12 redemandes, 22 tours), récupérées en une redemande à
+chaque fois, sans événement consommé mais au prix d'un appel. Piste générique
+à instruire sur mesure : pourquoi le modèle omet la ligne après une alerte ou
+une évaluation (structure du prompt de tour, pas une règle de jeu).
+
+**Campagne complète (fin de session).** `make check` VERT : lint (117
+fichiers), mypy (116), 657 unitaires, 151 intégration, 6 E2E (pile relancée
+sur les nouvelles cassettes) ; `make build` VERT.
+
+**Où reprendre.** U29a4/U31, dans l'ordre : (a) relever les lignes de base
+h25 bruit 0 entrepot seeds 1–3 sous le code suite 21+22 (les h25 des suites
+14–16 ne sont plus comparables) puis les points bruit 5/20/50 de la campagne
+systématique ; (b) si les redemandes de format persistent sur ces séries,
+instruire la piste « ligne PREDICTION/VERDICT » sur mesure ; (c) le registre
+garde une seule entrée ouverte (fumée `RESET`), étrangère à U29a4.

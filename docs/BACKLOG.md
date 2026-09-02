@@ -825,11 +825,14 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   extrait en `fusionner_fragments` et lecture partagée des conversations
   enregistrées sous les deux formes (six décors dédupliqués) ; 657 unitaires,
   151 intégration, 6 E2E sur pile relancée, lint, mypy strict.
-  **Reste à livrer** : campagne de banc systématique — bruit aux niveaux de
-  référence (0/5/20/50) et horizons 25+ multi-seeds (3 seeds minimum par point,
-  §S5.4) sur les deux environnements, dérive aux horizons 25+, alimentation du
-  déclencheur U25 avec ces séries ; lignes de base h10/h25 sous le code
-  suite 21+22 (H15.9 + H16.1 + streaming ensemble).
+  Lignes de base h10 dérive relevées sous ce code (journal suite 22 :
+  entrepot 0,93, depot 0,77, récupération 0–2 pas, 6/6 épisodes au bout,
+  refus documentaire tombé à 1 par run).
+  **Reste à livrer** : campagne de banc systématique — lignes de base h25
+  bruit 0 sous le code suite 21+22, bruit aux niveaux de référence (0/5/20/50)
+  et horizons 25+ multi-seeds (3 seeds minimum par point, §S5.4) sur les deux
+  environnements, dérive aux horizons 25+, alimentation du déclencheur U25
+  avec ces séries.
 
 ## Lot H — La méthode dans la structure
 
