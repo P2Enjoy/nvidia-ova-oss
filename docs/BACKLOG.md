@@ -994,7 +994,7 @@ Friction n° 2 instruite au journal : le ping-pong des lignes PREDICTION/VERDICT
 (la redemande ne nomme que la ligne manquante) — prochaine amélioration
 candidate.
 
-## U32 — Limitation de concurrence des requêtes LLM par endpoint `[ ]`
+## U32 — Limitation de concurrence des requêtes LLM par endpoint `[x]`
 
 `@spec` docs/SPEC_HARNAIS.md §H4.9 (jetons de fichiers, attente bornée, jeton
 périmé, `429`/`RateLimited`, activation live uniquement), §H3.1
@@ -1017,3 +1017,8 @@ d'échouer (contrainte 4 de `CLAUDE_PROJECT.md`).
 - Hors périmètre, nommé : la garantie inter-machines isolées relève d'une
   limitation côté serveur (pont/origine) — suivie séparément si le responsable
   la demande ; en attendant, une exécution live au plus par session planifiée.
+
+**Livrée et intégralement vérifiée le 2026-09-02** (journal suite 26) :
+`avo.llm.concurrence`, client et transport amendés, 20 unitaires + 1
+intégration, campagne complète verte (684 unitaires, 153 intégration, 6 E2E,
+mypy strict 120 fichiers, build), `make smoke-live` vert sous le limiteur réel.

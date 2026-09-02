@@ -2368,3 +2368,46 @@ live en parallèle. Elles sont l'effet de ce plafond de concurrence, pas une
 panne du serveur : l'hypothèse « panne d'endpoint » de ces entrées est
 remplacée par cette cause nommée. Les scores mesurés pendant ces fenêtres
 gardent leur réserve de lecture (contexte de retries, tours ralentis).
+
+---
+
+## 2026-09-02 (suite 26, session interactive) — U32 livrée et close : limitation de concurrence des requêtes LLM par endpoint (§H4.9)
+
+Instruction du responsable, dans la foulée de la suite 25 : le harnais doit
+gérer lui-même un plafond de requêtes concurrentes par endpoint, multisession
+compris, et faire patienter l'excédent (file) plutôt que d'échouer.
+
+**Spécifié d'abord** (commit dédié avant le code) : §H4.9 — jetons de fichiers
+par endpoint, un jeton par tentative HTTP, attente scrutée avec jitter bornée
+par `AVO_TIMEOUT_S`, reprise des jetons périmés (occupant mort), `429` →
+`RateLimited` retentée en honorant `Retry-After`, activation live uniquement ;
+§H3.1 : `AVO_LLM_MAX_CONCURRENT` (défaut 3, `0` désactive) et
+`AVO_LLM_SLOTS_DIR` (défaut `<AVO_RUNS_DIR>/.llm-slots`). Limite NOMMÉE dans la
+spécification et l'unité : des machines isolées ne se coordonnent pas par
+fichiers — la garantie globale inter-machines relève d'une limitation côté
+serveur (pont/origine), hors périmètre client ; en attendant, une exécution
+live au plus par session (CLAUDE_PROJECT, contrainte 4).
+
+**Livré** : `avo.llm.concurrence` (limiteur, `PatienceEpuisee`,
+`dossier_endpoint`), client (jeton autour de chaque tentative, `RateLimited`,
+`Retry-After` transporté par `ReponseHTTP`), `avec_retries` honore
+`attente_minimale_s`, configuration et résumé sans secret. README, DAT,
+CHANGELOG, `.env.example` dans le même commit.
+
+**Preuves exécutées** : 20 unitaires dédiés (plafond tenu sous 6 fils
+concurrents, jeton libéré même sur exception, périmé repris, frais jamais volé,
+patience épuisée nommant les occupants, `429` avec/sans `Retry-After`, palier
+§H4.5 prime sur un `Retry-After` plus court, `0` désactive, rejeu sans
+limiteur) ; 1 intégration (jeton tenu pendant la requête HTTP réelle contre le
+rejeu, config live pointant la pile locale) ; campagne complète verte : lint,
+ruff format 121 fichiers, mypy strict 120 fichiers, 684 unitaires, 153
+intégration, 6 E2E, build ; balayage « zéro indice » vide sur les fichiers
+touchés ; `make smoke-live` vert SOUS le limiteur réel (répertoire par endpoint
+créé, zéro jeton résiduel). **U32 `[x]`.**
+
+**En chemin** : `.env.example` annonçait encore `transcript` comme défaut de
+`AVO_CONTEXT_MODE` — consigné au registre et corrigé en commit dédié.
+
+**Où reprendre.** Inchangé : U31 → U29a4 (suite 24). Si le responsable veut la
+garantie inter-machines, une unité « file d'attente côté pont » (infra/llm-proxy,
+`429 Retry-After`) se spécifie — le client est déjà prêt à la consommer (§H4.9).
