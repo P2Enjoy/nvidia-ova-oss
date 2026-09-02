@@ -905,9 +905,9 @@ phase.
    30–33), 2 à 9 redemandes par run. Le message de refus des gardes du mode
    `state` (§H16.1–§H16.3, mécanisme d'erreur §H15.8) se clôt donc TOUJOURS
    par la forme complète de la réponse attendue, dans l'ordre : la ligne
-   « VERDICT: confirmee » ou « VERDICT: contredite » quand une prédiction
-   attend sa qualification (les deux seules valeurs reconnues — rien d'autre,
-   pas de « non applicable »), la ligne « PREDICTION: … », puis le bloc
+   « VERDICT: confirmee », « VERDICT: contredite » ou « VERDICT: caduque »
+   quand une prédiction attend sa qualification (les trois issues de §H16.3,
+   lues par familles de jetons), la ligne « PREDICTION: … », puis le bloc
    ```json à deux clés (§H15.1) ; les manques restent nommés en tête du
    message. La forme est une constante de `prompts.py` (règle 5). En mode
    `transcript`, la redemande de verdict (§H16.3) attend une réponse à une
@@ -1010,9 +1010,35 @@ prédiction (VISTA) ; sur le fil officiel, la prédiction part dans le champ
 inchangé) ; le harnais présente prédit-contre-observé et exige la qualification
 avant l'action suivante.
 
+Trois issues de qualification, et la LECTURE accepte ce que le modèle exprime
+réellement (POINT TRANCHÉ du 2026-09-02 ; mesure qui désigne la règle : série
+live h25 bruit 20, 18 refus de verdict sur 5 runs dont 17 portaient une
+qualification EXPLICITE que la lecture stricte refusait — 8 « non applicable »,
+6 verdicts en prose ou en milieu de ligne, 1 faute de frappe — chaque refus
+coûtant un appel et le forçage « contredite » falsifiant la métrique) :
+
+- `confirmee` — famille de jetons `confirm*` : l'observation confirme la
+  prédiction ;
+- `contredite` — familles `contred*` et `infirm*` : l'observation la contredit ;
+  déclenche l'événement CONTRADICTION ;
+- `caduque` — famille `caduc*`, et les formes « non applicable » /
+  « non_applicable » / « n/a » : un événement postérieur a rendu la prédiction
+  sans objet (elle n'est ni validée ni démentie). Ne déclenche PAS Bug-Fixing —
+  une prédiction caduque n'est pas un bug du modèle du monde — et se compte à
+  part (`issue: "caduque"`, §H16.5), jamais dans les confirmées.
+
+Le jeton se lit OÙ QU'IL SOIT dans la réponse (`VERDICT:` en tête de ligne ou en
+milieu de phrase, casse et accents tolérés) : refuser un verdict présent mais mal
+placé mesure la ponctuation, pas la qualification. Si des occurrences distinctes
+portent des familles CONTRADICTOIRES (par exemple une réponse qui recopie la
+forme annoncée entière), aucune n'est retenue : la qualification est ambiguë et
+se redemande. L'issue écartée — accepter la prose après « VERDICT: » et y
+chercher les familles — est refusée : « n'est pas confirmée » y serait lu
+« confirmée », une négation inversant le sens.
+
 - **Mode `transcript`.** L'invite d'Evaluation cite la prédiction conservée
   (« Tu avais prédit : “…” ») avec l'observation, et exige une ligne
-  `VERDICT: confirmee` ou `VERDICT: contredite` (accents et casse tolérés).
+  `VERDICT:` portant l'une des trois issues.
   Réponse sans verdict → redemande nommée, au plus `AVO_GARDE_RETRIES` fois ;
   budget épuisé → issue prudente : la prédiction est réputée CONTREDITE (une
   prédiction non qualifiée n'est pas confirmée), l'événement `garde_forcee` est
@@ -1048,8 +1074,10 @@ la mise à jour de `GUIDE.md` est exigée avant de poursuivre.
 **H16.5 — Observabilité et preuves.** Chaque décision de garde écrit un événement
 `garde` dans `metrics.jsonl` (H11.2) : `garde` ∈ {documentaire, prediction,
 evaluation, persistance}, `issue` ∈ {satisfaite_apres_redemande, redemandee,
-tour_clos, forcee} — le chemin nominal (artefact présent du premier coup) n'écrit
-rien, pour ne pas noyer les métriques. Le bilan de run compte les redemandes
+tour_clos, forcee, caduque} — le chemin nominal (artefact présent du premier
+coup) n'écrit rien, pour ne pas noyer les métriques ; `caduque` (§H16.3) trace
+chaque prédiction qualifiée sans objet, pour que le relevé distingue les
+confirmées des caduques. Le bilan de run compte les redemandes
 totales. Preuves exigées (U30) : unitaires par garde (refus nommé quand l'artefact
 manque, passage quand il est là, budget épuisé → issue écrite ici), intégration
 sur `cible` (partie jouée sous gardes, artefacts dans le workspace), E2E rejeu

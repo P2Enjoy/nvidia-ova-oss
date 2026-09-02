@@ -2,6 +2,24 @@
 
 ## [Non publié]
 
+### 2026-09-02 — U31 : la garde d'évaluation lit la qualification réellement exprimée (§H16.3 : trois issues dont « caduque ») et le dépôt lit la notation `PR_k` (§S4.2)
+
+- Mesuré (série live h25 bruit 20, 5 runs complets) : 18 refus de verdict dont
+  17 portaient une qualification EXPLICITE refusée par la lecture stricte —
+  8 « non applicable » (l'événement suivant avait rendu la prédiction sans
+  objet), 6 verdicts en milieu de ligne ou en prose, 1 faute de frappe ; et
+  3 des 5 invalides du dépôt s2 sont des `merge` en notation `pr_3`/`PR_5`
+  (tiret bas), forme imposée par les clés JSON de Σ et par les noms d'objets de
+  l'environnement lui-même (`branche_4`).
+- §H16.3 (point tranché) : trois issues de qualification — `confirmee`,
+  `contredite` (famille `infirm*` incluse), `caduque` (famille `caduc*`,
+  « non applicable », « n/a ») ; le jeton se lit où qu'il soit dans la réponse ;
+  deux familles contradictoires = qualification ambiguë, redemandée. `caduque`
+  ne déclenche pas Bug-Fixing et se compte à part (`issue: "caduque"`, §H16.5).
+  Prompts v1.6 : les trois valeurs annoncées d'emblée.
+- §S4.2 (tranché étendu) : le séparateur tiret bas après le préfixe `PR` se lit
+  (`PR_5`, `pr_3`) ; `pr:3` reste invalide nommée.
+
 ### 2026-09-02 — U31 : le protocole du mode `state` annonce d'emblée l'exigence documentaire et l'enseignement d'un refus (§H16.0.7)
 
 - Mesuré (série live entrepôt h25 bruit 5, seeds 1–3) : 3 runs sur 3 perdent
