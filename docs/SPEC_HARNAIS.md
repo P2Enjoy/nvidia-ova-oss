@@ -816,8 +816,30 @@ jamais sur un `WORKING.md` vide.
 - **Mode `state`.** L'artefact est le champ `hypotheses` de Σ (§H15.6) : tant
   qu'il est vide, l'action du pas est retenue (non jouée, donc gratuite) et le pas
   suivant reçoit l'erreur nommée par le mécanisme d'erreur d'action existant
-  (§H15.8). `hypotheses` survivant aux niveaux, la garde ne mord en pratique qu'à
-  l'ouverture du run — c'est voulu : Σ est trans-tour, pas trans-note.
+  (§H15.8). `hypotheses` survivant aux niveaux, la garde ne mord qu'à l'ouverture
+  du run : Σ est trans-tour, pas trans-note, et le vidage en cours de run est
+  refusé (voir ci-dessous).
+- **Refus de garde = pas blanc atomique (mode `state`).** Quand une garde retient
+  l'action d'un pas, le `state_patch` du même pas est ANNULÉ avec elle : Σ revient
+  à sa valeur d'avant le pas, et le workspace avec lui. Le pas suivant ré-émet
+  patch et action depuis le même couple (Σ, O) — le mode `state` étant sans
+  mémoire, rien n'est perdu. Motif, mesuré (journal 2026-09-02, suite 21) : dans
+  la source, patch et action forment UN pas (l'exemple B.3 écrit l'effet attendu
+  de l'action dans le patch du même pas) ; acquérir le patch en retenant l'action
+  fait mentir Σ — un run archivé porte l'inventaire d'un rangement jamais joué,
+  et les deux pas suivants (un `wait` indu, une action invalide) découlent de ce
+  seul mensonge. La ligne d'archive du refus (§H15.10) suffit à retrouver le
+  patch annulé : il n'entre jamais dans Σ.
+- **`hypotheses` ne se vide pas en cours de run (mode `state`).** Un patch qui
+  viderait le champ commun `hypotheses` alors qu'il est non vide — liste vide
+  explicite ou `null` de réinitialisation — est un `EtatInvalide` nommé, traité
+  par le rollback-retry de §H15.4 (immédiat, gratuit en événements) : une
+  hypothèse périmée se remplace par sa révision, elle ne se retire pas sans
+  successeur. À l'ouverture (vide → vide), rien n'est refusé. Le protocole
+  engendré (§H15.9) énonce la règle — le prompt conseille, la structure impose.
+  Motif, mesuré (suites 20 et 21) : le modèle « nettoie » ses hypothèses caduques
+  par `[]` en révisant, ce qui réarmait la garde documentaire au pas suivant —
+  jusqu'à 11 refus sur 25 appels d'un même run.
 
 **H16.2 — Garde de prédiction.** Une action n'est jouable qu'accompagnée de sa
 prédiction (VISTA) ; sur le fil officiel, la prédiction part dans le champ

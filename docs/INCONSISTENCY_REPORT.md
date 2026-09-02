@@ -5,6 +5,22 @@ registre devient vide, le fichier lui-même est supprimé du dépôt (CLAUDE.md 
 
 ## Ouverts
 
+### 2026-09-02 — L'échelle de relances H4.5 est plus courte que les rafales de 500 mesurées sur le pont
+
+- **Constat.** `ATTENTES_RETRY = (1, 4, 16, 45, 90)` s couvre, appels compris
+  (~40 s max chacun via le pont), environ six minutes d'indisponibilité. Les
+  rafales de HTTP 500 du pont (« the edge function timed out », limite de 40 s
+  avant premiers en-têtes alors que l'origine répond) durent au moins autant.
+- **Mesure.** 2026-09-02, run `s20-derive-entrepot-h10-s1` : rafale de
+  02:38:19 à 02:44:07, les cinq relances épuisées, épisode mort à 2/10
+  événements (`arret: incident : ServerError: erreur serveur HTTP 500`).
+  Même profil que la campagne de la suite 20 (journal).
+- **Issue retenue.** Allonger l'échelle (un ou deux barreaux de l'ordre de
+  180 s) ou la rendre configurable, pour couvrir les rafales mesurées sans
+  retarder le diagnostic des erreurs non transitoires. Correction étrangère à
+  l'unité de la session (H16.1) : comportement laissé inchangé, à traiter dans
+  un commit dédié par une session dont c'est le chemin.
+
 ### 2026-09-01 — `scripts/smoke_pile.sh` : le contrôle `RESET` ne suit plus le contrat du rejoueur ARC
 
 - **Constat.** Le script de fumée envoie `POST /api/cmd/RESET` avec un corps `{}`

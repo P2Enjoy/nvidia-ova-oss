@@ -2065,3 +2065,48 @@ documentaire refuse si souvent, et livrer la correction générique désignée ;
 refuser sans consommer d'événement une action dont un argument n'a jamais
 figuré dans une observation ni dans Σ (l'analogue de « Read avant Edit »),
 à ne coder que si `pas.jsonl` montre des identifiants inventés.
+
+---
+
+## 2026-09-02 (suite 21, session planifiée) — U31 : dépouillement de `pas.jsonl`, révision H16.1 (pas blanc atomique, `hypotheses` non vidable)
+
+**Relevé (a) interrompu — endpoint instable.** Série A/B h10 dérive lancée
+(`s20-derive-{entrepot,depot}-h10-s{1,2,3}`, live, `state`, gardes, schéma du
+domaine). Deux rafales de HTTP 500 en dix minutes — mesuré à la sonde : le pont
+rend « the edge function timed out », sa limite de 40 s avant premiers en-têtes,
+alors que l'origine répond (modèle chargé, `/api/version` 200 en 0,5 s). La
+rafale de 02:38–02:44 (≈ 6 min) excède la couverture de l'échelle de relances
+H4.5 (attentes 1+4+16+45+102 s ≈ 6 min appels compris) : s1 meurt à 2/10
+événements (relevé partiel `arret: incident`, non comparable §S5.3), s2 en 500
+dès son premier appel. Point tranché : série arrêtée, la condition « endpoint
+stable » (suite 20) n'est pas remplie ; le relevé se refera sous le code corrigé
+— l'A/B pur H15.9 (suite 19 contre suite 20 à code constant) reste sans mesure
+complète et le restera, les prochaines lignes de base étant celles du code
+suite 21. Défaut de plomberie consigné au registre : l'échelle de relances est
+plus courte que la rafale mesurée.
+
+**Dépouillement (b) — `pas.jsonl` du run s1 (10 pas archivés avant l'incident,
+4 refus documentaires, score 0, 0/2 correctes).** La cause est double et NE
+tient pas au « mauvais vouloir » du modèle :
+
+1. **Le patch acquis sous action retenue fait mentir Σ.** t1 : le modèle répond
+   patch (`inventaire.etagere_0=article_0`, `en_attente=[]` — l'effet ATTENDU de
+   son action, exactement comme l'exemple B.3 du papier) + `store`. La garde
+   documentaire retient `store` (hypotheses vide, cas d'ouverture voulu), mais le
+   patch est acquis (H16.1 d'avant cette session). Σ affirme un rangement jamais
+   joué : t2 en déduit la livraison redondante (`wait` indu, 0), t3 déplace un
+   article jamais rangé (invalide), t4 doit tout réviser.
+2. **Le modèle vide `hypotheses` en révisant.** t4 : révision après l'erreur,
+   patch `hypotheses: []` (nettoyage des hypothèses caduques) → garde réarmée,
+   refus t4 et t5. Même mécanisme que les 11 refus/25 appels de la suite 20.
+
+**Décision (H16.1 révisé sur place, spec committée avant le code).**
+(1) Refus de garde = pas blanc atomique : le patch du pas refusé est annulé avec
+l'action, Σ et workspace reviennent à l'état d'avant le pas — patch et action
+forment un pas dans la source ; rien n'est perdu, le pas suivant re-dérive tout
+du même (Σ, O). (2) Un patch qui vide `hypotheses` non vide (liste vide ou
+`null`) est un `EtatInvalide` de §H15.4 (retry immédiat, gratuit) ; le protocole
+engendré énonce la règle. Issues écartées : ne corriger que le prompt (la
+structure doit imposer, H16.0) ; annuler aussi le patch des actions invalides
+(l'événement y est consommé et le patch peut porter une vraie correction —
+hors mesure, comportement H15.8 inchangé).
