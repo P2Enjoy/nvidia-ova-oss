@@ -2,6 +2,27 @@
 
 ## [Non publié]
 
+### 2026-09-02 — U31 : action refusée par l'environnement = patch annulé (§H15.8, drapeau `refusee`)
+
+- L'issue d'une action peut désormais déclarer `refusee` (faux par défaut,
+  contrat §H8.2) : vrai quand l'environnement a refusé l'action — elle n'a
+  rien exécuté. En mode `state`, le `state_patch` du même pas est alors ANNULÉ :
+  Σ et le workspace reviennent à l'avant-pas, la ligne d'archive porte le patch
+  annulé avec `patch_annule: true` (§H15.10), et le pas suivant lit le refus
+  dans l'issue rappelée. Un environnement qui ne déclare pas le drapeau se
+  comporte comme avant ; l'adaptateur du banc expose `refusee = not valide`
+  (§S6.1), le fil ARC ne refuse jamais (`IssueArc.refusee = False`).
+- Motif mesuré (journal suite 24, h25 bruit 0 entrepot seeds 1–3) : 21 des
+  22 actions refusées de la série portaient un patch inscrivant dans Σ l'effet
+  attendu d'une action qui n'a pas eu lieu — chaque faux fait causant l'erreur
+  suivante (cascades de 9 à 11 invalides, scores 0,48 et 0,52 contre 0,96 pour
+  le run sans cascade). Même principe que le pas blanc des gardes (§H16.1).
+- Le protocole engendré énonce la règle ; cassettes E2E régénérées
+  (`make seed-e2e`, double génération vérifiée), pile relancée.
+- Preuves : 664 unitaires (6 nouveaux : annulation, conservation sur action
+  acceptée, environnement sans drapeau inchangé, protocole, adaptateur
+  entrepôt valide/invalide), 152 intégration, 6 E2E, lint, mypy strict, build.
+
 ### 2026-09-02 — U31 : le vidage d'« hypotheses » se conserve au lieu d'invalider le patch (H16.1 révisé)
 
 - Un patch qui vide le champ commun `hypotheses` alors qu'il est non vide
