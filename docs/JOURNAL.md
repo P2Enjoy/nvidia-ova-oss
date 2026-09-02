@@ -2131,3 +2131,31 @@ engendré énonce la règle. Issues écartées : ne corriger que le prompt (la
 structure doit imposer, H16.0) ; annuler aussi le patch des actions invalides
 (l'événement y est consommé et le patch peut porter une vraie correction —
 hors mesure, comportement H15.8 inchangé).
+
+**Livré (H16.1 révisé, commit `f836da7`/`60308ac`).** (1) `boucle.py` : sous
+refus de garde, Σ revient à `etat_avant` et le workspace n'écrit l'état
+qu'après le passage des gardes — le patch annulé reste lisible dans
+`pas.jsonl`. (2) `etat.py` : vider `hypotheses` non vide (liste vide ou `null`)
+est un `EtatInvalide` nommé ; l'ouverture reste permise. (3) `prompts.py` 1.3 :
+le protocole engendré énonce « remplace une hypothèse périmée par sa
+révision » ; cassettes E2E régénérées (`make seed-e2e`), pile relancée.
+
+**Campagne complète (fin de session).** `make check` VERT : lint (117 fichiers),
+mypy (116 fichiers), 642 unitaires (dont 5 nouveaux : vidage refusé ×2,
+remplacement permis, ouverture permise, annulation du patch sous refus ; et le
+protocole énonce la règle), 151 intégration, 6 E2E. `make build` : ÉCHEC
+d'environnement, `429 Too Many Requests` de docker.io sur `python:3.13-slim`
+(limite de tirage, étrangère au produit ; l'image dev s'est construite au
+démarrage de session) — retenté, à re-vérifier en prochaine session si le 429
+persiste.
+
+**Où reprendre.** U31, dans l'ordre : (a) NE PAS jouer de live tant que le
+client streamé (§H4.7, spécifié par la session interactive, commit `e22afd7`)
+n'est pas livré — les générations longues meurent au pont et la campagne
+interactive occupe le runner ; (b) une fois le streaming livré, relever les
+lignes de base h10/h25 sous le code suite 21 (H15.9 + H16.1 ensemble — l'A/B
+pur H15.9 à code constant est abandonné, consigné plus haut) ; (c) dépouiller
+`pas.jsonl` des premiers runs post-correction : les refus documentaires
+doivent retomber à ~1 par run (ouverture seule) et les cascades « Σ ment »
+disparaître — si les refus persistent, la mesure suivante désignera la piste
+(garde d'ancrage, voir suite 20).
