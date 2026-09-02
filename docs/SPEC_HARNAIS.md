@@ -780,8 +780,9 @@ harnais qu'on ne peut pas dépouiller ne s'améliore pas (U31, « observer »).
 Règle : chaque appel du mode `state` écrit UNE ligne JSON dans
 `runs/<run_id>/state/pas.jsonl` — `tour`, `tentative`, la réponse brute du modèle
 (`contenu`), puis selon l'issue : `patch` et `action` décodés, ou `erreur` (patch
-malformé ou invalide, §H15.4), et `refus` quand une garde retient l'action
-(§H16). Cette archive est le pendant des frames ARC (§A4, §H15.7) : un filet
+malformé ou invalide, §H15.4), `refus` quand une garde retient l'action
+(§H16), et `hypotheses_conservees: true` quand le patch demandait un vidage
+d'`hypotheses` resté sans effet (§H16.1). Cette archive est le pendant des frames ARC (§A4, §H15.7) : un filet
 sans perte pour le diagnostic et pour retrouver après coup ce que Σ n'a pas
 projeté. Elle n'entre JAMAIS dans un prompt : la propriété O(1) de §H15.1 est
 intacte, et le préremplissage ne la voit pas. Sans workspace (boucle éprouvée sur
@@ -846,7 +847,7 @@ jamais sur un `WORKING.md` vide.
   suivant reçoit l'erreur nommée par le mécanisme d'erreur d'action existant
   (§H15.8). `hypotheses` survivant aux niveaux, la garde ne mord qu'à l'ouverture
   du run : Σ est trans-tour, pas trans-note, et le vidage en cours de run est
-  refusé (voir ci-dessous).
+  sans effet sur le champ (voir ci-dessous).
 - **Refus de garde = pas blanc atomique (mode `state`).** Quand une garde retient
   l'action d'un pas, le `state_patch` du même pas est ANNULÉ avec elle : Σ revient
   à sa valeur d'avant le pas, et le workspace avec lui. Le pas suivant ré-émet
@@ -860,14 +861,21 @@ jamais sur un `WORKING.md` vide.
   patch annulé : il n'entre jamais dans Σ.
 - **`hypotheses` ne se vide pas en cours de run (mode `state`).** Un patch qui
   viderait le champ commun `hypotheses` alors qu'il est non vide — liste vide
-  explicite ou `null` de réinitialisation — est un `EtatInvalide` nommé, traité
-  par le rollback-retry de §H15.4 (immédiat, gratuit en événements) : une
-  hypothèse périmée se remplace par sa révision, elle ne se retire pas sans
-  successeur. À l'ouverture (vide → vide), rien n'est refusé. Le protocole
-  engendré (§H15.9) énonce la règle — le prompt conseille, la structure impose.
-  Motif, mesuré (suites 20 et 21) : le modèle « nettoie » ses hypothèses caduques
-  par `[]` en révisant, ce qui réarmait la garde documentaire au pas suivant —
-  jusqu'à 11 refus sur 25 appels d'un même run.
+  explicite ou `null` de réinitialisation — s'applique avec `hypotheses`
+  INCHANGÉ : le reste du patch et l'action du pas jouent normalement, et la
+  ligne d'archive du pas (§H15.10) porte `hypotheses_conservees: true` — un
+  écart nommé, jamais silencieux. À l'ouverture (vide → vide), rien n'est
+  retenu. Le protocole engendré (§H15.9) énonce la règle — la structure impose
+  l'invariant, le prompt dit comment s'y conformer ; une hypothèse périmée
+  reste visible jusqu'à sa révision, ce qui est exactement la règle (« se
+  remplace, ne se retire pas sans successeur »). Motif, mesuré (suites 20, 21
+  et 23) : le modèle « nettoie » ses hypothèses caduques par `[]` en révisant —
+  d'abord 11 réarmements de la garde documentaire sur 25 appels d'un même run
+  (suite 20) ; traité en `EtatInvalide` à rollback-retry (suite 21), le vidage
+  a coûté 12 relances sur un run h25 et TUÉ en `RetriesEpuises` un run dont
+  toutes les actions étaient correctes (suite 23, s1 h25) : dans un mode sans
+  mémoire, la relance n'enseigne rien d'un tour à l'autre — seul Σ, que la
+  conservation préserve, porte l'apprentissage intra-run.
 
 **H16.2 — Garde de prédiction.** Une action n'est jouable qu'accompagnée de sa
 prédiction (VISTA) ; sur le fil officiel, la prédiction part dans le champ
