@@ -2727,3 +2727,59 @@ pas refusé — à spécifier posément) et amorçage documentaire du premier pa
 VÉRIFIER EN OUVERTURE que l'endpoint répond (`/api/version` en 200) avant de
 lancer une série live ; si la panne persiste sur plusieurs sessions, le serveur
 d'inférence relève du responsable (arbitrage cas 4, accès externe).
+
+---
+
+## 2026-09-03 (suite 32, session planifiée) — U31 : la tension §H15.8 tranchée — le patch annulé est rappelé verbatim au pas suivant (prompts v1.7) ; l'indisponibilité de l'endpoint traverse une troisième session
+
+**Unité.** U31 (jouer/observer/améliorer), reprise des suites 30–31 : rejouer
+sous v1.6 les points morts de la série bruit 20 h25 — et, la panne persistant,
+la friction désignée « tension §H15.8 » traitée en repli hors ligne.
+
+**Jouer : BLOQUÉ par la même panne d'endpoint.** Sondes en ouverture (23:35),
+en cours (23:50) et après livraison (00:05+) : `HTTP 500 the edge function
+timed out` en ~37 s sur `/api/version`, plus une coupure sèche — l'origine
+derrière le pont 443 ne répond toujours pas (panne continue depuis ~22:40, à
+travers les suites 30, 31 et 32). Aucun run live lancé, aucun relevé partiel de
+plus. **La panne dure maintenant plus d'une session entière : le serveur
+d'inférence relève du responsable (arbitrage cas 4, accès/service externe) —
+le harnais, lui, reste livrable et livré.**
+
+**Améliorer (spécifié d'abord, `94d6b0c` avant le code `c43a7bc`) : la tension
+§H15.8 tranchée.** Mesure qui désigne (suite 30, dépôt s2-v2, cascade
+`etagere_2`, 9 invalides) : à t08 le modèle rejoue une action refusée en
+CORRIGEANT Σ dans le même pas, et l'annulation atomique jette la correction
+avec l'action — 8 refus « occupée » sur le même point, la boucle se
+ré-enseigne. Point tranché : l'annulation RESTE (Σ n'enregistre jamais l'effet
+d'une action non exécutée) et le prompt du pas suivant rappelle le patch annulé
+VERBATIM — action nommée, JSON tel quel — avec l'instruction générique de
+réinscrire ce qui y décrit la situation indépendamment de l'action refusée.
+C'est le modèle qui décide de ce qui survit, jamais le harnais. Deux issues
+écartées avec leur motif (dans la spéc) : n'annuler que les clés engagées par
+la prédiction (interprétation sémantique d'un texte libre par le harnais) ;
+conserver le patch quand le pas suivant rejoue la même action (récompense la
+répétition et perd la correction quand le modèle joue autre chose — le
+comportement souhaité). Rappel borné, omis sur patch vide, présent au seul pas
+qui suit le refus. Prompts v1.7 (`rappel_patch_annule`) ; les chemins nominaux
+sont inchangés — les cassettes E2E existantes passent telles quelles, vérifié.
+
+**Preuves.** 4 unitaires dédiés (`test_pas_refuse.py` : rappel verbatim au pas
+suivant, omission sur patch vide, non-survie au-delà d'un pas, remplacement par
+un nouveau refus). Campagne complète APRÈS le changement, verte : lint, ruff
+format (121 fichiers), mypy strict (120), **703 unitaires**, **153
+intégration**, **6 E2E** sur la pile montée et seedée de la session. Balayage
+« zéro indice de jeu » : exécutable, inclus dans les unitaires, vert.
+`make build` VERT (image de production), après un premier essai rejeté
+`429 Too Many Requests` par le registre Docker — relance avec backoff, aléa
+d'infrastructure étranger au produit.
+
+**Où reprendre.** VÉRIFIER EN OUVERTURE que l'endpoint répond (`/api/version`
+en 200). S'il répond : rejouer les points morts de la série bruit 20 h25 —
+entrepôt s2–s3, dépôt s1–s3 — désormais sous prompts v1.7 (chemins nominaux
+identiques à v1.6 ; seul le pas suivant un refus change, ce qui est justement
+la mesure attendue : la cascade s2-v2 doit disparaître) ; puis bruit 50 h25
+multi-seeds et dérive h25 dépôt. S'il ne répond pas : la panne aura traversé
+quatre sessions — le signaler au responsable en compte rendu (arbitrage cas 4)
+et prendre une amélioration hors ligne UNIQUEMENT si une mesure archivée la
+désigne (l'amorçage documentaire du premier pas reste à instruire sur les
+prochains relevés, rien d'inventé sans données).

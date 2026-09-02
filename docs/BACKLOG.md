@@ -878,10 +878,14 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   contre 3–7 sous v1.5), relevés partiels archivés hors comparaison. Campagne
   complète verte (lint, mypy strict, 699 unitaires, 153 intégration, 6 E2E,
   build).
-  **Reste à livrer** : rejouer sous v1.6 les points morts de la série bruit 20
-  h25 (entrepôt s3, dépôt s1–s3) ; puis bruit 50 à h25 multi-seeds (3 seeds
+  **Reste à livrer** : rejouer les points morts de la série bruit 20 h25
+  (entrepôt s2–s3, dépôt s1–s3) — désormais sous prompts v1.7 (suite 32 :
+  chemins nominaux identiques à v1.6, seul le pas suivant un refus change, et
+  c'est la mesure attendue) ; puis bruit 50 à h25 multi-seeds (3 seeds
   minimum par point, §S5.4) sur les deux environnements, dérive h25 dépôt,
-  alimentation du déclencheur U25 avec ces séries.
+  alimentation du déclencheur U25 avec ces séries. Préalable de chaque série :
+  l'endpoint répond (`/api/version` en 200) — panne continue à travers les
+  suites 30–32.
 
 ## Lot H — La méthode dans la structure
 
@@ -1038,6 +1042,18 @@ observer : aucun refus de garde consécutif sur les trois archives `pas.jsonl` �
 le ping-pong a disparu ; friction suivante instruite : résolution des demandes
 du dépôt basse (0–0,4), part du comportement modèle à établir sur les
 transcripts avant toute correction.
+
+**Itération du 2026-09-03 (suite 32, session planifiée)** — jouer : BLOQUÉ, la
+panne d'endpoint des suites 30–31 persiste (500 « edge function timed out » en
+ouverture, en cours et après livraison — troisième session traversée : le
+serveur d'inférence relève du responsable, arbitrage cas 4) ; observer/améliorer
+(repli hors ligne sur la mesure de la suite 30, cascade s2-v2) : la tension
+§H15.8 TRANCHÉE — l'annulation atomique reste, et le patch annulé d'une action
+refusée est rappelé VERBATIM au pas suivant (le modèle décide de ce qui survit,
+jamais le harnais ; deux issues écartées avec motif dans la spéc) ; spec
+`94d6b0c` avant code `c43a7bc`, prompts v1.7, 4 unitaires dédiés, cassettes E2E
+inchangées et vertes ; campagne complète verte (lint, mypy strict, 703
+unitaires, 153 intégration, 6 E2E, build).
 
 **Itération du 2026-09-02 (suite 31, session planifiée, parallèle à la
 suite 30)** — jouer : série propre v1.6 tentée sur le même créneau, arrêtée par
