@@ -795,7 +795,7 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   campagne complète verte (lint, mypy strict 112 fichiers, 592 unitaires,
   148 intégration, 5 E2E, build). Le branchement adaptateur+CLI du dépôt
   appartient à U29a4 (§S7, point tranché à la clôture).
-- **U29a4 `[~]`** — branchement du Dépôt logiciel à l'adaptateur et à la CLI
+- **U29a4 `[x]`** — branchement du Dépôt logiciel à l'adaptateur et à la CLI
   (§S6), puis bruit et récupération d'état en campagne de banc, relevés
   multi-seeds, alimentation du déclencheur U25.
   **Livré et vérifié le 2026-09-01** : adaptateur des deux environnements (base
@@ -888,10 +888,18 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   disparu ; friction dominante restante sur l'entrepôt : refus non répercutés
   dans Σ (comportement modèle). Redemandes de garde 0–3 par run (correctif
   §H16.3 confirmé sur 5 runs de plus).
-  **Reste à livrer** : bruit 50 à h25 multi-seeds (3 seeds minimum par point,
-  §S5.4) sur les deux environnements, dérive h25 dépôt, alimentation du
-  déclencheur U25 avec ces séries. Préalable de chaque série : l'endpoint
-  répond (`/api/version` en 200).
+  **Livré et vérifié le 2026-09-03 (suite 34) — unité CLOSE.** Le « reste à
+  livrer » est intégralement exécuté : bruit 50 h25 seeds 1–3 sur les DEUX
+  environnements (entrepôt **0,72 / 0,88 / 0,80**, moyenne 0,80 ; dépôt
+  **0,96 / 1,00 / 0,96**, moyenne 0,973, résolution 15/17 — le bruit 50 ne
+  dégrade pas plus que les niveaux inférieurs, la variance inter-runs domine),
+  dérive h25 dépôt seeds 1–3 (**0,92 / 0,92 / 0,92**, récupération 1–2 pas,
+  3/3 récupérés, résolution 14/14), séries consignées au journal (suite 34) et
+  alimentant le déclencheur U25. Ces relevés ont en outre réfuté la mesure
+  attendue de v1.8 (5/6 refus documentaires t01 à bruit 50) et désigné
+  l'amorce documentaire adjacente (§H16.0.7, prompts v1.9), livrée et validée
+  live (0 refus t01 sur le pire cas). La poursuite des campagnes de banc et
+  du déclencheur U25 appartient à l'unité permanente U31.
 
 ## Lot H — La méthode dans la structure
 
@@ -1048,6 +1056,18 @@ observer : aucun refus de garde consécutif sur les trois archives `pas.jsonl` �
 le ping-pong a disparu ; friction suivante instruite : résolution des demandes
 du dépôt basse (0–0,4), part du comportement modèle à établir sur les
 transcripts avant toute correction.
+
+**Itération du 2026-09-03 (suite 34, session planifiée)** — jouer : les neuf
+runs qui SOLDENT U29a4 (bruit 50 h25 seeds 1–3 sur les deux environnements,
+dérive h25 dépôt seeds 1–3 — détail dans U29a4 et au journal) ; observer : la
+mesure attendue de v1.8 réfutée sous bruit lourd (5/6 refus documentaires t01
+à bruit 50, 0/3 à bruit 0 — gradient dépôt 0/6, 0/3, 2/3 : la phrase finale du
+protocole perd contre une observation volumineuse) ; améliorer : §H16.0.7
+complété (spec `47525e5` avant code `a8a0e4e`) — l'amorce documentaire ouvre
+le message du pas tant que « hypotheses » est vide, prompts v1.9, 2 unitaires,
+cassettes régénérées, validation live sur le pire cas (0 refus t01, redemandes
+4 → 1) ; campagne complète verte (706 unitaires, 153 intégration, 6 E2E,
+build).
 
 **Itération du 2026-09-03 (suite 33, session planifiée)** — jouer : les cinq
 points morts bruit 20 h25 rejoués sous v1.7, série indépendante parallèle à

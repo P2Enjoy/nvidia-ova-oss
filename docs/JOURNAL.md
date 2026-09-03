@@ -2876,3 +2876,71 @@ restante (suite 32, non traitée ici) : refus d'environnement non répercutés
 dans Σ sur l'entrepôt — instruire sur les prochaines archives si une famille
 de formulations du refus est mieux répercutée. Vérifier en ouverture que
 l'endpoint répond (`/api/version` en 200) avant toute série live.
+
+---
+
+## 2026-09-03 (suite 34, session planifiée) — U31 : U29a4 soldée (bruit 50 h25 sur les deux environnements, dérive h25 dépôt), et l'amorce documentaire adjacente livrée (prompts v1.9) — la mesure attendue de v1.8 réfutée sous bruit lourd puis rétablie
+
+**Unité.** U31 (jouer/observer/améliorer) → solder U29a4 : les trois points du
+« reste à livrer » (bruit 50 h25 multi-seeds sur les deux environnements,
+dérive h25 dépôt, alimentation du déclencheur U25). Endpoint vérifié en
+ouverture : `/api/version` 200 en 1,7 s.
+
+**Jouer : neuf runs live complets, une exécution à la fois, sous v1.8
+(`ea4be6a`).** Bruit 50 h25 seeds 1–3 :
+
+| env | seed | score | corr/inc/inv | résolution | redemandes | retries patch | tokens | durée s | arrêt |
+|---|---|---|---|---|---|---|---|---|---|
+| entrepot | 1 | 0,72 | 18/3/4 | — | 4 | 0 | 89 443 | 491 | épuisé |
+| entrepot | 2 | 0,88 | 22/0/3 | — | 2 | 0 | 78 437 | 305 | épuisé |
+| entrepot | 3 | 0,80 | 20/1/4 | — | 2 | 0 | 83 503 | 439 | épuisé |
+| depot | 1 | 0,96 | 24/0/1 | 4/5 | 5 | 0 | 89 455 | 446 | épuisé |
+| depot | 2 | 1,00 | 25/0/0 | 7/7 | 1 | 0 | 77 015 | 307 | épuisé |
+| depot | 3 | 0,96 | 24/0/1 | 4/5 | 5 | 1 | 91 995 | 292 | épuisé |
+
+Dérive h25 dépôt (bruit 0) seeds 1–3 : **0,92 / 0,92 / 0,92**, récupération
+**1 / 2 / 2 pas** (3/3 récupérés), résolution 4/4, 6/6, 4/4, zéro invalide de
+cascade. **Le bruit 50 ne dégrade pas plus que les niveaux inférieurs :
+entrepôt moyenne 0,80 (au-dessus des séries mixtes bruit 20), dépôt moyenne
+0,973 (au niveau des séries bruit 5 et 20, résolution 15/17) — la variance
+inter-runs domine, constat des suites 30–33 confirmé.** Ces séries alimentent
+le déclencheur U25 (fourchette h25 bruit 0 de référence [0,76 ; 0,84] :
+l'entrepôt à bruit 50 y entre, le dépôt la dépasse).
+
+**Observer : la mesure attendue de v1.8 (« zéro refus documentaire t01 »)
+est RÉFUTÉE sous bruit lourd.** Refus t01 par la garde documentaire : 5 runs
+sur 6 à bruit 50 (3/3 entrepôt, 2/3 dépôt), 0/3 à bruit 0 (dérive). Gradient
+dépôt seul, même protocole v1.8 : 0/6 à bruit 0, 0/3 à bruit 20 (suite 33),
+2/3 à bruit 50 — la phrase finale du protocole (message système) perd contre
+une observation volumineuse : la consigne éloignée s'efface derrière le
+contenu adjacent. Friction « refus non répercutés dans Σ » (suite 32) :
+toujours présente sur l'entrepôt (article_7 retenté sur trois étagères au s1),
+aucune boucle pathologique, rien de neuf qui désigne.
+
+**Améliorer (spécifié d'abord, `47525e5` avant le code `a8a0e4e`) : l'amorce
+documentaire adjacente.** §H16.0.7 complété : tant que « hypotheses » de Σ est
+vide — la condition exacte de la garde §H16.1, donc à l'ouverture du run —, le
+message du pas s'OUVRE sur un rappel d'une ligne de l'exigence
+(`AMORCE_DOCUMENTAIRE`, prompts v1.9) ; il disparaît dès la première hypothèse
+écrite, et l'erreur nommée d'un pas refusé garde la primauté en tête
+(§H16.0.6). Issue écartée (dans la spéc) : écrire le rappel dans l'observation
+— elle appartient à l'environnement (H8.1). Preuve live de validation sur le
+pire cas (entrepôt s1 bruit 50, 3/3 refus sous v1.8) : **0 refus documentaire
+avant la première action**, redemandes 4 → 1, score 0,76 (± bruit de variance).
+
+**Preuves.** 2 unitaires dédiés (amorce en tête au premier pas puis disparue ;
+gardes désactivées → pas d'amorce) ; cassettes E2E régénérées (`make
+seed-e2e`, double génération vérifiée, pile relancée). Campagne complète APRÈS
+le changement, verte : lint, ruff format (121 fichiers), mypy strict (120),
+**706 unitaires**, **153 intégration**, **6 E2E** ; balayage « zéro indice de
+jeu » inclus et vert ; `make build` VERT.
+
+**Où reprendre.** U29a4 est soldée (les preuves du « reste à livrer » sont
+exécutées) — U31 continue : prochaine cible d'affinage selon l'ordre a → b → c
+de U29 (banc b, patron InterCode CTF, spécification d'abord) ou séries
+complémentaires si une mesure les désigne (bruit 50 entrepôt sous v1.9,
+dérive entrepôt h25). Frictions ouvertes : refus d'environnement non
+répercutés dans Σ (entrepôt, comportement modèle) ; vérifier sur les
+prochaines archives que l'amorce v1.9 tient à 0 refus t01. Vérifier en
+ouverture que l'endpoint répond (`/api/version` en 200) avant toute série
+live.
