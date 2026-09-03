@@ -746,7 +746,16 @@ le module `avo.context.etat` restant inchangé et pur :
   nommé — une valeur écrite « cle=valeur » dont « cle » est EXACTEMENT le nom du
   paramètre requis auquel sa position la destine se lit comme « valeur » ; si
   « cle » diffère du paramètre attendu, la valeur reste inchangée (elle peut
-  contenir un « = » légitime). Ces normalisations sont purement syntaxiques et
+  contenir un « = » légitime). Un outil dont le schéma ne déclare qu'UN paramètre
+  requis reçoit le reste du texte VERBATIM — ni découpage par virgules, ni repli
+  par espaces (seule la normalisation « cle=valeur » s'applique avant) : la
+  valeur d'un paramètre libre — une ligne de commande, une phrase — contient
+  légitimement virgules et espaces, et tout découpage la mutilerait pour ensuite
+  refuser l'action sur le compte de valeurs. Règle désignée par la conception du
+  banc b (`docs/SPEC_BANCS.md` §S12.1 : outil `bash` à paramètre unique) et
+  valable pour tout environnement à paramètre de texte libre — aucun nom d'outil
+  n'y est codé, le compte de paramètres vient du schéma déclaré.
+  Ces normalisations sont purement syntaxiques et
   valent pour tout environnement : aucun nom d'action ni compte de paramètres
   n'y est codé — le nom de paramètre comparé vient du schéma déclaré par
   l'outil, jamais d'une liste écrite dans le noyau.
@@ -843,7 +852,10 @@ champs.
 
 - **Déclaration.** Un schéma nomme ses champs, chacun d'un GENRE générique du
   noyau — `position` (`{"x": int, "y": int}` ou `null`), `entier_positif`
-  (entier ≥ 1), `liste_chaines`, `liste_objets` (objets à `id` et `description`
+  (entier ≥ 1), `chaine` (chaîne de caractères, défaut vide — le scalaire
+  textuel du papier, tel `working_dir` du schéma CTF de la source §3.1,
+  transposé `docs/SPEC_BANCS.md` §S12.3), `liste_chaines`, `liste_objets`
+  (objets à `id` et `description`
   au moins) ou `dictionnaire` (clé → valeur JSON) —, son défaut, et un rôle en
   une phrase que le protocole cite. Les genres sont ceux du noyau : un domaine ne
   définit jamais un validateur.

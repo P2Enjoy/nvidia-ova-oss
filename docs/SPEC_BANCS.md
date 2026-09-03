@@ -565,10 +565,19 @@ les refus de forme (§S10.2) portent `refusee = True` (§H15.8).
 
 **S10.1 — Environnement de boucle.** `terminal.py` implémente le contrat §H8.2 :
 `observation()` rend, au premier tour, l'énoncé minimal
-(`Terminal prêt. Répertoire de travail : <chemin>.`) puis, après chaque action,
-le bloc de résultat de la dernière issue ; `actions_disponibles()` rend les deux
-commandes ; `derniere_issue()` l'issue de la dernière action ; `etat_terminal()`
-le motif de fin (§S9.3).
+(`Terminal prêt. Chaque commande s'exécute depuis la racine du défi.`) puis,
+après chaque action, le bloc de résultat de la dernière issue ;
+`actions_disponibles()` rend les deux commandes ; `derniere_issue()` l'issue de
+la dernière action ; `etat_terminal()` le motif de fin (§S9.3). POINT TRANCHÉ :
+l'énoncé ne porte AUCUN chemin d'hôte — le chemin absolu du répertoire de
+travail est un détail de l'exécuteur (§S10.3 : paramètre d'infrastructure,
+jamais un comportement du défi), il n'apporte rien à l'agent (chaque commande
+part de la racine du défi, §S10.2) et le taire garde les observations
+identiques octet pour octet entre exécuteurs et entre runs — condition des
+cassettes (§S1.4) et de l'absence de détail d'infrastructure dans les prompts.
+Issue écartée : énoncer le chemin réel (`/defi`, répertoire temporaire hôte) —
+les épisodes cessaient d'être appariables en cassette et l'observation
+changeait avec l'exécuteur.
 
 **S10.2 — Exécution d'une commande.** Chaque action `bash` exécute UNE ligne de
 commande (`bash -c`) dans le répertoire de travail du défi. L'issue porte la
