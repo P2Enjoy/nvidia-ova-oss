@@ -939,6 +939,21 @@ Le banc b se découpe en unités d'une session (§S13) :
   1–10, `aleatoire`, horizon 30) — ligne de base du banc b pour le déclencheur
   U25. La poursuite (banc c, séries complémentaires) appartient à U31.
 
+**Spécification du banc c écrite le 2026-09-03** (`docs/SPEC_BANCS.md` §S14–§S19,
+patron Sierra τ-Bench : domaine Détail sur SQLite outillée, politique métier
+donnée, intention seedée avec éligibilité, utilisateur simulé `scripte`/`llm`,
+évaluateur d'état final binaire, références publiées en orientation §S17.4).
+Le banc c se découpe en unités d'une session (§S19) :
+
+- **U29c1 `[ ]`** — base seedée et outils (`src/avo/bancs/tau/domaine.py`),
+  intention + état attendu + simulateur `scripte` (`scenario.py`), évaluateur
+  d'état final et relevé (`score.py`) ; preuves unitaires de §S18.5. Sans
+  adaptateur ni CLI.
+- **U29c2 `[ ]`** — adaptateur + branchement au dispatch CLI `banc` (§S18) :
+  outils, contexte de tâche, schéma de Σ `service`, utilisateur `llm` du mode
+  live, intégration en rejeu, cassette E2E, premier relevé live multi-seeds au
+  journal (§S17.3).
+
 ## Lot H — La méthode dans la structure
 
 Source : instruction du responsable (2026-08-31, session interactive). Les règles de
