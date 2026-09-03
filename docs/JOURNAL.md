@@ -3180,3 +3180,78 @@ directement), utilisateur `llm` du mode live, intégration en rejeu, cassette
 E2E, premier relevé live multi-seeds (série de référence §S17.3 : seeds 1–10,
 `detail`, horizon 20, ou son amorce). Vérifier en ouverture que l'endpoint
 répond (`/api/version` en 200) avant toute série live.
+
+## 2026-09-03 (suite 39, session planifiée) — U31 : réplication indépendante de la série de référence du banc b — pass@1 6/10 contre 8/10 (suite 37), la variance inter-séries du banc instruite par la mesure
+
+**Unité.** U31 (jouer/observer/améliorer). La session a démarré sur le
+checkout `9cb3465` pendant que la session parallèle (suites 37–38) clôturait
+U29b2 puis ouvrait le banc c : lisant U29b2 sans entrée de journal, elle a
+joué la série de référence COMPLÈTE du banc b (§S11.3, seeds 1–10,
+`aleatoire`, horizon 30, exécuteur `conteneur`, une exécution à la fois,
+prompts v1.9) — série découverte DUPLIQUÉE au push (même patron que la
+suite 35, mais ici achevée avant la découverte). Les dix épisodes étant
+complets et réels, la série est CONSERVÉE comme réplication indépendante du
+point de mesure : elle instruit la variance inter-séries que la suite 37
+désignait comme piste. Endpoint vérifié en ouverture (`/api/version` 200 en
+0,5 s).
+
+**Jouer : la même série de référence, tirages de familles identiques** (le
+générateur est seedé — mêmes défis exactement), runs indépendants du modèle :
+
+| seed | famille | issue | actions | soum. (inc.) | redem. | tokens | durée s |
+|---|---|---|---|---|---|---|---|
+| 1 | encodage | échec (budget) | 30 | 0 (0) | 13 | 79 223 | 676 |
+| 2 | fouille | capturé | 4 | 1 (0) | 1 | 8 312 | 44 |
+| 3 | encodage | capturé | 19 | 1 (0) | 3 | 36 210 | 381 |
+| 4 | encodage | échec (budget) | 30 | 2 (2) | 8 | 66 144 | 541 |
+| 5 | piste | capturé | 13 | 1 (0) | 5 | 29 715 | 212 |
+| 6 | piste | capturé | 7 | 1 (0) | 1 | 12 118 | 82 |
+| 7 | archive | échec (budget) | 30 | 0 (0) | 9 | 75 401 | 458 |
+| 8 | encodage | échec (budget) | 30 | 0 (0) | 16 | 77 985 | 638 |
+| 9 | binaire | capturé | 4 | 1 (0) | 1 | 6 173 | 43 |
+| 10 | piste | capturé | 7 | 1 (0) | 1 | 10 903 | 120 |
+
+**pass@1 = 6/10 (0,60)**, contre 8/10 (0,80) pour la série de la suite 37 sur
+les MÊMES défis. Aucun refus de forme, aucun incident, zéro conteneur
+résiduel, confinement réseau effectif sur les dix épisodes.
+
+**Observer.** (1) **La variance inter-séries du banc b est mesurée : deux
+séries complètes sur défis identiques donnent 0,60 et 0,80.** Les issues
+divergent sur s3 (capturé ici en 19 actions ; 14 là-bas), s7 (échec ici,
+capturé là-bas en 21) et s8 (échec ici, capturé là-bas en 23) ; les runs
+courts (s2, s6, s9, s10 : 4–7 actions) sont stables entre séries. La
+divergence se concentre sur les épisodes LONGS — même constat que la
+variance inter-runs de l'entrepôt (suites 23–35) : plus l'épisode dure, plus
+l'issue est dispersée. Le pass@1 binaire amplifie cette dispersion (§S11.3
+avait raison d'exiger dix épisodes minimum ; la comparaison avant/après du
+déclencheur U25 devra lire les DEUX séries, 14/20 cumulé = 0,70). (2) Mêmes
+familles d'échec que la suite 37 : trois échecs sur quatre SANS soumission
+(le modèle décode sans risquer de candidat avant l'épuisement) ; au s4,
+même erreur qu'en face — leurre rot13 `SYNT{…}` soumis transposé en
+`FLAG{…}` sans décoder le contenu. Comportement modèle, constant entre
+séries. (3) Redemandes de garde 0–16, corrélées à la longueur (friction
+connue, suites 22+) ; 6 retries de patch sur ~200 pas (prose `PREDICTION:`
+hors bloc JSON, friction connue). (4) `piste` 3/3 des deux côtés ;
+`encodage` 1/4 ici, 2/4 là-bas — famille la plus coûteuse en budget des deux
+séries.
+
+**Améliorer : rien — aucune mesure ne désigne un mécanisme absent** (règle
+U31 ; les divergences relèvent de la variance du modèle sur épisodes longs,
+et toute aide propre à une famille serait du benchmaxing). Session sans
+commit de code au titre de ce motif consigné : le livrable est la
+réplication qui alimente le déclencheur U25 et la mesure de variance.
+Campagne complète rejouée sur l'arbre `9cb3465` en validation indépendante
+(verdict au commit suivant) ; l'arbre a avancé depuis (banc c, U29c1 clos,
+U29c2 en cours par la session parallèle) — ces commits appartiennent à leurs
+sessions.
+
+**Où reprendre.** U29c2 est EN COURS par une session parallèle (adaptateur,
+intégration et cassette déjà poussés ; il lui reste le relevé live §S17.3 et
+la clôture) : la prochaine session VÉRIFIE la dernière entrée du journal et
+l'état de U29c2 avant tout geste — si U29c2 est clos, l'ordre a → b → c de
+U29 est épuisé et U31 continue sur les séries que les mesures désignent
+(variance des épisodes longs : répliquer une série est désormais un point de
+mesure recevable) ; si U29c2 est encore ouvert SANS entrée de journal
+fraîche, le solder comme ici — relevé live d'abord, en vérifiant qu'aucune
+session parallèle ne joue déjà. Vérifier en ouverture que l'endpoint répond
+(`/api/version` en 200) avant toute série live.
