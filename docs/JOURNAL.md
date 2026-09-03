@@ -3063,3 +3063,80 @@ directement), cassette E2E, premier relevé live multi-seeds (série de
 référence §S11.3 : seeds 1–10, `aleatoire`, horizon 30). Vérifier en
 ouverture que l'endpoint répond (`/api/version` en 200) avant toute série
 live.
+
+## 2026-09-03 (suite 37, session planifiée) — U31 : U29b2 livré et clos — le banc b joué par la boucle complète, série de référence pass@1 = 8/10 (seeds 1–10, aléatoire, h30, conteneur)
+
+**Unité.** U31, temps « construire le prochain banc » : U29b2 (adaptateur + CLI du
+banc b), désigné par la suite 36. Spécification §S12 existante — cas « spécification
+existante », codé directement après trois amendements committés avant le code
+(`1b4b726`) : genre `chaine` de Σ (§H15.9, le `working_dir` de la source),
+résolution VERBATIM du paramètre requis unique (§H15.8 — une ligne de commande
+contient virgules et espaces, le découpage la mutilait), énoncé du terminal sans
+chemin d'hôte (§S10.1 — même observation quel que soit l'exécuteur, condition des
+cassettes, aucun détail d'infrastructure dans les prompts).
+
+**Coder** (`de6c713`, `55a597f`, `9cb3465`). `src/avo/bancs/ctf/adaptateur.py`
+(outils `bash`/`soumettre` avec `prediction`, contexte de tâche §S12.2, schéma de
+Σ `ctf` à cinq contenants, relevé même sur incident) ; dispatch `banc ctf`
+(`--env` famille, `--executeur` avec refus nommés : `--bruit`/`--derive`,
+`processus` en live, `--executeur` sur skillexec) ; l'annonce du relevé déplacée
+sous `avo.bancs` pour que la CLI du noyau ne porte aucun mot de banc (balayage
+§S12.5 revenu vide).
+
+**Prouver.** 28 unitaires ajoutés (758 au total), intégration en rejeu HTTP réel
+(`test_banc_ctf_sur_rejeu.py`, 154 au total), cassette `e2e_banc_ctf.jsonl` à
+double génération vérifiée + scénario CLI réel (8 E2E), campagne complète verte
+(lint, mypy strict 128 fichiers, 758 unitaires, 154 intégration, 8 E2E, build).
+Cassettes des autres scénarios inchangées octet pour octet après `make seed-e2e`.
+
+**Relevé live — série de référence §S11.3 COMPLÈTE** (`python -m avo banc ctf
+--env aleatoire --seed S --horizon 30 --mode live`, exécuteur `conteneur`,
+qwen3.6:35b, mode `state`, gardes ; séquentiel, une exécution à la fois ;
+endpoint stable, `smoke-live` tout vert, aucun incident, aucun conteneur
+résiduel) :
+
+| seed | famille | issue | actions | cmd | soum. (inc.) | redem. | tokens | durée s |
+|---|---|---|---|---|---|---|---|---|
+| 1 | encodage | échec (budget) | 30 | 30 | 0 (0) | 10 | 69 890 | 663 |
+| 2 | fouille | capturé | 3 | 2 | 1 (0) | 1 | 8 133 | 69 |
+| 3 | encodage | capturé | 14 | 12 | 2 (1) | 3 | 25 819 | 180 |
+| 4 | encodage | échec (budget) | 30 | 29 | 1 (1) | 8 | 78 899 | 696 |
+| 5 | piste | capturé | 9 | 8 | 1 (0) | 2 | 16 369 | 103 |
+| 6 | piste | capturé | 7 | 6 | 1 (0) | 1 | 12 366 | 92 |
+| 7 | archive | capturé | 21 | 20 | 1 (0) | 5 | 50 868 | 287 |
+| 8 | encodage | capturé | 23 | 21 | 2 (1) | 10 | 61 669 | 615 |
+| 9 | binaire | capturé | 4 | 3 | 1 (0) | 3 | 8 594 | 154 |
+| 10 | piste | capturé | 7 | 6 | 1 (0) | 0 | 12 425 | 158 |
+
+**pass@1 = 8/10 (0,80)** — la LIGNE DE BASE du banc b pour le déclencheur U25
+(§S11.4 : pas de chiffre publié comparable, la lecture se fait sur la
+progression). Familles tirées : encodage ×4 (2 réussites), piste ×3, fouille,
+archive, binaire (toutes réussies). Zéro refus de forme sur 137 commandes ; la
+résolution verbatim §H15.8 a porté sans erreur des commandes à tubes, boucles,
+virgules et guillemets.
+
+**Observer.** (1) Les deux échecs sont des `encodage` à budget épuisé. s4
+instruit sur l'archive : le modèle DÉCODE jusqu'à la chaîne rot13 (`SYNT{…}`)
+puis la soumet enveloppée dans `FLAG{}` au lieu de la décoder — erreur de
+résolution du modèle, pas du harnais. s1 : boucles de commandes répétées
+(`base64 -d bloc_0.dat` ×5), une seule leçon écrite dans `resume_commandes` en
+30 commandes, aucune soumission. Les affordances du harnais (Σ `resume_commandes`,
+`drapeaux_testes`, gardes) sont en place et UTILISÉES dans les runs réussis
+(s8 : soumission incorrecte suivie d'une correction et de la capture) :
+comportement modèle, rien de désigné. (2) Le patron « soumission incorrecte =
+information » (§S9.3) fonctionne en réel : 3 soumissions incorrectes, 2 suivies
+d'une capture dans le même épisode. (3) Redemandes de garde 0–10 par run,
+corrélées à la longueur (friction connue, suites 22+). (4) Coût : épisodes
+réussis 69–615 s ; les échecs saturent à ~700 s et ~75 000 tokens.
+
+**Améliorer : rien — aucune mesure ne désigne un mécanisme absent** (règle U31 ;
+les échecs relèvent de la résolution du modèle sur une famille, et toute aide
+propre à une famille serait du benchmaxing).
+
+**Où reprendre.** U31 continue, ordre a → b → c de U29 : **banc c, Sierra
+τ-Bench — spécification d'abord** (§S14+, patron : workflows client, utilisateur
+simulé par un second LLM, bases SQLite outillées, évaluateur sur l'état final —
+export SKILL.state), puis découpage en unités d'une session. Alternative si une
+mesure la désigne : série complémentaire du banc b (h60, ou familles fixées)
+pour instruire la variance. Vérifier en ouverture que l'endpoint répond
+(`/api/version` en 200) avant toute série live.

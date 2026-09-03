@@ -919,10 +919,25 @@ Le banc b se découpe en unités d'une session (§S13) :
   vide sur le noyau, exécuteur `conteneur` prouvé par une exécution réelle
   documentée (journal suite 36 : confinement réseau mesuré, capture, aucun
   conteneur résiduel).
-- **U29b2 `[ ]`** — adaptateur + branchement au dispatch CLI `banc` (§S12) :
+- **U29b2 `[x]`** — adaptateur + branchement au dispatch CLI `banc` (§S12) :
   outils `bash`/`soumettre`, contexte de tâche, schéma de Σ `ctf`, intégration
   en rejeu, cassette E2E, exécution réelle de l'exécuteur `conteneur`
   documentée, premier relevé live multi-seeds au journal (§S11.3).
+  **Livré et intégralement vérifié le 2026-09-03** (spec amendée `1b4b726`
+  avant code) : `src/avo/bancs/ctf/adaptateur.py` (outils avec `prediction`,
+  contexte §S12.2, schéma `ctf`, relevé même sur incident), dispatch CLI
+  `banc ctf` (`--executeur`, refus nommés §S12.4/§S10.3), annonce du relevé
+  sous `avo.bancs` (CLI du noyau sans mot de banc). Trois génériques du noyau
+  désignés par la conception : genre `chaine` de Σ (§H15.9), résolution
+  verbatim du paramètre requis unique (§H15.8), énoncé du terminal sans chemin
+  d'hôte (§S10.1). Preuves : 28 unitaires ajoutés, intégration en rejeu HTTP
+  réel, cassette `e2e_banc_ctf.jsonl` à double génération vérifiée + scénario
+  CLI réel, balayage « zéro indice » vide, campagne complète verte (lint, mypy
+  strict 128 fichiers, 758 unitaires, 154 intégration, 8 E2E, build).
+  Exécuteur `conteneur` exercé en réel sur les dix épisodes live ; **série de
+  référence §S11.3 complète au journal (suite 37) : pass@1 = 8/10** (seeds
+  1–10, `aleatoire`, horizon 30) — ligne de base du banc b pour le déclencheur
+  U25. La poursuite (banc c, séries complémentaires) appartient à U31.
 
 ## Lot H — La méthode dans la structure
 
@@ -1115,6 +1130,21 @@ verte, exécuteur `conteneur` prouvé en réel) ; aucune série live (pas
 d'adaptateur avant U29b2, aucune série complémentaire désignée par la
 suite 35) ; prochaine session : U29b2 (spécification existante, coder
 directement).
+
+**Itération du 2026-09-03 (suite 37, session planifiée)** — construire/jouer :
+U29b2 livré et clos (adaptateur + CLI du banc b, trois génériques du noyau
+désignés par la conception : genre `chaine`, résolution verbatim du paramètre
+unique, énoncé sans chemin d'hôte — spec `1b4b726` avant code), puis **série de
+référence §S11.3 complète : pass@1 = 8/10** (seeds 1–10, `aleatoire`, h30,
+exécuteur `conteneur`, aucun incident) — la ligne de base du banc b ; observer :
+les deux échecs sont des `encodage` à budget épuisé (s4 : la chaîne rot13
+soumise enveloppée au lieu d'être décodée ; s1 : commandes répétées, une seule
+leçon écrite en 30 commandes), soumission-information §S9.3 validée en réel
+(2 corrections après soumission incorrecte), zéro refus de forme sur
+137 commandes ; améliorer : rien — aucune mesure ne désigne un mécanisme absent
+(les échecs relèvent du modèle, toute aide par famille serait du benchmaxing) ;
+campagne complète verte (758 unitaires, 154 intégration, 8 E2E, build) ;
+prochaine session : banc c (τ-Bench), spécification d'abord.
 
 **Itération du 2026-09-03 (suite 33, session planifiée)** — jouer : les cinq
 points morts bruit 20 h25 rejoués sous v1.7, série indépendante parallèle à
