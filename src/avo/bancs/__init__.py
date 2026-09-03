@@ -41,6 +41,36 @@ class SortieBanc:
     chemin_releve: Path
 
 
+def annoncer_releve(releve: Releve | ReleveCtf) -> list[str]:
+    """Les lignes que l'opérateur lit dans son terminal (§S6.3, §S12.4).
+
+    L'annonce vit ici avec les mots des bancs : la CLI du noyau les imprime
+    sans en connaître aucun (balayage « zéro indice », §S12.5).
+    """
+    if isinstance(releve, ReleveCtf):
+        # Relevé pass@1 du banc b (§S11.1, §S11.2).
+        issue = "drapeau capturé" if releve.reussi else "non capturé"
+        return [
+            f"épisode terminé : seed {releve.seed}, famille {releve.famille}, "
+            f"horizon {releve.horizon} — {issue} ({releve.arret} ; "
+            f"{releve.actions} actions, {releve.commandes} commandes, "
+            f"{releve.soumissions} soumissions dont "
+            f"{releve.soumissions_incorrectes} incorrectes)"
+        ]
+    lignes = [
+        f"épisode terminé : seed {releve.seed}, horizon {releve.horizon}, "
+        f"bruit {releve.bruit} — score {releve.score:.2f} "
+        f"({releve.correctes} correctes, {releve.incorrectes} incorrectes, "
+        f"{releve.invalides} invalides)"
+    ]
+    if "derive_evenement" in releve.champs_libres:
+        # Mesure de récupération de la condition 3 (§S5.5).
+        pas = releve.champs_libres["pas_de_recuperation"]
+        etat = f"récupération en {pas} pas" if pas is not None else "non récupérée"
+        lignes.append(f"dérive à l'événement {releve.champs_libres['derive_evenement']} — {etat}")
+    return lignes
+
+
 def _valider_skillexec(environnement: str, executeur: str | None) -> None:
     """Refus nommés du banc a : environnement connu, aucun exécuteur (§S10.3)."""
     if environnement not in ("entrepot", "depot"):

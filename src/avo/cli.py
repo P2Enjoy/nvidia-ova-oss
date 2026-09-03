@@ -7,7 +7,7 @@
 @spec docs/SPEC_ARCAGI3.md §A7.1 (surface du runner et plafonds), §A7.2 (garde
       d'accord de publication), §A7.4 (contrat d'implémentation de la CLI)
 @spec docs/SPEC_BANCS.md §S6.3 (CLI `banc` : boucle complète, relevé §S5.3),
-      §S12.4 (dispatch `ctf`, `--executeur` paramètre d'infrastructure — U29b2)
+      §S12.4 (dispatch du banc b, `--executeur` paramètre d'infrastructure — U29b2)
 @spec docs/MASTER_PLAN.md §5 (produit CLI : la vérification utilisateur passe par ces commandes)
 
 Les sous-commandes du contrat sont déclarées ici dès maintenant afin que
@@ -177,9 +177,12 @@ def _reprendre(args: argparse.Namespace) -> int:
 
 
 def _executer_banc(args: argparse.Namespace) -> int:
-    """Joue un épisode de banc et annonce le relevé (docs/SPEC_BANCS.md §S6.3, §S12.4)."""
-    from avo.bancs import BancInconnu, ParametreBancInvalide, executer_banc
-    from avo.bancs.ctf.score import ReleveCtf
+    """Joue un épisode de banc et annonce le relevé (docs/SPEC_BANCS.md §S6.3, §S12.4).
+
+    L'annonce du relevé vient de `avo.bancs` : la CLI du noyau imprime sans
+    connaître les mots d'aucun banc (balayage « zéro indice », §S12.5).
+    """
+    from avo.bancs import BancInconnu, ParametreBancInvalide, annoncer_releve, executer_banc
 
     try:
         sortie = executer_banc(
@@ -197,29 +200,8 @@ def _executer_banc(args: argparse.Namespace) -> int:
     except (BancInconnu, ParametreBancInvalide) as erreur:
         print(f"avo: banc refusé — {erreur}", file=sys.stderr)
         return 2
-    releve = sortie.releve
-    if isinstance(releve, ReleveCtf):
-        # Relevé pass@1 du banc b (docs/SPEC_BANCS.md §S11.1, §S11.2).
-        issue = "drapeau capturé" if releve.reussi else "non capturé"
-        print(
-            f"épisode terminé : seed {releve.seed}, famille {releve.famille}, "
-            f"horizon {releve.horizon} — {issue} ({releve.arret} ; "
-            f"{releve.actions} actions, {releve.commandes} commandes, "
-            f"{releve.soumissions} soumissions dont "
-            f"{releve.soumissions_incorrectes} incorrectes)"
-        )
-    else:
-        print(
-            f"épisode terminé : seed {releve.seed}, horizon {releve.horizon}, "
-            f"bruit {releve.bruit} — score {releve.score:.2f} "
-            f"({releve.correctes} correctes, {releve.incorrectes} incorrectes, "
-            f"{releve.invalides} invalides)"
-        )
-        if "derive_evenement" in releve.champs_libres:
-            # Mesure de récupération de la condition 3 (docs/SPEC_BANCS.md §S5.5).
-            pas = releve.champs_libres["pas_de_recuperation"]
-            etat = f"récupération en {pas} pas" if pas is not None else "non récupérée"
-            print(f"dérive à l'événement {releve.champs_libres['derive_evenement']} — {etat}")
+    for ligne in annoncer_releve(sortie.releve):
+        print(ligne)
     print(f"relevé : {sortie.chemin_releve}")
     return 0
 
