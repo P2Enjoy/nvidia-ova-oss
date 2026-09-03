@@ -760,11 +760,17 @@ class BoucleAgent:
         parametres = schema.get("parameters", {})
         requis: list[str] = list(parametres.get("required", []))
         proprietes: dict[str, Any] = dict(parametres.get("properties", {}))
-        valeurs = (
-            [valeur.strip() for valeur in reste.split(",") if valeur.strip()]
-            if reste.strip()
-            else []
-        )
+        if len(requis) == 1 and reste.strip():
+            # §H15.8 : un seul paramètre requis reçoit le reste VERBATIM — un
+            # paramètre de texte libre (ligne de commande, phrase) contient
+            # légitimement virgules et espaces, tout découpage le mutilerait.
+            valeurs = [reste.strip()]
+        else:
+            valeurs = (
+                [valeur.strip() for valeur in reste.split(",") if valeur.strip()]
+                if reste.strip()
+                else []
+            )
         if len(valeurs) != len(requis):
             # §H15.8 : quand les virgules ne rendent pas le compte de paramètres
             # requis mais que les espaces le rendent (« store a b », mesuré sur le

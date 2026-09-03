@@ -37,6 +37,7 @@ RETRIES_MAX: Final = 3
 #: compose son schéma avec eux, jamais avec un validateur à lui.
 POSITION: Final = "position"
 ENTIER_POSITIF: Final = "entier_positif"
+CHAINE: Final = "chaine"
 LISTE_CHAINES: Final = "liste_chaines"
 LISTE_OBJETS: Final = "liste_objets"
 DICTIONNAIRE: Final = "dictionnaire"
@@ -84,6 +85,12 @@ def _valider_entier_positif(nom: str, valeur: Any) -> None:
         raise EtatInvalide(f"{nom} : entier ≥ 1 attendu, reçu {valeur!r}")
 
 
+def _valider_chaine(nom: str, valeur: Any) -> None:
+    """Scalaire textuel (§H15.9, genre `chaine`) : le `working_dir` de la source."""
+    if not isinstance(valeur, str):
+        raise EtatInvalide(f"{nom} : chaîne attendue, reçue {valeur!r}")
+
+
 def _valider_liste_chaines(nom: str, valeur: Any) -> None:
     if not isinstance(valeur, (list, tuple)) or not all(isinstance(item, str) for item in valeur):
         raise EtatInvalide(f"{nom} : liste de chaînes attendue, reçue {valeur!r}")
@@ -122,6 +129,7 @@ def _valider_dictionnaire(nom: str, valeur: Any) -> None:
 _VALIDATEURS: Final = {
     POSITION: _valider_position,
     ENTIER_POSITIF: _valider_entier_positif,
+    CHAINE: _valider_chaine,
     LISTE_CHAINES: _valider_liste_chaines,
     LISTE_OBJETS: _valider_liste_objets,
     DICTIONNAIRE: _valider_dictionnaire,
@@ -132,6 +140,7 @@ _DEFAUTS_GENRE: Final[Mapping[str, Any]] = MappingProxyType(
     {
         POSITION: None,
         ENTIER_POSITIF: 1,
+        CHAINE: "",
         LISTE_CHAINES: (),
         LISTE_OBJETS: (),
         DICTIONNAIRE: MappingProxyType({}),
@@ -143,6 +152,7 @@ FORMES: Final[Mapping[str, str]] = MappingProxyType(
     {
         POSITION: '{"x": int, "y": int} ou null',
         ENTIER_POSITIF: "entier ≥ 1",
+        CHAINE: "chaîne de caractères",
         LISTE_CHAINES: "liste de chaînes",
         LISTE_OBJETS: "liste d'objets avec au moins « id » et « description »",
         DICTIONNAIRE: "objet clé → valeur, fusionné clé par clé",

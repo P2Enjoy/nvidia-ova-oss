@@ -20,6 +20,7 @@ from avo.config import Mode, charger
 from avo.context.contexte import Contexte
 from avo.context.etat import (
     ARC_V1,
+    CHAINE,
     CHAMP_HYPOTHESES,
     DICTIONNAIRE,
     ENTIER_POSITIF,
@@ -117,6 +118,43 @@ class TestFusionDictionnaire(unittest.TestCase):
         self.assertEqual(relu, etat)
         with self.assertRaises(EtatInvalide):
             Etat.depuis_json(etat.vers_json())  # sous arc-v1, « registre » est inconnu
+
+
+class TestGenreChaine(unittest.TestCase):
+    """§H15.9 : genre `chaine` — scalaire textuel, défaut vide, null = défaut.
+
+    Ajouté pour le schéma `ctf` (§S12.3, `repertoire_travail`), transposé du
+    `working_dir` de la source (§3.1).
+    """
+
+    SCHEMA = SchemaEtat(
+        "chaine-v1",
+        (
+            ChampEtat(CHAMP_HYPOTHESES, LISTE_CHAINES),
+            ChampEtat("repertoire", CHAINE, "où je me trouve"),
+        ),
+    )
+
+    def test_defaut_vide_et_remplacement(self) -> None:
+        etat = Etat.initial(self.SCHEMA)
+        self.assertEqual(etat.en_dict()["repertoire"], "")
+        etat = etat.fusionner({"repertoire": "sous/dossier"})
+        self.assertEqual(etat.en_dict()["repertoire"], "sous/dossier")
+
+    def test_null_revient_au_defaut(self) -> None:
+        etat = Etat.initial(self.SCHEMA).fusionner({"repertoire": "ailleurs"})
+        etat = etat.fusionner({"repertoire": None})
+        self.assertEqual(etat.en_dict()["repertoire"], "")
+
+    def test_refus_nomme_hors_chaine(self) -> None:
+        with self.assertRaises(EtatInvalide) as arret:
+            Etat.initial(self.SCHEMA).fusionner({"repertoire": 7})
+        self.assertIn("repertoire", str(arret.exception))
+        self.assertIn("chaîne", str(arret.exception))
+
+    def test_aller_retour(self) -> None:
+        etat = Etat.initial(self.SCHEMA).fusionner({"repertoire": "x/y", "hypotheses": ["h"]})
+        self.assertEqual(Etat.depuis_json(etat.vers_json(), self.SCHEMA), etat)
 
 
 class TestProtocoleEngendre(unittest.TestCase):

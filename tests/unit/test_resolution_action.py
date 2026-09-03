@@ -5,8 +5,9 @@
 @verifies docs/SPEC_HARNAIS.md §H15.8 (résolution générique : ordre des paramètres
           requis du schéma, coercition par type déclaré, normalisation de la
           ponctuation traînante, de la syntaxe d'appel de fonction, de la syntaxe
-          d'argument nommé « cle=valeur » et repli de découpage par espaces —
-          jamais un nom ni un compte codés en dur)
+          d'argument nommé « cle=valeur », repli de découpage par espaces et
+          paramètre requis unique reçu verbatim — jamais un nom ni un compte
+          codés en dur)
 
 La résolution est une fonction de parsing pure : elle s'éprouve directement, sans
 appel LLM ni environnement réel. Les bruits de format couverts ici sont tous
@@ -64,6 +65,17 @@ def _boucle(dossier: Path) -> BoucleAgent:
                 description="Avance : aucun paramètre.",
                 parametres={"type": "object", "properties": {}},
                 fonction=lambda: "ok",
+                etiquettes=frozenset({"action"}),
+            ),
+            Outil(
+                nom="dire",
+                description="Texte libre : un seul paramètre requis.",
+                parametres={
+                    "type": "object",
+                    "properties": {"texte": {"type": "string"}},
+                    "required": ["texte"],
+                },
+                fonction=lambda texte: "ok",
                 etiquettes=frozenset({"action"}),
             ),
         ]
@@ -158,6 +170,30 @@ class TestResolutionAction(unittest.TestCase):
         appel = self._resoudre("poser case=cle_1, 4")
         self.assertTrue(appel.valide)
         self.assertEqual(appel.arguments, {"objet": "case=cle_1", "case": 4})
+
+    def test_parametre_unique_recoit_le_reste_verbatim(self) -> None:
+        """§H15.8 : un seul paramètre requis — ni découpage par virgules, ni
+        repli par espaces. Une ligne de commande contient légitimement les deux
+        (règle désignée par la conception du banc b, §S12.1)."""
+        appel = self._resoudre("dire grep -rn 'a, b' . | sort")
+        self.assertTrue(appel.valide)
+        self.assertEqual(appel.arguments, {"texte": "grep -rn 'a, b' . | sort"})
+
+    def test_parametre_unique_en_syntaxe_d_appel_de_fonction(self) -> None:
+        appel = self._resoudre("dire(bonjour, monde)")
+        self.assertTrue(appel.valide)
+        self.assertEqual(appel.arguments, {"texte": "bonjour, monde"})
+
+    def test_parametre_unique_argument_nomme(self) -> None:
+        """La normalisation « cle=valeur » s'applique avant le verbatim."""
+        appel = self._resoudre("dire texte=bonjour, monde")
+        self.assertTrue(appel.valide)
+        self.assertEqual(appel.arguments, {"texte": "bonjour, monde"})
+
+    def test_parametre_unique_absent_reste_un_refus_nomme(self) -> None:
+        appel = self._resoudre("dire")
+        self.assertFalse(appel.valide)
+        self.assertIn("1 valeur(s) attendue(s)", appel.erreur_arguments or "")
 
 
 if __name__ == "__main__":  # pragma: no cover

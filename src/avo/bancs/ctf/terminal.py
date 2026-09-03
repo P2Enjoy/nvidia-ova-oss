@@ -248,7 +248,9 @@ class EnvironnementTerminal:
         if motif is not None:
             return motif
         if self._issue is None:
-            return f"Terminal prêt. Répertoire de travail : {self._repertoire}."
+            # §S10.1 (point tranché) : aucun chemin d'hôte dans l'énoncé — même
+            # observation quel que soit l'exécuteur, condition des cassettes.
+            return "Terminal prêt. Chaque commande s'exécute depuis la racine du défi."
         return self._issue.observation
 
     def actions_disponibles(self) -> tuple[str, ...]:
