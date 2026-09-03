@@ -3140,3 +3140,43 @@ export SKILL.state), puis découpage en unités d'une session. Alternative si un
 mesure la désigne : série complémentaire du banc b (h60, ou familles fixées)
 pour instruire la variance. Vérifier en ouverture que l'endpoint répond
 (`/api/version` en 200) avant toute série live.
+
+## 2026-09-03 (suite 38, session planifiée) — U31 : le banc c est ouvert — spécification §S14–§S19 committée avant le code, U29c1 livré et clos (base Détail outillée, scénario seedé, évaluateur d'état final)
+
+**Unité.** U31, temps « construire le prochain banc » (ordre a → b → c de U29,
+désigné par la suite 37). Aucune série live jouée : le banc c n'a pas encore
+d'adaptateur (U29c2), et aucune mesure fraîche ne désignait de série
+complémentaire sur les bancs a/b.
+
+**Spécifier.** `docs/SPEC_BANCS.md` §S14–§S19 écrits et committés AVANT le code
+(`8c5ed43`), sur les invariants de la source (export SKILL.state §4.2/§4.3 et
+table 4) : patron Sierra τ-Bench — dialogue outil-agent-utilisateur, base SQLite
+outillée, politique métier DONNÉE, évaluateur programmatique binaire sur l'état
+FINAL. Points tranchés principaux : scénarios ENGENDRÉS seedés plutôt que le jeu
+de données original (mêmes motifs que §S8.2 ; scores publiés en orientation
+§S17.4) ; les outils exécutent le POSSIBLE même contraire à la politique, la
+conformité se juge à l'évaluateur sur le journal des événements (sans quoi le
+banc perdrait son objet) ; utilisateur simulé `scripte` déterministe en
+preuves/rejeu, `llm` en live (U29c2) ; `clore()` appartient à l'agent ;
+domaine `detail` seul livré. Découpage U29c1/U29c2 persisté au backlog avant le
+code (`6329f35`).
+
+**Coder (U29c1, `f7a6f0e`).** `src/avo/bancs/tau/` : `domaine.py` (base SQLite
+en mémoire seedée — clients, articles, commandes, lignes —, six outils avec
+refus techniques nommés, journal ordonné des recherches et transactions),
+`scenario.py` (intention équiprobable, éligibilité 2/3–1/3, candidat tiré,
+erreur nommée sans candidat, état attendu par clone muté, simulateur scripté),
+`score.py` (`ReleveTau`, `relever_violations` — identification, propriété,
+hors-intention, violation même défaite —, `evaluer` binaire). 26 preuves
+unitaires (`tests/unit/test_banc_tau.py`).
+
+**Prouver.** Campagne complète verte : lint, mypy strict 134 fichiers,
+**784 unitaires**, 154 intégration, 8 E2E, build. Balayage « zéro indice » :
+aucun mot du banc hors `src/avo/bancs/`.
+
+**Où reprendre.** U31 continue : **U29c2** — adaptateur + CLI du banc c
+(spécification §S18 déjà écrite : cas « spécification existante », coder
+directement), utilisateur `llm` du mode live, intégration en rejeu, cassette
+E2E, premier relevé live multi-seeds (série de référence §S17.3 : seeds 1–10,
+`detail`, horizon 20, ou son amorce). Vérifier en ouverture que l'endpoint
+répond (`/api/version` en 200) avant toute série live.

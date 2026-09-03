@@ -2,6 +2,20 @@
 
 ## [Non publié]
 
+### 2026-09-03 — U29c1 : banc c, patron Sierra τ-Bench — base Détail outillée, scénario seedé, évaluateur d'état final (§S14–§S17)
+
+- Spécification du banc c écrite et committée avant le code
+  (`docs/SPEC_BANCS.md` §S14–§S19) : dialogue outil-agent-utilisateur, base
+  SQLite outillée, politique métier donnée, intention seedée avec éligibilité,
+  utilisateur simulé `scripte`/`llm`, évaluateur binaire sur l'état final,
+  découpage U29c1/U29c2.
+- `src/avo/bancs/tau/` : base Détail SQLite en mémoire seedée avec six outils
+  et journal ordonné des événements (`domaine.py`), scénario — intention,
+  éligibilité, état attendu, simulateur scripté déterministe (`scenario.py`),
+  évaluateur des violations de politique et relevé (`score.py`).
+- 26 preuves unitaires (`tests/unit/test_banc_tau.py`). L'adaptateur, la CLI,
+  l'utilisateur `llm` et le premier relevé live arrivent avec U29c2.
+
 ### 2026-09-03 — U29b2 : banc b joué par la boucle complète — adaptateur, CLI `banc ctf`, exécution conteneurisée en live
 
 - Adaptateur du banc CTF (`src/avo/bancs/ctf/adaptateur.py`) : outils `bash` et

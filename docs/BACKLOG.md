@@ -945,10 +945,19 @@ donnée, intention seedée avec éligibilité, utilisateur simulé `scripte`/`ll
 évaluateur d'état final binaire, références publiées en orientation §S17.4).
 Le banc c se découpe en unités d'une session (§S19) :
 
-- **U29c1 `[ ]`** — base seedée et outils (`src/avo/bancs/tau/domaine.py`),
+- **U29c1 `[x]`** — base seedée et outils (`src/avo/bancs/tau/domaine.py`),
   intention + état attendu + simulateur `scripte` (`scenario.py`), évaluateur
   d'état final et relevé (`score.py`) ; preuves unitaires de §S18.5. Sans
   adaptateur ni CLI.
+  **Livré et vérifié le 2026-09-03** (spec `8c5ed43` et backlog `6329f35`
+  avant code `f7a6f0e`) : 26 unitaires (déterminisme octet pour octet,
+  familles et éligibilités tirées, erreur nommée sans candidat, chaque effet
+  et refus technique des six outils, journal, les quatre issues de
+  l'évaluateur dont la violation défaite, simulateur, relevé), campagne
+  complète verte (lint, mypy strict 134 fichiers, 784 unitaires,
+  154 intégration, 8 E2E, build), balayage « zéro indice » vide.
+  L'intégration, la cassette E2E et le premier relevé live appartiennent à
+  U29c2 (§S19).
 - **U29c2 `[ ]`** — adaptateur + branchement au dispatch CLI `banc` (§S18) :
   outils, contexte de tâche, schéma de Σ `service`, utilisateur `llm` du mode
   live, intégration en rejeu, cassette E2E, premier relevé live multi-seeds au
@@ -1160,6 +1169,16 @@ leçon écrite en 30 commandes), soumission-information §S9.3 validée en réel
 (les échecs relèvent du modèle, toute aide par famille serait du benchmaxing) ;
 campagne complète verte (758 unitaires, 154 intégration, 8 E2E, build) ;
 prochaine session : banc c (τ-Bench), spécification d'abord.
+
+**Itération du 2026-09-03 (suite 38, session planifiée)** — construire : le
+banc c est ouvert selon l'ordre a → b → c — spécification §S14–§S19 committée
+avant le code (`8c5ed43`, points tranchés : outils qui exécutent le possible,
+conformité jugée à l'évaluateur sur le journal ; utilisateur `scripte`/`llm`),
+U29c1 livré et clos (`f7a6f0e` : base Détail SQLite seedée et outillée,
+scénario avec éligibilité, évaluateur d'état final binaire, 26 unitaires,
+campagne complète verte — 784 unitaires, 154 intégration, 8 E2E) ; aucune
+série live (pas d'adaptateur avant U29c2) ; prochaine session : U29c2
+(spécification existante, coder directement).
 
 **Itération du 2026-09-03 (suite 33, session planifiée)** — jouer : les cinq
 points morts bruit 20 h25 rejoués sous v1.7, série indépendante parallèle à
