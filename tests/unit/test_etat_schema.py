@@ -149,6 +149,18 @@ class TestProtocoleEngendre(unittest.TestCase):
             self.assertIn("aucune action n'est jouée", texte)
             self.assertIn("au moins une hypothèse", texte)
 
+    def test_l_exigence_documentaire_clot_le_protocole_apres_la_parcimonie(self) -> None:
+        """§H16.0.7 : l'exigence documentaire est la phrase FINALE, exception nommée
+        à la parcimonie — annoncée avant elle, elle perdait quand la première
+        observation ne laissait aucune incertitude (2/2 premiers pas refusés,
+        journal 2026-09-03 suite 33)."""
+        for texte in (prompts.PROTOCOLE_ETAT, prompts.protocole_etat(SCHEMA)):
+            self.assertLess(
+                texte.index("ce qui change réellement"),
+                texte.index("au moins une hypothèse"),
+            )
+            self.assertTrue(texte.rstrip().endswith("hypothèse dans son patch."))
+
     def test_le_protocole_enonce_l_enseignement_d_un_refus(self) -> None:
         """§H16.0.7 : un refus nomme le point sur lequel Σ est faux — le protocole
         commande de corriger Σ d'après ce message (mesuré : 17 invalides répétant
