@@ -1,13 +1,16 @@
-"""Décor partagé des preuves du banc a : politique parfaite et pas scriptés.
+"""Décor partagé des preuves des bancs : politiques parfaites et pas scriptés.
 
 @verifies docs/BACKLOG.md U29a2 — adaptateur harnais + CLI `banc` ; U29a4 —
-          branchement du Dépôt logiciel (politique parfaite §S4.5)
+          branchement du Dépôt logiciel (politique parfaite §S4.5) ; U29b2 —
+          adaptateur du banc CTF (recouvrement canonique §S9.2)
 @verifies docs/SPEC_BANCS.md §S3.5 et §S4.5 (obligations : les politiques
           parfaites les rejouent exactement), §S3.8 et §S4.7 (la politique
           parfaite lit l'alerte de dérive : déplacement appliqué à l'ombre,
           `wait` sur la notification périmée), §S6.4 (preuves du banc : rejeu
-          déterministe, score exact)
-@verifies docs/SPEC_HARNAIS.md §H15.8 (forme textuelle du champ `action`),
+          déterministe, score exact), §S9.2 (famille `fouille` : recherche
+          récursive du motif), §S12.5 (intégration et E2E du banc b)
+@verifies docs/SPEC_HARNAIS.md §H15.8 (forme textuelle du champ `action`,
+          paramètre requis unique reçu verbatim),
           §H16.2 et §H16.3 (lignes PREDICTION/VERDICT des pas scriptés)
 
 La politique parfaite suit l'état NOMINAL du générateur (§S3.4) : rangement sur la
@@ -23,6 +26,7 @@ import copy
 import json
 from typing import Any
 
+from avo.bancs.ctf.defis import PREFIXE_DRAPEAU, PlanDefi
 from avo.bancs.skillexec.depot import (
     AFFECTATION,
     ECHEC_CI,
@@ -42,9 +46,11 @@ from tests.e2e.scenarios import ENV_EPINGLE, JETON, gabarit_reponse
 
 __all__ = [
     "ENV_EPINGLE_BANC",
+    "HYPOTHESE_CTF",
     "HYPOTHESE_DEPOT",
     "JETON",
     "actions_parfaites",
+    "actions_parfaites_ctf",
     "actions_parfaites_depot",
     "contenu_pas",
     "gabarit_reponse",
@@ -54,6 +60,9 @@ __all__ = [
 #: Hypothèse des pas scriptés du Dépôt logiciel (§H16.1) — le décor de l'Entrepôt
 #: garde la sienne par défaut, la cassette existante restant appariable.
 HYPOTHESE_DEPOT = "je tiens l'état exact du dépôt"
+
+#: Hypothèse des pas scriptés du banc CTF (§H16.1).
+HYPOTHESE_CTF = "le drapeau se trouve dans un fichier du répertoire de travail"
 
 #: Environnement épinglé du banc (§A8.5, même principe que `scenarios.ENV_EPINGLE`) :
 #: le mode `state` est celui du produit par défaut, épinglé ici pour que la cassette
@@ -138,6 +147,21 @@ def actions_parfaites_depot(episode: EpisodeDepot) -> list[str]:
         else:
             actions.append(f"merge {evenement.pr}")
     return actions
+
+
+def actions_parfaites_ctf(plan: PlanDefi) -> list[str]:
+    """Le recouvrement canonique de la famille `fouille` (§S9.2), textes §H15.8.
+
+    Deux actions : la recherche récursive du motif — la sortie est la ligne du
+    drapeau seule, indépendante du chemin d'exécution — puis la soumission
+    exacte. Le paramètre unique de chaque outil reçoit le reste du texte
+    verbatim (§H15.8).
+    """
+    if plan.famille != "fouille":
+        raise AssertionError(
+            f"le décor scripté du banc b couvre la famille fouille, reçu {plan.famille}"
+        )
+    return [f"bash grep -rhF {PREFIXE_DRAPEAU} .", f"soumettre {plan.drapeau}"]
 
 
 def contenu_pas(action: str, hypothese: str = "je tiens l'état exact de l'entrepôt") -> str:

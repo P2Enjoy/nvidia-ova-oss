@@ -238,8 +238,8 @@ seed:
 	else \
 	  echo "  e2e_etat_victoire.jsonl ABSENTE — lancez « make seed-e2e » puis relancez la pile"; \
 	fi
-	@echo "→ cassettes de scénario E2E, banc a (U29a2/U29a4, générées : make seed-e2e)"
-	@for f in e2e_banc_entrepot.jsonl e2e_banc_depot.jsonl; do \
+	@echo "→ cassettes de scénario E2E, bancs (U29a2/U29a4/U29b2, générées : make seed-e2e)"
+	@for f in e2e_banc_entrepot.jsonl e2e_banc_depot.jsonl e2e_banc_ctf.jsonl; do \
 	  if [ -s tests/fixtures/llm/cassettes/$$f ]; then \
 	    echo "  $$f : $$(wc -l < tests/fixtures/llm/cassettes/$$f) échanges"; \
 	  else \

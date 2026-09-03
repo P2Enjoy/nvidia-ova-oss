@@ -1,10 +1,12 @@
-"""E2E : un épisode du banc a joué par la CLI réelle, pile compose debout.
+"""E2E : un épisode de chaque banc joué par la CLI réelle, pile compose debout.
 
 @verifies docs/BACKLOG.md U29a2 — adaptateur harnais + CLI `banc` ; U29a4 —
-          branchement du Dépôt logiciel (scénario CLI du dépôt, résolution §S4.4)
+          branchement du Dépôt logiciel (scénario CLI du dépôt, résolution
+          §S4.4) ; U29b2 — scénario CLI du banc CTF (capture attendue, §S12.5)
 @verifies docs/SPEC_BANCS.md §S6.3 (CLI `banc` : boucle complète, relevé §S5.3
           écrit dans le workspace), §S6.4 (E2E : scénario rejoué par cassette,
-          épisode court, score attendu exact)
+          épisode court, score attendu exact), §S12.4 (CLI `banc ctf`,
+          `--executeur` paramètre d'infrastructure)
 @verifies docs/SPEC_HARNAIS.md §H6.1 (artefacts du run), §H15.5 (Σ persisté)
 @verifies docs/MASTER_PLAN.md §5 (vérification dans la peau de l'utilisateur :
           la commande documentée, exécutée réellement, artefacts lus)
@@ -26,6 +28,7 @@ from pathlib import Path
 
 from tests.e2e.generer_cassette_banc import (
     DOSSIER_CASSETTES,
+    SCENARIO_CTF,
     SCENARIO_DEPOT,
     SCENARIO_ENTREPOT,
     SCENARIOS,
@@ -40,10 +43,10 @@ HOTE_LLM = "http://127.0.0.1:11435"
 
 def setUpModule() -> None:  # noqa: N802 — contrat unittest
     """La pile et la cassette sont des préconditions NOMMÉES, pas des surprises."""
-    for scenario in SCENARIOS:
-        if not (DOSSIER_CASSETTES / scenario.cassette).exists():
+    for cassette in [scenario.cassette for scenario in SCENARIOS] + [SCENARIO_CTF.cassette]:
+        if not (DOSSIER_CASSETTES / cassette).exists():
             raise RuntimeError(
-                f"cassette {scenario.cassette} absente — lancez « make seed-e2e » "
+                f"cassette {cassette} absente — lancez « make seed-e2e » "
                 "puis relancez la pile (make down && make up)"
             )
     try:
@@ -206,6 +209,117 @@ class TestBancDepotParCliReelle(unittest.TestCase):
         ]
         self.assertEqual(types.count("action"), SCENARIO_DEPOT.horizon)
         self.assertEqual(types.count("llm"), SCENARIO_DEPOT.horizon)
+
+
+class TestBancCtfParCliReelle(unittest.TestCase):
+    """Scénario CTF : sous-processus `python -m avo banc ctf` réel (§S12.4).
+
+    Même parcours opérateur que le banc a (MASTER_PLAN §5) ; l'exécuteur
+    `processus` est celui des preuves (§S10.3 : la suite tourne déjà en
+    conteneur, sans démon Docker), les commandes du recouvrement canonique
+    s'exécutent réellement.
+    """
+
+    RUN_ID = "e2e-banc-ctf"
+
+    def setUp(self) -> None:
+        self._dossier = tempfile.TemporaryDirectory()
+        self.racine = Path(self._dossier.name)
+        self.env = {
+            **os.environ,
+            **ENV_EPINGLE_BANC,
+            "OLLAMA_HOST": HOTE_LLM,
+            "OLLAMA_API_KEY": JETON,
+            "AVO_RUNS_DIR": str(self.racine),
+        }
+
+    def tearDown(self) -> None:
+        self._dossier.cleanup()
+
+    def test_capture_par_la_cli_et_artefacts(self) -> None:
+        execution = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "avo",
+                "banc",
+                "ctf",
+                "--env",
+                "fouille",
+                "--seed",
+                str(SCENARIO_CTF.seed),
+                "--horizon",
+                str(SCENARIO_CTF.horizon),
+                "--executeur",
+                "processus",
+                "--run-id",
+                self.RUN_ID,
+            ],
+            env=self.env,
+            capture_output=True,
+            text=True,
+            timeout=600,
+            check=False,
+        )
+        self.assertEqual(execution.returncode, 0, execution.stderr)
+        self.assertIn(
+            f"seed {SCENARIO_CTF.seed}, famille fouille, horizon {SCENARIO_CTF.horizon}",
+            execution.stdout,
+        )
+        self.assertIn("drapeau capturé", execution.stdout)
+
+        espace = self.racine / self.RUN_ID
+
+        # Relevé §S11.2 : écrit, exact, auto-porteur.
+        releve = json.loads((espace / "banc.json").read_text(encoding="utf-8"))
+        self.assertTrue(releve["reussi"])
+        self.assertEqual(releve["seed"], SCENARIO_CTF.seed)
+        self.assertEqual(releve["famille"], "fouille")
+        self.assertEqual(releve["horizon"], SCENARIO_CTF.horizon)
+        self.assertEqual(releve["actions"], 2)
+        self.assertEqual(releve["arret"], "drapeau capturé")
+        self.assertEqual(releve["banc"], "ctf")
+        self.assertEqual(releve["schema_etat"], "ctf")
+        self.assertEqual(releve["executeur"], "processus")
+        self.assertEqual(releve["mode_contexte"], "state")
+        self.assertGreater(releve["tokens_consommes"], 0)
+
+        # Artefacts du run (§H6.1, §H15.5) : manifeste, métriques, Σ persisté.
+        self.assertTrue((espace / "manifest.json").exists())
+        self.assertTrue((espace / "state" / "etat.json").exists())
+        types = [
+            json.loads(ligne)["type"]
+            for ligne in (espace / "metrics.jsonl").read_text(encoding="utf-8").splitlines()
+        ]
+        self.assertEqual(types.count("action"), 2)
+        self.assertEqual(types.count("llm"), 2)
+
+    def test_refus_nomme_d_un_parametre_sans_objet(self) -> None:
+        """§S12.4 : `--derive` sur le banc ctf est refusé par une erreur nommée."""
+        execution = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "avo",
+                "banc",
+                "ctf",
+                "--env",
+                "fouille",
+                "--seed",
+                "1",
+                "--horizon",
+                "3",
+                "--derive",
+            ],
+            env=self.env,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+        self.assertEqual(execution.returncode, 2, execution.stdout)
+        self.assertIn("banc refusé", execution.stderr)
+        self.assertIn("--derive", execution.stderr)
 
 
 if __name__ == "__main__":  # pragma: no cover
