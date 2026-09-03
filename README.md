@@ -82,6 +82,7 @@ officielle enregistre un scorecard sur le compte du responsable.
 ```sh
 python -m avo banc skillexec --env entrepot --seed 42 --horizon 50 [--bruit N] [--derive] [--mode live]
 python -m avo banc ctf --env aleatoire --seed 42 --horizon 30 [--executeur conteneur|processus] [--mode live]
+python -m avo banc tau --env detail --seed 42 --horizon 20 [--mode live]
 ```
 
 En `--mode replay` (défaut), l'épisode se rejoue contre la pile locale par cassette ;
@@ -92,8 +93,11 @@ récupération (§S5.5). Banc `ctf` : `--env` porte la famille de défi (`aleato
 la tire au seed) ; les commandes de l'agent s'exécutent dans un conteneur jetable
 sans réseau (`--executeur conteneur`, défaut, requis en live — un démon Docker
 joignable est alors nécessaire ; `processus` est réservé aux preuves et au
-rejeu, §S10.3). Le relevé (score continu §S5.3, ou pass@1 §S11.2) s'écrit dans
-`runs/<run_id>/banc.json`, à côté des artefacts habituels du run.
+rejeu, §S10.3). Banc `tau` : dialogue de service client sur base SQLite outillée
+sous politique donnée, jugé sur l'état final (§S17) — l'utilisateur simulé est
+scripté en replay et joué par un second LLM en live (§S16.3), choisi par le
+mode. Le relevé (score continu §S5.3, pass@1 §S11.2 ou réussite binaire §S17.2)
+s'écrit dans `runs/<run_id>/banc.json`, à côté des artefacts habituels du run.
 
 **Lancer la pile locale** (aucun secret requis) :
 

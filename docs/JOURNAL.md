@@ -3260,3 +3260,72 @@ mesure recevable) ; si U29c2 est encore ouvert SANS entrée de journal
 fraîche, le solder comme ici — relevé live d'abord, en vérifiant qu'aucune
 session parallèle ne joue déjà. Vérifier en ouverture que l'endpoint répond
 (`/api/version` en 200) avant toute série live.
+## 2026-09-03 (suite 40, session planifiée) — U31 : U29c2 livré et clos, U29 CLOSE — les trois bancs du papier sont debout ; série de référence du banc c : pass = 8/10
+
+**Unité.** U31, temps « construire le prochain banc » : U29c2 (adaptateur + CLI
+du banc c), désigné par la suite 38. Spécification §S18 existante — codé
+directement.
+
+**Coder** (`359dd49`, `db71b50`, `158738a`). `src/avo/bancs/tau/adaptateur.py` :
+contrat `Environnement` sur le dialogue (observation = issue du pas + dernier
+message de l'utilisateur, fin sur `clore()` ou budget), huit outils avec
+`prediction`, contexte de tâche à politique intégrale, schéma de Σ `service`,
+utilisateur `scripte`/`llm` choisi par le mode (POINT D'IMPLÉMENTATION consigné :
+premier message scripté dans les deux variantes, l'utilisateur `llm` ne joue que
+les réponses — épisodes comparables entre modes), relevé jamais en succès sur
+incident ; dispatch `banc tau` avec refus nommés ; preuve du dispatch banc b mise
+au réel (« tau » est désormais connu).
+
+**Prouver.** 18 unitaires ajoutés (820 au total), intégration en rejeu HTTP réel
+(politique conforme jouée par la boucle sous gardes, relevé exact), cassette
+`e2e_banc_tau.jsonl` (5 échanges, double génération vérifiée) + scénario CLI
+réel + refus nommé, campagne complète verte (lint, mypy strict 136 fichiers,
+820 unitaires, 155 intégration, 10 E2E, build), balayage « zéro indice » vide.
+
+**Relevé live — série de référence §S17.3 COMPLÈTE** (`python -m avo banc tau
+--env detail --seed S --horizon 20 --mode live`, utilisateur `llm`,
+qwen3.6:35b, mode `state`, gardes ; séquentiel, aucun incident) :
+
+| seed | intention | élig. | issue | actions | répl. | trans. | viol. | tokens | durée s |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | modifier | non | réussi | 16 | 2 | 0 | 0 | 25 127 | 208 |
+| 2 | annuler | non | réussi | 6 | 3 | 0 | 0 | 8 299 | 56 |
+| 3 | retourner | oui | réussi | 8 | 1 | 1 | 0 | 13 266 | 117 |
+| 4 | retourner | oui | réussi | 17 | 2 | 1 | 0 | 33 040 | 192 |
+| 5 | modifier | oui | ÉCHEC | 6 | 3 | 0 | 0 | 11 655 | 105 |
+| 6 | modifier | non | réussi | 10 | 3 | 0 | 0 | 16 605 | 160 |
+| 7 | modifier | non | réussi | 8 | 3 | 0 | 0 | 12 664 | 154 |
+| 8 | annuler | oui | réussi | 8 | 3 | 1 | 0 | 10 308 | 124 |
+| 9 | annuler | non | ÉCHEC | 9 | 3 | 1 | 1 | 18 179 | 183 |
+| 10 | retourner | oui | réussi | 7 | 1 | 1 | 0 | 9 421 | 96 |
+
+**pass = 8/10 (0,80)** — la LIGNE DE BASE du banc c pour le déclencheur U25
+(§S17.4 : chiffres publiés en orientation seulement — τ-Retail SKILL.state
+58,3 % sur le jeu de données original). Les 10 épisodes se sont clos par
+l'agent ; les cinq refus d'intentions inéligibles sur six sont corrects.
+
+**Observer.** (1) s5 instruit : l'agent lit la commande du bon client et conclut
+À TORT qu'elle appartient à un autre compte (erreur de rapprochement
+d'identifiants), refuse et clôt — erreur de résolution du modèle, affordances
+(`faits`, `client_identifie`) en place. (2) s9 instruit : l'agent REFUSE
+correctement l'annulation inéligible (politique appliquée), puis l'utilisateur
+`llm` DÉRIVE de son personnage et négocie un retour hors de sa demande —
+l'agent cède et exécute : violation de la règle 5, jugée par l'évaluateur. La
+dérive du simulateur `llm` (le persona dit pourtant « ne réclame rien
+d'autre ») est une friction du BANC consignée, rien de désigné sur une
+occurrence. (3) Notation « outil, arguments » et redemandes de garde 0–2 par
+run : frictions connues, toutes absorbées. (4) **U29 est CLOSE** : les trois
+bancs du papier sont livrés avec leurs lignes de base (banc a : fourchettes
+§S5.4 atteintes ; banc b : pass@1 8/10 et 6/10 en réplication indépendante —
+suite 39, variance inter-séries mesurée ; banc c : pass 8/10).
+
+**Améliorer : rien — aucune mesure ne désigne un mécanisme absent** (règle
+U31 ; les deux échecs relèvent des modèles, agent et simulateur).
+
+**Où reprendre.** U31 continue en régime « jouer, observer, améliorer » sur les
+TROIS bancs : relire le déclencheur U25 (les lignes de base des trois bancs
+existent désormais — vérifier ses termes exacts et statuer dessus), sinon
+séries complémentaires là où une mesure les désigne (variance du banc a
+entrepôt ; famille `encodage` du banc b ; dérive du simulateur `llm` du
+banc c). Vérifier en ouverture que l'endpoint répond (`/api/version` en 200)
+avant toute série live.

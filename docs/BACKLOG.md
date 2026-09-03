@@ -727,7 +727,16 @@ Rapport comparatif committé ; recommandation du mode par défaut pour U25 arrê
   (lint, mypy strict, 508 unitaires, 145 intégration, 4 E2E, build). Unité
   close.
 
-## U29 — Benchmarks interactifs complémentaires : terrain d'affinage du harnais `[~]`
+## U29 — Benchmarks interactifs complémentaires : terrain d'affinage du harnais `[x]`
+
+**Close le 2026-09-03** : les trois bancs du papier SKILL.state sont livrés et
+intégralement prouvés — a) SkillExecBench (U29a1–U29a4), b) InterCode CTF
+(U29b1–U29b2, lignes de base pass@1 8/10 et 6/10 en réplication indépendante),
+c) Sierra τ-Bench (U29c1–U29c2, ligne de base pass 8/10) — chacun avec générateur seedé, adaptateur mince,
+preuves unitaires/intégration/E2E et relevés live consignés. La POURSUITE des
+campagnes de banc, l'observation et les améliorations génériques appartiennent
+à l'unité permanente U31 ; le déclencheur de la campagne ARC est consigné dans
+U25.
 
 **Ouverte par le responsable le 2026-09-01** (session interactive, journal
 suite 11) : le harnais s'AFFINE sur ces bancs avant de rejouer la campagne ARC
@@ -958,10 +967,21 @@ Le banc c se découpe en unités d'une session (§S19) :
   154 intégration, 8 E2E, build), balayage « zéro indice » vide.
   L'intégration, la cassette E2E et le premier relevé live appartiennent à
   U29c2 (§S19).
-- **U29c2 `[ ]`** — adaptateur + branchement au dispatch CLI `banc` (§S18) :
+- **U29c2 `[x]`** — adaptateur + branchement au dispatch CLI `banc` (§S18) :
   outils, contexte de tâche, schéma de Σ `service`, utilisateur `llm` du mode
   live, intégration en rejeu, cassette E2E, premier relevé live multi-seeds au
   journal (§S17.3).
+  **Livré et intégralement vérifié le 2026-09-03** (`359dd49`, `158738a`) :
+  huit outils avec `prediction`, contexte §S18.2 (politique intégrale), schéma
+  `service`, utilisateur `scripte`/`llm` choisi par le mode (premier message
+  scripté dans les deux variantes, consigné), dispatch avec refus nommés,
+  relevé jamais en succès sur incident. Preuves : 18 unitaires (820 au
+  total), intégration en rejeu HTTP réel, cassette `e2e_banc_tau.jsonl` à
+  double génération vérifiée + scénario CLI réel avec refus nommé, campagne
+  complète verte (lint, mypy strict, 820 unitaires, 155 intégration, 10 E2E,
+  build), balayage « zéro indice » vide. **Série de référence §S17.3 complète
+  au journal (suite 40) : pass = 8/10** (seeds 1–10, `detail`, horizon 20,
+  utilisateur `llm`) — ligne de base du banc c pour le déclencheur U25.
 
 ## Lot H — La méthode dans la structure
 
@@ -1179,6 +1199,19 @@ scénario avec éligibilité, évaluateur d'état final binaire, 26 unitaires,
 campagne complète verte — 784 unitaires, 154 intégration, 8 E2E) ; aucune
 série live (pas d'adaptateur avant U29c2) ; prochaine session : U29c2
 (spécification existante, coder directement).
+
+**Itération du 2026-09-03 (suite 40, session planifiée)** — construire/jouer :
+U29c2 livré et clos (adaptateur + CLI du banc c, utilisateur `scripte`/`llm`
+choisi par le mode, 18 unitaires, intégration rejeu, cassette E2E, campagne
+complète verte — 820 unitaires, 155 intégration, 10 E2E), puis **série de
+référence §S17.3 complète : pass = 8/10** (seeds 1–10, `detail`, h20,
+utilisateur `llm`, aucun incident) — la ligne de base du banc c ; observer :
+s5 = erreur de rapprochement d'identifiants du modèle ; s9 = refus correct
+puis dérive du simulateur `llm` hors personnage (négocie un retour hors
+demande), violation règle 5 jugée ; améliorer : rien — aucune mesure ne
+désigne un mécanisme absent ; **U29 CLOSE** (les trois bancs livrés avec
+lignes de base) ; prochaine session : relire le déclencheur U25 et statuer,
+sinon séries complémentaires désignées.
 
 **Itération du 2026-09-03 (suite 33, session planifiée)** — jouer : les cinq
 points morts bruit 20 h25 rejoués sous v1.7, série indépendante parallèle à

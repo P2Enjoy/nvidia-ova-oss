@@ -2,6 +2,24 @@
 
 ## [Non publié]
 
+### 2026-09-03 — U29c2 : banc c joué par la boucle complète — adaptateur, CLI `banc tau`, utilisateur simulé par second LLM, série de référence pass 8/10
+
+- Adaptateur du banc τ (`src/avo/bancs/tau/adaptateur.py`) : huit outils de
+  dialogue et de base (étiquette `action`, paramètre `prediction`), contexte
+  de tâche portant la politique intégrale (§S18.2), schéma de Σ `service`
+  (§S18.3), évaluation à la clôture et relevé écrit même sur incident (jamais
+  de succès sur un épisode interrompu).
+- Utilisateur simulé : `scripte` déterministe en replay, `llm` en live —
+  réponses par un second LLM sur le même endpoint (appels séquentiels),
+  premier message scripté pour garder les épisodes comparables (§S16.3).
+- Dispatch CLI `banc tau --env detail` avec refus nommés de
+  `--bruit`/`--derive`/`--executeur` (§S18.4).
+- Preuves : 18 unitaires ajoutés, intégration en rejeu HTTP réel
+  (`tests/integration/test_banc_tau_sur_rejeu.py`), cassette E2E
+  `e2e_banc_tau.jsonl` à double génération vérifiée + scénario CLI réel,
+  campagne complète verte. Série de référence live §S17.3 complète (seeds
+  1–10, `detail`, h20) : **pass = 8/10**, détail au journal (suite 40).
+
 ### 2026-09-03 — U29c1 : banc c, patron Sierra τ-Bench — base Détail outillée, scénario seedé, évaluateur d'état final (§S14–§S17)
 
 - Spécification du banc c écrite et committée avant le code
