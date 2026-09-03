@@ -3364,3 +3364,68 @@ l'autorisation du responsable (2026-08-30, prompt de la tâche) :
 `--j-autorise-la-publication` posé. Exécution séquentielle, par tranches
 reprenables (granularité jeu, §A7.4) : cette session joue autant de jeux que
 son temps le permet et consigne l'état exact d'arrêt pour la suivante.
+
+## 2026-09-03 (suite 42, session planifiée) — U31 : réplication indépendante de la série de référence du banc c — pass = 9/10 contre 8/10 (suite 40), un cas de déviation du simulateur `llm` mesuré
+
+**Unité et contexte.** Session ouverte sur un checkout où U29c2 n'était pas
+encore clos au backlog (code poussé, clôture absente) ; la reprise désignée
+était donc U29c2. En cours de session, une session parallèle a poussé la
+clôture (suites 40–41 : série de référence pass 8/10, U29 close, déclencheur
+U25 consigné atteint). La série jouée ici n'en reste pas moins une donnée
+réelle : c'est la RÉPLICATION INDÉPENDANTE de la série de référence du banc c
+— même rôle que la suite 39 pour le banc b — et elle instruit précisément la
+« dérive du simulateur `llm` » que la suite 40 désignait comme série
+complémentaire.
+
+**Prouver (hors ligne, rejoué en ouverture).** 802 unitaires verts (dont les
+suites τ), 155 intégration verte (dont `test_banc_tau_sur_rejeu.py`),
+`make seed` complet, pile saine, `smoke-live` tout vert, endpoint en 200.
+
+**Relevé live** (`python -m avo banc tau --env detail --seed S --horizon 20
+--mode live`, utilisateur `llm`, qwen3.6:35b, mode `state`, gardes ;
+séquentiel, une exécution à la fois ; un `TransportError` transitoire absorbé
+par §H4.5, aucun incident) :
+
+| seed | intention | éligible | issue | actions | répliques | trans. | viol. | redem. | tokens | durée s |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | modifier | non | réussi | 5 | 2 | 0 | 0 | 0 | 8 109 | 79 |
+| 2 | annuler | non | échec (violation) | 7 | 2 | 1 | 1 | 1 | 11 117 | 111 |
+| 3 | retourner | oui | réussi | 5 | 1 | 1 | 0 | 1 | 7 755 | 68 |
+| 4 | retourner | oui | réussi | 8 | 2 | 1 | 0 | 1 | 11 793 | 91 |
+| 5 | modifier | oui | réussi | 13 | 2 | 2 | 0 | 1 | 19 772 | 173 |
+| 6 | modifier | non | réussi | 10 | 4 | 0 | 0 | 2 | 19 391 | 191 |
+| 7 | modifier | non | réussi | 11 | 2 | 0 | 0 | 3 | 20 098 | 145 |
+| 8 | annuler | oui | réussi | 8 | 2 | 1 | 0 | 1 | 12 207 | 62 |
+| 9 | annuler | non | réussi | 9 | 2 | 0 | 0 | 0 | 13 492 | 75 |
+| 10 | retourner | oui | réussi | 9 | 2 | 1 | 0 | 1 | 16 426 | 112 |
+
+**pass = 9/10 (0,90)** — contre 8/10 en suite 40 aux mêmes paramètres :
+variance inter-séries du banc c 8–9/10, du même ordre que celle du banc b
+(6–8/10, suite 39). Éligibles 5/5, inéligibles 4/5 ; tous les épisodes clos
+par l'agent, aucun budget épuisé ; 62–191 s et 8 000–20 000 tokens par épisode.
+
+**Observer.** (1) L'unique échec (s2) est un cas MESURÉ de déviation du
+simulateur : après le refus motivé de l'annulation (commande livrée — refus
+correct de l'agent), le second LLM a enfreint sa consigne de persona
+(« accepte un refus motivé… ne réclame rien d'autre que ta demande ») en
+demandant un retour à la place ; l'agent a servi cette demande née du
+dialogue et l'évaluateur l'a comptée hors-intention (§S17.1, conforme).
+Fréquence observée à ce jour : 1 déviation sur 20 épisodes joués (suites 40
+et 42 cumulées). POINT TRANCHÉ : pas de retouche du prompt de persona sur
+cette fréquence — le mécanisme d'interdiction existe ; s'il se renforce un
+jour, ce sera côté banc (fidélité du simulateur), jamais côté agent. (2) Les
+refus polis conformes (s1, s6, s7, s9) suivent le patron voulu : vérifier le
+statut réel, puis expliquer la règle. (3) Redemandes de garde 0–3, faibles ;
+zéro refus technique d'outil sur la série.
+
+**Améliorer : rien — aucune mesure ne désigne un mécanisme absent** (règle
+U31 ; l'échec relève de la fidélité du simulateur, consignée avec sa mesure
+de fréquence et sa condition de retouche).
+
+**Où reprendre.** La suite 41 a ouvert la campagne ARC officielle (U25,
+tranche 1) et sa session en consignera l'état d'arrêt : reprendre sur sa
+DERNIÈRE entrée. Si la campagne est en cours dans une session voisine, ne pas
+lancer d'exécution live concurrente au-delà du plafond global de 3 requêtes
+parallèles (CLAUDE_PROJECT.md) ; à défaut, séries complémentaires désignées :
+variance du banc a entrepôt, famille `encodage` du banc b. Vérifier en
+ouverture que l'endpoint répond (`/api/version` en 200).

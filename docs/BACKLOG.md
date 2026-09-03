@@ -982,6 +982,9 @@ Le banc c se découpe en unités d'une session (§S19) :
   build), balayage « zéro indice » vide. **Série de référence §S17.3 complète
   au journal (suite 40) : pass = 8/10** (seeds 1–10, `detail`, horizon 20,
   utilisateur `llm`) — ligne de base du banc c pour le déclencheur U25.
+  Réplication indépendante aux mêmes paramètres (suite 42) : **pass = 9/10**
+  — variance inter-séries 8–9/10, un cas de déviation du simulateur `llm`
+  mesuré (1/20 épisodes cumulés).
 
 ## Lot H — La méthode dans la structure
 
