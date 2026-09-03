@@ -3380,6 +3380,8 @@ complémentaire.
 **Prouver (hors ligne, rejoué en ouverture).** 802 unitaires verts (dont les
 suites τ), 155 intégration verte (dont `test_banc_tau_sur_rejeu.py`),
 `make seed` complet, pile saine, `smoke-live` tout vert, endpoint en 200.
+Campagne complète de fin de session verte sur l'arbre courant (lint, mypy
+strict, 802 unitaires, 155 intégration, 10 E2E, build).
 
 **Relevé live** (`python -m avo banc tau --env detail --seed S --horizon 20
 --mode live`, utilisateur `llm`, qwen3.6:35b, mode `state`, gardes ;
