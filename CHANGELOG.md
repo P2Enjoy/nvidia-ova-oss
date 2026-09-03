@@ -2,6 +2,24 @@
 
 ## [Non publié]
 
+### 2026-09-03 — U29b1 : banc b, patron InterCode CTF — générateur, terminal confiné, relevé pass@1 (§S8–§S11)
+
+- Spécification du banc b écrite et committée avant le code
+  (`docs/SPEC_BANCS.md` §S8–§S13) : défis seedés en cinq familles solubles par
+  construction (`fouille`, `encodage`, `archive`, `binaire`, `piste`),
+  terminal bash confiné, pass@1 sur drapeau exact, découpage U29b1/U29b2.
+- `src/avo/bancs/ctf/` : générateur de plans purs déterministes
+  (`defis.py` — matérialisation séparée, métadonnées de recouvrement pour les
+  preuves seules), environnement terminal (`terminal.py` — budget, capture,
+  soumission incorrecte qui continue, refus de forme seuls `refusee`) avec
+  deux exécuteurs (`processus` pour les preuves et le rejeu ; `conteneur`
+  jetable, réseau coupé et ressources bornées, requis en live), relevé
+  (`score.py`).
+- 24 preuves unitaires (`tests/unit/test_banc_ctf.py`) : déterminisme,
+  solvabilité canonique des cinq familles, exécution bash réelle, troncature
+  et délai nommés, persistance fichiers sans persistance shell, capture,
+  budget, relevé. L'adaptateur et la CLI arrivent avec U29b2.
+
 ### 2026-09-03 — U31 : l'amorce documentaire ouvre le message du pas tant que le champ de connaissances est vide (§H16.0.7, prompts v1.9)
 
 - Mesuré (série live bruit 50 h25, sous protocole v1.8) : la phrase finale du

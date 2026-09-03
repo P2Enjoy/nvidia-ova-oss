@@ -906,7 +906,7 @@ patron InterCode CTF : défis seedés en cinq familles, terminal bash confiné,
 pass@1 sur drapeau exact, références publiées consignées en orientation §S11.4).
 Le banc b se découpe en unités d'une session (§S13) :
 
-- **U29b1 `[ ]`** — générateur des cinq familles + matérialisation
+- **U29b1 `[~]`** — générateur des cinq familles + matérialisation
   (`src/avo/bancs/ctf/defis.py`), environnement terminal et exécuteurs
   `processus`/`conteneur` (`terminal.py`), relevé pass@1 (`score.py`), preuves
   unitaires de §S12.5. Sans adaptateur ni CLI.
