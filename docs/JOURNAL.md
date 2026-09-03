@@ -3276,11 +3276,11 @@ les réponses — épisodes comparables entre modes), relevé jamais en succès 
 incident ; dispatch `banc tau` avec refus nommés ; preuve du dispatch banc b mise
 au réel (« tau » est désormais connu).
 
-**Prouver.** 18 unitaires ajoutés (820 au total), intégration en rejeu HTTP réel
+**Prouver.** 18 unitaires ajoutés (802 au total), intégration en rejeu HTTP réel
 (politique conforme jouée par la boucle sous gardes, relevé exact), cassette
 `e2e_banc_tau.jsonl` (5 échanges, double génération vérifiée) + scénario CLI
 réel + refus nommé, campagne complète verte (lint, mypy strict 136 fichiers,
-820 unitaires, 155 intégration, 10 E2E, build), balayage « zéro indice » vide.
+802 unitaires, 155 intégration, 10 E2E, build), balayage « zéro indice » vide.
 
 **Relevé live — série de référence §S17.3 COMPLÈTE** (`python -m avo banc tau
 --env detail --seed S --horizon 20 --mode live`, utilisateur `llm`,

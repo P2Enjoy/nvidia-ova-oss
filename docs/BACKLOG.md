@@ -975,10 +975,10 @@ Le banc c se découpe en unités d'une session (§S19) :
   huit outils avec `prediction`, contexte §S18.2 (politique intégrale), schéma
   `service`, utilisateur `scripte`/`llm` choisi par le mode (premier message
   scripté dans les deux variantes, consigné), dispatch avec refus nommés,
-  relevé jamais en succès sur incident. Preuves : 18 unitaires (820 au
+  relevé jamais en succès sur incident. Preuves : 18 unitaires (802 au
   total), intégration en rejeu HTTP réel, cassette `e2e_banc_tau.jsonl` à
   double génération vérifiée + scénario CLI réel avec refus nommé, campagne
-  complète verte (lint, mypy strict, 820 unitaires, 155 intégration, 10 E2E,
+  complète verte (lint, mypy strict, 802 unitaires, 155 intégration, 10 E2E,
   build), balayage « zéro indice » vide. **Série de référence §S17.3 complète
   au journal (suite 40) : pass = 8/10** (seeds 1–10, `detail`, horizon 20,
   utilisateur `llm`) — ligne de base du banc c pour le déclencheur U25.
@@ -1203,7 +1203,7 @@ série live (pas d'adaptateur avant U29c2) ; prochaine session : U29c2
 **Itération du 2026-09-03 (suite 40, session planifiée)** — construire/jouer :
 U29c2 livré et clos (adaptateur + CLI du banc c, utilisateur `scripte`/`llm`
 choisi par le mode, 18 unitaires, intégration rejeu, cassette E2E, campagne
-complète verte — 820 unitaires, 155 intégration, 10 E2E), puis **série de
+complète verte — 802 unitaires, 155 intégration, 10 E2E), puis **série de
 référence §S17.3 complète : pass = 8/10** (seeds 1–10, `detail`, h20,
 utilisateur `llm`, aucun incident) — la ligne de base du banc c ; observer :
 s5 = erreur de rapprochement d'identifiants du modèle ; s9 = refus correct
