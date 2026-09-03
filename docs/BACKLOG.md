@@ -901,6 +901,20 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   live (0 refus t01 sur le pire cas). La poursuite des campagnes de banc et
   du déclencheur U25 appartient à l'unité permanente U31.
 
+**Spécification du banc b écrite le 2026-09-03** (`docs/SPEC_BANCS.md` §S8–§S13,
+patron InterCode CTF : défis seedés en cinq familles, terminal bash confiné,
+pass@1 sur drapeau exact, références publiées consignées en orientation §S11.4).
+Le banc b se découpe en unités d'une session (§S13) :
+
+- **U29b1 `[ ]`** — générateur des cinq familles + matérialisation
+  (`src/avo/bancs/ctf/defis.py`), environnement terminal et exécuteurs
+  `processus`/`conteneur` (`terminal.py`), relevé pass@1 (`score.py`), preuves
+  unitaires de §S12.5. Sans adaptateur ni CLI.
+- **U29b2 `[ ]`** — adaptateur + branchement au dispatch CLI `banc` (§S12) :
+  outils `bash`/`soumettre`, contexte de tâche, schéma de Σ `ctf`, intégration
+  en rejeu, cassette E2E, exécution réelle de l'exécuteur `conteneur`
+  documentée, premier relevé live multi-seeds au journal (§S11.3).
+
 ## Lot H — La méthode dans la structure
 
 Source : instruction du responsable (2026-08-31, session interactive). Les règles de

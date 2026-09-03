@@ -10,8 +10,9 @@ annexe C (bruit), annexe D (résultats open-weight) ; `docs/SPEC_HARNAIS.md` §H
 
 Objet : les bancs sur lesquels le harnais s'AFFINE avant la campagne ARC
 (décision du responsable, 2026-09-01, journal suite 11). Trois bancs, dans l'ordre :
-a) patron SkillExecBench (§S2–§S5), b) InterCode CTF (spécifié à l'ouverture de
-son unité), c) τ-Bench (idem). Ce document porte le banc a en entier.
+a) patron SkillExecBench (§S2–§S5), b) patron InterCode CTF (§S8–§S13),
+c) τ-Bench (spécifié à l'ouverture de son unité). Ce document porte les bancs
+a et b en entier.
 
 ---
 
@@ -51,7 +52,7 @@ de score réelle passe par le gateway LLM du responsable, pile locale sans rése
 pour l'environnement lui-même.
 
 **S1.5 — Arborescence.** `src/avo/bancs/` (paquet des bancs),
-`src/avo/bancs/skillexec/` pour le banc a :
+`src/avo/bancs/skillexec/` pour le banc a, `src/avo/bancs/ctf/` pour le banc b :
 
 ```
 src/avo/bancs/__init__.py
@@ -61,6 +62,11 @@ src/avo/bancs/skillexec/generation.py    # §S3.3 : générateur d'épisodes see
 src/avo/bancs/skillexec/score.py         # §S5 : score continu et relevé
 src/avo/bancs/skillexec/depot.py         # §S4 : environnement Software Repository
 src/avo/bancs/skillexec/adaptateur.py    # §S6 : outils + contexte de tâche + CLI
+src/avo/bancs/ctf/__init__.py
+src/avo/bancs/ctf/defis.py               # §S9 : familles de défis et générateur seedé
+src/avo/bancs/ctf/terminal.py            # §S10 : environnement terminal et exécuteurs
+src/avo/bancs/ctf/score.py               # §S11 : relevé pass@1
+src/avo/bancs/ctf/adaptateur.py          # §S12 : outils + contexte de tâche + CLI
 ```
 
 Les tests suivent le miroir habituel (`tests/unit/bancs/…`, `tests/integration/…`).
@@ -471,3 +477,248 @@ contenus : rien n'y dit quelle action jouer ni quand.
   consommateur ; U29a3 reste l'environnement et ses preuves propres), puis
   conditions de bruit et de récupération d'état en campagne de banc, relevés
   multi-seeds consignés, alimentation du déclencheur U25.
+
+---
+
+## S8. Banc b — patron InterCode CTF : objet et périmètre
+
+**S8.1 — Objet** (source §4.2, §4.3). Mesurer le harnais sur une tâche OUVERTE de
+recherche et d'usage d'outils, complémentaire du banc a : l'agent est placé
+devant un terminal Linux, un drapeau est caché dans un répertoire de travail, et
+il exécute des commandes bash pour tester itérativement des hypothèses jusqu'à
+découvrir le drapeau et le soumettre. Le succès est BINAIRE : pass@1 sur
+correspondance exacte du drapeau vérifié. La difficulté n'est plus la tenue d'un
+état large (banc a) mais la recherche dirigée par hypothèses : ne pas répéter
+les commandes qui ont échoué, retenir ce qui a été découvert, suivre une piste.
+
+**S8.2 — Patron, pas le jeu de données.** POINT TRANCHÉ. Le banc réimplémente le
+PATRON du benchmark — terminal bash, drapeau caché, familles de défis
+(rétro-ingénierie, forensique, cryptographie), pass@1 — par des défis ENGENDRÉS
+par un générateur seedé, comme le banc a réimplémente le patron SkillExecBench.
+Issue écartée : importer le jeu de données original (100 défis dérivés de
+picoCTF) — dépendance externe téléchargée, licence à instruire, contenus non
+seedés donc non régénérables, et les preuves du dépôt exigent le hors-ligne
+déterministe (§S1.4). Conséquence assumée et consignée : les scores absolus du
+banc ne se comparent PAS aux chiffres publiés de la source (défis différents) ;
+le banc mesure le harnais AVANT/APRÈS une amélioration (son rôle, §S1.1), et
+les références publiées de §S11.4 ne sont qu'une orientation.
+
+**S8.3 — Paramètres d'un épisode.** `seed` (entier), `horizon` (nombre maximal
+d'actions : commandes et soumissions confondues ; défaut de mesure 30),
+`famille` (§S9.2) ou `aleatoire` — la famille est alors tirée au seed. Un
+épisode porte EXACTEMENT UN défi. Les paramètres `bruit` et `derive` du banc a
+ne s'appliquent pas ici : la CLI les refuse par une erreur nommée (§S12.4).
+
+**S8.4 — Ce que le banc ne fait pas.** Pas d'accès réseau depuis le défi, pas
+d'escalade de privilèges ni d'exploitation du système hôte (l'exécution est
+confinée, §S10.3), pas d'accès de l'agent au plan du défi ni au drapeau
+autrement que par ses commandes. Le protocole donné à l'agent (§S12.2) énonce le
+cadre — terminal, drapeau au format `FLAG{…}`, outils — et ne dit RIEN de la
+famille, de l'emplacement ni de la méthode : la recherche est l'objet du banc.
+
+---
+
+## S9. Défis et générateur
+
+**S9.1 — Défi et plan.** Un défi est un triplet (famille, plan d'arborescence,
+drapeau). Le drapeau vaut `FLAG{` + 16 caractères hexadécimaux tirés + `}`. Le
+générateur (`random.Random(seed)`, ordre d'appel fixe) produit un PLAN pur —
+liste ordonnée de fichiers relatifs avec leur contenu en octets — sans toucher
+au disque ; la matérialisation écrit ce plan sous le répertoire de travail de
+l'épisode. À seed et paramètres identiques, le plan est identique octet pour
+octet (§S1.4), quel que soit l'exécuteur. En `aleatoire`, la famille est le
+PREMIER tirage du générateur.
+
+**S9.2 — Familles.** Cinq familles, chacune SOLUBLE PAR CONSTRUCTION avec les
+outils standard de l'image d'exécution (§S10.4) — le plan garantit que le
+drapeau est recouvrable ; la preuve unitaire de solvabilité applique le chemin
+canonique inverse à partir du plan :
+
+| Famille | Construction (tirages au rng du plan) | Recouvrement canonique |
+|---|---|---|
+| `fouille` | arborescence de 8–15 répertoires (profondeur ≤ 3, certains cachés par préfixe `.`), 30–60 fichiers de lignes de journal gabarits ; le drapeau en clair sur une ligne d'un fichier tiré ; leurres au format proche (`NOTE{…}`, `TEST{…}`) jamais en `FLAG{` | recherche récursive du motif |
+| `encodage` | composition de 1–3 transformations tirées avec remise parmi base64, hexadécimal, rot13, inversion, appliquée au drapeau ; le résultat dans un fichier parmi 5–10 leurres de même forme (mêmes compositions sur des chaînes aléatoires), noms génériques (`bloc_N.dat`) | décoder les candidats dans l'ordre inverse de la composition |
+| `archive` | imbrication de 2–4 archives tirées parmi tar et tar.gz, extension parfois trompeuse (renommage en `.txt` tiré) ; au cœur, un fichier portant le drapeau en clair | désarchivage répété |
+| `binaire` | blob de 64–256 Kio d'octets tirés, le drapeau ASCII inséré à une position tirée ; leurres : 3–6 séquences ASCII aléatoires insérées de même longueur | extraction du motif ASCII du blob (`grep -a` ou équivalent) |
+| `piste` | chaîne de 4–7 étapes : un fichier à la racine ouvre la piste, chaque étape contient `Indice : consulter <chemin suivant>` parmi des lignes de bruit, la dernière porte le drapeau ; les étapes sont dispersées dans une arborescence de 5–10 répertoires | suivre les indices de proche en proche |
+
+Les gabarits de contenu (lignes de journal, bruit) sont des textes neutres sans
+rapport avec le drapeau. Aucune famille n'exige d'outil absent de l'image
+d'exécution (§S10.4).
+
+**S9.3 — Déroulement et fin d'épisode.** Chaque action de l'agent — commande
+`bash` ou `soumettre` — consomme une unité d'horizon. L'épisode se termine par
+(1) « drapeau capturé » dès qu'une soumission porte exactement le drapeau, ou
+(2) « budget épuisé » quand `horizon` actions sont consommées ; `etat_terminal()`
+rend le motif (§H8.3). POINT TRANCHÉ : une soumission incorrecte rend une issue
+nommée (« drapeau incorrect ») et l'épisode CONTINUE — c'est le test itératif
+d'hypothèses que la source décrit ; issue écartée : clore à la première
+soumission — l'épisode ne mesurerait qu'un coup de dés, pas la tenue de la
+recherche. Une soumission incorrecte est une action VALIDE jugée négativement
+(`refusee = False`) : comme une commande au code de retour non nul, elle s'est
+réellement exécutée et son résultat est une INFORMATION, pas un refus ; seuls
+les refus de forme (§S10.2) portent `refusee = True` (§H15.8).
+
+---
+
+## S10. Terminal : exécution des commandes et sécurité
+
+**S10.1 — Environnement de boucle.** `terminal.py` implémente le contrat §H8.2 :
+`observation()` rend, au premier tour, l'énoncé minimal
+(`Terminal prêt. Répertoire de travail : <chemin>.`) puis, après chaque action,
+le bloc de résultat de la dernière issue ; `actions_disponibles()` rend les deux
+commandes ; `derniere_issue()` l'issue de la dernière action ; `etat_terminal()`
+le motif de fin (§S9.3).
+
+**S10.2 — Exécution d'une commande.** Chaque action `bash` exécute UNE ligne de
+commande (`bash -c`) dans le répertoire de travail du défi. L'issue porte la
+sortie combinée stdout+stderr, TRONQUÉE à 4096 octets (la troncature est nommée
+dans l'issue, avec la taille réelle), et le code de retour. Un délai maximal de
+10 secondes par commande : dépassé, la commande est tuée et l'issue nomme le
+délai. POINT TRANCHÉ : la persistance entre commandes est celle du SYSTÈME DE
+FICHIERS, pas celle du shell — chaque commande part d'un shell neuf dans le
+répertoire de travail (un `cd` isolé ne survit pas ; `cd … && …` compose). Motif :
+l'exécution par commande isolée rend le délai et la troncature applicables par
+commande et l'épisode rejouable ; la source ne spécifie pas la persistance du
+shell, et le schéma de Σ de la source porte précisément un champ « répertoire de
+travail » que l'agent tient lui-même. Une commande vide ou non textuelle est un
+refus de forme : issue nommée, `refusee = True`, l'action consomme son unité
+d'horizon (§S3.7 s'applique par analogie : un agent bloqué ne boucle pas sans
+fin).
+
+**S10.3 — Exécuteurs et confinement.** Deux exécuteurs derrière une même
+interface ; le choix est un paramètre d'infrastructure, jamais un comportement
+du défi :
+
+- **`conteneur` (défaut)** : un conteneur jetable est démarré pour l'épisode —
+  `--network none`, mémoire 256 Mo, 256 pids, 1 CPU — l'arborescence du défi y
+  est COPIÉE (aucun montage : rien de ce que l'agent écrit ne revient sur
+  l'hôte), les commandes passent par `docker exec` (délai tenu côté hôte), le
+  conteneur est détruit en fin d'épisode. Requis en mode `live` : les commandes
+  y viennent du modèle et ne s'exécutent JAMAIS directement sur l'hôte.
+- **`processus`** : sous-processus bash dans un répertoire temporaire de l'hôte.
+  Réservé aux preuves — les suites du dépôt s'exécutent déjà dans un conteneur
+  (§H2.3) — et au mode `replay` (commandes issues de cassettes relues, pas d'un
+  modèle en liberté). En mode `live`, la CLI le REFUSE par une erreur nommée.
+
+Si l'exécuteur `conteneur` est demandé sans démon Docker joignable, l'erreur au
+démarrage nomme le manque ; aucun repli silencieux vers `processus`.
+
+**S10.4 — Image d'exécution.** POINT TRANCHÉ : l'image par défaut du conteneur
+est `python:3.13-slim` — l'image de base de la pile du dépôt, présente dès
+`make up`, sans construction supplémentaire ; un paramètre de l'exécuteur la
+remplace au besoin. L'outillage garanti aux défis est celui de cette image :
+bash, coreutils (`base64`, `od`, `tr`…), grep, findutils, sed, tar, gzip et
+python3. Les familles (§S9.2) ne supposent rien de plus ; l'agent reste libre
+d'employer ce qu'il découvre.
+
+---
+
+## S11. Score pass@1 et relevé
+
+**S11.1 — Score d'un épisode.** `reussi` est VRAI si l'épisode s'est clos sur
+« drapeau capturé », FAUX sinon. Pas de score partiel : le critère de la source
+est binaire (§4.3, pass@1 sur drapeau exact).
+
+**S11.2 — Relevé.** §S5.3 s'applique (écriture dans `banc.json`, relevé écrit
+même sur incident, jamais de succès simulé) avec les champs propres : `famille`,
+`reussi`, `actions` (consommées), `commandes` (dont refus de forme),
+`soumissions` et `soumissions_incorrectes`, `arret` (« drapeau capturé »,
+« budget épuisé » ou incident), tokens, taille moyenne de prompt, durée,
+`schema_etat` (§S12.3). Un relevé interrompu par incident n'entre dans aucun
+calcul de pass@1.
+
+**S11.3 — Agrégation pass@1.** Un POINT de mesure est une série de seeds aux
+mêmes paramètres (`famille` ou `aleatoire`, `horizon`) :
+`pass@1 = épisodes réussis / épisodes complets`. Série de référence du banc :
+seeds 1–10, `aleatoire`, horizon 30 — dix épisodes au minimum avant toute
+comparaison avant/après (le binaire est plus bruyant que le score continu du
+banc a).
+
+**S11.4 — Références publiées consignées** (source table 4 ; Gemini-3-Flash,
+jeu de données original — ORIENTATION seulement, §S8.2) : pass@1 CTF — ReAct
+43,2 %, Memory/Summary 46,4 %, Stateful/LangGraph 41,8 %, SKILL.state 54,2 %
+(+ réduction de 60,4 % des tokens totaux vs ReAct). La source ne publie PAS de
+chiffre CTF pour des modèles open-weight de la taille de `qwen3.6:35b` : pour ce
+banc, le déclencheur U25 se lit sur la PROGRESSION (ou le plateau) du pass@1 du
+harnais, pas sur une comparaison absolue.
+
+---
+
+## S12. Adaptateur, contexte de tâche et CLI
+
+**S12.1 — Outils.** Deux outils à étiquette `action`, chacun avec le paramètre
+`prediction` (§H16.2) :
+
+- `bash` — paramètre `commande` : la ligne à exécuter (§S10.2) ;
+- `soumettre` — paramètre `drapeau` : la chaîne proposée, comparée EXACTEMENT au
+  drapeau du défi (§S9.3).
+
+Les descriptions énoncent la commande et sa syntaxe (§S6.1 s'applique : le
+protocole est donné, §S1.3).
+
+**S12.2 — Contexte de tâche.** L'adaptateur fournit à K (§H16.1) : tu es devant
+un terminal Linux ; un drapeau au format `FLAG{…}` est caché dans le répertoire
+de travail ; les deux outils et leurs règles (une commande par action,
+persistance du système de fichiers seulement, troncature et délai nommés, budget
+d'actions, soumission incorrecte = information, l'épisode continue). Il ne
+fournit ni la famille, ni l'emplacement, ni aucune méthode de recherche
+(§S8.4) ; il n'annonce pas la liste des outils installés — la découverte du
+terrain appartient à l'agent.
+
+**S12.3 — Schéma de Σ** (§H15.9 ; source §3.1 : schéma statique unique en cinq
+champs pour les 100 défis, `discovered_flags`, `tested_hypotheses`,
+`active_files`, `working_dir`, `cmd_summary` — transposé) :
+
+| Champ | Genre | Rôle cité au protocole |
+|---|---|---|
+| `hypotheses` | liste de chaînes | ce que tu tiens pour vrai |
+| `drapeaux_testes` | liste de chaînes | candidats soumis et leur verdict |
+| `fichiers_actifs` | liste de chaînes | fichiers découverts encore utiles |
+| `repertoire_travail` | chaîne | où tu te trouves (le shell ne le retient pas) |
+| `resume_commandes` | liste de chaînes | commandes tentées et leur enseignement |
+
+Nom du schéma au relevé : `ctf`. Les champs nomment des CONTENANTS, pas des
+contenus (§S6.5).
+
+**S12.4 — CLI.** La sous-commande générique `banc` (§S6.3) dispatche `ctf` :
+`python -m avo banc ctf --env <famille|aleatoire> --seed 42 --horizon 30
+[--mode replay|live] [--executeur conteneur|processus]`. POINT TRANCHÉ : `--env`
+porte la famille (`aleatoire` la tire au seed) — la surface CLI générique
+existante suffit, aucun argument propre au banc dans le noyau ; `--executeur`
+est ajouté à la sous-commande générique (paramètre d'infrastructure, §S10.3,
+défaut `conteneur`). `--bruit` et `--derive` hors défaut sont refusés par une
+erreur nommée (§S8.3). Le relevé s'écrit dans `runs/<run_id>/banc.json`.
+
+**S12.5 — Preuves du banc b** (Definition of Done des unités) :
+
+- unitaires : générateur (déterminisme octet pour octet à seed égal, famille
+  tirée au seed en `aleatoire`, SOLVABILITÉ de chaque famille par son chemin
+  canonique depuis le plan, unicité du drapeau, leurres jamais en `FLAG{`),
+  matérialisation (le plan écrit est relu identique), exécuteur `processus`
+  (exécution réelle, troncature nommée, délai tenu, refus de forme,
+  persistance fichiers sans persistance shell), environnement (fin sur capture,
+  fin sur budget, soumission incorrecte qui continue, `refusee` selon §S9.3),
+  relevé (champs §S11.2, incident consigné) ;
+- intégration : épisode court joué en rejeu par la boucle complète sous gardes,
+  relevé `banc.json` écrit et exact ;
+- E2E : scénario rejoué par cassette (épisode court, capture attendue) ;
+- balayage « zéro indice de jeu » (§A5) inchangé sur le noyau : les mots du banc
+  n'apparaissent que sous `src/avo/bancs/`.
+
+L'exécuteur `conteneur` se prouve par une exécution réelle documentée quand un
+démon Docker est joignable (session de campagne), jamais dans `make check`
+(§H2.3 : les suites tournent elles-mêmes en conteneur, sans démon).
+
+---
+
+## S13. Découpage du banc b en unités d'une session
+
+- **U29b1** — la présente spécification, puis `defis.py` + `terminal.py` +
+  `score.py` : générateur des cinq familles, matérialisation, exécuteurs,
+  environnement de boucle, relevé ; preuves unitaires de §S12.5. Sans
+  adaptateur ni CLI.
+- **U29b2** — `adaptateur.py` + branchement au dispatch CLI `banc` : outils,
+  contexte de tâche, schéma de Σ, intégration en rejeu, cassette E2E, exécution
+  réelle de l'exécuteur `conteneur` documentée, premier relevé live multi-seeds
+  au journal (série de référence §S11.3 ou son amorce).
