@@ -3329,3 +3329,38 @@ séries complémentaires là où une mesure les désigne (variance du banc a
 entrepôt ; famille `encodage` du banc b ; dérive du simulateur `llm` du
 banc c). Vérifier en ouverture que l'endpoint répond (`/api/version` en 200)
 avant toute série live.
+
+## 2026-09-03 (suite 41, session planifiée) — U25 : le déclencheur est ATTEINT et consigné — la campagne ARC officielle s'ouvre (tranche 1)
+
+**Unité.** U25 (campagne étendue, [LIVE]), prise au titre de la reprise désignée
+par la suite 40 : « relire le déclencheur U25 et statuer ».
+
+**Décision : déclencheur ATTEINT, au titre du critère 1.** Texte du déclencheur
+(U25, décision du responsable 2026-09-01) : « scores comparables aux références
+publiées des modèles de taille similaire sur les bancs publics (consignées par
+la spécification U29), OU score qui a cessé de progresser ». Mesures :
+
+- **Banc a** — le SEUL banc dont la spécification consigne des références
+  publiées de modèles open-weight de taille comparable (§S5.4 : fourchette
+  [Qwen-3-8B 0,76 ; Gemma-4-31B 0,84] à h25 bruit 0). Point canonique mesuré :
+  **0,77** (suite 23, seeds 1–3) — DANS la fourchette ; sous les correctifs
+  ultérieurs, les points de bruit sont au-dessus (bruit 20 : 0,96/0,92 ;
+  bruit 50 : 0,80/0,973 ; dépôt bruit 5 : 0,987).
+- **Bancs b et c** — aucune référence open-weight publiée (§S11.4, §S17.4 :
+  lecture sur la PROGRESSION) ; lignes de base posées (b : pass@1 8/10 et 6/10
+  en réplication ; c : pass 8/10). Ils ne portent pas le critère 1 et ne
+  peuvent le bloquer.
+
+Issue écartée : attendre une progression mesurée sur b/c — les améliorations
+U31 n'étant recevables que désignées par des mesures, et aucune ne l'étant à ce
+jour, ce chemin resterait indéfiniment hors d'atteinte ; le « OU » du texte
+tranche. La décision reste révisable (CLAUDE.md, « Autonomie de décision »).
+
+**Périmètre de la tranche 1** (celui arrêté par le responsable, U25) : tous les
+jeux que `/api/games` déclare ; plafonds PAR JEU : 80 actions/niveau,
+300 actions/jeu, 1 200 s/jeu, 1 500 000 tokens/jeu, 400 tours ; mode `state`,
+gardes actives, `qwen3.6:35b` via le gateway. Garde de publication levée par
+l'autorisation du responsable (2026-08-30, prompt de la tâche) :
+`--j-autorise-la-publication` posé. Exécution séquentielle, par tranches
+reprenables (granularité jeu, §A7.4) : cette session joue autant de jeux que
+son temps le permet et consigne l'état exact d'arrêt pour la suivante.
