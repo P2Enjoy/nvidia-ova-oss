@@ -24,7 +24,7 @@ from avo.context.etat import ARC_V1, CHAMP_HYPOTHESES, DICTIONNAIRE, FORMES, Sch
 
 #: Version des prompts. Change dès qu'un texte change : le rapport d'une campagne
 #: doit pouvoir dire sous quelle formulation ses résultats ont été obtenus.
-VERSION: Final = "1.8"
+VERSION: Final = "1.9"
 
 #: Contrat de tâche, posé une fois en tête de segment (§A5.1, calqué sur VISTA).
 SYSTEME: Final = """Tu joues à un jeu inconnu, tour par tour, sur une grille de
@@ -127,6 +127,16 @@ def protocole_etat(schema: SchemaEtat = ARC_V1) -> str:
 #: « zéro indice » (§A5.1), qui lit les constantes de ce module.
 PROTOCOLE_ETAT: Final = protocole_etat(ARC_V1)
 
+
+#: Amorce documentaire du mode `state` (§H16.0.7) : tant que le champ de
+#: connaissances est vide — la condition exacte de la garde §H16.1 —, le message
+#: du pas s'ouvre sur ce rappel d'une ligne ; la phrase finale du protocole,
+#: éloignée dans le message système, perd contre une observation volumineuse.
+AMORCE_DOCUMENTAIRE: Final = (
+    f"[GARDE] Le champ « {CHAMP_HYPOTHESES} » de Σ est encore vide : aucune action "
+    "n'est jouée tant qu'il l'est. Ta réponse à CE pas écrit au moins une hypothèse "
+    "dans son state_patch, en plus de ce qui change."
+)
 
 #: Garde documentaire (§H16.1) : l'artefact exigé avant de déverrouiller l'action.
 GARDE_DOCUMENTAIRE: Final = """[GARDE] Avant toute action, écris dans WORKING.md

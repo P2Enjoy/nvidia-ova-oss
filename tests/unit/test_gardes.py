@@ -8,8 +8,9 @@
           « caduque », jetons lus où qu'ils soient, issue prudente), §H16.4
           (garde de persistance armée par complétion et game over), §H16.5
           (redemandes comptées au bilan), §H16.0.6 (la redemande du mode
-          `state` énonce la forme complète attendue) — dans les deux modes de
-          contexte
+          `state` énonce la forme complète attendue), §H16.0.7 (l'amorce
+          documentaire ouvre le message du pas tant que le champ de
+          connaissances est vide) — dans les deux modes de contexte
 @verifies docs/SPEC_HARNAIS.md §H3.1 (`AVO_GARDES`, `AVO_GARDE_RETRIES`)
 
 Le transport du client est injecté (aucun réseau, aucune cassette) : chaque test
@@ -478,6 +479,42 @@ class TestGardesModeEtat(unittest.TestCase):
         second = boucle.jouer_tour(2)
         self.assertEqual(second.action, "avance")
         self.assertIn("hypotheses", transport.invite(1), "l'erreur nommée revient au pas suivant")
+
+    def test_l_amorce_documentaire_ouvre_le_message_tant_qu_hypotheses_est_vide(self) -> None:
+        """§H16.0.7 : le rappel adjacent ouvre le pas, puis disparaît avec la 1re hypothèse.
+
+        Mesuré (journal 2026-09-03, suite 34, bruit 50 h25 sous protocole v1.8) :
+        la phrase finale du protocole — dans le message système — perd contre une
+        observation volumineuse (5/6 refus t01 à bruit 50, 0/3 à bruit 0).
+        """
+        boucle, transport = self._boucle(
+            [
+                self._pas(
+                    "PREDICTION: quelque chose bouge",
+                    {"hypotheses": ["la commande déplace un objet"]},
+                ),
+                self._pas("PREDICTION: quelque chose bouge encore"),
+            ]
+        )
+        boucle.jouer_tour(1)
+        self.assertTrue(
+            transport.invite(0).startswith(prompts.AMORCE_DOCUMENTAIRE),
+            "le premier pas s'ouvre sur l'amorce documentaire",
+        )
+        boucle.jouer_tour(2)
+        self.assertNotIn(
+            prompts.AMORCE_DOCUMENTAIRE,
+            transport.invite(1),
+            "l'amorce disparaît dès que « hypotheses » est non vide",
+        )
+
+    def test_gardes_desactivees_omettent_l_amorce_documentaire(self) -> None:
+        boucle, transport = self._boucle(
+            [self._pas("un pas sans garde")],
+            AVO_GARDES="false",
+        )
+        boucle.jouer_tour(1)
+        self.assertNotIn(prompts.AMORCE_DOCUMENTAIRE, transport.invite(0))
 
     def test_le_patch_du_pas_refuse_est_annule_avec_l_action(self) -> None:
         """§H16.1 : refus de garde = pas blanc atomique — Σ ne garde rien du pas refusé.

@@ -2,6 +2,19 @@
 
 ## [Non publié]
 
+### 2026-09-03 — U31 : l'amorce documentaire ouvre le message du pas tant que le champ de connaissances est vide (§H16.0.7, prompts v1.9)
+
+- Mesuré (série live bruit 50 h25, sous protocole v1.8) : la phrase finale du
+  protocole — dans le message système — perd contre une observation
+  volumineuse : 5 runs sur 6 à bruit 50 perdaient leur premier pas sur la
+  garde documentaire, contre 0 sur 3 à bruit 0 (dépôt seul, gradient : 0/6 à
+  bruit 0, 0/3 à bruit 20, 2/3 à bruit 50).
+- §H16.0.7 complété : tant que « hypotheses » de Σ est vide — la condition
+  exacte de la garde §H16.1 —, le message du pas s'ouvre sur un rappel d'une
+  ligne de l'exigence ; il disparaît dès la première hypothèse écrite, et
+  l'erreur nommée d'un pas refusé garde la primauté en tête (§H16.0.6).
+  Prompts v1.9, 2 unitaires, cassettes E2E régénérées.
+
 ### 2026-09-03 — U31 : l'exigence documentaire clôt le protocole du mode `state` (§H16.0.7, prompts v1.8)
 
 - Mesuré (série live bruit 20 h25) : le premier pas était refusé par la garde

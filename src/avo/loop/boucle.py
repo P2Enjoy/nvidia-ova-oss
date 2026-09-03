@@ -677,6 +677,14 @@ class BoucleAgent:
             f"{self.notes.pour_segment_frais()}\n\n"
             f"{self._avec_observation(protocole)}"
         )
+        # §H16.0.7 : tant que le champ de connaissances est vide — la condition
+        # exacte de la garde documentaire (§H16.1) —, le message du pas s'ouvre
+        # sur le rappel de l'exigence : la phrase finale du protocole, dans le
+        # message système, perd contre une observation volumineuse. L'erreur
+        # nommée d'un pas refusé garde la primauté (§H16.0.6) : l'amorce se pose
+        # avant elle et reste donc en dessous.
+        if self.config.gardes and not self.etat.champs.get("hypotheses"):
+            contenu = f"{prompts.AMORCE_DOCUMENTAIRE}\n\n{contenu}"
         if erreur_precedente is not None:
             contenu = (
                 f"Ta réponse précédente était invalide : {erreur_precedente}\n"

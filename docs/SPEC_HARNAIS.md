@@ -980,7 +980,9 @@ phase.
    — la condition exacte de la garde (§H16.1), donc à l'ouverture du run et
    jamais après la première hypothèse écrite —, le message du pas s'OUVRE sur
    un rappel d'une ligne nommant l'exigence (constante de `prompts.py`,
-   règle 5 ; aucun terme d'environnement, règle 3). Le rappel disparaît de
+   règle 5 ; aucun terme d'environnement, règle 3). L'erreur nommée d'un pas
+   refusé garde la primauté en tête de message (règle 6) : sur un pas de
+   redemande, le rappel vient sous elle. Le rappel disparaît de
    lui-même dès que le champ est non vide : il ne coûte au préremplissage
    que sur les pas où la garde mordrait de toute façon. Issue écartée avec
    son motif : répéter l'exigence dans l'observation elle-même — l'observation
