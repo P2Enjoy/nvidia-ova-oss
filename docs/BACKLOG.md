@@ -1069,6 +1069,21 @@ cassettes régénérées, validation live sur le pire cas (0 refus t01, redemand
 4 → 1) ; campagne complète verte (706 unitaires, 153 intégration, 6 E2E,
 build).
 
+**Itération du 2026-09-03 (suite 35, session planifiée)** — jouer : les deux
+séries complémentaires désignées par la suite 34, sous v1.9 — bruit 50 h25
+entrepôt seeds 1–3 (1,00/0,84/0,88, moyenne 0,907 contre 0,80 sous v1.8, un
+épisode parfait) et dérive h25 entrepôt seeds 1–3 (0,16/0,64/0,96, moyenne
+0,587, 3/3 dérives récupérées en 0–3 pas — le s1 s'effondre AVANT la dérive,
+variance inter-runs confirmée) ; observer : **l'amorce v1.9 validée sur
+séries complètes (0 refus documentaire t01, 6/6 runs)**, et la piste « une
+famille de formulations du refus serait mieux répercutée » (suite 32) close
+par la mesure — « occupée » et « ne porte pas » également non répercutés
+dans Σ, le pas suivant ré-affirme le fait fantôme (comportement modèle,
+affordances en place) ; améliorer : rien — aucune mesure ne désigne un
+mécanisme absent, session sans commit de code au titre de ce motif
+(campagne non rejouée : arbre `fd92406` inchangé, vérifié vert par la
+suite 34).
+
 **Itération du 2026-09-03 (suite 33, session planifiée)** — jouer : les cinq
 points morts bruit 20 h25 rejoués sous v1.7, série indépendante parallèle à
 celle de la clôture de la suite 32 (entrepôt s2–s3 0,56/0,80 ; dépôt

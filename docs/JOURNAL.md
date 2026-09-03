@@ -2944,3 +2944,77 @@ répercutés dans Σ (entrepôt, comportement modèle) ; vérifier sur les
 prochaines archives que l'amorce v1.9 tient à 0 refus t01. Vérifier en
 ouverture que l'endpoint répond (`/api/version` en 200) avant toute série
 live.
+
+---
+
+## 2026-09-03 (suite 35, session planifiée) — U31 : les deux séries complémentaires désignées par la suite 34 relevées sous v1.9 — l'amorce documentaire validée sur séries complètes (0 refus t01, 6/6), la piste « famille de formulations du refus » close par la mesure, aucune amélioration désignée
+
+**Unité.** U31 (jouer/observer/améliorer). Endpoint vérifié en ouverture
+(`/api/version` 200 en 0,6 s). La session a démarré sur le checkout `47525e5`
+pendant que la session parallèle (suite 34) clôturait U29a4 : un run dupliqué
+de sa série dérive dépôt (seed 1, ~13 événements) a été lancé puis ARRÊTÉ
+volontairement à la découverte de son push `fd92406` — relevé absent, aucun
+score comparable, aucun artefact conservé en comparaison. Reprise sur
+`fd92406` (prompts v1.9) pour les deux séries que sa clôture désigne.
+
+**Jouer : six runs live complets sous v1.9 (`fd92406`), une exécution à la
+fois.** Bruit 50 h25 entrepôt seeds 1–3 (série de validation de v1.9, en
+regard de la série v1.8 de la suite 34 : 0,72/0,88/0,80) :
+
+| seed | score | corr/inc/inv | redemandes | retries patch | tokens | durée s | arrêt |
+|---|---|---|---|---|---|---|---|
+| 1 | 1,00 | 25/0/0 | 3 | 0 | 77 318 | 206 | épuisé |
+| 2 | 0,84 | 21/1/3 | 2 | 1 | 81 756 | 324 | épuisé |
+| 3 | 0,88 | 22/2/1 | 0 | 0 | 73 008 | 261 | épuisé |
+
+Moyenne **0,907** (v1.8 : 0,80), un épisode parfait. Dérive h25 entrepôt
+(bruit 0) seeds 1–3 — le point symétrique de la série dépôt de la suite 34 :
+
+| seed | score | corr/inc/inv | dérive d | récup. (pas) | redemandes | tokens | durée s |
+|---|---|---|---|---|---|---|---|
+| 1 | 0,16 | 4/11/10 | 12 | 3 | 2 | 52 150 | 549 |
+| 2 | 0,64 | 16/3/6 | 12 | 0 | 3 | 40 203 | 242 |
+| 3 | 0,96 | 24/0/1 | 12 | 0 | 2 | 37 178 | 195 |
+
+Moyenne 0,587, **3/3 dérives récupérées en 0–3 pas** (dépôt suite 34 :
+0,92×3, récupération 1–2 pas). Le s1 s'effondre AVANT la dérive
+(désynchronisation de Σ dès t2, cascade « etagere_0 est occupée » ×6) : la
+récupération de la dérive elle-même est bonne, la variance inter-runs domine
+(0,16 → 0,96 aux mêmes paramètres), constat des suites 23–34 confirmé. Le
+run 1 de bruit 50 a traversé un redémarrage du conteneur de session APRÈS
+l'écriture de son relevé (aucune mesure perdue ; démon Docker et pile
+relancés).
+
+**Observer.** (1) **La mesure attendue de v1.9 est VALIDÉE sur séries
+complètes : 0 refus documentaire t01 sur 6/6 runs** (bruit 50 et dérive
+confondus ; la validation de la suite 34 ne portait qu'un run). L'amorce
+tient sous observation volumineuse. (2) **La piste « une famille de
+formulations du refus serait mieux répercutée » (suite 32) est CLOSE par la
+mesure : non.** Les deux familles de refus de l'environnement sont également
+non répercutées dans Σ — « occupée » (6 refus au s1-dérive dont 3
+consécutifs, 2 consécutifs au s2-bruit 50) comme « ne porte pas » (3 refus
+IDENTIQUES au s2-dérive, t8/t11/t19) ; le pas qui suit un refus ré-affirme
+le fait fantôme dans son patch (s1-dérive t7 : `etagere_0: article_3` après
+« occupée »). Les affordances du harnais sont toutes en place (rappel
+verbatim §H15.8, erreur nommée en tête §H16.0.6, amorce §H16.0.7) :
+comportement modèle. (3) Redemandes de garde restantes : 0–3 par run,
+toutes « VERDICT/PREDICTION manquante » (friction connue, suites 22+).
+(4) Usage large du verdict « caduque » observé (9 verdicts au s2-dérive),
+sans coût de score mesuré — rien de désigné.
+
+**Améliorer : rien — aucune mesure fraîche ne désigne un mécanisme absent**
+(règle U31 : pas d'amélioration inventée). Session SANS commit de code, au
+titre de ce motif consigné : les livrables sont les deux séries qui
+alimentent le déclencheur U25, la validation de v1.9 et la clôture de la
+piste de la suite 32. Le code de l'arbre (`fd92406`) est celui que la
+campagne complète de la suite 34 a vérifié vert ; aucun changement, campagne
+non rejouée (elle mesurerait un arbre identique).
+
+**Où reprendre.** U31 continue : prochaine cible d'affinage selon l'ordre
+a → b → c de U29 — **banc b, patron InterCode CTF, spécification d'abord**
+(export SKILL.state dans `knowledge/`) — ou séries complémentaires si une
+mesure les désigne. Frictions ouvertes : refus d'environnement non
+répercutés dans Σ (les deux familles, piste « formulation » close —
+comportement modèle) ; variance inter-runs de l'entrepôt. Vérifier en
+ouverture que l'endpoint répond (`/api/version` en 200) avant toute série
+live.
