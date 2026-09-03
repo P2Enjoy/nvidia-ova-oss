@@ -153,8 +153,8 @@ class TestDispatch(unittest.TestCase):
 
     def test_banc_inconnu(self) -> None:
         with self.assertRaises(BancInconnu) as arret:
-            executer_banc("tau", "retail", seed=1, horizon=3)
-        self.assertIn("skillexec, ctf", str(arret.exception))
+            executer_banc("gymnase", "retail", seed=1, horizon=3)
+        self.assertIn("skillexec, ctf, tau", str(arret.exception))
 
     def test_famille_inconnue(self) -> None:
         with self.assertRaises(BancInconnu) as arret:
