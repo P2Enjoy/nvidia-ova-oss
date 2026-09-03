@@ -878,14 +878,20 @@ de référence consignés (§S5.4). Le banc a se découpe en unités d'une sessi
   contre 3–7 sous v1.5), relevés partiels archivés hors comparaison. Campagne
   complète verte (lint, mypy strict, 699 unitaires, 153 intégration, 6 E2E,
   build).
-  **Reste à livrer** : rejouer les points morts de la série bruit 20 h25
-  (entrepôt s2–s3, dépôt s1–s3) — désormais sous prompts v1.7 (suite 32 :
-  chemins nominaux identiques à v1.6, seul le pas suivant un refus change, et
-  c'est la mesure attendue) ; puis bruit 50 à h25 multi-seeds (3 seeds
-  minimum par point, §S5.4) sur les deux environnements, dérive h25 dépôt,
-  alimentation du déclencheur U25 avec ces séries. Préalable de chaque série :
-  l'endpoint répond (`/api/version` en 200) — panne continue à travers les
-  suites 30–32.
+  **Livré et vérifié le 2026-09-03 (suite 32)** : les cinq points morts de la
+  série bruit 20 h25 rejoués sous prompts v1.7 (l'endpoint revenu à ~00:10
+  après ~1 h 30 de panne) — dépôt s1–s3 : **0,96 / 1,00 / 1,00** (moyenne
+  0,987, zéro invalide, résolution cumulée **17/17**, deux épisodes parfaits) ;
+  entrepôt s2–s3 : 0,36 / 0,56 (série mixte avec le s1 0,92 v1.6 : moyenne
+  0,613 — variance inter-runs, cascades d'invalides d'inventaire). Rappel
+  §H15.8 observé en réel : zéro régression, la boucle en un point du s2-v2 a
+  disparu ; friction dominante restante sur l'entrepôt : refus non répercutés
+  dans Σ (comportement modèle). Redemandes de garde 0–3 par run (correctif
+  §H16.3 confirmé sur 5 runs de plus).
+  **Reste à livrer** : bruit 50 à h25 multi-seeds (3 seeds minimum par point,
+  §S5.4) sur les deux environnements, dérive h25 dépôt, alimentation du
+  déclencheur U25 avec ces séries. Préalable de chaque série : l'endpoint
+  répond (`/api/version` en 200).
 
 ## Lot H — La méthode dans la structure
 
@@ -1043,17 +1049,20 @@ le ping-pong a disparu ; friction suivante instruite : résolution des demandes
 du dépôt basse (0–0,4), part du comportement modèle à établir sur les
 transcripts avant toute correction.
 
-**Itération du 2026-09-03 (suite 32, session planifiée)** — jouer : BLOQUÉ, la
-panne d'endpoint des suites 30–31 persiste (500 « edge function timed out » en
-ouverture, en cours et après livraison — troisième session traversée : le
-serveur d'inférence relève du responsable, arbitrage cas 4) ; observer/améliorer
-(repli hors ligne sur la mesure de la suite 30, cascade s2-v2) : la tension
-§H15.8 TRANCHÉE — l'annulation atomique reste, et le patch annulé d'une action
-refusée est rappelé VERBATIM au pas suivant (le modèle décide de ce qui survit,
-jamais le harnais ; deux issues écartées avec motif dans la spéc) ; spec
-`94d6b0c` avant code `c43a7bc`, prompts v1.7, 4 unitaires dédiés, cassettes E2E
-inchangées et vertes ; campagne complète verte (lint, mypy strict, 703
-unitaires, 153 intégration, 6 E2E, build).
+**Itération du 2026-09-03 (suite 32, session planifiée)** — améliorer (repli
+hors ligne pendant la panne, sur la mesure de la suite 30, cascade s2-v2) : la
+tension §H15.8 TRANCHÉE — l'annulation atomique reste, et le patch annulé d'une
+action refusée est rappelé VERBATIM au pas suivant (le modèle décide de ce qui
+survit, jamais le harnais ; deux issues écartées avec motif dans la spéc) ;
+spec `94d6b0c` avant code `c43a7bc`, prompts v1.7, 4 unitaires dédiés,
+cassettes E2E inchangées et vertes ; campagne complète verte (lint, mypy
+strict, 703 unitaires, 153 intégration, 6 E2E, build). Jouer : l'endpoint
+revenu (~00:10, après ~1 h 30 de panne), les cinq points morts de la série
+bruit 20 h25 rejoués sous v1.7 — dépôt 0,96/1,00/1,00 (résolution 17/17),
+entrepôt s2–s3 0,36/0,56 ; observer : zéro régression du rappel, la boucle en
+un point a disparu, friction dominante restante « refus non répercutés dans
+Σ » sur l'entrepôt (comportement modèle, à instruire sur les prochains
+relevés).
 
 **Itération du 2026-09-02 (suite 31, session planifiée, parallèle à la
 suite 30)** — jouer : série propre v1.6 tentée sur le même créneau, arrêtée par

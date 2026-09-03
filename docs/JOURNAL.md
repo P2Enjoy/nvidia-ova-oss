@@ -2730,20 +2730,19 @@ d'inférence relève du responsable (arbitrage cas 4, accès externe).
 
 ---
 
-## 2026-09-03 (suite 32, session planifiée) — U31 : la tension §H15.8 tranchée — le patch annulé est rappelé verbatim au pas suivant (prompts v1.7) ; l'indisponibilité de l'endpoint traverse une troisième session
+## 2026-09-03 (suite 32, session planifiée) — U31 : la tension §H15.8 tranchée (rappel verbatim du patch annulé, prompts v1.7), puis l'endpoint revient et les points morts de la série bruit 20 h25 sont rejoués — dépôt 0,96/1,00/1,00
 
 **Unité.** U31 (jouer/observer/améliorer), reprise des suites 30–31 : rejouer
-sous v1.6 les points morts de la série bruit 20 h25 — et, la panne persistant,
-la friction désignée « tension §H15.8 » traitée en repli hors ligne.
+les points morts de la série bruit 20 h25 — et, tant que la panne durait, la
+friction désignée « tension §H15.8 » traitée en repli hors ligne.
 
-**Jouer : BLOQUÉ par la même panne d'endpoint.** Sondes en ouverture (23:35),
-en cours (23:50) et après livraison (00:05+) : `HTTP 500 the edge function
-timed out` en ~37 s sur `/api/version`, plus une coupure sèche — l'origine
-derrière le pont 443 ne répond toujours pas (panne continue depuis ~22:40, à
-travers les suites 30, 31 et 32). Aucun run live lancé, aucun relevé partiel de
-plus. **La panne dure maintenant plus d'une session entière : le serveur
-d'inférence relève du responsable (arbitrage cas 4, accès/service externe) —
-le harnais, lui, reste livrable et livré.**
+**Panne d'endpoint : levée en cours de session.** Sondes en ouverture (23:35)
+et pendant la livraison hors ligne : `HTTP 500 the edge function timed out` en
+~37 s — la panne des suites 30–31 se prolongeait. Retour mesuré vers 00:10
+(`/api/version` 200 en 0,5 s, sonde armée toutes les 2 min) : indisponibilité
+totale ~1 h 30 (≈ 22:40 → 00:10), trois sessions traversées, résolue sans
+intervention. Aucun arbitrage nécessaire ; si une panne de cette ampleur se
+reproduit, le serveur d'inférence relève du responsable (cas 4).
 
 **Améliorer (spécifié d'abord, `94d6b0c` avant le code `c43a7bc`) : la tension
 §H15.8 tranchée.** Mesure qui désigne (suite 30, dépôt s2-v2, cascade
@@ -2773,13 +2772,46 @@ intégration**, **6 E2E** sur la pile montée et seedée de la session. Balayage
 `429 Too Many Requests` par le registre Docker — relance avec backoff, aléa
 d'infrastructure étranger au produit.
 
-**Où reprendre.** VÉRIFIER EN OUVERTURE que l'endpoint répond (`/api/version`
-en 200). S'il répond : rejouer les points morts de la série bruit 20 h25 —
-entrepôt s2–s3, dépôt s1–s3 — désormais sous prompts v1.7 (chemins nominaux
-identiques à v1.6 ; seul le pas suivant un refus change, ce qui est justement
-la mesure attendue : la cascade s2-v2 doit disparaître) ; puis bruit 50 h25
-multi-seeds et dérive h25 dépôt. S'il ne répond pas : la panne aura traversé
-quatre sessions — le signaler au responsable en compte rendu (arbitrage cas 4)
-et prendre une amélioration hors ligne UNIQUEMENT si une mesure archivée la
-désigne (l'amorçage documentaire du premier pas reste à instruire sur les
-prochains relevés, rien d'inventé sans données).
+**Jouer (endpoint revenu) : les cinq points morts rejoués sous v1.7, live,
+une exécution à la fois** (runs `banc-live-s32-*`, non committés) :
+
+| env | seed | score | corr/inc/inv | résolution | redemandes | retries patch | tokens | durée s | arrêt |
+|---|---|---|---|---|---|---|---|---|---|
+| entrepot | 2 | 0,36 | 9/7/9 | — | 2 | 0 | 57 473 | 500 | épuisé |
+| entrepot | 3 | 0,56 | 14/4/7 | — | 2 | 1 | 59 621 | 340 | épuisé |
+| depot | 1 | 0,96 | 24/1/0 | 5/5 | 3 | 0 | 61 137 | 267 | épuisé |
+| depot | 2 | 1,00 | 25/0/0 | 7/7 | 0 | 0 | 52 998 | 377 | épuisé |
+| depot | 3 | 1,00 | 25/0/0 | 5/5 | 2 | 1 | 59 426 | 627 | épuisé |
+
+**Dépôt bruit 20, série v1.7 complète : moyenne 0,987, zéro invalide sur les
+trois runs, résolution CUMULÉE 17/17** (deux épisodes parfaits ; série
+d'instruction v1.5 : 0,92 et résolutions partielles). **Entrepôt bruit 20,
+série mixte : s1 0,92 (v1.6, suite 30), s2 0,36, s3 0,56 — moyenne 0,613**,
+sous la série d'instruction v1.5 (0,96) : la variance inter-runs domine, et
+les mauvais runs restent des cascades d'invalides d'inventaire. Les
+redemandes de garde restent basses (0–3 par run, contre 3–7 sous v1.5) : le
+correctif verdicts §H16.3 confirme sur cinq runs de plus.
+
+**Observer : le rappel §H15.8 en conditions réelles.** Zéro régression (dépôt :
+3 runs sans une annulation, 2 parfaits ; zéro erreur de patch sur les 5 runs).
+Sur l'entrepôt, la boucle en un point du s2-v2 a DISPARU : les 9 annulations
+du s2 portent des actions et des articles variés, plus aucune répétition
+patch+action au même point. Mais les patchs annulés de cette série ne
+portaient que l'effet attendu — aucune correction à sauver — et la friction
+DOMINANTE demeure : le refus nommé (« occupée ») n'est pas répercuté dans Σ —
+le modèle n'inscrit jamais l'occupation de l'étagère refusée et retente plus
+tard avec un autre article (s2 : t15/t20/t24/t26 sur la même étagère ; s3 : le
+même `move` refusé à t14/t19/t24). Le message de refus est pourtant en TÊTE de
+l'observation, avant le bruit (vérifié dans l'adaptateur) : c'est un
+comportement modèle — l'annonce §H16.0.7 est nécessaire, pas suffisante.
+L'amorçage documentaire coûte toujours le pas t01 (2 runs sur 5 ; dépôt s2 :
+zéro refus). Rien d'autre n'est désigné par ces mesures : pas d'amélioration
+inventée.
+
+**Où reprendre.** U31 → U29a4 : bruit 50 à h25 multi-seeds (3 seeds minimum,
+§S5.4) sur les deux environnements, puis dérive h25 dépôt ; alimentation du
+déclencheur U25 avec ces séries. Frictions à instruire sur les prochains
+relevés (archives `pas.jsonl`) : refus non répercutés dans Σ sur l'entrepôt —
+regarder si une famille de formulations du refus est mieux répercutée ;
+amorçage documentaire du premier pas. Vérifier en ouverture que l'endpoint
+répond (`/api/version` en 200) avant toute série live.
