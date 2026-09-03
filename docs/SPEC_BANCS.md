@@ -11,8 +11,8 @@ annexe C (bruit), annexe D (résultats open-weight) ; `docs/SPEC_HARNAIS.md` §H
 Objet : les bancs sur lesquels le harnais s'AFFINE avant la campagne ARC
 (décision du responsable, 2026-09-01, journal suite 11). Trois bancs, dans l'ordre :
 a) patron SkillExecBench (§S2–§S5), b) patron InterCode CTF (§S8–§S13),
-c) τ-Bench (spécifié à l'ouverture de son unité). Ce document porte les bancs
-a et b en entier.
+c) patron Sierra τ-Bench (§S14–§S19). Ce document porte les trois bancs en
+entier.
 
 ---
 
@@ -67,6 +67,11 @@ src/avo/bancs/ctf/defis.py               # §S9 : familles de défis et généra
 src/avo/bancs/ctf/terminal.py            # §S10 : environnement terminal et exécuteurs
 src/avo/bancs/ctf/score.py               # §S11 : relevé pass@1
 src/avo/bancs/ctf/adaptateur.py          # §S12 : outils + contexte de tâche + CLI
+src/avo/bancs/tau/__init__.py
+src/avo/bancs/tau/domaine.py             # §S15 : base seedée, outils, transactions
+src/avo/bancs/tau/scenario.py            # §S16 : intention, état attendu, simulateur
+src/avo/bancs/tau/score.py               # §S17 : évaluateur d'état final et relevé
+src/avo/bancs/tau/adaptateur.py          # §S18 : outils + contexte de tâche + CLI
 ```
 
 Les tests suivent le miroir habituel (`tests/unit/bancs/…`, `tests/integration/…`).
@@ -731,3 +736,249 @@ démon Docker est joignable (session de campagne), jamais dans `make check`
   contexte de tâche, schéma de Σ, intégration en rejeu, cassette E2E, exécution
   réelle de l'exécuteur `conteneur` documentée, premier relevé live multi-seeds
   au journal (série de référence §S11.3 ou son amorce).
+
+---
+
+## S14. Banc c — patron Sierra τ-Bench : objet et périmètre
+
+**S14.1 — Objet** (source §4.2, §4.3). Mesurer le harnais sur l'interaction
+outil-agent-UTILISATEUR : un dialogue multi-tours de service client où l'agent
+doit satisfaire l'intention d'un utilisateur simulé en interrogeant et en
+modifiant une base relationnelle SQLite par appels d'outils, SOUS des
+contraintes de politique métier données. La compétence mesurée est la troisième
+du triptyque : après la tenue d'état (banc a) et la recherche par hypothèses
+(banc b), la conduite d'une transaction conforme — comprendre l'intention,
+vérifier l'éligibilité, agir ou refuser poliment. Le succès est BINAIRE, jugé
+par un évaluateur programmatique sur l'ÉTAT FINAL de la base : l'intention est
+satisfaite et aucune violation de politique n'a eu lieu (source §4.3).
+
+**S14.2 — Patron, pas le jeu de données.** POINT TRANCHÉ, même décision et mêmes
+motifs que §S8.2 : le banc réimplémente le PATRON — dialogue, base outillée,
+politique, évaluateur d'état final — par des scénarios ENGENDRÉS par un
+générateur seedé. Issue écartée : importer le jeu de données original
+(dépendance externe, contenus non seedés, hors-ligne déterministe exigé §S1.4).
+Conséquence assumée : les scores absolus ne se comparent PAS aux chiffres
+publiés (§S17.4, orientation seulement).
+
+**S14.3 — Paramètres d'un épisode.** `seed` (entier), `horizon` (nombre maximal
+d'actions de l'agent ; défaut de mesure 20), `domaine` (§S15 ; `detail` seul
+livré, la sentinelle `aleatoire` le tire au seed le jour où un second domaine
+existe). Un épisode porte EXACTEMENT UNE intention d'utilisateur. `--bruit`,
+`--derive` et `--executeur` ne s'appliquent pas : la CLI les refuse par une
+erreur nommée (§S18.4).
+
+**S14.4 — Ce que le banc ne fait pas.** Pas d'accès de l'agent à l'intention ni
+à l'état attendu autrement que par le dialogue et les outils ; pas d'accès de
+l'agent à la base autrement que par les outils ; l'utilisateur simulé ne révèle
+que ce qui lui est demandé (§S16.3). La politique est DONNÉE (§S1.3) : elle
+entre dans K par le contexte de tâche, jamais dans le noyau.
+
+---
+
+## S15. Domaine Détail : base et politique
+
+**S15.1 — Base de vérité.** Une base SQLite (module standard `sqlite3`, en
+mémoire, une par épisode) ; le schéma est fixe, les contenus sont tirés au
+générateur seedé (`random.Random(seed)`, ordre d'appel fixe) :
+
+```
+clients   (id TEXT, nom TEXT, adhesion TEXT)           -- adhesion : standard | premium
+articles  (id TEXT, nom TEXT, prix_centimes INTEGER)
+commandes (id TEXT, client TEXT, statut TEXT)          -- statut : en_attente | expediee | livree | annulee | retournee
+lignes    (commande TEXT, article TEXT, quantite INTEGER)
+```
+
+Tailles tirées : 8–15 clients (`client_N`, noms tirés d'un gabarit neutre),
+10–20 articles (`article_N`), 15–30 commandes (`commande_N`) de 1–3 lignes,
+statuts initiaux tirés parmi `en_attente`, `expediee`, `livree`. La base
+appartient à l'environnement et n'est jamais montrée : l'agent la lit et la
+modifie par les outils seuls (§S14.4).
+
+**S15.2 — Outils de base** (transposition de « query relational SQLite
+databases via tool calls », source §4.2) :
+
+| Outil | Effet | Refus techniques (erreur nommée, rien ne change) |
+|---|---|---|
+| `chercher_client(nom)` | rend les clients dont le nom contient le texte | aucun (liste vide possible) |
+| `lire_commandes(client)` | rend les commandes du client (id, statut) | client inexistant |
+| `lire_commande(id)` | rend statut, lignes et montant de la commande | commande inexistante |
+| `annuler_commande(id)` | statut → `annulee` | commande inexistante, ou déjà `annulee`/`retournee` |
+| `modifier_ligne(commande, article, quantite)` | remplace la quantité de la ligne (quantite ≥ 1) | commande ou ligne inexistante, quantité invalide |
+| `retourner_commande(id)` | statut → `retournee` | commande inexistante, ou statut ni `livree` ni `expediee` |
+
+POINT TRANCHÉ : les outils refusent l'IMPOSSIBLE technique et EXÉCUTENT le
+possible même quand il viole la politique (§S15.3) — annuler une commande
+`expediee` est techniquement possible et interdit par la politique. C'est le
+patron de la source (« transactional actions … under business policy
+constraints », jugées à l'état final) : la politique vit dans le contexte de
+l'agent, la conformité se juge à l'évaluateur (§S17.1), jamais par un
+garde-fou codé qui ôterait au banc son objet. L'environnement tient le JOURNAL
+des transactions exécutées (outil, arguments, épisode) : c'est la trace que
+l'évaluateur confronte à la politique.
+
+**S15.3 — Politique métier**, donnée intégralement à l'agent (§S1.3, §S18.2) :
+
+1. **Identification** : aucune action transactionnelle (`annuler_commande`,
+   `modifier_ligne`, `retourner_commande`) avant d'avoir identifié le client —
+   l'utilisateur donne son nom, l'agent le retrouve par `chercher_client` — et
+   aucune transaction sur une commande qui n'appartient pas à ce client.
+2. **Annulation** : seule une commande `en_attente` s'annule.
+3. **Modification** : seule une commande `en_attente` se modifie.
+4. **Retour** : seule une commande `livree` se retourne — une commande
+   `expediee` ne se retourne qu'après livraison, l'agent doit le dire.
+5. **Une seule affaire** : l'épisode traite l'intention de l'utilisateur et
+   rien d'autre — toute transaction hors de l'intention éligible est une
+   violation.
+
+---
+
+## S16. Intention, utilisateur simulé et déroulé
+
+**S16.1 — Intention.** Le générateur tire UNE intention par épisode, parmi
+trois familles équiprobables : `annuler` (une commande), `modifier` (la
+quantité d'une ligne, nouvelle quantité tirée ≠ l'actuelle), `retourner` (une
+commande). Il tire ensuite l'ÉLIGIBILITÉ (2/3 éligible, 1/3 inéligible) et
+choisit dans la base une commande du client tiré qui la réalise : éligible —
+le statut permet l'action selon la politique ; inéligible — le statut
+l'interdit (annuler/modifier sur `expediee` ou `livree`, retourner sur
+`en_attente` ou `expediee`). La génération échoue par une erreur nommée si la
+base tirée n'offre aucun candidat — le point de mesure prend un autre seed
+(même règle que §S3.8).
+
+**S16.2 — État attendu.** Calculé par le générateur au moment du tirage :
+intention éligible — la base initiale plus EXACTEMENT la mutation de
+l'intention ; intention inéligible — la base initiale INCHANGÉE (l'agent doit
+refuser poliment et n'exécuter aucune transaction). L'état attendu n'est
+jamais montré à l'agent.
+
+**S16.3 — Utilisateur simulé.** Deux implémentations derrière une même
+interface, comme les exécuteurs du banc b (§S10.3) :
+
+- **`scripte` (preuves et rejeu)** : un simulateur DÉTERMINISTE porté par le
+  scénario — premier message : salutation + intention en langage naturel
+  (gabarit tiré au rng, nommant la commande) ; il répond aux questions par les
+  faits du scénario (son nom au premier abord, l'identifiant de commande si
+  demandé), accepte tout refus motivé, et dit au revoir quand l'agent annonce
+  l'issue. Sans lui, aucune preuve n'est rejouable (§S1.4).
+- **`llm` (live, U29c2)** : un second LLM sur le même endpoint joue
+  l'utilisateur (« Agents interact with simulated users », source §4.2), avec
+  un prompt d'utilisateur qui lui donne le scénario et lui interdit d'en
+  révéler l'état attendu. Les appels restent SÉQUENTIELS dans l'épisode : le
+  plafond de 3 requêtes parallèles de l'endpoint (CLAUDE_PROJECT.md) est
+  respecté par construction.
+
+**S16.4 — Déroulé et fin d'épisode.** Chaque action de l'agent — un outil de
+§S15.2, `repondre(message)` (parle à l'utilisateur, qui répond au tour
+suivant) ou `clore()` — consomme une unité d'horizon. L'observation d'un pas
+porte le dernier message de l'utilisateur puis, après chaque action, l'issue
+de l'outil (les réponses de `repondre` incluent la réplique de l'utilisateur).
+L'épisode se termine par (1) `clore()` de l'agent, ou (2) « budget épuisé »
+quand `horizon` actions sont consommées ; `etat_terminal()` rend le motif
+(§H8.3). POINT TRANCHÉ : `clore()` appartient à l'agent — c'est lui qui juge
+l'affaire traitée, et clore trop tôt se paie à l'évaluateur ; issue écartée :
+clore sur le au-revoir de l'utilisateur — l'agent perdrait la main sur sa
+propre terminaison.
+
+---
+
+## S17. Évaluateur d'état final et relevé
+
+**S17.1 — Réussite** (source §4.3 : « the final database state satisfies user
+intent without policy violations »). `reussi` est VRAI si et seulement si :
+
+1. le DUMP CANONIQUE de la base finale (lignes de chaque table, triées) est
+   EXACTEMENT l'état attendu de §S16.2 ; et
+2. le journal des transactions (§S15.2) ne contient AUCUNE violation de la
+   politique §S15.3 — une transaction hors intention éligible, ou exécutée
+   avant identification du client, est une violation même si son effet a été
+   « défait » ensuite.
+
+Pas de score partiel : le critère de la source est binaire.
+
+**S17.2 — Relevé.** §S5.3 s'applique (écriture dans `banc.json`, relevé écrit
+même sur incident, jamais de succès simulé) avec les champs propres :
+`domaine`, `intention` (famille), `eligible`, `reussi`, `actions`, `repliques`
+(tours de dialogue), `transactions`, `violations`, `arret` (« clos par
+l'agent », « budget épuisé » ou incident), tokens, taille moyenne de prompt,
+durée, `schema_etat` (§S18.3), `utilisateur` (`scripte` ou `llm`).
+
+**S17.3 — Agrégation.** `pass = épisodes réussis / épisodes complets`, par
+série de seeds aux mêmes paramètres. Série de référence du banc : seeds 1–10,
+`detail`, horizon 20, dix épisodes au minimum avant toute comparaison
+avant/après (§S11.3 s'applique par analogie).
+
+**S17.4 — Références publiées consignées** (source table 4 ; Gemini-3-Flash,
+jeu de données original — ORIENTATION seulement, §S14.2) : τ-Retail pass —
+ReAct 48,2 %, Memory/Summary 29,9 %, Stateful/LangGraph 51,7 %, SKILL.state
+58,3 % ; τ-Airline — 21,8 / 23,6 / 28,1 / 32,4 %. La source ne publie pas de
+chiffre τ pour des modèles open-weight de la taille de `qwen3.6:35b` : le
+déclencheur U25 se lit sur la PROGRESSION du pass du harnais, pas sur une
+comparaison absolue.
+
+---
+
+## S18. Adaptateur, contexte de tâche et CLI
+
+**S18.1 — Outils.** Les outils de §S15.2 plus `repondre(message)` et
+`clore()`, tous à étiquette `action` avec le paramètre `prediction` (§H16.2) ;
+les descriptions énoncent commande et syntaxe (§S6.1 s'applique — le protocole
+est donné, §S1.3).
+
+**S18.2 — Contexte de tâche.** L'adaptateur fournit à K (§H16.1) : tu es un
+agent de service client ; un utilisateur te parle ; la POLITIQUE de §S15.3,
+intégralement ; les outils et leurs règles ; le but — satisfaire la demande de
+l'utilisateur SANS violer la politique, et la refuser poliment quand la
+politique l'interdit. Il ne fournit ni l'intention, ni l'état de la base, ni
+l'état attendu (§S14.4).
+
+**S18.3 — Schéma de Σ** (§H15.9 ; transposé du patron §S12.3, aucun schéma τ
+publié dans la source — POINT TRANCHÉ) :
+
+| Champ | Genre | Rôle cité au protocole |
+|---|---|---|
+| `hypotheses` | liste de chaînes | ce que tu tiens pour vrai |
+| `client_identifie` | chaîne | l'identifiant du client, une fois retrouvé |
+| `demande` | chaîne | ce que l'utilisateur veut, dans tes mots |
+| `faits` | dictionnaire | ce que la base t'a appris (commande → statut, lignes) |
+| `reste_a_faire` | liste de chaînes | les étapes restantes avant de clore |
+
+Nom du schéma au relevé : `service`. Les champs nomment des CONTENANTS (§S6.5).
+
+**S18.4 — CLI.** La sous-commande générique `banc` (§S6.3) dispatche `tau` :
+`python -m avo banc tau --env detail --seed 42 --horizon 20 [--mode replay|live]`.
+`--bruit`, `--derive` et `--executeur` hors défaut sont refusés par une erreur
+nommée (§S14.3) ; l'utilisateur simulé est `scripte` en replay et `llm` en
+live (§S16.3), sans paramètre : le mode le choisit. Le relevé s'écrit dans
+`runs/<run_id>/banc.json`.
+
+**S18.5 — Preuves du banc c** (Definition of Done des unités) :
+
+- unitaires : générateur (déterminisme octet pour octet du dump initial à seed
+  égal, intention et éligibilité tirées, erreur nommée sans candidat), outils
+  (chaque effet et chaque refus technique de §S15.2), journal des
+  transactions, évaluateur (réussite sur mutation exacte, échec sur base
+  intacte quand l'intention était éligible, échec sur violation même défaite,
+  réussite du refus poli — base inchangée — quand l'intention était
+  inéligible), simulateur scripté (premier message, réponses aux questions,
+  au-revoir), relevé (champs §S17.2, incident consigné) ;
+- intégration : épisode court joué en rejeu par la boucle complète sous gardes,
+  relevé `banc.json` écrit et exact ;
+- E2E : scénario rejoué par cassette (épisode court, réussite attendue) ;
+- balayage « zéro indice de jeu » (§A5) inchangé sur le noyau : les mots du
+  banc n'apparaissent que sous `src/avo/bancs/`.
+
+L'utilisateur `llm` se prouve en live (premier relevé U29c2), jamais dans
+`make check` (garde A2.3 : aucun appel réseau depuis les tests).
+
+---
+
+## S19. Découpage du banc c en unités d'une session
+
+- **U29c1** — la présente spécification, puis `domaine.py` + `scenario.py` +
+  `score.py` : base seedée et outils, journal des transactions, intention et
+  état attendu, simulateur `scripte`, évaluateur d'état final, relevé ;
+  preuves unitaires de §S18.5. Sans adaptateur ni CLI.
+- **U29c2** — `adaptateur.py` + branchement au dispatch CLI `banc` : outils,
+  contexte de tâche, schéma de Σ `service`, utilisateur `llm` du mode live,
+  intégration en rejeu, cassette E2E, premier relevé live multi-seeds au
+  journal (série de référence §S17.3 ou son amorce).
