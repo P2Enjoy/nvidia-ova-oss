@@ -2,7 +2,8 @@
 
 @verifies docs/BACKLOG.md U29a2 — adaptateur harnais + CLI `banc` ; U29a4 —
           branchement du Dépôt logiciel (politique parfaite §S4.5) ; U29b2 —
-          adaptateur du banc CTF (recouvrement canonique §S9.2)
+          adaptateur du banc CTF (recouvrement canonique §S9.2) ; U29c2 —
+          adaptateur du banc τ (politique conforme §S15.3/§S16.4)
 @verifies docs/SPEC_BANCS.md §S3.5 et §S4.5 (obligations : les politiques
           parfaites les rejouent exactement), §S3.8 et §S4.7 (la politique
           parfaite lit l'alerte de dérive : déplacement appliqué à l'ombre,
@@ -42,16 +43,19 @@ from avo.bancs.skillexec.generation import (
     Episode,
     nom_etagere,
 )
+from avo.bancs.tau.scenario import Scenario
 from tests.e2e.scenarios import ENV_EPINGLE, JETON, gabarit_reponse
 
 __all__ = [
     "ENV_EPINGLE_BANC",
     "HYPOTHESE_CTF",
     "HYPOTHESE_DEPOT",
+    "HYPOTHESE_TAU",
     "JETON",
     "actions_parfaites",
     "actions_parfaites_ctf",
     "actions_parfaites_depot",
+    "actions_parfaites_tau",
     "contenu_pas",
     "gabarit_reponse",
     "reponse_pas",
@@ -63,6 +67,9 @@ HYPOTHESE_DEPOT = "je tiens l'état exact du dépôt"
 
 #: Hypothèse des pas scriptés du banc CTF (§H16.1).
 HYPOTHESE_CTF = "le drapeau se trouve dans un fichier du répertoire de travail"
+
+#: Hypothèse des pas scriptés du banc τ (§H16.1).
+HYPOTHESE_TAU = "l'utilisateur veut une opération sur une de ses commandes"
 
 #: Environnement épinglé du banc (§A8.5, même principe que `scenarios.ENV_EPINGLE`) :
 #: le mode `state` est celui du produit par défaut, épinglé ici pour que la cassette
@@ -162,6 +169,36 @@ def actions_parfaites_ctf(plan: PlanDefi) -> list[str]:
             f"le décor scripté du banc b couvre la famille fouille, reçu {plan.famille}"
         )
     return [f"bash grep -rhF {PREFIXE_DRAPEAU} .", f"soumettre {plan.drapeau}"]
+
+
+def actions_parfaites_tau(scenario: Scenario) -> list[str]:
+    """La conduite conforme d'une intention ÉLIGIBLE (§S15.3, §S16.4), textes §H15.8.
+
+    Cinq actions : demander le nom, identifier le client (règle 1), exécuter la
+    mutation exacte de l'intention, annoncer l'issue (l'utilisateur scripté dit
+    au revoir), clore. Le décor exige un scénario éligible : la politique
+    parfaite d'un inéligible est un autre parcours, hors de ce décor.
+    """
+    if not scenario.eligible:
+        raise AssertionError("le décor scripté du banc c couvre une intention éligible")
+    if scenario.famille == "annuler":
+        transaction = f"annuler_commande {scenario.commande_id}"
+        annonce = "repondre Votre commande a été annulée."
+    elif scenario.famille == "modifier":
+        transaction = (
+            f"modifier_ligne {scenario.commande_id}, {scenario.article_id}, {scenario.quantite}"
+        )
+        annonce = "repondre Votre commande a été modifiée."
+    else:
+        transaction = f"retourner_commande {scenario.commande_id}"
+        annonce = "repondre Votre commande a été retournée."
+    return [
+        "repondre Bonjour, quel est votre nom ?",
+        f"chercher_client {scenario.client_nom}",
+        transaction,
+        annonce,
+        "clore",
+    ]
 
 
 def contenu_pas(action: str, hypothese: str = "je tiens l'état exact de l'entrepôt") -> str:

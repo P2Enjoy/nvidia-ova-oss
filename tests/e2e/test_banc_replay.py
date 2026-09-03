@@ -2,7 +2,8 @@
 
 @verifies docs/BACKLOG.md U29a2 — adaptateur harnais + CLI `banc` ; U29a4 —
           branchement du Dépôt logiciel (scénario CLI du dépôt, résolution
-          §S4.4) ; U29b2 — scénario CLI du banc CTF (capture attendue, §S12.5)
+          §S4.4) ; U29b2 — scénario CLI du banc CTF (capture attendue, §S12.5) ;
+          U29c2 — scénario CLI du banc τ (réussite attendue, §S18.5)
 @verifies docs/SPEC_BANCS.md §S6.3 (CLI `banc` : boucle complète, relevé §S5.3
           écrit dans le workspace), §S6.4 (E2E : scénario rejoué par cassette,
           épisode court, score attendu exact), §S12.4 (CLI `banc ctf`,
@@ -31,6 +32,7 @@ from tests.e2e.generer_cassette_banc import (
     SCENARIO_CTF,
     SCENARIO_DEPOT,
     SCENARIO_ENTREPOT,
+    SCENARIO_TAU,
     SCENARIOS,
 )
 from tests.e2e.scenarios_banc import ENV_EPINGLE_BANC, JETON
@@ -43,7 +45,9 @@ HOTE_LLM = "http://127.0.0.1:11435"
 
 def setUpModule() -> None:  # noqa: N802 — contrat unittest
     """La pile et la cassette sont des préconditions NOMMÉES, pas des surprises."""
-    for cassette in [scenario.cassette for scenario in SCENARIOS] + [SCENARIO_CTF.cassette]:
+    cassettes = [scenario.cassette for scenario in SCENARIOS]
+    cassettes += [SCENARIO_CTF.cassette, SCENARIO_TAU.cassette]
+    for cassette in cassettes:
         if not (DOSSIER_CASSETTES / cassette).exists():
             raise RuntimeError(
                 f"cassette {cassette} absente — lancez « make seed-e2e » "
@@ -320,6 +324,114 @@ class TestBancCtfParCliReelle(unittest.TestCase):
         self.assertEqual(execution.returncode, 2, execution.stdout)
         self.assertIn("banc refusé", execution.stderr)
         self.assertIn("--derive", execution.stderr)
+
+
+class TestBancTauParCliReelle(unittest.TestCase):
+    """Scénario τ : sous-processus `python -m avo banc tau` réel (§S18.4).
+
+    Même parcours opérateur que les bancs a et b (MASTER_PLAN §5) ;
+    l'utilisateur simulé est `scripte` — le mode replay le choisit (§S18.4).
+    """
+
+    RUN_ID = "e2e-banc-tau"
+
+    def setUp(self) -> None:
+        self._dossier = tempfile.TemporaryDirectory()
+        self.racine = Path(self._dossier.name)
+        self.env = {
+            **os.environ,
+            **ENV_EPINGLE_BANC,
+            "OLLAMA_HOST": HOTE_LLM,
+            "OLLAMA_API_KEY": JETON,
+            "AVO_RUNS_DIR": str(self.racine),
+        }
+
+    def tearDown(self) -> None:
+        self._dossier.cleanup()
+
+    def test_episode_conforme_par_la_cli_et_artefacts(self) -> None:
+        execution = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "avo",
+                "banc",
+                "tau",
+                "--env",
+                "detail",
+                "--seed",
+                str(SCENARIO_TAU.seed),
+                "--horizon",
+                str(SCENARIO_TAU.horizon),
+                "--run-id",
+                self.RUN_ID,
+            ],
+            env=self.env,
+            capture_output=True,
+            text=True,
+            timeout=600,
+            check=False,
+        )
+        self.assertEqual(execution.returncode, 0, execution.stderr)
+        self.assertIn(f"seed {SCENARIO_TAU.seed}, domaine detail", execution.stdout)
+        self.assertIn("— réussi", execution.stdout)
+        self.assertIn("clos par l'agent", execution.stdout)
+
+        espace = self.racine / self.RUN_ID
+
+        # Relevé §S17.2 : écrit, exact, auto-porteur.
+        releve = json.loads((espace / "banc.json").read_text(encoding="utf-8"))
+        self.assertTrue(releve["reussi"])
+        self.assertEqual(releve["seed"], SCENARIO_TAU.seed)
+        self.assertEqual(releve["domaine"], "detail")
+        self.assertEqual(releve["actions"], 5)
+        self.assertEqual(releve["repliques"], 2)
+        self.assertEqual(releve["transactions"], 1)
+        self.assertEqual(releve["violations"], 0)
+        self.assertEqual(releve["arret"], "clos par l'agent")
+        self.assertEqual(releve["banc"], "tau")
+        self.assertEqual(releve["schema_etat"], "service")
+        self.assertEqual(releve["utilisateur"], "scripte")
+        self.assertEqual(releve["mode_contexte"], "state")
+        self.assertGreater(releve["tokens_consommes"], 0)
+
+        # Artefacts du run (§H6.1, §H15.5) : manifeste, métriques, Σ persisté.
+        self.assertTrue((espace / "manifest.json").exists())
+        self.assertTrue((espace / "state" / "etat.json").exists())
+        types = [
+            json.loads(ligne)["type"]
+            for ligne in (espace / "metrics.jsonl").read_text(encoding="utf-8").splitlines()
+        ]
+        self.assertEqual(types.count("action"), 5)
+        self.assertEqual(types.count("llm"), 5)
+
+    def test_refus_nomme_d_un_parametre_sans_objet(self) -> None:
+        """§S18.4 : `--executeur` sur le banc tau est refusé par une erreur nommée."""
+        execution = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "avo",
+                "banc",
+                "tau",
+                "--env",
+                "detail",
+                "--seed",
+                "1",
+                "--horizon",
+                "5",
+                "--executeur",
+                "conteneur",
+            ],
+            env=self.env,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+        self.assertEqual(execution.returncode, 2, execution.stdout)
+        self.assertIn("banc refusé", execution.stderr)
+        self.assertIn("--executeur", execution.stderr)
 
 
 if __name__ == "__main__":  # pragma: no cover

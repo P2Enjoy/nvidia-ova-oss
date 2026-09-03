@@ -2,7 +2,7 @@
 
 @verifies docs/BACKLOG.md U29a2 — adaptateur harnais + CLI `banc` ; U29a4 —
           branchement du Dépôt logiciel (cassette E2E du dépôt) ; U29b2 —
-          cassette E2E du banc CTF
+          cassette E2E du banc CTF ; U29c2 — cassette E2E du banc τ
 @verifies docs/SPEC_BANCS.md §S6.4 (E2E : scénario rejoué par cassette, épisode
           court, score attendu exact), §S12.5 (E2E du banc b : capture
           attendue), §S1.4 (déterminisme : double génération comparée)
@@ -28,6 +28,8 @@ from avo.bancs.ctf.defis import generer_defi
 from avo.bancs.skillexec.adaptateur import jouer_episode
 from avo.bancs.skillexec.depot import generer_episode_depot
 from avo.bancs.skillexec.generation import generer_episode
+from avo.bancs.tau.adaptateur import UTILISATEUR_SCRIPTE, jouer_episode_tau
+from avo.bancs.tau.scenario import generer_episode_tau
 from avo.config import Mode, charger
 from avo.llm.client import LLMClient, ReponseHTTP
 from avo.memory.workspace import Workspace
@@ -36,10 +38,12 @@ from tests.e2e.scenarios_banc import (
     ENV_EPINGLE_BANC,
     HYPOTHESE_CTF,
     HYPOTHESE_DEPOT,
+    HYPOTHESE_TAU,
     JETON,
     actions_parfaites,
     actions_parfaites_ctf,
     actions_parfaites_depot,
+    actions_parfaites_tau,
     gabarit_reponse,
     reponse_pas,
 )
@@ -238,6 +242,91 @@ def generer(scenario: ScenarioBanc) -> str:
     return premiere
 
 
+@dataclass(frozen=True)
+class ScenarioTau:
+    """Le scénario E2E du banc c (§S18.5) : intention éligible conduite en cinq
+    actions conformes, utilisateur `scripte` (§S16.3), réussite attendue."""
+
+    cassette: str
+    seed: int
+    horizon: int
+
+    def actions(self) -> list[str]:
+        base, scenario, _ = generer_episode_tau(self.seed)
+        base.fermer()
+        return actions_parfaites_tau(scenario)
+
+
+SCENARIO_TAU = ScenarioTau("e2e_banc_tau.jsonl", 8, 8)
+
+
+def _capturer_corps_tau(gabarit: dict[str, Any]) -> list[dict[str, Any]]:
+    """Première passe du banc c : joue l'épisode et relève les corps émis."""
+    actions = SCENARIO_TAU.actions()
+    corps_emis: list[dict[str, Any]] = []
+
+    def transport(url: str, corps: bytes, entetes: Any, timeout: float) -> ReponseHTTP:
+        corps_emis.append(json.loads(corps))
+        reponse = reponse_pas(gabarit, actions[len(corps_emis) - 1], HYPOTHESE_TAU)
+        return ReponseHTTP(200, json.dumps(reponse).encode())
+
+    environnement = {
+        **ENV_EPINGLE_BANC,
+        "OLLAMA_HOST": "http://capture.invalide",
+        "OLLAMA_API_KEY": JETON,
+    }
+    config = charger(Mode.REJEU, env=environnement, racine=Path("/inexistant"))
+    with tempfile.TemporaryDirectory() as dossier:
+        espace = Workspace.ouvrir(config, "capture-banc-tau", racine=Path(dossier))
+        releve = jouer_episode_tau(
+            config,
+            espace,
+            seed=SCENARIO_TAU.seed,
+            horizon=SCENARIO_TAU.horizon,
+            utilisateur=UTILISATEUR_SCRIPTE,
+            client_llm=LLMClient(config, transport=transport, dormir=lambda _: None),
+        )
+    if not releve.reussi or releve.violations:
+        raise AssertionError(
+            f"scénario banc (tau) : réussite attendue sans violation, obtenu "
+            f"reussi={releve.reussi}, violations={releve.violations}"
+        )
+    return corps_emis
+
+
+def _cassette_tau(gabarit: dict[str, Any], corps_emis: list[dict[str, Any]]) -> str:
+    """Seconde passe du banc c : apparie chaque corps à la réponse scriptée."""
+    actions = SCENARIO_TAU.actions()
+    cassette = Cassette()
+    for rang, corps in enumerate(corps_emis):
+        cassette.ajouter(
+            Exchange(
+                request=RequestRecord.depuis("POST", "/api/chat", AUTH_VALIDE, corps),
+                response=ResponseRecord(
+                    status=200,
+                    headers={"content-type": "application/json"},
+                    body=reponse_pas(gabarit, actions[rang], HYPOTHESE_TAU),
+                ),
+                recorded_at=HORODATAGE,
+                duration_ms=1,
+            )
+        )
+    return "".join(json.dumps(echange.en_json(), ensure_ascii=False) + "\n" for echange in cassette)
+
+
+def generer_tau() -> str:
+    """Génère deux fois la cassette du banc c, compare, rend le contenu (§A8.5)."""
+    gabarit = gabarit_reponse()
+    premiere = _cassette_tau(gabarit, _capturer_corps_tau(gabarit))
+    seconde = _cassette_tau(gabarit, _capturer_corps_tau(gabarit))
+    if premiere != seconde:
+        raise AssertionError(
+            "scénario banc (tau) : deux générations diffèrent — le décor n'est "
+            "pas déterministe, la cassette ne peut pas être seedée (§A8.5, §S1.4)"
+        )
+    return premiere
+
+
 def main() -> int:
     for scenario in SCENARIOS:
         contenu = generer(scenario)
@@ -248,6 +337,10 @@ def main() -> int:
     chemin = DOSSIER_CASSETTES / SCENARIO_CTF.cassette
     chemin.write_text(contenu, encoding="utf-8")
     print(f"  {SCENARIO_CTF.cassette} : {contenu.count(chr(10))} échanges, régénération vérifiée")
+    contenu = generer_tau()
+    chemin = DOSSIER_CASSETTES / SCENARIO_TAU.cassette
+    chemin.write_text(contenu, encoding="utf-8")
+    print(f"  {SCENARIO_TAU.cassette} : {contenu.count(chr(10))} échanges, régénération vérifiée")
     return 0
 
 
