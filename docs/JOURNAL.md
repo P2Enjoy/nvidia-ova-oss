@@ -3240,10 +3240,15 @@ U31 ; les divergences relèvent de la variance du modèle sur épisodes longs,
 et toute aide propre à une famille serait du benchmaxing). Session sans
 commit de code au titre de ce motif consigné : le livrable est la
 réplication qui alimente le déclencheur U25 et la mesure de variance.
-Campagne complète rejouée sur l'arbre `9cb3465` en validation indépendante
-(verdict au commit suivant) ; l'arbre a avancé depuis (banc c, U29c1 clos,
-U29c2 en cours par la session parallèle) — ces commits appartiennent à leurs
-sessions.
+**Prouver.** Campagne complète VERTE sur l'arbre courant (`62cbf4e`, qui
+porte aussi le banc c des suites parallèles) : lint, mypy strict
+136 fichiers, **802 unitaires**, 155 intégration, 10 E2E, build. Un premier
+passage avait rougi le seul E2E τ (`HTTP 599`, requête inconnue du
+rejoueur) : la PILE, démarrée avant le rebase, n'avait pas chargé la
+cassette `e2e_banc_tau.jsonl` arrivée avec lui — incident d'environnement,
+pas du produit ; pile redémarrée, preuve rejouée verte, campagne entière
+rejouée verte derrière. Leçon d'exploitation : après un rebase qui apporte
+une cassette, redémarrer la pile avant les E2E.
 
 **Où reprendre.** U29c2 est EN COURS par une session parallèle (adaptateur,
 intégration et cassette déjà poussés ; il lui reste le relevé live §S17.3 et
