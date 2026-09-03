@@ -968,6 +968,23 @@ phase.
    dernière consigne lue l'emporte : la parcimonie s'énonce d'abord, l'exigence
    documentaire la suit en phrase FINALE du protocole, nommée comme sa seule
    exception.
+   **Tant qu'elle s'applique, l'exigence documentaire s'annonce AUSSI en tête
+   du message du pas (mode `state`).** Motif, mesuré (journal 2026-09-03,
+   suite 34, bruit 50 h25, protocole v1.8) : énoncée en phrase finale du
+   protocole — qui vit dans le message système —, l'exigence perd à nouveau
+   dès que l'observation du pas est volumineuse : 5 runs sur 6 à bruit 50
+   perdent leur premier pas sur la garde documentaire, contre 0 sur 3 à
+   bruit 0 sous le même protocole (dépôt seul, gradient complet : 0/6 à
+   bruit 0, 0/3 à bruit 20, 2/3 à bruit 50). La consigne éloignée s'efface
+   derrière le contenu adjacent. Tant que le champ de connaissances est vide
+   — la condition exacte de la garde (§H16.1), donc à l'ouverture du run et
+   jamais après la première hypothèse écrite —, le message du pas s'OUVRE sur
+   un rappel d'une ligne nommant l'exigence (constante de `prompts.py`,
+   règle 5 ; aucun terme d'environnement, règle 3). Le rappel disparaît de
+   lui-même dès que le champ est non vide : il ne coûte au préremplissage
+   que sur les pas où la garde mordrait de toute façon. Issue écartée avec
+   son motif : répéter l'exigence dans l'observation elle-même — l'observation
+   appartient à l'environnement (H8.1), le harnais n'y écrit jamais.
 
 **H16.1 — Garde documentaire, à l'entrée de Planning.** Le réflexe « chercher
 l'information avant d'agir », mécanisé : les outils d'action ne se déverrouillent
