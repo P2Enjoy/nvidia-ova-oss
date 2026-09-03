@@ -77,17 +77,22 @@ par jeu. En `--mode live`, quatre plafonds sont obligatoires et l'accord de publ
 doit être donné explicitement par `--j-autorise-la-publication` : jouer via l'API
 officielle enregistre un scorecard sur le compte du responsable.
 
-**Jouer un épisode de banc d'affinage** (`docs/SPEC_BANCS.md` §S6) :
+**Jouer un épisode de banc d'affinage** (`docs/SPEC_BANCS.md` §S6, §S12) :
 
 ```sh
 python -m avo banc skillexec --env entrepot --seed 42 --horizon 50 [--bruit N] [--derive] [--mode live]
+python -m avo banc ctf --env aleatoire --seed 42 --horizon 30 [--executeur conteneur|processus] [--mode live]
 ```
 
 En `--mode replay` (défaut), l'épisode se rejoue contre la pile locale par cassette ;
 en `--mode live`, le harnais joue réellement contre l'endpoint d'inférence (`.env`
-requis). `--derive` active la condition 3 (§S3.8, §S4.7) : une dérive d'état
-externe signalée par une alerte non structurée, mesurée en pas de récupération
-(§S5.5). Le relevé (`score`, compteurs, coûts — §S5.3) s'écrit dans
+requis). Banc `skillexec` : `--derive` active la condition 3 (§S3.8, §S4.7) — une
+dérive d'état externe signalée par une alerte non structurée, mesurée en pas de
+récupération (§S5.5). Banc `ctf` : `--env` porte la famille de défi (`aleatoire`
+la tire au seed) ; les commandes de l'agent s'exécutent dans un conteneur jetable
+sans réseau (`--executeur conteneur`, défaut, requis en live — un démon Docker
+joignable est alors nécessaire ; `processus` est réservé aux preuves et au
+rejeu, §S10.3). Le relevé (score continu §S5.3, ou pass@1 §S11.2) s'écrit dans
 `runs/<run_id>/banc.json`, à côté des artefacts habituels du run.
 
 **Lancer la pile locale** (aucun secret requis) :

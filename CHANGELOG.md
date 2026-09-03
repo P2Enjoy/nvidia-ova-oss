@@ -2,6 +2,27 @@
 
 ## [Non publié]
 
+### 2026-09-03 — U29b2 : banc b joué par la boucle complète — adaptateur, CLI `banc ctf`, exécution conteneurisée en live
+
+- Adaptateur du banc CTF (`src/avo/bancs/ctf/adaptateur.py`) : outils `bash` et
+  `soumettre` (étiquette `action`, paramètre `prediction` §H16.2), contexte de
+  tâche §S12.2 (le cadre, jamais la famille ni la méthode), schéma de Σ `ctf`
+  (§S12.3, cinq contenants transposés de la source), relevé `banc.json` écrit
+  même sur incident.
+- Dispatch CLI `banc ctf` (`--env <famille|aleatoire>`, `--executeur
+  conteneur|processus`) : refus nommés de `--bruit`/`--derive` (§S8.3), de
+  `processus` en mode live (§S10.3) et de `--executeur` sur le banc skillexec.
+- Noyau, génériques et valables pour tout environnement : genre de champ de Σ
+  `chaine` (§H15.9 — le scalaire textuel du papier, tel `working_dir`) ;
+  résolution du champ `action` — un outil à UN paramètre requis reçoit le reste
+  du texte verbatim, sans découpage (§H15.8) ; énoncé du terminal sans chemin
+  d'hôte (§S10.1 — même observation quel que soit l'exécuteur).
+- Preuves : 28 unitaires ajoutés (résolution verbatim, genre `chaine`,
+  adaptateur et dispatch), intégration en rejeu HTTP réel
+  (`tests/integration/test_banc_ctf_sur_rejeu.py`), cassette E2E
+  `e2e_banc_ctf.jsonl` à double génération vérifiée et scénario CLI réel,
+  campagne complète verte.
+
 ### 2026-09-03 — U29b1 : banc b, patron InterCode CTF — générateur, terminal confiné, relevé pass@1 (§S8–§S11)
 
 - Spécification du banc b écrite et committée avant le code
