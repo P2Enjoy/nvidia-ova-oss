@@ -3018,3 +3018,48 @@ répercutés dans Σ (les deux familles, piste « formulation » close —
 comportement modèle) ; variance inter-runs de l'entrepôt. Vérifier en
 ouverture que l'endpoint répond (`/api/version` en 200) avant toute série
 live.
+
+## 2026-09-03 (suite 36, session planifiée) — U31 : le banc b est ouvert — spécification §S8–§S13 committée avant le code, U29b1 livré et clos (générateur cinq familles, terminal confiné, relevé pass@1), campagne complète verte
+
+**Unité.** U31, temps « construire le prochain banc » (ordre a → b → c de U29,
+désigné par la suite 35). Aucune série live jouée : le banc b n'a pas encore
+d'adaptateur (U29b2), et aucune mesure fraîche ne désignait de série
+complémentaire sur le banc a.
+
+**Spécifier.** `docs/SPEC_BANCS.md` §S8–§S13 écrits et committés AVANT le code
+(`0ce8e31`) : patron InterCode CTF — points tranchés principaux : défis
+ENGENDRÉS seedés plutôt que le jeu de données original (hors-ligne
+déterministe exigé ; scores absolus non comparables aux chiffres publiés,
+consignés en orientation §S11.4) ; soumission incorrecte = information,
+l'épisode continue (`refusee` réservé aux refus de forme) ; persistance du
+système de fichiers sans persistance du shell ; exécuteur `conteneur` requis
+en live (réseau coupé, ressources bornées), `processus` réservé aux preuves
+et au rejeu ; `--env` de la CLI générique porte la famille.
+
+**Coder (U29b1, `71f1150`).** `src/avo/bancs/ctf/` : `defis.py` (plans purs
+déterministes, cinq familles — fouille, encodage, archive, binaire, piste —
+solubles par construction, métadonnées de recouvrement pour les preuves
+seules), `terminal.py` (environnement de boucle §H8.2, budget, capture,
+troncature 4096 o et délai 10 s nommés, deux exécuteurs), `score.py`
+(`ReleveCtf`). 24 preuves unitaires (`tests/unit/test_banc_ctf.py`).
+
+**Prouver.** Campagne complète verte : lint, mypy strict 125 fichiers,
+**730 unitaires**, 153 intégration, 6 E2E, build. Balayage « zéro indice » :
+aucun mot du banc hors `src/avo/bancs/`. L'exécuteur `conteneur` prouvé par
+une exécution RÉELLE hors tests (démon Docker de la session) : épisode
+fouille seed 2 en conteneur jetable, confinement réseau mesuré
+(`urlopen` → « Network is unreachable »), capture du drapeau, relevé exact,
+aucun conteneur résiduel. U29b1 est CLOS ; l'intégration, la cassette E2E et
+le premier relevé live appartiennent à U29b2 (§S13).
+
+**Incident d'environnement.** Le conteneur de session a redémarré en cours de
+route (après le seed) : démon Docker et pile relancés, aucune perte (la
+spécification était déjà poussée). Contournement TLS : le CA du proxy doit
+être copié dans `certs/` AVANT `make image` (mécanisme câblé du Dockerfile).
+
+**Où reprendre.** U31 continue : **U29b2** — adaptateur + CLI du banc b
+(spécification §S12 déjà écrite : cas « spécification existante », coder
+directement), cassette E2E, premier relevé live multi-seeds (série de
+référence §S11.3 : seeds 1–10, `aleatoire`, horizon 30). Vérifier en
+ouverture que l'endpoint répond (`/api/version` en 200) avant toute série
+live.

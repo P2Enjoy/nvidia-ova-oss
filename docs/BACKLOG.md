@@ -906,10 +906,19 @@ patron InterCode CTF : défis seedés en cinq familles, terminal bash confiné,
 pass@1 sur drapeau exact, références publiées consignées en orientation §S11.4).
 Le banc b se découpe en unités d'une session (§S13) :
 
-- **U29b1 `[~]`** — générateur des cinq familles + matérialisation
+- **U29b1 `[x]`** — générateur des cinq familles + matérialisation
   (`src/avo/bancs/ctf/defis.py`), environnement terminal et exécuteurs
   `processus`/`conteneur` (`terminal.py`), relevé pass@1 (`score.py`), preuves
   unitaires de §S12.5. Sans adaptateur ni CLI.
+  **Livré et vérifié le 2026-09-03** (spec `0ce8e31` avant code `71f1150`) :
+  24 unitaires (déterminisme octet pour octet, solvabilité canonique des cinq
+  familles, exécution bash réelle, troncature/délai nommés, persistance
+  fichiers sans persistance shell, capture/budget/soumission incorrecte,
+  relevé), campagne complète verte (lint, mypy strict 125 fichiers,
+  730 unitaires, 153 intégration, 6 E2E, build), balayage « zéro indice »
+  vide sur le noyau, exécuteur `conteneur` prouvé par une exécution réelle
+  documentée (journal suite 36 : confinement réseau mesuré, capture, aucun
+  conteneur résiduel).
 - **U29b2 `[ ]`** — adaptateur + branchement au dispatch CLI `banc` (§S12) :
   outils `bash`/`soumettre`, contexte de tâche, schéma de Σ `ctf`, intégration
   en rejeu, cassette E2E, exécution réelle de l'exécuteur `conteneur`
@@ -1097,6 +1106,15 @@ affordances en place) ; améliorer : rien — aucune mesure ne désigne un
 mécanisme absent, session sans commit de code au titre de ce motif
 (campagne non rejouée : arbre `fd92406` inchangé, vérifié vert par la
 suite 34).
+
+**Itération du 2026-09-03 (suite 36, session planifiée)** — jouer/construire :
+le banc b est ouvert selon l'ordre a → b → c — spécification §S8–§S13 committée
+avant le code (`0ce8e31`), U29b1 livré et clos (`71f1150` : générateur cinq
+familles, terminal confiné, relevé pass@1, 24 unitaires, campagne complète
+verte, exécuteur `conteneur` prouvé en réel) ; aucune série live (pas
+d'adaptateur avant U29b2, aucune série complémentaire désignée par la
+suite 35) ; prochaine session : U29b2 (spécification existante, coder
+directement).
 
 **Itération du 2026-09-03 (suite 33, session planifiée)** — jouer : les cinq
 points morts bruit 20 h25 rejoués sous v1.7, série indépendante parallèle à
