@@ -956,6 +956,18 @@ phase.
    nomme le point sur lequel Σ est faux, le patch du pas suivant corrige Σ
    d'après ce message avant de rejouer (§H15.8). Constantes de `prompts.py`,
    versionnées (règle 5) ; aucun terme d'environnement (règle 3).
+   **L'exigence documentaire CLÔT le protocole, énoncée comme l'exception à la
+   consigne de parcimonie.** Motif, mesuré (journal 2026-09-03, suite 33, bruit
+   20 h25) : annoncée en milieu de paragraphe et suivie de la consigne finale
+   « n'inclus dans le patch que ce qui change réellement », elle perd chaque
+   fois que la première observation ne laisse aucune incertitude réelle — le
+   modèle applique la parcimonie à la lettre et son premier patch ne porte que
+   les champs que l'événement change (2 runs sur 2 d'un environnement au
+   premier événement entièrement déterminé perdent leur premier pas, contre 0
+   sur 3 là où la première observation appelle d'elle-même une hypothèse). La
+   dernière consigne lue l'emporte : la parcimonie s'énonce d'abord, l'exigence
+   documentaire la suit en phrase FINALE du protocole, nommée comme sa seule
+   exception.
 
 **H16.1 — Garde documentaire, à l'entrée de Planning.** Le réflexe « chercher
 l'information avant d'agir », mécanisé : les outils d'action ne se déverrouillent
