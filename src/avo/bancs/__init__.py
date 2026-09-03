@@ -2,7 +2,8 @@
 
 @spec docs/BACKLOG.md U29 — Benchmarks interactifs complémentaires ; U29a2 —
       adaptateur harnais + CLI `banc` ; U29a4 — branchement du Dépôt logiciel ;
-      U29b2 — branchement du banc CTF au dispatch
+      U29b2 — branchement du banc CTF au dispatch ; U29c2 — branchement du
+      banc τ au dispatch (§S18.4)
 @spec docs/SPEC_BANCS.md §S1 (cadre commun : adaptateurs minces, noyau agnostique),
       §S6.3 (CLI : la sous-commande `banc` monte la boucle complète et écrit le
       relevé §S5.3), §S12.4 (dispatch `ctf` : `--env` porte la famille,
@@ -22,6 +23,7 @@ from pathlib import Path
 
 from avo.bancs.ctf.score import ReleveCtf
 from avo.bancs.skillexec.score import Releve
+from avo.bancs.tau.score import ReleveTau
 
 
 class BancInconnu(ValueError):
@@ -37,16 +39,27 @@ class SortieBanc:
     """Ce que l'exécution d'un épisode rend à la CLI (§S6.3)."""
 
     run_id: str
-    releve: Releve | ReleveCtf
+    releve: Releve | ReleveCtf | ReleveTau
     chemin_releve: Path
 
 
-def annoncer_releve(releve: Releve | ReleveCtf) -> list[str]:
+def annoncer_releve(releve: Releve | ReleveCtf | ReleveTau) -> list[str]:
     """Les lignes que l'opérateur lit dans son terminal (§S6.3, §S12.4).
 
     L'annonce vit ici avec les mots des bancs : la CLI du noyau les imprime
     sans en connaître aucun (balayage « zéro indice », §S12.5).
     """
+    if isinstance(releve, ReleveTau):
+        # Relevé binaire du banc c (§S17.1, §S17.2).
+        issue = "réussi" if releve.reussi else "échoué"
+        eligibilite = "éligible" if releve.eligible else "inéligible"
+        return [
+            f"épisode terminé : seed {releve.seed}, domaine {releve.domaine}, "
+            f"intention {releve.intention} ({eligibilite}), horizon {releve.horizon} "
+            f"— {issue} ({releve.arret} ; {releve.actions} actions, "
+            f"{releve.repliques} répliques, {releve.transactions} transactions, "
+            f"{releve.violations} violations)"
+        ]
     if isinstance(releve, ReleveCtf):
         # Relevé pass@1 du banc b (§S11.1, §S11.2).
         issue = "drapeau capturé" if releve.reussi else "non capturé"
@@ -115,6 +128,32 @@ def _valider_ctf(environnement: str, bruit: int, derive: bool, executeur: str, m
         )
 
 
+def _valider_tau(environnement: str, bruit: int, derive: bool, executeur: str | None) -> None:
+    """Refus nommés du banc c (§S14.3, §S18.4)."""
+    from avo.bancs.tau.scenario import DOMAINES
+
+    if environnement not in DOMAINES:
+        raise BancInconnu(
+            f"environnement inconnu : « {environnement} ». Disponibles : {', '.join(DOMAINES)}."
+        )
+    if bruit != 0:
+        raise ParametreBancInvalide(
+            "« --bruit » ne s'applique pas au banc tau (§S14.3) : le dialogue n'a "
+            "pas de télémétrie de fond."
+        )
+    if derive:
+        raise ParametreBancInvalide(
+            "« --derive » ne s'applique pas au banc tau (§S14.3) : le scénario n'a "
+            "pas de dérive d'état."
+        )
+    if executeur is not None:
+        raise ParametreBancInvalide(
+            "« --executeur » est sans objet pour le banc tau : aucune commande n'y "
+            "est exécutée (§S14.3) — l'utilisateur simulé est choisi par le mode "
+            "(§S18.4)."
+        )
+
+
 def executer_banc(
     nom: str,
     environnement: str,
@@ -138,21 +177,23 @@ def executer_banc(
     from avo.memory.workspace import Workspace
     from avo.runlog import configurer_journalisation, nouveau_run_id
 
-    if nom not in ("skillexec", "ctf"):
-        raise BancInconnu(f"banc inconnu : « {nom} ». Disponibles : skillexec, ctf.")
+    if nom not in ("skillexec", "ctf", "tau"):
+        raise BancInconnu(f"banc inconnu : « {nom} ». Disponibles : skillexec, ctf, tau.")
     if nom == "skillexec":
         _valider_skillexec(environnement, executeur)
-    else:
+    elif nom == "ctf":
         from avo.bancs.ctf.adaptateur import EXECUTEUR_CONTENEUR
 
         executeur = executeur or EXECUTEUR_CONTENEUR
         _valider_ctf(environnement, bruit, derive, executeur, mode)
+    else:
+        _valider_tau(environnement, bruit, derive, executeur)
 
     config = charger(mode)
     identifiant = run_id or nouveau_run_id(suffixe="banc")
     configurer_journalisation(identifiant)
     espace = Workspace.ouvrir(config, identifiant)
-    releve: Releve | ReleveCtf
+    releve: Releve | ReleveCtf | ReleveTau
     if nom == "skillexec":
         from avo.bancs.skillexec.adaptateur import jouer_episode
 
@@ -166,7 +207,7 @@ def executer_banc(
             environnement=environnement,
             derive=derive,
         )
-    else:
+    elif nom == "ctf":
         from avo.bancs.ctf.adaptateur import jouer_episode_ctf
 
         assert executeur is not None  # posé au défaut ci-dessus
@@ -177,6 +218,22 @@ def executer_banc(
             horizon=horizon,
             famille=environnement,
             executeur=executeur,
+            tours_max=tours_max,
+        )
+    else:
+        from avo.bancs.tau.adaptateur import (
+            UTILISATEUR_LLM,
+            UTILISATEUR_SCRIPTE,
+            jouer_episode_tau,
+        )
+
+        releve = jouer_episode_tau(
+            config,
+            espace,
+            seed=seed,
+            horizon=horizon,
+            domaine=environnement,
+            utilisateur=UTILISATEUR_LLM if mode == "live" else UTILISATEUR_SCRIPTE,
             tours_max=tours_max,
         )
     return SortieBanc(run_id=identifiant, releve=releve, chemin_releve=espace.chemin / "banc.json")
