@@ -2815,3 +2815,64 @@ relevés (archives `pas.jsonl`) : refus non répercutés dans Σ sur l'entrepôt
 regarder si une famille de formulations du refus est mieux répercutée ;
 amorçage documentaire du premier pas. Vérifier en ouverture que l'endpoint
 répond (`/api/version` en 200) avant toute série live.
+
+---
+
+## 2026-09-03 (suite 33, session planifiée) — U31 : série bruit 20 h25 répliquée indépendamment sous v1.7, l'amorçage documentaire instruit au mécanisme et corrigé (prompts v1.8, l'exigence clôt le protocole)
+
+**Unité.** U31 (jouer/observer/améliorer). L'endpoint répond dès l'ouverture
+(`/api/version` 200 en 1,7 s) : la panne des suites 30–32 est finie.
+
+**Jouer : les cinq points morts bruit 20 h25 rejoués sous v1.7, une exécution
+live à la fois** — série INDÉPENDANTE, parallèle à celle que la clôture de la
+suite 32 (`dbca7a8`) a jouée sur le même créneau avec les mêmes seeds (deux
+sessions live simultanées au plus, plafond de 3 respecté) :
+
+| env | seed | score | corr/inc/inv | résolution | redemandes | retries patch | tokens | durée s | arrêt |
+|---|---|---|---|---|---|---|---|---|---|
+| entrepot | 2 | 0,56 | 14/2/9 | — | 5 | 3 | 76 745 | 559 | épuisé |
+| entrepot | 3 | 0,80 | 20/2/3 | — | 4 | 0 | 65 790 | 664 | épuisé |
+| depot | 1 | 1,00 | 25/0/0 | 1,0 | 0 | 0 | 52 421 | 187 | épuisé |
+| depot | 2 | 1,00 | 25/0/0 | 1,0 | 3 | 0 | 58 155 | 208 | épuisé |
+| depot | 3 | 0,84 | 21/3/1 | 0,6 | 1 | 2 | 67 673 | 436 | épuisé |
+
+Réplication croisée avec la série de la suite 32 (entrepôt 0,36/0,56 ; dépôt
+0,96/1,00/1,00) : le dépôt bruit 20 est HAUT et stable sur les deux séries
+(ici 0,947 de moyenne, deux épisodes parfaits dont le s2 de la cascade
+`etagere_2` — 0 invalide deux fois : la boucle en un point que §H15.8 révisé
+devait casser a disparu des DEUX séries) ; l'entrepôt reste dominé par la
+variance inter-runs (ici s2 0,56 / s3 0,80 contre 0,36 / 0,56 en parallèle —
+mêmes seeds, mêmes prompts : la variance est celle du modèle, pas des seeds).
+
+**Observer : l'amorçage documentaire instruit au MÉCANISME.** t01 refusé par
+la garde documentaire sur 2/2 runs entrepôt, 0/3 runs dépôt (cohérent avec les
+2/6 puis 2/5 des suites 30–32). Les archives `pas.jsonl` désignent la cause :
+le pas t01 entrepôt est bien formé (PREDICTION, patch, action) et son patch
+porte EXACTEMENT les champs que l'événement change — la consigne FINALE du
+protocole (« n'inclus dans le patch que ce qui change réellement ») est suivie
+à la lettre et l'emporte sur l'exigence documentaire annoncée trois phrases
+plus tôt. Au dépôt, la première observation laisse une vraie incertitude (la
+CI) : le modèle écrit spontanément une hypothèse, 3/3. Le contraste établit
+que l'annonce (§H16.0.7, v1.5) est perdue quand la première observation est
+entièrement déterminée : la dernière consigne lue gagne.
+
+**Améliorer (spécifié d'abord, `50b0b44` avant le code `ea4be6a`).** §H16.0.7
+complété : l'exigence documentaire CLÔT le protocole, énoncée comme la seule
+exception à la parcimonie (« n'inclus que ce qui change réellement, à une
+exception près : tant que « hypotheses » est vide… »). Prompts v1.8 ; chemins
+non documentaires inchangés. Mesure attendue des prochains relevés : zéro
+refus documentaire t01, sur les deux environnements.
+
+**Preuves.** Unitaire de position finale ajouté (`test_etat_schema.py`),
+cassettes E2E régénérées (`make seed-e2e`, pile relancée et seedée). Campagne
+complète APRÈS le changement, verte : lint, ruff format, mypy strict, **704
+unitaires**, **153 intégration**, **6 E2E** ; balayage « zéro indice de jeu »
+inclus et vert ; `make build` VERT.
+
+**Où reprendre.** Sous v1.8 : bruit 50 h25 seeds 1–3 sur les deux
+environnements (§S5.4), puis dérive h25 dépôt — en vérifiant au passage la
+mesure attendue de v1.8 (t01 sans refus documentaire). Friction désignée
+restante (suite 32, non traitée ici) : refus d'environnement non répercutés
+dans Σ sur l'entrepôt — instruire sur les prochaines archives si une famille
+de formulations du refus est mieux répercutée. Vérifier en ouverture que
+l'endpoint répond (`/api/version` en 200) avant toute série live.

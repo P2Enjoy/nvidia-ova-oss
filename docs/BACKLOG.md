@@ -1049,6 +1049,19 @@ le ping-pong a disparu ; friction suivante instruite : résolution des demandes
 du dépôt basse (0–0,4), part du comportement modèle à établir sur les
 transcripts avant toute correction.
 
+**Itération du 2026-09-03 (suite 33, session planifiée)** — jouer : les cinq
+points morts bruit 20 h25 rejoués sous v1.7, série indépendante parallèle à
+celle de la clôture de la suite 32 (entrepôt s2–s3 0,56/0,80 ; dépôt
+1,00/1,00/0,84, deux parfaits dont le s2 de la cascade — 0 invalide, la boucle
+en un point a disparu des deux séries) ; observer : l'amorçage documentaire
+instruit au mécanisme — t01 refusé 2/2 entrepôt et 0/3 dépôt, le patch t01
+entrepôt portant exactement les champs que l'événement change : la consigne
+finale de parcimonie l'emporte sur l'exigence annoncée en milieu de
+paragraphe ; améliorer : §H16.0.7 complété (spec `50b0b44` avant code
+`ea4be6a`) — l'exigence documentaire clôt le protocole en exception nommée à
+la parcimonie, prompts v1.8, cassettes régénérées ; campagne complète verte
+(704 unitaires, 153 intégration, 6 E2E, build).
+
 **Itération du 2026-09-03 (suite 32, session planifiée)** — améliorer (repli
 hors ligne pendant la panne, sur la mesure de la suite 30, cascade s2-v2) : la
 tension §H15.8 TRANCHÉE — l'annulation atomique reste, et le patch annulé d'une

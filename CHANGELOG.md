@@ -2,6 +2,17 @@
 
 ## [Non publié]
 
+### 2026-09-03 — U31 : l'exigence documentaire clôt le protocole du mode `state` (§H16.0.7, prompts v1.8)
+
+- Mesuré (série live bruit 20 h25) : le premier pas était refusé par la garde
+  documentaire chaque fois que la première observation ne laissait aucune
+  incertitude réelle (2/2 runs d'un environnement, 0/3 de l'autre) — le patch
+  t01 suivait à la lettre la consigne finale de parcimonie et omettait
+  l'hypothèse exigée trois phrases plus tôt.
+- §H16.0.7 complété : l'exigence documentaire est la phrase FINALE du
+  protocole, énoncée comme la seule exception à la parcimonie. Prompts v1.8,
+  test unitaire de position finale, cassettes E2E régénérées.
+
 ### 2026-09-03 — U31 : le patch annulé d'une action refusée est rappelé verbatim au pas suivant (§H15.8)
 
 - Mesuré (série live h25 bruit 20, dépôt s2-v2, cascade de 9 invalides) : le
