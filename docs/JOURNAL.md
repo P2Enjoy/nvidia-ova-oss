@@ -3431,3 +3431,40 @@ lancer d'exécution live concurrente au-delà du plafond global de 3 requêtes
 parallèles (CLAUDE_PROJECT.md) ; à défaut, séries complémentaires désignées :
 variance du banc a entrepôt, famille `encodage` du banc b. Vérifier en
 ouverture que l'endpoint répond (`/api/version` en 200).
+
+## 2026-09-04 (suite 43, session planifiée) — U25 tranche 1 : périmètre d'exécution de la session, consigné avant lancement
+
+**Unité.** U25 (campagne ARC officielle, [LIVE]), reprise désignée par la
+suite 42 : « reprendre sur la dernière entrée de la suite 41 ». La suite 41 a
+ouvert la campagne (déclencheur atteint, périmètre et plafonds du responsable)
+mais n'a consigné AUCUN état d'arrêt : aucun jeu joué n'est enregistré dans le
+dépôt (ni journal, ni `docs/rapports/`). La tranche 1 part donc du premier jeu.
+
+**Environnement (mesuré en ouverture).** Pile compose saine (`arc-replay`,
+`llm-replay` healthy), `make seed` complet, endpoint d'inférence en 200
+(`/api/version` via le pont 443), `/api/games` en 200 : 25 jeux déclarés ce
+jour (ordre du listing, premiers : `r11l-495a7899`, `re86-8af5384d`,
+`tn36-ef4dde99`, `ls20-9607627b`, …).
+
+**POINT TRANCHÉ — granularité d'invocation : UN jeu par `run-arc`, rapport
+committé entre deux jeux.** Motif : la machine est éphémère et `runs/` est
+hors dépôt ; une invocation multi-jeux interrompue perdrait la fermeture du
+scorecard et le rapport de TOUS les jeux de l'invocation, alors qu'une
+invocation par jeu borne la perte au jeu en cours (≤ 1 200 s) et permet de
+committer `report.md` sous `docs/rapports/` après CHAQUE jeu. §A7.2 (« un
+scorecard par campagne ») reste tenu : chaque invocation est une campagne
+d'un jeu, ouverte et fermée proprement. Issue écartée : une invocation
+multi-jeux par session — la reprise §A7.4 (`campagne.json`) ne survit pas à
+la machine, la protection qu'elle offre est ici illusoire.
+
+**Périmètre de la session (écrit AVANT lancement, §A7.2).** Jeux dans l'ordre
+du listing `/api/games`, en commençant par `r11l-495a7899`, autant que le
+temps de session le permet ; plafonds PAR JEU du responsable (U25) :
+80 actions/niveau, 300 actions/jeu, 1 200 s/jeu, 1 500 000 tokens/jeu,
+400 tours ; mode `state` (défaut), gardes H16 actives (défaut),
+`qwen3.6:35b`, fenêtre `OLLAMA_CONTEXT_LENGTH=229376` (plafond réel par clé,
+configuration de la tâche) ; `--j-autorise-la-publication` posé au titre de
+l'autorisation du responsable (2026-08-30). `run-id` : `u25-t1-<game_id>`.
+Un jeu refusé par le serveur (« listé non servi », §A1.4) reçoit son issue
+nommée et la session passe au suivant. Une seule exécution live à la fois
+(plafond de parallélisme, CLAUDE_PROJECT.md).
