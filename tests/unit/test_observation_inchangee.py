@@ -1,12 +1,14 @@
 """Métrique `observation_inchangee` : la mesure du non-progrès, sans effet (§H11.2).
 
 @verifies docs/BACKLOG.md U31 — amélioration générique sur mesures (journal
-          2026-09-05, suites 43–46 : le non-progrès est le candidat désigné par
+          2026-09-05, suites 43–47 : le non-progrès est le candidat désigné par
           la campagne U25 tranche 1, immesurable post-hoc — cette métrique est
           la mesure préalable exigée par la règle U31)
 @verifies docs/SPEC_HARNAIS.md §H11.2 (métrique émise après chaque action VALIDE
-          dont l'observation rendue est strictement identique à celle d'avant
-          l'action ; action refusée exclue ; aucun effet sur le comportement)
+          dont le CONTENU d'observation est strictement identique à celui d'avant
+          l'action ; le contenu comparé est `empreinte_observation()` quand
+          l'environnement la déclare, `observation()` sinon ; action refusée
+          exclue ; aucun effet sur le comportement)
 
 Aucun réseau : client au transport scripté, environnement factice dont
 l'observation change — ou non — après une action.
@@ -87,6 +89,24 @@ class _EnvironnementImmobile:
         return self._derniere.observation
 
 
+class _EnvironnementACompteur(_EnvironnementImmobile):
+    """Environnement factice dont le RENDU porte un compteur de présentation.
+
+    C'est le cas mesuré sur l'interface ARC (suite 47) : `observation()` change
+    à chaque action valide à cause d'un compteur local, alors que le contenu
+    observable — l'empreinte — peut, lui, rester identique.
+    """
+
+    def __init__(self, empreinte_change: bool) -> None:
+        super().__init__(observation_change=True)
+        self.empreinte_change = empreinte_change
+
+    def empreinte_observation(self) -> str:
+        if self.empreinte_change:
+            return f"contenu-{self.jouees}"
+        return "contenu-fixe"
+
+
 class _TransportScripte:
     def __init__(self, reponses: list[dict[str, Any]]) -> None:
         self.reponses = list(reponses)
@@ -163,6 +183,19 @@ class TestObservationInchangee(unittest.TestCase):
 
     def test_observation_changee_n_emet_rien(self) -> None:
         metriques = self._jouer_un_tour(_EnvironnementImmobile(observation_change=True))
+        self.assertEqual(metriques, [])
+
+    def test_empreinte_declaree_prime_sur_le_rendu(self) -> None:
+        """§H11.2 : un rendu à compteur change à chaque action ; seule
+        l'empreinte déclarée rend la mesure possible sur un tel environnement."""
+        environnement = _EnvironnementACompteur(empreinte_change=False)
+        metriques = self._jouer_un_tour(environnement)
+        self.assertNotEqual(environnement.observation(), "observation-fixe")
+        self.assertEqual(len(metriques), 1)
+        self.assertEqual(metriques[0]["action"], "avance")
+
+    def test_empreinte_changee_n_emet_rien(self) -> None:
+        metriques = self._jouer_un_tour(_EnvironnementACompteur(empreinte_change=True))
         self.assertEqual(metriques, [])
 
     def test_action_refusee_n_emet_rien(self) -> None:

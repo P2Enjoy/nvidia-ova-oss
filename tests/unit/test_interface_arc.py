@@ -9,6 +9,9 @@
 @verifies docs/SPEC_HARNAIS.md §H8.3 (motif d'arrêt terminal rendu par l'environnement)
 @verifies docs/BACKLOG.md U30 — garde de prédiction sur l'interface (§H16.2 :
           paramètre déclaré, requis ou non, acheminé tronqué vers `reasoning`)
+@verifies docs/BACKLOG.md U31 ; docs/SPEC_ARCAGI3.md §A4.1 et
+          docs/SPEC_HARNAIS.md §H11.2 (empreinte d'observation : l'état
+          observable du jeu sans les compteurs de présentation du harnais)
 """
 
 from __future__ import annotations
@@ -258,6 +261,46 @@ class TestObservation(unittest.TestCase):
         interface, _ = _interface(_reponse())
         with self.assertRaises(RuntimeError):
             interface.jouer("ACTION1")
+
+
+class TestEmpreinteObservation(unittest.TestCase):
+    """§A4.1, §H11.2 : l'empreinte compare l'état observable du jeu, pas les
+    compteurs de présentation du harnais."""
+
+    def test_l_empreinte_ignore_le_compteur_local_d_actions(self) -> None:
+        """Mesuré (journal, suite 47) : le rendu change à CHAQUE action valide à
+        cause du compteur `actions_niveau` — la comparaison du rendu était donc
+        structurellement muette. L'empreinte, elle, reste identique quand le jeu
+        n'a pas changé."""
+        interface, _ = _interface(_reponse(), _reponse())
+        interface.demarrer()
+        empreinte_avant = interface.empreinte_observation()
+        observation_avant = interface.observation()
+        interface.jouer("ACTION1")
+        self.assertNotEqual(interface.observation(), observation_avant)
+        self.assertEqual(interface.empreinte_observation(), empreinte_avant)
+
+    def test_l_empreinte_change_avec_la_grille(self) -> None:
+        grille_changee = [ligne[:] for ligne in _GRILLE]
+        grille_changee[0][0] = 5
+        interface, _ = _interface(_reponse(), _reponse(frame=[grille_changee]))
+        interface.demarrer()
+        empreinte_avant = interface.empreinte_observation()
+        interface.jouer("ACTION1")
+        self.assertNotEqual(interface.empreinte_observation(), empreinte_avant)
+
+    def test_l_empreinte_change_avec_le_score(self) -> None:
+        """Le score et le niveau sont du contenu : un progrès réel se voit."""
+        interface, _ = _interface(_reponse(), _reponse(levels_completed=1))
+        interface.demarrer()
+        empreinte_avant = interface.empreinte_observation()
+        interface.jouer("ACTION1")
+        self.assertNotEqual(interface.empreinte_observation(), empreinte_avant)
+
+    def test_l_empreinte_avant_de_demarrer_est_refusee(self) -> None:
+        interface, _ = _interface(_reponse())
+        with self.assertRaises(RuntimeError):
+            interface.empreinte_observation()
 
 
 class TestZeroIndiceDeJeu(unittest.TestCase):

@@ -138,6 +138,11 @@ class Environnement(Protocol):
     registre qui l'exécute, comme n'importe quel outil, et l'environnement conserve
     l'issue produite. La boucle la relit ensuite. Sans ce détour, l'outil d'action
     serait une déclaration décorative que rien n'exécuterait.
+
+    Un environnement PEUT en outre déclarer `empreinte_observation() -> str`
+    (§H11.2) : le contenu observable sans les compteurs de présentation du
+    harnais. La boucle la lit par `getattr` pour la mesure de non-progrès ; un
+    environnement qui ne la déclare pas est comparé sur `observation()`.
     """
 
     def observation(self) -> str: ...
@@ -1115,7 +1120,15 @@ class BoucleAgent:
         une déclaration décorative que rien n'exécuterait.
         """
         issue_avant = self.environnement.derniere_issue()
-        observation_avant = self.environnement.observation()
+        # §H11.2 : le contenu comparé pour la mesure de non-progrès est
+        # l'empreinte d'observation quand l'environnement la déclare — le
+        # contenu observable sans les compteurs de présentation du harnais,
+        # qui changent à chaque action et rendraient la comparaison muette —
+        # et l'observation rendue sinon (lecture par getattr, comme `refusee`).
+        empreinte = getattr(
+            self.environnement, "empreinte_observation", self.environnement.observation
+        )
+        observation_avant = empreinte()
         execution = self.registre.executer(
             [appel],
             self.contexte.transcript,
@@ -1143,14 +1156,12 @@ class BoucleAgent:
             evenement=issue.evenement.value,
         )
         # §H11.2 : mesure du non-progrès, et uniquement la mesure — une action
-        # valide dont l'observation rendue est STRICTEMENT identique à celle
-        # d'avant l'action s'émet en métrique ; aucun seuil, aucune
+        # valide dont le CONTENU d'observation est STRICTEMENT identique à
+        # celui d'avant l'action s'émet en métrique ; aucun seuil, aucune
         # interprétation, aucun effet sur le comportement. Une action refusée
         # par l'environnement (§H15.8) laisse l'observation inchangée par
         # nature : elle est exclue, son refus porte déjà sa métrique.
-        if not getattr(issue, "refusee", False) and (
-            self.environnement.observation() == observation_avant
-        ):
+        if not getattr(issue, "refusee", False) and empreinte() == observation_avant:
             self._metrique("observation_inchangee", action=appel.nom, tour=tour.numero)
         return issue
 

@@ -28,7 +28,7 @@ from typing import Any, Final
 
 from avo.arc.client import ArcClient, EtatArc, FrameResult, TypeFrame
 from avo.arc.memoire import MemoireFrames
-from avo.arc.rendu import COTE, rendre_observation
+from avo.arc.rendu import COTE, rendre_grille, rendre_observation
 from avo.loop.etats import Evenement
 from avo.tools.registre import Outil, RegistreOutils
 
@@ -176,6 +176,27 @@ class InterfaceArc:
                 f"consultables par inspect sur le tour {self.memoire.tour_courant})"
             )
         return rendu
+
+    def empreinte_observation(self) -> str:
+        """Contenu d'observation pour la mesure de non-progrès (§H11.2, §A4.1).
+
+        Niveau, score, actions disponibles, grille exacte et nombre de frames
+        transitoires du dernier résultat — jamais le compteur local
+        `actions_niveau` ni le numéro de tour : ces compteurs de présentation
+        changent à chaque action valide et rendraient la comparaison muette.
+        """
+        if self.dernier is None:
+            raise RuntimeError("partie non démarrée : appeler demarrer() d'abord")
+        frame = self.dernier.frame_de_decision or self.dernier.frames[-1]
+        transitoires = sum(
+            1 for candidate in self.dernier.frames if candidate.type is TypeFrame.TRANSITOIRE
+        )
+        actions = ",".join(self.dernier.actions_disponibles) or "(aucune)"
+        return (
+            f"niveau={self.dernier.niveau} score={self.dernier.score} "
+            f"actions={actions} transitoires={transitoires}\n"
+            f"{rendre_grille(frame.grille)}"
+        )
 
     def actions_disponibles(self) -> Sequence[str]:
         return () if self.dernier is None else self.dernier.actions_disponibles
