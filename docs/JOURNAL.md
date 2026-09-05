@@ -3560,3 +3560,30 @@ titre de l'autorisation du responsable (2026-08-30) ; `run-id` :
 `u25-t1-<game_id>` ; une seule exécution live à la fois. Jeux de la
 session : `tu93-0768757b` d'abord, puis l'ordre du jour ci-dessus, autant
 que le temps le permet, rapport committé après chaque jeu.
+
+**Exécution de la suite 45 (terminée 2026-09-05T07:20Z).** Deux jeux joués par
+cette session, une invocation par jeu, rapports committés :
+
+| jeu | niveaux | actions | RHAE | arrêt | tours | tokens prompt | générés | scorecard |
+|---|---|---|---|---|---|---|---|---|
+| `tu93-0768757b` (9 niv.) | 0 | 23 | 0,00 | temps (1 200 s) | 26 | 236 902 | 14 298 | `7af8dabf…` fermé |
+| `sc25-635fd71a` (6 niv.) | 0 | 18 | 0,00 | temps (1 200 s) | 21 | 185 646 | 14 648 | `4c4ab24e…` fermé |
+
+**COLLISION MESURÉE ET RÉSOLUE.** Deux sessions planifiées chevauchées ont
+joué `tu93-0768757b` en double (l'autre : 10 actions, scorecard `96ffae3c…`,
+committé en premier — il fait foi ; le mien conservé comme mesure dans
+`docs/rapports/u25-t1-tu93-bis.md`). L'autre session a posé le protocole
+anti-collision (marqueurs EN COURS au backlog) ; cette session l'a appliqué
+pour son second jeu (`sc25`, marqueur posé puis retiré au rapport). Aucune
+perte : conflit résolu par rebase sur place, les deux rapports committés.
+
+**Aucun code modifié cette session** (rapports et suivi uniquement) : la
+campagne complète `make check` n'a pas été rejouée — elle mesurerait un dépôt
+inchangé depuis son dernier passage vert (2026-09-04) ; écart nommé au titre
+du budget §4.3.
+
+**Où reprendre.** U25 tranche 1 : 13/25 jeux joués, `g50t-5849a774` EN COURS
+(session parallèle, suite 44) ; prochaine session : `m0r0-492f87ba`, puis
+l'ordre consigné dans l'unité U25 du backlog, en appliquant le protocole
+anti-collision (pull --rebase, relire les marqueurs, poser le sien). Le
+rapport final comparatif (A7.3) s'écrit une fois les 25 jeux couverts.
