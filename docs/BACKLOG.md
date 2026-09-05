@@ -572,7 +572,11 @@ committé, CHANGELOG et README mis à jour.
     `su15-1944f8ab` (0/9 niv., 11 actions, `u25-t1-su15.md`) ;
     `ft09-0d8bbf25` (0/6 niv., 27 actions, `u25-t1-ft09.md`) ;
     `ls20-9607627b` (0/7 niv., 47 actions, `u25-t1-ls20.md`) ;
-    `tu93-0768757b` (0/9 niv., 10 actions, `u25-t1-tu93.md`).
+    `tu93-0768757b` (0/9 niv., 10 actions, `u25-t1-tu93.md` ; joué en DOUBLE
+    par deux sessions chevauchées le 2026-09-05 avant le protocole
+    anti-collision — second run 0/9 niv., 23 actions, scorecard `7af8dabf…`
+    fermé, rapport `u25-t1-tu93-bis.md` ; le premier committé fait foi pour
+    la tranche, le doublon est conservé comme mesure).
   - **Jeux EN COURS (marqueur anti-collision entre sessions parallèles)** :
     `wa30-ee6fef47` (session suite 44, lancé 06:43Z). PROTOCOLE : deux
     sessions planifiées peuvent se chevaucher ; avant CHAQUE lancement,
