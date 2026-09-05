@@ -3587,3 +3587,40 @@ du budget §4.3.
 l'ordre consigné dans l'unité U25 du backlog, en appliquant le protocole
 anti-collision (pull --rebase, relire les marqueurs, poser le sien). Le
 rapport final comparatif (A7.3) s'écrit une fois les 25 jeux couverts.
+
+## 2026-09-05 (suite 44, clôture) — U25 tranche 1 TERMINÉE : 22 jeux joués cette session, 25/25 au total, rapport final agrégé committé
+
+**Fait.** Vingt-deux jeux joués séquentiellement par cette session (une
+invocation `run-arc` par jeu, rapport committé et poussé entre chaque jeu),
+en coordination avec la session chevauchée suite 45 (3 jeux : r11l/re86 en
+suite 43, sc25 + doublon tu93 en suite 45). Les 25 jeux du listing sont tous
+couverts ; chaque scorecard est fermé. Rapport final agrégé A7.3 :
+`docs/rapports/u25-t1-final.md`. U25 passe à `[x]` (backlog, CHANGELOG,
+README mis à jour dans le même changement).
+
+**Mesuré (générique, aucun indice de jeu).** (1) Le plafond de temps
+(1 200 s/jeu) a lié sur 25/25 jeux : 10–57 actions par jeu, 0/183 niveaux,
+RHAE 0,00 ; coûts agrégés 1 027 appels, ~10,0 M tokens de prompt, ~0,5 M
+générés, ~8,0 h d'inférence. (2) Zéro `413`, zéro game over, zéro refus
+d'outil, zéro intervention du superviseur sur la campagne ; le mode `state`
+a tenu le prompt en O(1) (~9 000–9 300 tokens/tour). (3) Ordre du listing
+`/api/games` instable d'un jour à l'autre — l'ensemble des jeux joués fait
+foi. (4) Deux sessions planifiées peuvent se chevaucher : le protocole
+anti-collision (marqueurs EN COURS dans le backlog, pull avant lancement,
+marqueur poussé après lancement) a été introduit en cours de tranche après
+le doublon tu93 et a tenu ensuite (zéro doublon sur les 14 jeux suivants).
+
+**Campagne de preuves de fin de session (verte, exit 0).** lint + format,
+mypy strict, 802 unitaires, 155 intégration, 10 E2E. Aucun code modifié par
+cette session (campagne d'exécution et documentation seulement) ; aucune
+correction requise.
+
+**Améliorer : rien ici — règle U31.** L'observation candidate reste celle
+des suites 43–44 : un détecteur GÉNÉRIQUE de non-progrès (état inchangé sur
+N tours) côté superviseur, à instruire par U31 sur mesures. La lecture des
+scores de la tranche 1 doit toujours rappeler la borne du plafond de temps.
+
+**Où reprendre.** U25 est `[x]`. Prochaine session : cycle permanent U31 —
+affinage du harnais sur les bancs U29 d'après les mesures collectées
+(tranche 1 comprise), déclencheur d'une éventuelle tranche 2 consigné dans
+U25. Vérifier en ouverture l'endpoint (`/api/version` en 200).
