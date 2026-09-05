@@ -3878,3 +3878,26 @@ actions/niveau, 300 actions/jeu, 1 200 s/jeu, 1 500 000 tokens/jeu,
 229 376 ; `--j-autorise-la-publication` au titre de l'autorisation du
 responsable (2026-08-30) ; `run-id` : `u31-obs-tn36` ; une seule exécution
 live dans cette session (plafond de parallélisme global : 3).
+
+## 2026-09-05 (suite 47, addendum) — périmètre de la validation live de l'empreinte §H11.2
+
+**Mesuré sur le run `u31-obs-tn36`** (scorecard `950b1b75…` fermé) :
+**0 événement `observation_inchangee` sur 38 actions valides** d'un jeu sans
+conversion en niveau — non pas parce que le non-progrès n'existe pas, mais
+parce que la ligne d'état du rendu ARC porte le compteur local
+`actions_niveau` (et la note des transitoires le numéro de tour) : le rendu
+ne peut JAMAIS être identique après une action valide, la mesure était
+structurellement muette. Correction générique livrée et poussée : §H11.2 et
+§A4.1 révisés (spec avant code), `empreinte_observation()` facultative lue
+par `getattr` comme `refusee`, implémentée par l'interface ARC (contenu :
+niveau, score, actions disponibles, grille, nombre de transitoires — aucun
+compteur du harnais), 6 unitaires, 817 unitaires verts.
+
+**Périmètre de la validation live (écrit AVANT lancement, §A7.2).** Même jeu
+et mêmes plafonds que le run d'observation : `tn36-ef4dde99`, 80
+actions/niveau, 300 actions/jeu, 1 200 s/jeu, 1 500 000 tokens/jeu,
+400 tours, mode `state`, gardes actives, `qwen3.6:35b`,
+`--j-autorise-la-publication` (autorisation du 2026-08-30) ; `run-id` :
+`u31-obs2-tn36` ; exécutions live séquentielles, jamais deux à la fois.
+Attendu : la métrique collecte enfin le non-progrès réel ; aucun effet de
+comportement n'est attendu sur le score (la mesure n'en a pas).
