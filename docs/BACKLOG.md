@@ -1144,9 +1144,11 @@ améliorer : §H15.8 complété (spec committée avant le code) — la ligne
 « Actions disponibles » annonce les valeurs requises de chaque action et le
 refus de résolution se clôt par la forme attendue, le tout engendré des
 schémas au registre (prompts v1.10, 6 unitaires, cassettes régénérées,
-campagne complète verte : 808/155/10) ; validation live sur le pire cas
-(scorecard `3fbdd48a…` fermé, rapport `docs/rapports/u31-v110-tn36.md`) :
-invalides 25 → 4, actions valides 14 → 30 à budget identique. La piste
+campagne complète verte : 808/155/10) ; validation live sur les TROIS pires
+cas de la tranche 1, à budgets identiques (rapports
+`docs/rapports/u31-v110-{tn36,su15,tu93}.md`, scorecards `3fbdd48a…`,
+`cae887c2…`, `a39514e0…` fermés) : invalides 25→4, 22→5, 19→4 (66→13,
+−80 %) ; actions valides 14→30, 11→29, 10→40 (35→99, +183 %). La piste
 « détecteur de non-progrès » reste ouverte, non instruite (l'archive de
 frames ne conserve pas les grilles par tour).
 

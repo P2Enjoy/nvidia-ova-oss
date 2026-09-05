@@ -3688,3 +3688,28 @@ sur mesures. Pistes ouvertes non instruites : détecteur générique de
 non-progrès (exige d'archiver l'observation par tour — mesure impossible sur
 les artefacts actuels) ; résidu « coordonnées sans valeur ». Vérifier en
 ouverture l'endpoint (`/api/version` en 200).
+
+## 2026-09-05 (suite 46, addendum) — confirmation de v1.10 sur les trois pires cas
+
+**Jouer/observer.** Série de confirmation sur les trois jeux au pire taux
+d'actions invalides de la tranche 1, mêmes plafonds (rapports
+`docs/rapports/u31-v110-{tn36,su15,tu93}.md`, un scorecard fermé chacun) :
+
+| jeu | invalides v1.9 → v1.10 | actions valides v1.9 → v1.10 |
+|---|---|---|
+| tn36 | 25 → 4 | 14 → 30 |
+| su15 | 22 → 5 | 11 → 29 |
+| tu93 | 19 → 4 | 10 → 40 |
+
+Cumul : invalides 66 → 13 (−80 %), actions valides 35 → 99 (+183 %), à
+budgets identiques. RHAE toujours 0,00 sur ces runs (le plafond de temps de
+1 200 s lie toujours) — mais le budget se dépense désormais en actions
+d'exploration réelles. Motifs résiduels épars : « coordonnées sans valeur »
+(5), valeurs en trop (4), noms inventés (3) — aucun mécanisme absent
+désigné ; comportement modèle résiduel, à réobserver sur les prochaines
+séries.
+
+**Où reprendre.** Inchangé : U31, itération suivante (bancs U29 par défaut ;
+tranche 2 ARC sur déclencheur U25). Sous v1.10, les mesures d'actions par
+jeu de la tranche 1 sont à relire avec prudence : une tranche 2 jouerait
+~2× plus d'actions par jeu au même plafond de temps.
