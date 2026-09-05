@@ -560,7 +560,7 @@ committé, CHANGELOG et README mis à jour.
   listing `/api/games` n'est PAS stable d'un jour à l'autre (mesuré suite 44) :
   l'ensemble des jeux joués fait foi, la reprise suit l'ordre du jour consigné
   au journal (suite 44).
-  - Jeux joués (17/25, chacun : RHAE 0,00, arrêt au plafond de temps 1 200 s,
+  - Jeux joués (18/25, chacun : RHAE 0,00, arrêt au plafond de temps 1 200 s,
     scorecard fermé, rapport sous `docs/rapports/`) :
     `r11l-495a7899` (0/6 niv., 35 actions, `u25-t1-r11l.md`) ;
     `re86-8af5384d` (0/8 niv., 38 actions, `u25-t1-re86.md`) ;
@@ -582,9 +582,10 @@ committé, CHANGELOG et README mis à jour.
     `g50t-5849a774` (0/7 niv., 18 actions, `u25-t1-g50t.md`) ;
     `m0r0-492f87ba` (0/6 niv., 24 actions, `u25-t1-m0r0.md`) ;
     `bp35-0a0ad940` (0/9 niv., 16 actions, `u25-t1-bp35.md`) ;
-    `lf52-271a04aa` (0/10 niv., 39 actions, `u25-t1-lf52.md`).
+    `lf52-271a04aa` (0/10 niv., 39 actions, `u25-t1-lf52.md`) ;
+    `dc22-fdcac232` (0/6 niv., 33 actions, `u25-t1-dc22.md`).
   - **Jeux EN COURS (marqueur anti-collision entre sessions parallèles)** :
-    `dc22-fdcac232` (session suite 44, lancé 08:30Z). PROTOCOLE : deux
+    `s5i5-18d95033` (session suite 44, lancé 08:52Z). PROTOCOLE : deux
     sessions planifiées peuvent se chevaucher ; avant CHAQUE lancement,
     `git pull --rebase`, relire cette liste et les rapports committés, ne
     lancer NI un jeu joué NI un jeu marqué EN COURS, puis committer et
