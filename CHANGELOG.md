@@ -2,6 +2,21 @@
 
 ## [Non publié]
 
+### 2026-09-05 — U31 : le mode `state` annonce la forme d'appel des actions (prompts v1.10)
+
+- Mesure (dépouillement des 25 jeux de la tranche 1) : 161 actions invalides
+  pour 646 jouées (~20 % des appels de décision) — en mode `state`, aucun
+  schéma d'outil n'atteignait le modèle, qui apprenait la forme d'appel en la
+  violant.
+- §H15.8 complété : la ligne « Actions disponibles » annonce les valeurs
+  requises de chaque action, et un refus de résolution (nom inconnu, compte,
+  type) se clôt par la forme complète attendue — le tout engendré des schémas
+  déclarés au registre, jamais d'une liste codée.
+- Preuves : 6 unitaires ajoutés (808 au total), cassettes E2E régénérées,
+  campagne complète verte ; validation live sur le pire cas de la tranche 1 :
+  actions invalides 25 → 4, actions valides 14 → 30 à budget identique
+  (rapport `docs/rapports/u31-v110-tn36.md`).
+
 ### 2026-09-04/05 — U25 : campagne ARC officielle, tranche 1 TERMINÉE (25/25 jeux, rapport final agrégé)
 
 - Les 25 jeux déclarés par `/api/games` ont tous été joués en live sous les

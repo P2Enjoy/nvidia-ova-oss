@@ -1134,6 +1134,22 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-05 (suite 46, session planifiée)** — observer :
+dépouillement des 25 jeux de la campagne U25 tranche 1 (161 actions invalides
+pour 646 jouées, ~20 % des appels de décision, ~72 min d'inférence sous un
+plafond de temps liant : 82 appels à coordonnées sans valeur, 47 valeurs à un
+outil qui n'en prend pas, 19 noms inventés) — en mode `state`, la forme
+d'appel des outils n'atteignait jamais le modèle (`tools=None`, noms nus) ;
+améliorer : §H15.8 complété (spec committée avant le code) — la ligne
+« Actions disponibles » annonce les valeurs requises de chaque action et le
+refus de résolution se clôt par la forme attendue, le tout engendré des
+schémas au registre (prompts v1.10, 6 unitaires, cassettes régénérées,
+campagne complète verte : 808/155/10) ; validation live sur le pire cas
+(scorecard `3fbdd48a…` fermé, rapport `docs/rapports/u31-v110-tn36.md`) :
+invalides 25 → 4, actions valides 14 → 30 à budget identique. La piste
+« détecteur de non-progrès » reste ouverte, non instruite (l'archive de
+frames ne conserve pas les grilles par tour).
+
 **Itération du 2026-09-02 (suite 20, session interactive)** — deux améliorations
 génériques désignées par la mesure de la suite 19, livrées et prouvées
 (`make check` vert, cassettes régénérées) : H15.9 schéma de Σ déclaré par le

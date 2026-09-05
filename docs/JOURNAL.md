@@ -3660,3 +3660,31 @@ ligne « Actions disponibles » annonce les paramètres requis de chaque action
 clôt par la forme complète attendue (extension du principe §H16.0.6).
 Implémentation, preuves (unitaires, cassettes régénérées, campagne
 complète) : suite de cette session.
+
+## 2026-09-05 (suite 46, clôture) — U31 : amélioration §H15.8 livrée, prouvée et validée en réel
+
+**Fait (suite de l'entrée précédente).** Implémentation committée après la
+spec : `prompts.annonce_action` et `prompts.forme_appel_attendue` (v1.10),
+ligne « Actions disponibles » annotée des valeurs requises dans
+`_avec_observation`, refus de résolution clos par la forme attendue dans
+`_resoudre_action` — le tout engendré des schémas au registre, aucun nom ni
+compte codé (balayage « zéro indice » vert). Preuves : 6 unitaires ajoutés,
+campagne complète verte (lint, format, mypy strict, 808 unitaires, 155
+intégration, 10 E2E), cassettes E2E régénérées (bancs ; les cassettes ARC
+rejouent inchangées).
+
+**Validation live (pire cas de la tranche 1, précédent suite 34).** Même jeu,
+mêmes plafonds, run `u31-v110-tn36` (scorecard `3fbdd48a…` fermé, rapport
+`docs/rapports/u31-v110-tn36.md`) : actions invalides **25 → 4**, actions
+valides **14 → 30**, appels 46 → 39. Le motif résiduel dominant (3×) reste
+« coordonnées sans valeur » : l'annonce réduit massivement sans éliminer.
+RHAE toujours 0,00 — le plafond de temps lie encore, mais le budget se
+dépense désormais en actions réelles.
+
+**Où reprendre.** U31, itération suivante : jouer (série au choix des mesures
+— une tranche 2 ARC relève du déclencheur U25 ; les bancs U29 restent la
+cible d'affinage par défaut), observer les artefacts sous v1.10, améliorer
+sur mesures. Pistes ouvertes non instruites : détecteur générique de
+non-progrès (exige d'archiver l'observation par tour — mesure impossible sur
+les artefacts actuels) ; résidu « coordonnées sans valeur ». Vérifier en
+ouverture l'endpoint (`/api/version` en 200).
