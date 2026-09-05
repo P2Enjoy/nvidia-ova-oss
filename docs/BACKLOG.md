@@ -560,7 +560,7 @@ committé, CHANGELOG et README mis à jour.
   listing `/api/games` n'est PAS stable d'un jour à l'autre (mesuré suite 44) :
   l'ensemble des jeux joués fait foi, la reprise suit l'ordre du jour consigné
   au journal (suite 44).
-  - Jeux joués (13/25, chacun : RHAE 0,00, arrêt au plafond de temps 1 200 s,
+  - Jeux joués (14/25, chacun : RHAE 0,00, arrêt au plafond de temps 1 200 s,
     scorecard fermé, rapport sous `docs/rapports/`) :
     `r11l-495a7899` (0/6 niv., 35 actions, `u25-t1-r11l.md`) ;
     `re86-8af5384d` (0/8 niv., 38 actions, `u25-t1-re86.md`) ;
@@ -578,17 +578,17 @@ committé, CHANGELOG et README mis à jour.
     fermé, rapport `u25-t1-tu93-bis.md` ; le premier committé fait foi pour
     la tranche, le doublon est conservé comme mesure) ;
     `wa30-ee6fef47` (0/9 niv., 22 actions, `u25-t1-wa30.md`) ;
-    `sc25-635fd71a` (0/6 niv., 18 actions, `u25-t1-sc25.md`).
+    `sc25-635fd71a` (0/6 niv., 18 actions, `u25-t1-sc25.md`) ;
+    `g50t-5849a774` (0/7 niv., 18 actions, `u25-t1-g50t.md`).
   - **Jeux EN COURS (marqueur anti-collision entre sessions parallèles)** :
-    `g50t-5849a774` (session suite 44, lancé 07:08Z). PROTOCOLE : deux
+    `m0r0-492f87ba` (session suite 44, lancé 07:28Z). PROTOCOLE : deux
     sessions planifiées peuvent se chevaucher ; avant CHAQUE lancement,
     `git pull --rebase`, relire cette liste et les rapports committés, ne
     lancer NI un jeu joué NI un jeu marqué EN COURS, puis committer et
     pousser son propre marqueur immédiatement après le lancement (et le
     retirer dans le commit du rapport).
-  - **Reprise pour toute autre session : `m0r0-492f87ba`**, puis les
-    non-joués dans l'ordre du jour du journal (suite 44) :
-    `bp35-0a0ad940`, `lf52-271a04aa`, `dc22-fdcac232`, `s5i5-18d95033`,
+  - **Reprise pour toute autre session : `bp35-0a0ad940`**, puis les
+    non-joués dans l'ordre du jour du journal (suite 44) : `lf52-271a04aa`, `dc22-fdcac232`, `s5i5-18d95033`,
     `ka59-38d34dbb`, `cd82-fb555c5d`, `cn04-2fe56bfb`, `ar25-0c556536`,
     `sk48-d8078629`, `tr87-cd924810` — en sautant ceux que la suite 45 a
     déclarés dans son ordre du jour (journal) si elle est active ; le rapport
