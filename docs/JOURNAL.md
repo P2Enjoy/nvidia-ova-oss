@@ -3533,3 +3533,30 @@ l'autorisation du responsable (2026-08-30) ; `run-id` : `u25-t1-<game_id>` ;
 une seule exécution live à la fois. Jeux de la session : `tn36-ef4dde99`
 d'abord, puis `lp85-305b61c3`, `sb26-7fbdac44`, `sp80-589a99af`, … autant que
 le temps le permet, rapport committé après chaque jeu.
+
+## 2026-09-05 (suite 45, session planifiée) — U25 tranche 1 : reprise au jeu 11 (tu93), ordre du jour consigné
+
+**Unité.** U25 tranche 1, reprise désignée par le backlog : jeu 11/25
+`tu93-0768757b`, une invocation `run-arc` par jeu, rapport committé entre
+deux jeux.
+
+**Environnement (mesuré en ouverture, 06:31Z).** Pile compose saine
+(`arc-replay`, `llm-replay` healthy), `make seed` complet, endpoint
+d'inférence en 200 (`/api/version` via le pont 443), `/api/games` en 200 :
+25 jeux, `tu93-0768757b` listé.
+
+**Ordre du jour (listing `/api/games` relevé en ouverture, non-joués
+seulement, après la reprise `tu93-0768757b`)** : `ar25-0c556536`,
+`s5i5-18d95033`, `cd82-fb555c5d`, `g50t-5849a774`, `bp35-0a0ad940`,
+`tr87-cd924810`, `cn04-2fe56bfb`, `sk48-d8078629`, `dc22-fdcac232`,
+`wa30-ee6fef47`, `ka59-38d34dbb`, `m0r0-492f87ba`, `lf52-271a04aa`,
+`sc25-635fd71a`.
+
+**Périmètre de la session (écrit AVANT lancement, §A7.2).** Identique aux
+suites 43–44 : plafonds par jeu 80 actions/niveau, 300 actions/jeu,
+1 200 s/jeu, 1 500 000 tokens/jeu, 400 tours ; mode `state`, gardes H16
+actives, `qwen3.6:35b`, fenêtre 229 376 ; `--j-autorise-la-publication` au
+titre de l'autorisation du responsable (2026-08-30) ; `run-id` :
+`u25-t1-<game_id>` ; une seule exécution live à la fois. Jeux de la
+session : `tu93-0768757b` d'abord, puis l'ordre du jour ci-dessus, autant
+que le temps le permet, rapport committé après chaque jeu.
