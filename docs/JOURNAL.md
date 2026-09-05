@@ -3498,3 +3498,38 @@ future désigne un manque, ce serait un détecteur GÉNÉRIQUE de non-progrès
 listing `/api/games` (l'état exact et la liste jouée sont dans l'unité U25 du
 backlog). Une invocation par jeu, rapport committé entre deux jeux. Vérifier
 en ouverture l'endpoint (`/api/version` en 200) et l'API ARC (`/api/games`).
+
+## 2026-09-05 (suite 44, session planifiée) — U25 tranche 1 : reprise au jeu 3, périmètre consigné avant lancement
+
+**Unité.** U25 tranche 1, reprise désignée par la suite 43 : jeu 3/25
+`tn36-ef4dde99`, une invocation `run-arc` par jeu, rapport committé entre
+deux jeux.
+
+**Environnement (mesuré en ouverture).** Pile compose saine (`arc-replay`,
+`llm-replay` healthy), `make seed` complet, endpoint d'inférence en 200
+(`/api/version` via le pont 443), `/api/games` en 200 : 25 jeux.
+
+**POINT TRANCHÉ — l'ordre du listing `/api/games` n'est PAS stable d'un jour
+à l'autre.** Mesuré ce jour : le listing commence par `lp85-305b61c3`,
+`sb26-7fbdac44`, `r11l-495a7899`, … là où la suite 43 avait relevé `r11l`,
+`re86`, `tn36`, `ls20`, …. L'ordre d'exécution de la tranche devient donc :
+les jeux DÉJÀ JOUÉS consignés au backlog font foi (ensemble, pas rang) ;
+la session joue d'abord la reprise désignée (`tn36-ef4dde99`), puis les jeux
+non joués dans l'ordre du listing DU JOUR, relevé en ouverture et consigné
+ici. Issue écartée : suivre le rang du listing du jour — il ferait rejouer ou
+sauter des jeux au gré des permutations du serveur. Ordre du jour (25) :
+lp85-305b61c3, sb26-7fbdac44, r11l-495a7899 (joué), sp80-589a99af,
+vc33-5430563c, su15-1944f8ab, ft09-0d8bbf25, ls20-9607627b, tu93-0768757b,
+wa30-ee6fef47, sc25-635fd71a, re86-8af5384d (joué), g50t-5849a774,
+m0r0-492f87ba, bp35-0a0ad940, lf52-271a04aa, dc22-fdcac232, s5i5-18d95033,
+ka59-38d34dbb, cd82-fb555c5d, cn04-2fe56bfb, ar25-0c556536, sk48-d8078629,
+tr87-cd924810, tn36-ef4dde99 (reprise, joué en premier cette session).
+
+**Périmètre de la session (écrit AVANT lancement, §A7.2).** Identique à la
+suite 43 : plafonds par jeu 80 actions/niveau, 300 actions/jeu, 1 200 s/jeu,
+1 500 000 tokens/jeu, 400 tours ; mode `state`, gardes H16 actives,
+`qwen3.6:35b`, fenêtre 229 376 ; `--j-autorise-la-publication` au titre de
+l'autorisation du responsable (2026-08-30) ; `run-id` : `u25-t1-<game_id>` ;
+une seule exécution live à la fois. Jeux de la session : `tn36-ef4dde99`
+d'abord, puis `lp85-305b61c3`, `sb26-7fbdac44`, `sp80-589a99af`, … autant que
+le temps le permet, rapport committé après chaque jeu.
