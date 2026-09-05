@@ -554,18 +554,27 @@ comportement du modèle) au journal.
 exécution par tranches reprenables, rapport final comparatif aux références (A7.3)
 committé, CHANGELOG et README mis à jour.
 
-- **Tranche 1 EN COURS (2026-09-04/05, suite 43)** : exécution dans l'ordre du
-  listing `/api/games` (25 jeux ce jour), une invocation `run-arc` par jeu
-  (motif : machine éphémère, journal suite 43), plafonds du responsable, mode
-  `state`, gardes actives, fenêtre 229 376.
-  - Jeux joués : 1/25 `r11l-495a7899` (0/6 niveaux, 35 actions, RHAE 0,00,
-    arrêt au plafond de temps 1 200 s, scorecard `24987b17…` fermé, rapport
-    `docs/rapports/u25-t1-r11l.md`) ; 2/25 `re86-8af5384d` (0/8 niveaux,
-    38 actions, RHAE 0,00, arrêt au plafond de temps, scorecard `398f7087…`
-    fermé, rapport `docs/rapports/u25-t1-re86.md`).
-  - **Prochaine session : reprendre au jeu 3/25, `tn36-ef4dde99`**, puis la
-    suite du listing ; le rapport final comparatif (A7.3, agrégé) s'écrit une
-    fois les 25 jeux couverts.
+- **Tranche 1 EN COURS (2026-09-04/05, suites 43–44)** : une invocation
+  `run-arc` par jeu (motif : machine éphémère, journal suite 43), plafonds du
+  responsable, mode `state`, gardes actives, fenêtre 229 376. L'ordre du
+  listing `/api/games` n'est PAS stable d'un jour à l'autre (mesuré suite 44) :
+  l'ensemble des jeux joués fait foi, la reprise suit l'ordre du jour consigné
+  au journal (suite 44).
+  - Jeux joués (5/25, chacun : RHAE 0,00, arrêt au plafond de temps 1 200 s,
+    scorecard fermé, rapport sous `docs/rapports/`) :
+    `r11l-495a7899` (0/6 niv., 35 actions, `u25-t1-r11l.md`) ;
+    `re86-8af5384d` (0/8 niv., 38 actions, `u25-t1-re86.md`) ;
+    `tn36-ef4dde99` (0/7 niv., 14 actions, `u25-t1-tn36.md`) ;
+    `lp85-305b61c3` (0/8 niv., 33 actions, `u25-t1-lp85.md`) ;
+    `sb26-7fbdac44` (0/8 niv., 21 actions, `u25-t1-sb26.md`).
+  - **Prochaine session : reprendre au jeu 6/25, `sp80-589a99af`**, puis les
+    non-joués dans l'ordre du jour du journal (suite 44) : `vc33-5430563c`,
+    `su15-1944f8ab`, `ft09-0d8bbf25`, `ls20-9607627b`, `tu93-0768757b`,
+    `wa30-ee6fef47`, `sc25-635fd71a`, `g50t-5849a774`, `m0r0-492f87ba`,
+    `bp35-0a0ad940`, `lf52-271a04aa`, `dc22-fdcac232`, `s5i5-18d95033`,
+    `ka59-38d34dbb`, `cd82-fb555c5d`, `cn04-2fe56bfb`, `ar25-0c556536`,
+    `sk48-d8078629`, `tr87-cd924810` ; le rapport final comparatif (A7.3,
+    agrégé) s'écrit une fois les 25 jeux couverts.
 
 - **Périmètre arrêté (2026-09-01)** : tous les jeux que `/api/games` déclare ;
   plafonds par jeu : 80 actions/niveau, 300 actions/jeu, 1 200 s/jeu,
