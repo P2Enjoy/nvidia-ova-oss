@@ -524,6 +524,18 @@ durées, retries), par action (jeu, niveau, index, latence), par événement
 (continuation, 413, intervention superviseur, commit de lignée). Totaux dans
 `report.md`.
 
+La boucle émet en outre, après chaque action VALIDE exécutée, la métrique
+`observation_inchangee` quand l'observation rendue par l'environnement est
+STRICTEMENT identique à celle d'avant l'action (comparaison de chaînes, aucun
+seuil, aucune interprétation — générique pour tout environnement). Motif,
+mesuré (journal 2026-09-05, suites 43–46) : le non-progrès est le candidat
+d'amélioration désigné par la campagne U25 tranche 1 (répétition d'un même
+type d'action sans conversion en niveau), mais il est IMMESURABLE post-hoc —
+l'archive disque des frames ne porte pas les grilles — et la règle U31
+interdit d'intervenir sans mesure. Cette métrique est la mesure, et
+uniquement la mesure : elle ne modifie ni le prompt, ni le superviseur, ni
+aucun comportement ; un éventuel détecteur s'instruira sur ses relevés.
+
 **H11.3 — Transcripts.** Chaque segment intégral en JSONL (messages exacts envoyés et
 reçus). C'est la preuve d'exécution et l'entrée du rejeu.
 
