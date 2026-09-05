@@ -3743,3 +3743,25 @@ bancs sous v1.10 valent d'être compétées au fil des sessions (entrepôt,
 banc b, banc c) ; une tranche 2 ARC sous v1.10 relève du déclencheur U25 —
 les mesures de cette suite (actions valides ×2–4 par jeu) sont l'argument à
 relire pour statuer. Vérifier l'endpoint en ouverture.
+
+## 2026-09-05 (suite 46, addendum 3) — v1.10 sur le banc a entrepôt : dans la bande de variance, rien à corriger
+
+**Jouer.** Série entrepôt (h25, bruit 0, seeds 1–3, live, `state`, gardes)
+sous v1.10 : **0,96 / 0,44 / 0,72, moyenne 0,707**. Références v1.9 sur les
+mêmes seeds : 0,96/0,92/0,44 (suite 23, moyenne 0,77) et 0,48/0,96/0,52
+(réplication suite 24, moyenne 0,653). La moyenne v1.10 tombe DANS la bande
+de variance inter-réplications de cet environnement [0,653 ; 0,77] : ni
+régression ni gain mesurable ici — l'entrepôt reste dominé par la variance
+de runs, pas par les refus de forme (2 invalides de schéma sur 75
+événements ; les « invalides » du score sont des refus SÉMANTIQUES de
+l'environnement, hors périmètre de v1.10). Relevés :
+`runs/20260905-{143318,143931,144520}-banc/banc.json` (hors dépôt).
+
+**Améliorer : rien** — aucune mesure ne désigne un mécanisme absent.
+
+**Où reprendre.** U31 : compléter les lignes de base v1.10 restantes — banc b
+(`python -m avo banc ctf --env aleatoire --seed 1..10 --horizon 30 --mode
+live`, exécuteur `conteneur` : l'invocation appelle le CLI `docker` depuis le
+conteneur de run, retrouver le montage utilisé par la suite 37 avant de
+lancer) puis banc c (`banc tau --env detail --seed 1..10 --horizon 20`,
+utilisateur `llm`). Une tranche 2 ARC sous v1.10 relève du déclencheur U25.
