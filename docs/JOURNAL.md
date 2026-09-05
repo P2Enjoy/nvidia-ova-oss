@@ -3713,3 +3713,33 @@ séries.
 tranche 2 ARC sur déclencheur U25). Sous v1.10, les mesures d'actions par
 jeu de la tranche 1 sont à relire avec prudence : une tranche 2 jouerait
 ~2× plus d'actions par jeu au même plafond de temps.
+
+## 2026-09-05 (suite 46, addendum 2) — v1.10 sur le banc a : série de référence dépôt rejouée, gain net, zéro régression
+
+**Jouer.** Série de référence banc a dépôt (h25, bruit 0, seeds 1–3,
+`--mode live`, `state`, gardes actives) sous v1.10 :
+
+| seed | score v1.9 (suite 27) | score v1.10 | corr/inc/inv |
+|---|---|---|---|
+| 1 | 0,88 | **0,96** | 24/0/1 |
+| 2 | 0,80 | **0,96** | 24/1/0 |
+| 3 | 0,80 | **0,92** | 23/1/1 |
+
+Moyenne : **0,947** contre 0,827 — l'annonce des valeurs requises profite
+aussi aux bancs (invalides quasi nuls : 2 sur 75 événements). Incident : le
+premier passage du seed 1 est mort sur une rafale de `HTTP 500` de
+l'endpoint (échelle de relances épuisée, ~14:10–14:13Z, motif connu journal
+suites 14–16/30–31 — une seule exécution live en cours, le plafond de
+parallélisme n'est pas en cause) ; rejoué complet ensuite. Relevés :
+`runs/20260905-{141352,141759,142450}-banc/banc.json` (hors dépôt).
+
+**Observer/améliorer : rien de neuf** — aucune mesure ne désigne un
+mécanisme absent ; les scores montent, les invalides disparaissent. La
+friction « résolution des demandes basse » (suite 27) reste à réobserver
+sur transcripts avant toute correction (inchangée).
+
+**Où reprendre.** U31, itération suivante : les lignes de base des trois
+bancs sous v1.10 valent d'être compétées au fil des sessions (entrepôt,
+banc b, banc c) ; une tranche 2 ARC sous v1.10 relève du déclencheur U25 —
+les mesures de cette suite (actions valides ×2–4 par jeu) sont l'argument à
+relire pour statuer. Vérifier l'endpoint en ouverture.

@@ -1148,7 +1148,10 @@ campagne complète verte : 808/155/10) ; validation live sur les TROIS pires
 cas de la tranche 1, à budgets identiques (rapports
 `docs/rapports/u31-v110-{tn36,su15,tu93}.md`, scorecards `3fbdd48a…`,
 `cae887c2…`, `a39514e0…` fermés) : invalides 25→4, 22→5, 19→4 (66→13,
-−80 %) ; actions valides 14→30, 11→29, 10→40 (35→99, +183 %). La piste
+−80 %) ; actions valides 14→30, 11→29, 10→40 (35→99, +183 %) ; et série de
+référence banc a dépôt h25 bruit 0 seeds 1–3 : 0,96/0,96/0,92, moyenne
+0,947 contre 0,827 sous v1.9 — aucune régression banc, gain net (relevés
+au journal, suite 46 ; un épisode mort sur rafale de 500 endpoint, rejoué). La piste
 « détecteur de non-progrès » reste ouverte, non instruite (l'archive de
 frames ne conserve pas les grilles par tour).
 
