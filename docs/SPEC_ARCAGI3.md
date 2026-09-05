@@ -160,6 +160,12 @@ d'une grille : 64 lignes de 64 valeurs décimales séparées par des espaces, pr
 d'une ligne d'état (`niveau, score, actions_du_niveau, actions_disponibles`). Aucune
 image, aucun autre enrichissement dans l'observation courante.
 
+L'interface déclare l'`empreinte_observation()` de §H11.2 : niveau, score,
+actions disponibles, grille exacte et nombre de frames transitoires du dernier
+résultat — jamais le compteur local `actions_du_niveau` ni le numéro de tour,
+qui sont des compteurs de présentation du harnais. La mesure de non-progrès
+compare ainsi l'état observable du jeu, pas la comptabilité du harnais.
+
 **A4.2 — Convention de coordonnées (MESURÉE en U22).** Interne : (row, col), 0-basé,
 origine en haut à gauche. Le fil exige `x` = colonne et `y` = ligne (A1.4) ; la
 conversion `(row, col) → {x: col, y: row}` est confinée au client A2.1 — mesuré :
