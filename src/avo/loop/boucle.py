@@ -1115,6 +1115,7 @@ class BoucleAgent:
         une déclaration décorative que rien n'exécuterait.
         """
         issue_avant = self.environnement.derniere_issue()
+        observation_avant = self.environnement.observation()
         execution = self.registre.executer(
             [appel],
             self.contexte.transcript,
@@ -1141,6 +1142,16 @@ class BoucleAgent:
             actions_niveau=self.bilan.actions_niveau,
             evenement=issue.evenement.value,
         )
+        # §H11.2 : mesure du non-progrès, et uniquement la mesure — une action
+        # valide dont l'observation rendue est STRICTEMENT identique à celle
+        # d'avant l'action s'émet en métrique ; aucun seuil, aucune
+        # interprétation, aucun effet sur le comportement. Une action refusée
+        # par l'environnement (§H15.8) laisse l'observation inchangée par
+        # nature : elle est exclue, son refus porte déjà sa métrique.
+        if not getattr(issue, "refusee", False) and (
+            self.environnement.observation() == observation_avant
+        ):
+            self._metrique("observation_inchangee", action=appel.nom, tour=tour.numero)
         return issue
 
     def _evenement_apres_evaluation(

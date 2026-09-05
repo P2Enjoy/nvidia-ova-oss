@@ -1134,6 +1134,16 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-05 (suite 46, addenda)** — lignes de base v1.10
+complètes, aucune régression : banc a dépôt 0,947 (contre 0,827), entrepôt
+0,707 (bande de variance), banc b 8/10 (identique, échecs `encodage`),
+banc c 9/10 (contre 8/10) ; et métrique d'observabilité
+`observation_inchangee` livrée (§H11.2, spec avant code, 3 unitaires,
+campagne verte 811/155/10) — la mesure du non-progrès préalable à tout
+détecteur, sans effet de comportement. Prochaine session : statuer sur une
+tranche 2 ARC sous v1.10 (déclencheur U25) ou dépouiller la métrique sur
+les prochaines séries.
+
 **Itération du 2026-09-05 (suite 46, session planifiée)** — observer :
 dépouillement des 25 jeux de la campagne U25 tranche 1 (161 actions invalides
 pour 646 jouées, ~20 % des appels de décision, ~72 min d'inférence sous un

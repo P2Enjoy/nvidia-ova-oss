@@ -3813,3 +3813,20 @@ tranche 2 ARC sous v1.10 (déclencheur U25) : arguments = actions valides
 contre-argument = le plafond de temps de 1 200 s/jeu (obligatoire) liera
 encore, le gain de RHAE attendu reste incertain. Vérifier l'endpoint en
 ouverture.
+
+## 2026-09-05 (suite 46, addendum 6) — métrique `observation_inchangee` livrée (§H11.2)
+
+**Améliorer (observabilité seule, règle U31 : mesurer avant d'intervenir).**
+La boucle émet `observation_inchangee` après chaque action valide dont
+l'observation rendue est strictement identique à celle d'avant l'action
+(comparaison de chaînes, générique, action refusée exclue — son refus porte
+déjà sa métrique). Spec §H11.2 committée avant le code ; implémentation dans
+`_jouer_action` (les deux modes en héritent) ; 3 unitaires dédiés
+(`tests/unit/test_observation_inchangee.py`) ; campagne complète verte
+(811 unitaires, 155 intégration, 10 E2E) ; aucun prompt touché, cassettes
+inchangées. Toute série future collecte la mesure sans coût : un éventuel
+détecteur de non-progrès s'instruira sur ces relevés, jamais avant.
+
+**Où reprendre.** Inchangé (addendum 5) : statuer sur une tranche 2 ARC sous
+v1.10 (déclencheur U25), ou jouer des séries et dépouiller la nouvelle
+métrique. Vérifier l'endpoint en ouverture.
