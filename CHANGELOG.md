@@ -2,18 +2,27 @@
 
 ## [Non publié]
 
-### 2026-09-04/05 — U25 : campagne ARC officielle, tranche 1 entamée (jeux 1–2/25)
+### 2026-09-04/05 — U25 : campagne ARC officielle, tranche 1 TERMINÉE (25/25 jeux, rapport final agrégé)
 
-- Deux jeux joués en live sous les plafonds du responsable (mode `state`,
-  gardes actives, une invocation `run-arc` par jeu) : `r11l-495a7899` (0/6
-  niveaux, 35 actions, RHAE 0,00) et `re86-8af5384d` (0/8 niveaux,
-  38 actions, RHAE 0,00), tous deux arrêtés proprement au plafond de temps
-  (1 200 s/jeu), scorecards fermés et réconciliés.
-- Rapports committés : `docs/rapports/u25-t1-r11l.md`,
-  `docs/rapports/u25-t1-re86.md` ; état de reprise (jeu 3/25 :
-  `tn36-ef4dde99`) consigné dans l'unité U25 du backlog.
-- Observation générique consignée au journal : le plafond de temps lie avant
-  les plafonds d'actions (~25 s d'inférence par tour ≈ 46 tours/jeu).
+- Les 25 jeux déclarés par `/api/games` ont tous été joués en live sous les
+  plafonds du responsable (mode `state`, gardes actives, une invocation
+  `run-arc` par jeu, un scorecard fermé par jeu), sur trois sessions
+  planifiées chevauchées (suites 43 à 45).
+- **Score global : RHAE 0,00 — aucun niveau complété (0/183).** Le plafond
+  de temps (1 200 s/jeu) a lié sur les 25 jeux : ~25–30 s d'inférence par
+  tour ≈ 37–46 tours, soit 10 à 57 actions par jeu, sous la baseline humaine
+  du seul premier niveau de chaque jeu. Coûts agrégés : 1 027 appels,
+  ~10,0 M tokens de prompt, ~0,5 M générés, ~8,0 h d'inférence.
+- Rapports committés : un par jeu (`docs/rapports/u25-t1-<jeu>.md`) et le
+  rapport final agrégé comparatif `docs/rapports/u25-t1-final.md` (A7.3).
+- Incident nommé : `tu93-0768757b` joué en double par deux sessions
+  chevauchées avant l'introduction du protocole anti-collision (marqueurs
+  EN COURS dans le backlog) ; le doublon est conservé comme mesure
+  (`u25-t1-tu93-bis.md`) et n'entre pas dans les agrégats.
+- L'ordre du listing `/api/games` s'est révélé instable d'un jour à l'autre :
+  la tranche fait foi par l'ensemble des jeux joués, consigné au backlog.
+- U25 passe à `[x]` ; toute nouvelle campagne relève du cycle U31 et de son
+  déclencheur.
 
 ### 2026-09-03 — U29c2 : banc c joué par la boucle complète — adaptateur, CLI `banc tau`, utilisateur simulé par second LLM, série de référence pass 8/10
 

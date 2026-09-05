@@ -548,19 +548,19 @@ comportement du modèle) au journal.
   « victoire » dans le rapport (défaut du registre du 2026-08-30, corrigé et
   prouvé : unitaires, intégration, E2E régénérés).
 
-## U25 — Campagne étendue et rapport final `[~]` **[LIVE]**
+## U25 — Campagne étendue et rapport final `[x]` **[LIVE]**
 
 `@spec` A7. Périmètre arrêté par le responsable (2026-09-01, session interactive),
 exécution par tranches reprenables, rapport final comparatif aux références (A7.3)
 committé, CHANGELOG et README mis à jour.
 
-- **Tranche 1 EN COURS (2026-09-04/05, suites 43–44)** : une invocation
+- **Tranche 1 (2026-09-04/05, suites 43–45)** : une invocation
   `run-arc` par jeu (motif : machine éphémère, journal suite 43), plafonds du
   responsable, mode `state`, gardes actives, fenêtre 229 376. L'ordre du
   listing `/api/games` n'est PAS stable d'un jour à l'autre (mesuré suite 44) :
   l'ensemble des jeux joués fait foi, la reprise suit l'ordre du jour consigné
   au journal (suite 44).
-  - Jeux joués (24/25, chacun : RHAE 0,00, arrêt au plafond de temps 1 200 s,
+  - Jeux joués (25/25, chacun : RHAE 0,00, arrêt au plafond de temps 1 200 s,
     scorecard fermé, rapport sous `docs/rapports/`) :
     `r11l-495a7899` (0/6 niv., 35 actions, `u25-t1-r11l.md`) ;
     `re86-8af5384d` (0/8 niv., 38 actions, `u25-t1-re86.md`) ;
@@ -589,21 +589,14 @@ committé, CHANGELOG et README mis à jour.
     `cd82-fb555c5d` (0/6 niv., 32 actions, `u25-t1-cd82.md`) ;
     `cn04-2fe56bfb` (0/6 niv., 27 actions, `u25-t1-cn04.md`) ;
     `ar25-0c556536` (0/8 niv., 35 actions, `u25-t1-ar25.md`) ;
-    `sk48-d8078629` (0/8 niv., 57 actions, `u25-t1-sk48.md`).
-  - **Jeux EN COURS (marqueur anti-collision entre sessions parallèles)** :
-    `tr87-cd924810` (session suite 44, lancé 10:57Z — DERNIER jeu non joué
-    du listing). PROTOCOLE : deux
-    sessions planifiées peuvent se chevaucher ; avant CHAQUE lancement,
-    `git pull --rebase`, relire cette liste et les rapports committés, ne
-    lancer NI un jeu joué NI un jeu marqué EN COURS, puis committer et
-    pousser son propre marqueur immédiatement après le lancement (et le
-    retirer dans le commit du rapport).
-  - **Reprise pour toute autre session : `bp35-0a0ad940`**, puis les
-    non-joués dans l'ordre du jour du journal (suite 44) : `lf52-271a04aa`, `dc22-fdcac232`, `s5i5-18d95033`,
-    `ka59-38d34dbb`, `cd82-fb555c5d`, `cn04-2fe56bfb`, `ar25-0c556536`,
-    `sk48-d8078629`, `tr87-cd924810` — en sautant ceux que la suite 45 a
-    déclarés dans son ordre du jour (journal) si elle est active ; le rapport
-    final comparatif (A7.3, agrégé) s'écrit une fois les 25 jeux couverts.
+    `sk48-d8078629` (0/8 niv., 57 actions, `u25-t1-sk48.md`) ;
+    `tr87-cd924810` (0/6 niv., 50 actions, `u25-t1-tr87.md`).
+  - **Tranche 1 TERMINÉE (2026-09-05, suite 44)** : 25/25 jeux joués, un
+    scorecard fermé par jeu, rapport final agrégé committé :
+    `docs/rapports/u25-t1-final.md` (score global 0,00 — le plafond de temps
+    1 200 s/jeu a lié sur les 25 jeux ; coûts agrégés : 1 027 appels,
+    ~10,0 M tokens de prompt, ~0,5 M générés, ~8,0 h d'inférence). Toute
+    nouvelle campagne (tranche 2) relève du cycle U31 et de son déclencheur.
 
 - **Périmètre arrêté (2026-09-01)** : tous les jeux que `/api/games` déclare ;
   plafonds par jeu : 80 actions/niveau, 300 actions/jeu, 1 200 s/jeu,
