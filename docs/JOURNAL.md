@@ -3765,3 +3765,20 @@ live`, exécuteur `conteneur` : l'invocation appelle le CLI `docker` depuis le
 conteneur de run, retrouver le montage utilisé par la suite 37 avant de
 lancer) puis banc c (`banc tau --env detail --seed 1..10 --horizon 20`,
 utilisateur `llm`). Une tranche 2 ARC sous v1.10 relève du déclencheur U25.
+
+## 2026-09-05 (suite 46, addendum 4) — v1.10 sur le banc b : pass@1 = 8/10, identique à la référence, échecs toujours `encodage`
+
+**Jouer.** Série de référence §S11.3 complète (seeds 1–10, `aleatoire`, h30,
+exécuteur `conteneur`, live, lancée depuis l'hôte — l'image de run ne porte
+pas le CLI `docker`, précision utile aux prochaines sessions) sous v1.10 :
+**pass@1 = 8/10**, identique à la référence v1.9 (suite 37). Échecs : seeds
+1 et 8, tous deux famille `encodage` (budget épuisé ; s8 a soumis une fois
+incorrect), même famille que les deux échecs de la suite 37. Succès rapides
+inchangés (4–17 actions). Aucun incident, zéro invalide de schéma.
+
+**Améliorer : rien** — profil stable, l'échec reste concentré sur une
+famille et relève du modèle ; toute aide par famille serait du benchmaxing.
+
+**Où reprendre.** Dernière ligne de base v1.10 : banc c (`banc tau --env
+detail --seed 1..10 --horizon 20`, utilisateur `llm`, référence 8/10
+suite 40) — en cours dans cette session ; sinon reprendre là.
