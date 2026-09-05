@@ -573,13 +573,21 @@ committé, CHANGELOG et README mis à jour.
     `ft09-0d8bbf25` (0/6 niv., 27 actions, `u25-t1-ft09.md`) ;
     `ls20-9607627b` (0/7 niv., 47 actions, `u25-t1-ls20.md`) ;
     `tu93-0768757b` (0/9 niv., 10 actions, `u25-t1-tu93.md`).
-  - **Prochaine session : reprendre au jeu 12/25, `wa30-ee6fef47`**, puis les
+  - **Jeux EN COURS (marqueur anti-collision entre sessions parallèles)** :
+    `wa30-ee6fef47` (session suite 44, lancé 06:43Z). PROTOCOLE : deux
+    sessions planifiées peuvent se chevaucher ; avant CHAQUE lancement,
+    `git pull --rebase`, relire cette liste et les rapports committés, ne
+    lancer NI un jeu joué NI un jeu marqué EN COURS, puis committer et
+    pousser son propre marqueur immédiatement après le lancement (et le
+    retirer dans le commit du rapport).
+  - **Reprise pour toute autre session : `sc25-635fd71a`**, puis les
     non-joués dans l'ordre du jour du journal (suite 44) :
-    `sc25-635fd71a`, `g50t-5849a774`, `m0r0-492f87ba`,
+    `g50t-5849a774`, `m0r0-492f87ba`,
     `bp35-0a0ad940`, `lf52-271a04aa`, `dc22-fdcac232`, `s5i5-18d95033`,
     `ka59-38d34dbb`, `cd82-fb555c5d`, `cn04-2fe56bfb`, `ar25-0c556536`,
-    `sk48-d8078629`, `tr87-cd924810` ; le rapport final comparatif (A7.3,
-    agrégé) s'écrit une fois les 25 jeux couverts.
+    `sk48-d8078629`, `tr87-cd924810` — en sautant ceux que la suite 45 a
+    déclarés dans son ordre du jour (journal) si elle est active ; le rapport
+    final comparatif (A7.3, agrégé) s'écrit une fois les 25 jeux couverts.
 
 - **Périmètre arrêté (2026-09-01)** : tous les jeux que `/api/games` déclare ;
   plafonds par jeu : 80 actions/niveau, 300 actions/jeu, 1 200 s/jeu,
