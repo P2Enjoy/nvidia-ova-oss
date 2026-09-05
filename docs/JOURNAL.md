@@ -3847,3 +3847,34 @@ inchangé). Décision révisable par le responsable.
 
 **Où reprendre.** U31 : jouer une série (banc au choix ou un jeu ARC de
 validation), dépouiller `observation_inchangee`, améliorer sur mesures.
+
+## 2026-09-05 (suite 47, session planifiée) — U31 : périmètre de la série d'observation `observation_inchangee`
+
+**Unité.** U31, itération désignée par l'addendum 7 de la suite 46 : jouer
+une série, dépouiller la métrique `observation_inchangee` (§H11.2, livrée
+suite 46 addendum 6), améliorer sur mesures uniquement.
+
+**Environnement (mesuré en ouverture, 18:31Z).** Pile compose saine
+(`arc-replay`, `llm-replay` healthy), `make seed` complet, endpoint
+d'inférence en 200 (`/v1/models` via le pont 443 : `qwen3.6:35b` présent).
+
+**POINT TRANCHÉ — la série se joue sur un jeu ARC de validation, pas sur un
+banc.** La métrique quantifie le non-progrès APRÈS action valide ; or le
+non-progrès observé vit sur ARC (30 actions valides, 0 niveau, tn36 sous
+v1.10) et pas sur les bancs U29, dont les scores sont au niveau ou au-dessus
+des références (suite 46, addenda 3–5) et où la mesure serait creuse. Jeu
+choisi : `tn36-ef4dde99`, le cas de non-progrès le mieux documenté de la
+tranche 1 (budget désormais dépensé en actions réelles sans conversion en
+niveaux) — rejouer le MÊME jeu à mêmes plafonds rend la mesure comparable
+aux deux relevés existants. Issue écartée : une série banc a/b/c — elle ne
+produirait presque aucun événement de non-progrès à dépouiller. Ce rejeu
+d'UN jeu de validation ne constitue pas une tranche 2 (décision addendum 7
+inchangée).
+
+**Périmètre (écrit AVANT lancement, §A7.2).** Un seul jeu :
+`tn36-ef4dde99` ; plafonds par jeu (§A7.1, tous obligatoires) : 80
+actions/niveau, 300 actions/jeu, 1 200 s/jeu, 1 500 000 tokens/jeu,
+400 tours ; mode `state`, gardes H16 actives, `qwen3.6:35b`, fenêtre
+229 376 ; `--j-autorise-la-publication` au titre de l'autorisation du
+responsable (2026-08-30) ; `run-id` : `u31-obs-tn36` ; une seule exécution
+live dans cette session (plafond de parallélisme global : 3).
