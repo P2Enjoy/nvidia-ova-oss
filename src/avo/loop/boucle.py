@@ -750,7 +750,19 @@ class BoucleAgent:
         }
         schema = schemas.get(nom)
         if schema is None:
-            disponibles = ", ".join(sorted(schemas)) or "(aucune)"
+            # §H15.8 : le refus se clôt par les formes disponibles, valeurs
+            # requises comprises — jamais les seuls noms (principe §H16.0.6
+            # étendu à la résolution).
+            disponibles = (
+                ", ".join(
+                    prompts.annonce_action(
+                        candidat,
+                        list(schemas[candidat].get("parameters", {}).get("required", [])),
+                    )
+                    for candidat in sorted(schemas)
+                )
+                or "(aucune)"
+            )
             return ToolCall(
                 nom=nom,
                 erreur_arguments=(
@@ -779,11 +791,16 @@ class BoucleAgent:
             if len(par_espaces) == len(requis):
                 valeurs = par_espaces
         if len(valeurs) != len(requis):
+            # §H15.8 : le refus se clôt par la forme complète attendue de l'outil
+            # fautif (principe §H16.0.6 étendu à la résolution) — le manque reste
+            # nommé en tête.
+            types = {cle: str(proprietes.get(cle, {}).get("type") or "") for cle in requis}
             return ToolCall(
                 nom=nom,
                 erreur_arguments=(
                     f"{len(requis)} valeur(s) attendue(s) ({', '.join(requis) or 'aucune'}), "
-                    f"{len(valeurs)} reçue(s)"
+                    f"{len(valeurs)} reçue(s). "
+                    f"{prompts.forme_appel_attendue(nom, requis, types)}"
                 ),
             )
         arguments: dict[str, Any] = {}
@@ -804,8 +821,17 @@ class BoucleAgent:
                 else:
                     arguments[cle] = brut
             except ValueError:
+                # §H15.8 : même clôture par la forme attendue que le refus de
+                # compte — le type fautif reste nommé en tête.
+                types = {
+                    autre: str(proprietes.get(autre, {}).get("type") or "") for autre in requis
+                }
                 return ToolCall(
-                    nom=nom, erreur_arguments=f"« {cle} » : {type_attendu} attendu, reçu {brut!r}"
+                    nom=nom,
+                    erreur_arguments=(
+                        f"« {cle} » : {type_attendu} attendu, reçu {brut!r}. "
+                        f"{prompts.forme_appel_attendue(nom, requis, types)}"
+                    ),
                 )
         return ToolCall(nom=nom, arguments=arguments)
 
@@ -1044,9 +1070,27 @@ class BoucleAgent:
 
     # ----------------------------------------------------------------- internes
     def _avec_observation(self, invite: str) -> str:
+        # §H15.8 : chaque action disponible s'annonce avec ses valeurs requises,
+        # lues dans son schéma au registre — la forme d'appel ne doit jamais
+        # s'apprendre en la violant (mesuré : 161 actions invalides sur 646,
+        # campagne U25 tranche 1). Un nom sans schéma reste nu.
+        schemas = {
+            schema["function"]["name"]: schema["function"]
+            for schema in self.registre.schemas(("action",))
+        }
+        annonces = ", ".join(
+            prompts.annonce_action(
+                nom,
+                (
+                    list(schemas[nom].get("parameters", {}).get("required", []))
+                    if nom in schemas
+                    else None
+                ),
+            )
+            for nom in self.environnement.actions_disponibles()
+        )
         etat = (
-            f"Observation :\n{self.environnement.observation()}\n\n"
-            f"Actions disponibles : {', '.join(self.environnement.actions_disponibles())}"
+            f"Observation :\n{self.environnement.observation()}\n\nActions disponibles : {annonces}"
         )
         return f"{etat}\n\n{invite}"
 

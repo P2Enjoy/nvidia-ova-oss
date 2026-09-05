@@ -24,7 +24,7 @@ from avo.context.etat import ARC_V1, CHAMP_HYPOTHESES, DICTIONNAIRE, FORMES, Sch
 
 #: Version des prompts. Change dès qu'un texte change : le rapport d'une campagne
 #: doit pouvoir dire sous quelle formulation ses résultats ont été obtenus.
-VERSION: Final = "1.9"
+VERSION: Final = "1.10"
 
 #: Contrat de tâche, posé une fois en tête de segment (§A5.1, calqué sur VISTA).
 SYSTEME: Final = """Tu joues à un jeu inconnu, tour par tour, sur une grille de
@@ -188,6 +188,41 @@ def rappel_patch_annule(action: str, patch_json: str) -> str:
         f"{patch_json}. Réinscris dans ton prochain patch ce qui y décrit la "
         "situation indépendamment de l'action refusée ; n'y reprends pas l'effet "
         "de cette action."
+    )
+
+
+def annonce_action(nom: str, requis: list[str] | None) -> str:
+    """Annonce d'une action disponible avec ses valeurs requises (§H15.8).
+
+    La forme d'appel s'annonce d'emblée (principe §H16.0.7) : mesuré (journal
+    2026-09-05, suite 46, dépouillement des 25 jeux de la campagne U25
+    tranche 1), 161 actions invalides sur 646 jouées quand seule la liste des
+    NOMS atteint le modèle — 82 appels à outil à coordonnées sans valeur,
+    47 valeurs données à un outil qui n'en prend pas. Les paramètres viennent
+    du schéma déclaré au registre, jamais d'une liste codée ; un nom sans
+    schéma (`requis` à None) reste nu.
+    """
+    if requis is None:
+        return nom
+    if not requis:
+        return f"{nom} (aucune valeur)"
+    return f"{nom} (valeurs requises : {', '.join(requis)})"
+
+
+def forme_appel_attendue(nom: str, requis: list[str], types: dict[str, str]) -> str:
+    """Forme complète attendue d'un appel d'action, pour clore un refus (§H15.8).
+
+    Principe de §H16.0.6 étendu à la résolution d'action : le refus qui ne nomme
+    que le compte manquant laisse le modèle deviner la forme. Les types cités
+    sont ceux que le schéma déclare ; sans type déclaré, le paramètre est cité
+    seul.
+    """
+    if not requis:
+        return f"Forme attendue : « {nom} » seul, sans valeur."
+    details = ", ".join(f"{cle} : {types[cle]}" if types.get(cle) else cle for cle in requis)
+    return (
+        f"Forme attendue : « {nom} {', '.join(requis)} », en remplaçant chaque "
+        f"nom par sa valeur ({details})."
     )
 
 

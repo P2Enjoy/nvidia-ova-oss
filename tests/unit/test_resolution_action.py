@@ -195,6 +195,61 @@ class TestResolutionAction(unittest.TestCase):
         self.assertFalse(appel.valide)
         self.assertIn("1 valeur(s) attendue(s)", appel.erreur_arguments or "")
 
+    def test_refus_de_compte_se_clot_par_la_forme_attendue(self) -> None:
+        """§H15.8 : mesuré (suite 46), 82 appels à coordonnées sans valeur sur la
+        campagne U25 tranche 1 — le refus qui ne nomme que le compte laisse le
+        modèle deviner la forme."""
+        appel = self._resoudre("poser")
+        self.assertFalse(appel.valide)
+        erreur = appel.erreur_arguments or ""
+        self.assertIn("2 valeur(s) attendue(s)", erreur)
+        self.assertIn("Forme attendue : « poser objet, case »", erreur)
+        self.assertIn("objet : string", erreur)
+        self.assertIn("case : integer", erreur)
+
+    def test_refus_de_valeurs_en_trop_se_clot_sans_valeur(self) -> None:
+        """§H15.8 : mesuré (suite 46), 47 valeurs données à un outil qui n'en
+        prend pas."""
+        appel = self._resoudre("avance 3, 4")
+        self.assertFalse(appel.valide)
+        erreur = appel.erreur_arguments or ""
+        self.assertIn("0 valeur(s) attendue(s)", erreur)
+        self.assertIn("Forme attendue : « avance » seul, sans valeur.", erreur)
+
+    def test_refus_de_type_se_clot_par_la_forme_attendue(self) -> None:
+        appel = self._resoudre("poser cle_1, quatre")
+        self.assertFalse(appel.valide)
+        erreur = appel.erreur_arguments or ""
+        self.assertIn("« case » : integer attendu", erreur)
+        self.assertIn("Forme attendue : « poser objet, case »", erreur)
+
+    def test_nom_inconnu_liste_les_formes_disponibles(self) -> None:
+        """§H15.8 : mesuré (suite 46), 19 noms d'outils inventés — la liste des
+        seuls noms n'enseignait pas les valeurs requises."""
+        appel = self._resoudre("bouger 1, 2")
+        self.assertFalse(appel.valide)
+        erreur = appel.erreur_arguments or ""
+        self.assertIn("outil_inconnu", erreur)
+        self.assertIn("avance (aucune valeur)", erreur)
+        self.assertIn("poser (valeurs requises : objet, case)", erreur)
+        self.assertIn("dire (valeurs requises : texte)", erreur)
+
+    def test_actions_disponibles_annoncees_avec_valeurs_requises(self) -> None:
+        """§H15.8 : la ligne « Actions disponibles » du message composé annonce
+        les paramètres requis de chaque action, lus au registre."""
+        contenu = self.boucle._avec_observation("invite")  # noqa: SLF001 — l'unité testée
+        self.assertIn(
+            "Actions disponibles : poser (valeurs requises : objet, case), avance (aucune valeur)",
+            contenu,
+        )
+
+    def test_action_sans_schema_reste_nue_dans_l_annonce(self) -> None:
+        """Un nom que l'environnement déclare mais que le registre ne porte pas
+        reste nu : rien n'est inventé."""
+        self.boucle.environnement.actions_disponibles = lambda: ["poser", "mystere"]  # type: ignore[method-assign]
+        contenu = self.boucle._avec_observation("invite")  # noqa: SLF001 — l'unité testée
+        self.assertIn("poser (valeurs requises : objet, case), mystere", contenu)
+
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
