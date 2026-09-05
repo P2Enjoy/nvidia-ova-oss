@@ -3782,3 +3782,34 @@ famille et relève du modèle ; toute aide par famille serait du benchmaxing.
 **Où reprendre.** Dernière ligne de base v1.10 : banc c (`banc tau --env
 detail --seed 1..10 --horizon 20`, utilisateur `llm`, référence 8/10
 suite 40) — en cours dans cette session ; sinon reprendre là.
+
+## 2026-09-05 (suite 46, addendum 5) — v1.10 sur le banc c : 9/10 ; les quatre lignes de base v1.10 sont complètes
+
+**Jouer.** Série de référence §S17.3 complète (seeds 1–10, `detail`, h20,
+utilisateur `llm`, live) sous v1.10 : **pass = 9/10** (référence v1.9 :
+8/10, suite 40). Les deux échecs de la suite 40 (s5, s9) passent ; seul
+échec s10 (retour éligible clos sans transaction, 0 violation). Zéro
+incident, zéro invalide de schéma.
+
+**Bilan des lignes de base sous v1.10 (cette session).** Banc a dépôt :
+0,947 contre 0,827 (gain net) ; banc a entrepôt : 0,707, dans la bande de
+variance [0,653 ; 0,77] ; banc b : 8/10, identique (échecs `encodage`) ;
+banc c : 9/10 contre 8/10. Aucune régression nulle part ; sur ARC, actions
+valides ×2–4 par jeu (validations tn36/su15/tu93). L'amélioration §H15.8
+est validée sur TOUTES les surfaces.
+
+**Améliorer : rien de plus cette session** — les mesures fraîches ne
+désignent pas d'autre mécanisme absent.
+
+**Où reprendre (les deux options, au choix de la session suivante).**
+(1) Itération d'observabilité : la mesure de non-progrès n'est pas
+possible post-hoc (l'archive disque des frames ne porte pas les grilles),
+mais elle l'est EN RUN via la mémoire de frames §A4.3 (`diff` existe) —
+première étape PRUDENTE : une métrique par tour « observation inchangée »
+(§H11), sans toucher au comportement, pour quantifier avant d'intervenir
+(règle U31 : pas de mesure, pas d'amélioration). (2) Statuer sur une
+tranche 2 ARC sous v1.10 (déclencheur U25) : arguments = actions valides
+×2–4 par jeu et lignes de base au niveau ou au-dessus des références ;
+contre-argument = le plafond de temps de 1 200 s/jeu (obligatoire) liera
+encore, le gain de RHAE attendu reste incertain. Vérifier l'endpoint en
+ouverture.
