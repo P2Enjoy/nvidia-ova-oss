@@ -2,6 +2,19 @@
 
 ## [Non publié]
 
+### 2026-09-04/05 — U25 : campagne ARC officielle, tranche 1 entamée (jeux 1–2/25)
+
+- Deux jeux joués en live sous les plafonds du responsable (mode `state`,
+  gardes actives, une invocation `run-arc` par jeu) : `r11l-495a7899` (0/6
+  niveaux, 35 actions, RHAE 0,00) et `re86-8af5384d` (0/8 niveaux,
+  38 actions, RHAE 0,00), tous deux arrêtés proprement au plafond de temps
+  (1 200 s/jeu), scorecards fermés et réconciliés.
+- Rapports committés : `docs/rapports/u25-t1-r11l.md`,
+  `docs/rapports/u25-t1-re86.md` ; état de reprise (jeu 3/25 :
+  `tn36-ef4dde99`) consigné dans l'unité U25 du backlog.
+- Observation générique consignée au journal : le plafond de temps lie avant
+  les plafonds d'actions (~25 s d'inférence par tour ≈ 46 tours/jeu).
+
 ### 2026-09-03 — U29c2 : banc c joué par la boucle complète — adaptateur, CLI `banc tau`, utilisateur simulé par second LLM, série de référence pass 8/10
 
 - Adaptateur du banc τ (`src/avo/bancs/tau/adaptateur.py`) : huit outils de

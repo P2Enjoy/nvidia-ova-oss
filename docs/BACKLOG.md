@@ -548,11 +548,24 @@ comportement du modèle) au journal.
   « victoire » dans le rapport (défaut du registre du 2026-08-30, corrigé et
   prouvé : unitaires, intégration, E2E régénérés).
 
-## U25 — Campagne étendue et rapport final `[ ]` **[LIVE]**
+## U25 — Campagne étendue et rapport final `[~]` **[LIVE]**
 
 `@spec` A7. Périmètre arrêté par le responsable (2026-09-01, session interactive),
 exécution par tranches reprenables, rapport final comparatif aux références (A7.3)
 committé, CHANGELOG et README mis à jour.
+
+- **Tranche 1 EN COURS (2026-09-04/05, suite 43)** : exécution dans l'ordre du
+  listing `/api/games` (25 jeux ce jour), une invocation `run-arc` par jeu
+  (motif : machine éphémère, journal suite 43), plafonds du responsable, mode
+  `state`, gardes actives, fenêtre 229 376.
+  - Jeux joués : 1/25 `r11l-495a7899` (0/6 niveaux, 35 actions, RHAE 0,00,
+    arrêt au plafond de temps 1 200 s, scorecard `24987b17…` fermé, rapport
+    `docs/rapports/u25-t1-r11l.md`) ; 2/25 `re86-8af5384d` (0/8 niveaux,
+    38 actions, RHAE 0,00, arrêt au plafond de temps, scorecard `398f7087…`
+    fermé, rapport `docs/rapports/u25-t1-re86.md`).
+  - **Prochaine session : reprendre au jeu 3/25, `tn36-ef4dde99`**, puis la
+    suite du listing ; le rapport final comparatif (A7.3, agrégé) s'écrit une
+    fois les 25 jeux couverts.
 
 - **Périmètre arrêté (2026-09-01)** : tous les jeux que `/api/games` déclare ;
   plafonds par jeu : 80 actions/niveau, 300 actions/jeu, 1 200 s/jeu,

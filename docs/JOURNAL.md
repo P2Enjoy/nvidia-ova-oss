@@ -3468,3 +3468,33 @@ l'autorisation du responsable (2026-08-30). `run-id` : `u25-t1-<game_id>`.
 Un jeu refusé par le serveur (« listé non servi », §A1.4) reçoit son issue
 nommée et la session passe au suivant. Une seule exécution live à la fois
 (plafond de parallélisme, CLAUDE_PROJECT.md).
+
+**Exécution de la tranche (même session, terminée 2026-09-05T00:20Z).** Deux
+jeux joués, séquentiellement, une invocation par jeu, chaque rapport committé
+avant le jeu suivant :
+
+| jeu | niveaux | actions | RHAE | arrêt | tours | tokens prompt | générés | retries patch | interv. | scorecard |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `r11l-495a7899` (6 niv.) | 0 | 35 | 0,00 | temps (1 200 s) | 45 | 421 474 | 19 873 | 1 | 0 | `24987b17…` fermé |
+| `re86-8af5384d` (8 niv.) | 0 | 38 | 0,00 | temps (1 200 s) | 46 | 438 212 | 20 262 | 1 | 0 | `398f7087…` fermé |
+
+Rapports : `docs/rapports/u25-t1-r11l.md`, `docs/rapports/u25-t1-re86.md`.
+Aucun game over, aucun refus d'outil, aucune continuation, zéro `413` ; le
+mode `state` a tenu le prompt en O(1) (~9 100–9 300 tokens/tour).
+
+**Observer (générique, aucun indice de jeu).** (1) Le plafond de TEMPS lie
+avant tous les autres : ~25 s d'inférence par tour ≈ 46 tours par jeu, soit
+~35 actions — sous la baseline humaine du seul niveau 1 des deux jeux. Les
+plafonds d'actions (80/niveau, 300/jeu) et de tours (400) restent loin. Toute
+lecture des scores de cette campagne doit tenir compte de cette borne. (2) Σ
+montre une vraie inférence de règles (hypothèses sur la sémantique des
+cellules, position suivie) mais l'exploration n'a pas converti en niveau dans
+le budget. (3) Sur le premier jeu, 100 % des actions étaient du même type avec
+« prédiction confirmée » et zéro intervention du superviseur : si une mesure
+future désigne un manque, ce serait un détecteur GÉNÉRIQUE de non-progrès
+(état inchangé sur N tours) — à instruire par U31 sur mesures, pas ici.
+
+**Où reprendre.** U25 tranche 1, jeu 3/25 : `tn36-ef4dde99`, puis l'ordre du
+listing `/api/games` (l'état exact et la liste jouée sont dans l'unité U25 du
+backlog). Une invocation par jeu, rapport committé entre deux jeux. Vérifier
+en ouverture l'endpoint (`/api/version` en 200) et l'API ARC (`/api/games`).
