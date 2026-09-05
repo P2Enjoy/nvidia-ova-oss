@@ -3830,3 +3830,20 @@ détecteur de non-progrès s'instruira sur ces relevés, jamais avant.
 **Où reprendre.** Inchangé (addendum 5) : statuer sur une tranche 2 ARC sous
 v1.10 (déclencheur U25), ou jouer des séries et dépouiller la nouvelle
 métrique. Vérifier l'endpoint en ouverture.
+
+## 2026-09-05 (suite 46, addendum 7) — POINT TRANCHÉ : pas de tranche 2 ARC maintenant
+
+**Décision.** Le déclencheur U25 exige des « résultats intéressants » avant
+de REJOUER la campagne. Les trois validations v1.10 sur jeux officiels
+(tn36, su15, tu93) montrent 2–4× plus d'actions valides mais toujours
+0 niveau complété : une tranche 2 de 25 jeux confirmerait très
+probablement un RHAE ~0 au prix de ~8 h et de 25 scorecards. Issue écartée
+avec son motif ; issue retenue : la cible reste l'AFFINAGE (séries U29 et
+dépouillement de la métrique `observation_inchangee` sur les prochaines
+séries — c'est elle qui dira si un détecteur générique de non-progrès
+convertirait l'exploration en niveaux). La tranche 2 se rejouera quand une
+amélioration aura converti des niveaux en validation (déclencheur U25
+inchangé). Décision révisable par le responsable.
+
+**Où reprendre.** U31 : jouer une série (banc au choix ou un jeu ARC de
+validation), dépouiller `observation_inchangee`, améliorer sur mesures.
