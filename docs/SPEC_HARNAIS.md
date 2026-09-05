@@ -763,6 +763,34 @@ le module `avo.context.etat` restant inchangé et pur :
   résolu est exécuté par le registre comme n'importe quel outil d'action
   (§H8.1 : « c'est le registre qui l'exécute ») ; un nom inconnu ou des valeurs en
   nombre incorrect produisent l'erreur d'outil habituelle (§H7.4), jamais fatale.
+- **Les actions disponibles s'annoncent avec leurs valeurs requises, et un refus
+  de résolution se clôt par la forme attendue.** Motif, mesuré (journal
+  2026-09-05, suite 46 — dépouillement des 25 jeux de la campagne U25
+  tranche 1) : le mode `transcript` déclare les schémas d'outils à l'API native,
+  mais la ligne « Actions disponibles » du message composé n'exposait que les
+  NOMS — la forme d'appel ne s'apprenait qu'en la violant. Relevé : 161 actions
+  invalides pour 646 actions jouées (~20 % des appels LLM de décision, ~72
+  minutes d'inférence sous un plafond de temps qui liait sur 25 jeux sur 25) —
+  82 appels à un outil à coordonnées sans aucune valeur, 47 valeurs données à un
+  outil qui n'en prend pas, 19 noms d'outils inventés, 2 types invalides ; des
+  runs jusqu'à 25 refus pour 14 actions jouées. Principe de §H16.0.7 (« le
+  protocole annonce d'emblée ce que la structure imposera ») appliqué à la forme
+  d'appel, et principe de §H16.0.6 (« une redemande énonce la forme COMPLÈTE
+  attendue ») étendu à l'erreur de résolution. Deux conséquences, toutes deux
+  ENGENDRÉES des schémas déclarés au registre au moment du rendu, jamais d'une
+  liste codée (interdiction de benchmaxing) :
+  - la ligne « Actions disponibles » (commune aux deux modes) annonce, pour
+    chaque action que l'environnement déclare disponible, ses paramètres requis
+    dans l'ordre du schéma — « nom (aucune valeur) » ou « nom (valeurs
+    requises : p1, p2) » ; un nom sans schéma au registre reste nu ;
+  - l'erreur de résolution (§H7.4 : nom inconnu, compte de valeurs, type
+    invalide) se clôt par la forme complète attendue — pour un nom inconnu, la
+    liste des actions disponibles avec leurs valeurs requises ; pour un compte
+    ou un type, la forme de l'outil fautif avec ses paramètres requis et leurs
+    types déclarés. Les manques restent nommés en tête du message (primauté de
+    l'erreur, §H16.0.6). Les gabarits sont des constantes de `prompts.py`
+    (versionnées, §H16.0.5) ; les contenus — noms, paramètres, types — viennent
+    du schéma au moment du refus.
 - **Détection d'événement inchangée.** Niveau complété et partie perdue restent
   décidés par l'environnement, jamais par le texte (§H8.1, principe repris tel
   quel). La contradiction reste lue dans le texte du pas (même heuristique qu'en

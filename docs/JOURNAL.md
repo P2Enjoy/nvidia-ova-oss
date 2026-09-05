@@ -3624,3 +3624,39 @@ scores de la tranche 1 doit toujours rappeler la borne du plafond de temps.
 affinage du harnais sur les bancs U29 d'après les mesures collectées
 (tranche 1 comprise), déclencheur d'une éventuelle tranche 2 consigné dans
 U25. Vérifier en ouverture l'endpoint (`/api/version` en 200).
+
+## 2026-09-05 (suite 46, session planifiée — même machine que la suite 44) — U31 : dépouillement de la tranche 1 et amélioration désignée, spécifiée avant le code
+
+**Unité.** U31 (cycle permanent), désignée par la clôture de la suite 44 :
+observer les mesures de la campagne U25 tranche 1 (les `runs/` des 22 jeux de
+la suite 44 sont encore sur cette machine), améliorer le harnais sur ces
+mesures uniquement.
+
+**Observer (dépouillement des 22 `metrics.jsonl` + rapports des 3 autres).**
+(1) **161 actions invalides pour 646 actions jouées** (~20 % des appels LLM
+de décision ; jusqu'à 25 refus pour 14 actions sur un même jeu). Motifs :
+82 « 2 valeur(s) attendue(s) (row, col), 0 reçue(s) », 47 valeurs données à
+un outil qui n'en prend aucune, 19 noms d'outils inventés (`inspect`,
+`move`, `deplacer`, …), 2 types invalides. Sous le plafond de temps qui liait
+(25/25 jeux), ces 161 appels ≈ 72 minutes d'inférence perdues. (2) Gardes :
+297 verdicts `caduque` (traçage normal §H16.3), 61 redemandes d'évaluation,
+7 de prédiction — le ping-pong reste éteint. (3) 30 retries de patch sur
+914 appels, marginal. (4) La piste « détecteur de non-progrès » (suites
+43–44) n'est PAS instruite par ces artefacts : l'archive de frames ne
+conserve pas les grilles par tour (index seuls), aucune mesure d'immobilité
+de l'état n'est possible sur cette campagne — piste laissée ouverte, sans
+amélioration inventée (règle U31).
+
+**Cause du (1), lue dans le code.** En mode `state`, aucun schéma d'outil
+n'atteint le modèle : `tools=None` (§H15.8), et la ligne « Actions
+disponibles » de `_avec_observation` n'expose que les noms. Le modèle ne
+peut apprendre la forme d'appel qu'en la violant. Le refus, lui, nomme le
+compte manquant mais pas la forme attendue — le principe mesuré de
+§H16.0.6/§H16.0.7 ne couvrait pas la résolution d'action.
+
+**Améliorer (spécifié AVANT le code, ce commit).** §H15.8 complété : la
+ligne « Actions disponibles » annonce les paramètres requis de chaque action
+(engendrés du schéma au registre, jamais codés) ; l'erreur de résolution se
+clôt par la forme complète attendue (extension du principe §H16.0.6).
+Implémentation, preuves (unitaires, cassettes régénérées, campagne
+complète) : suite de cette session.
