@@ -560,7 +560,7 @@ committé, CHANGELOG et README mis à jour.
   listing `/api/games` n'est PAS stable d'un jour à l'autre (mesuré suite 44) :
   l'ensemble des jeux joués fait foi, la reprise suit l'ordre du jour consigné
   au journal (suite 44).
-  - Jeux joués (9/25, chacun : RHAE 0,00, arrêt au plafond de temps 1 200 s,
+  - Jeux joués (10/25, chacun : RHAE 0,00, arrêt au plafond de temps 1 200 s,
     scorecard fermé, rapport sous `docs/rapports/`) :
     `r11l-495a7899` (0/6 niv., 35 actions, `u25-t1-r11l.md`) ;
     `re86-8af5384d` (0/8 niv., 38 actions, `u25-t1-re86.md`) ;
@@ -570,10 +570,10 @@ committé, CHANGELOG et README mis à jour.
     `sp80-589a99af` (0/6 niv., 30 actions, `u25-t1-sp80.md`) ;
     `vc33-5430563c` (0/7 niv., 40 actions, `u25-t1-vc33.md`) ;
     `su15-1944f8ab` (0/9 niv., 11 actions, `u25-t1-su15.md`) ;
-    `ft09-0d8bbf25` (0/6 niv., 27 actions, `u25-t1-ft09.md`).
-  - **Prochaine session : reprendre au jeu 10/25, `ls20-9607627b`**, puis les
+    `ft09-0d8bbf25` (0/6 niv., 27 actions, `u25-t1-ft09.md`) ;
+    `ls20-9607627b` (0/7 niv., 47 actions, `u25-t1-ls20.md`).
+  - **Prochaine session : reprendre au jeu 11/25, `tu93-0768757b`**, puis les
     non-joués dans l'ordre du jour du journal (suite 44) :
-    `tu93-0768757b`,
     `wa30-ee6fef47`, `sc25-635fd71a`, `g50t-5849a774`, `m0r0-492f87ba`,
     `bp35-0a0ad940`, `lf52-271a04aa`, `dc22-fdcac232`, `s5i5-18d95033`,
     `ka59-38d34dbb`, `cd82-fb555c5d`, `cn04-2fe56bfb`, `ar25-0c556536`,
