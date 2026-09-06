@@ -1134,6 +1134,19 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-06 (suite 48, session planifiée)** — jouer et
+observer : validation live de l'empreinte §H11.2 (run `u31-obs2-tn36`,
+`tn36-ef4dde99`, mêmes plafonds que le run d'observation, scorecard
+`2a3d6edb…` fermé, réconciliation exacte, rapport
+`docs/rapports/u31-obs2-tn36.md`) — 0 `observation_inchangee` sur 26
+actions valides, et le zéro est désormais une mesure VRAIE : l'archive des
+frames montre 0 paire de grilles de décision consécutives identiques sur
+26. Le non-progrès de ce jeu n'est pas l'identité stricte d'observation ;
+l'égalité stricte reste à collecter mais ne suffira pas seule à un futur
+détecteur. Améliorer : rien — aucune mesure fraîche ne désigne de mécanisme
+(pas d'amélioration inventée) ; aucun code modifié, campagne complète non
+due (clause de preuves ci-dessus).
+
 **Itération du 2026-09-05 (suite 46, addenda)** — lignes de base v1.10
 complètes, aucune régression : banc a dépôt 0,947 (contre 0,827), entrepôt
 0,707 (bande de variance), banc b 8/10 (identique, échecs `encodage`),

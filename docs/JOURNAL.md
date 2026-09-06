@@ -3901,3 +3901,46 @@ actions/niveau, 300 actions/jeu, 1 200 s/jeu, 1 500 000 tokens/jeu,
 `u31-obs2-tn36` ; exécutions live séquentielles, jamais deux à la fois.
 Attendu : la métrique collecte enfin le non-progrès réel ; aucun effet de
 comportement n'est attendu sur le score (la mesure n'en a pas).
+
+## 2026-09-06 (suite 48, session planifiée) — U31 : validation live de l'empreinte §H11.2, le zéro est désormais une mesure vraie
+
+**Unité.** U31, reprise désignée par l'addendum de la suite 47 : exécuter la
+validation live `u31-obs2-tn36` au périmètre déjà écrit (même jeu, mêmes
+plafonds que `u31-obs-tn36`), dépouiller `observation_inchangee`.
+
+**Joué.** Run `u31-obs2-tn36` sur `tn36-ef4dde99` (live, mode `state`,
+gardes actives, plafonds §A7.1 obligatoires) : 0/7 niveaux, 26 actions
+valides (toutes `action6`, 26 `prediction_confirmee`), 4 invalides, RHAE
+0,00, arrêt au plafond de temps (1 200 s) ; 38 appels modèle, 351 849
+tokens de prompt, 24 197 générés. Scorecard
+`2a3d6edb-1e6b-47de-83d0-5b1ad361fe0c` fermé, réconciliation exacte
+(0 divergence). Rapport : `docs/rapports/u31-obs2-tn36.md`.
+
+**Dépouillé — la correction d'empreinte est validée live.**
+`observation_inchangee` : **0 événement sur 26 actions valides**, mais cette
+fois le zéro est une mesure VRAIE et non un mutisme structurel : l'archive
+des frames du run (`frames/tn36-ef4dde99/niveau_01.jsonl`, 27 entrées)
+montre **0 paire de grilles de décision consécutives identiques sur 26** —
+le contenu observable change réellement après chaque action valide. Le
+non-progrès de ce jeu n'est donc PAS l'identité stricte d'observation :
+l'observation bouge à chaque coup pendant que rien ne se convertit en
+niveau. Enseignement pour tout futur détecteur : l'égalité stricte est un
+signal nécessaire à collecter (elle attrapera les vrais sur-place) mais
+insuffisant seul pour caractériser ce non-progrès-là ; un détecteur devra
+s'instruire d'un signal supplémentaire mesuré (stagnation de score/niveau
+par action, déjà portée par `metrics.jsonl` : `action`,
+`actions_niveau`, `evenement`).
+
+**Améliorer : rien cette session.** Aucune mesure fraîche ne désigne un
+mécanisme générique absent ou défaillant (règle U31 : pas d'amélioration
+inventée). Point tranché : `make check` non lancé — aucun code modifié
+(seuls des documents et le rapport entrent au dépôt), et la clause de
+preuves de U31 lie la campagne complète à une modification du harnais ;
+motif §2.3 du contrat worker (mesurer un dépôt non modifié consomme la
+session sans l'instruire).
+
+**Où reprendre.** U31, itération suivante : jouer une série qui accumule des
+relevés `observation_inchangee` sur une autre surface (banc au choix ou jeu
+ARC de validation — une seule exécution live par session), et n'instruire un
+détecteur de non-progrès que sur relevés accumulés. Vérifier l'endpoint en
+ouverture.
