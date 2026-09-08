@@ -3978,3 +3978,49 @@ exécution live dans cette session (plafond de parallélisme global : 3).
 Attendu : accumulation de relevés `observation_inchangee` sur une seconde
 surface de non-progrès, pour instruire — ou écarter — l'égalité stricte
 comme signal d'un futur détecteur générique.
+
+## 2026-09-08 (suite 49, addendum) — dépouillement `u31-obs3-tu93` : second zéro vrai, et le détecteur de stagnation ne peut jamais se déclencher en campagne
+
+**Joué.** Run `u31-obs3-tu93` sur `tu93-0768757b` (live, mode `state`,
+gardes actives, plafonds §A7.1 obligatoires) : 0/9 niveaux, 41 actions
+valides (toutes `action1`, 41 `prediction_confirmee`), 21 refus de garde
+(20 `evaluation`, 1 `prediction`), RHAE 0,00, arrêt au plafond de temps
+(1 200 s) ; 46 appels modèle, 420 772 tokens de prompt, 20 405 générés.
+Scorecard `cc8af56e-8c34-4c88-bb66-4d798be03854` fermé, réconciliation
+exacte (0 divergence). Rapport : `docs/rapports/u31-obs3-tu93.md`.
+
+**Dépouillé — second relevé concordant sur une seconde surface.**
+`observation_inchangee` : **0 événement sur 41 actions valides**, et le
+zéro est vrai : l'archive des frames (`frames/tu93-0768757b/niveau_01.jsonl`,
+42 entrées) montre **0 paire de `frame_de_decision` consécutives
+identiques sur 41**. Avec tn36 (26 actions, 0 événement, 0 paire
+identique), deux surfaces distinctes de non-progrès concordent :
+l'observation change à CHAQUE action valide pendant que score et niveau
+stagnent tout le budget. L'égalité stricte d'observation ne détectera pas
+ce non-progrès ; le signal mesuré qui le porte est la stagnation de
+score/niveau par action.
+
+**Fait nouveau, mesuré sur les trois runs d'observation accumulés
+(tn36 ×2, tu93 ×1) : le superviseur anti-stagnation (§H10.2) n'est JAMAIS
+intervenu (`interventions: 0` partout), et ne PEUT pas intervenir en
+campagne.** Son seuil par défaut est de 60 actions sans progrès, or sous le
+plafond de temps §A7.1 (1 200 s/jeu) les runs plafonnent à 26–41 actions
+valides (~30 s d'inférence par action) : le seuil est inatteignable. Un
+run qui dépense tout son budget au niveau 1 sans aucun progrès est
+exactement le cas pour lequel ce mécanisme existe (§H10.1, papier AVO
+§3.3), et il reste silencieux dans 100 % des runs observés.
+
+**POINT TRANCHÉ — amélioration générique désignée par ces mesures : le
+défaut de `AVO_SUP_STALL_ACTIONS` passe de 60 à 20.** Motifs : 20 est
+atteignable dans chaque run observé (minimum relevé : 26 actions valides)
+en laissant du budget pour exploiter la redirection ; il reste au-dessus
+de la fenêtre du détecteur de cycle (12 actions), donc n'interfère pas
+avec l'exploration initiale ; la valeur reste configurable par
+l'environnement et la révision est réversible. Issues écartées : un seuil
+relatif au budget restant (plus complexe, rien ne prouve qu'il fasse
+mieux qu'une constante atteignable — réversibilité et simplicité
+d'abord) ; instruire un détecteur nouveau sur l'égalité stricte (les deux
+relevés accumulés prouvent qu'elle ne porte pas ce non-progrès). Aucun
+indice de jeu : la correction porte la relation seuil/budget, valable
+pour tout environnement. Spec révisée avant le code (§H10.2 et table des
+variables), preuves : unitaire du défaut documenté + campagne complète.
