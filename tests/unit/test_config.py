@@ -4,6 +4,7 @@
 @verifies docs/SPEC_HARNAIS.md §H3.1 (env puis .env), §H3.2 (budget utile),
           §H3.3 (validation nommée), §H3.4 (modes), §H4.6 (aucun secret journalisé)
 @verifies docs/BACKLOG.md U27 — `AVO_CONTEXT_MODE` (§H15.7)
+@verifies docs/BACKLOG.md U31 — défaut du seuil de stagnation atteignable (§H10.2)
 """
 
 from __future__ import annotations
@@ -84,6 +85,11 @@ class TestModeRejeu(unittest.TestCase):
         self.assertEqual(config.timeout_s, 900)
         self.assertEqual(config.ratio_continuation, 0.85)
         self.assertEqual(config.runs_dir, Path("runs"))
+        # §H10.2 : le seuil de stagnation par défaut doit rester atteignable sous
+        # les budgets réels d'un run (26–41 actions valides mesurées en 1 200 s,
+        # journal 2026-09-08 suite 49) ; 60 rendait le superviseur muet.
+        self.assertEqual(config.sup_stall_actions, 20)
+        self.assertEqual(config.sup_cooldown, 30)
         # En rejeu, la base ARC pointe la pile locale : le mode ne doit atteindre
         # aucun service qui publierait un scorecard (§H3.4, §A2.3).
         self.assertEqual(config.arc_base_url, ARC_REJEU)

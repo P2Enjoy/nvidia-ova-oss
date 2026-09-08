@@ -336,7 +336,7 @@ def charger(
         tool_steps_max=source.entier("AVO_TOOL_STEPS_MAX", 40),
         actions_max_niveau=source.entier("AVO_ACTIONS_MAX_NIVEAU", 1000),
         actions_max_jeu=source.entier("AVO_ACTIONS_MAX_JEU", 5000),
-        sup_stall_actions=source.entier("AVO_SUP_STALL_ACTIONS", 60),
+        sup_stall_actions=source.entier("AVO_SUP_STALL_ACTIONS", 20),
         sup_cooldown=source.entier("AVO_SUP_COOLDOWN", 30),
         runs_dir=runs_dir,
         arc_api_key=arc,
