@@ -146,7 +146,7 @@ TLS.
 | `AVO_TOOL_STEPS_MAX` | garde du nombre d'appels d'outils par tour (H7.2) | `40` |
 | `AVO_ACTIONS_MAX_NIVEAU` | borne d'actions d'environnement par niveau (H8.3) | `1000` |
 | `AVO_ACTIONS_MAX_JEU` | borne d'actions d'environnement par jeu (H8.3) | `5000` |
-| `AVO_SUP_STALL_ACTIONS` | actions sans progrès avant intervention du superviseur (H10.2) | `60` |
+| `AVO_SUP_STALL_ACTIONS` | actions sans progrès avant intervention du superviseur (H10.2) | `20` |
 | `AVO_SUP_COOLDOWN` | actions minimales entre deux interventions (H10.3) | `30` |
 | `AVO_RUNS_DIR` | racine des artefacts | `runs/` |
 | `AVO_CONTEXT_MODE` | mode de contexte, `transcript` ou `state` (§H15.7) | `state` |
@@ -502,10 +502,19 @@ puis intervention conditionnelle qui redirige l'agent principal. Le superviseur 
 joue jamais d'action (séparation à la Tycho : seul l'acteur agit).
 
 **H10.2 — Déclencheurs (code, mesurables, configurables).**
-`AVO_SUP_STALL_ACTIONS` (défaut 60) actions sans complétion de niveau **et** sans
+`AVO_SUP_STALL_ACTIONS` (défaut 20) actions sans complétion de niveau **et** sans
 nouvelle entrée de lignée ; ou motif d'actions répétées (fenêtre de 12 actions dont
 ≥ 8 identiques sans changement de frame) ; ou volume de `Bug-Fixing` anormal
-(> 5 entrées consécutives).
+(> 5 entrées consécutives). Le défaut du seuil de stagnation est dimensionné pour
+rester ATTEIGNABLE sous les budgets réels d'un run : mesuré en campagne live
+(journal 2026-09-08, suite 49), un plafond de temps de 1 200 s/jeu limite un run
+à 26–41 actions valides, et un seuil de 60 rendait le détecteur structurellement
+muet (`interventions: 0` sur 100 % des runs observés, y compris un budget entier
+dépensé sans aucun progrès) ; 20 garantit au moins une intervention dans chaque
+run observé en laissant du budget pour exploiter la redirection, et reste
+au-dessus de la fenêtre du détecteur de cycle (12) pour ne pas interférer avec
+l'exploration initiale. Générique : la règle porte la relation seuil/budget,
+jamais un environnement particulier.
 
 **H10.3 — Intervention.** Appel LLM séparé (contexte propre : résumé de trajectoire,
 notes, dernières frames rendues en texte) qui produit un diagnostic et 2–3 directions
