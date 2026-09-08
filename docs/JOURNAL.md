@@ -3944,3 +3944,37 @@ relevés `observation_inchangee` sur une autre surface (banc au choix ou jeu
 ARC de validation — une seule exécution live par session), et n'instruire un
 détecteur de non-progrès que sur relevés accumulés. Vérifier l'endpoint en
 ouverture.
+
+## 2026-09-08 (suite 49, session planifiée) — U31 : périmètre de la série d'observation `observation_inchangee` sur une seconde surface
+
+**Unité.** U31, reprise désignée par la suite 48 : jouer une série qui
+accumule des relevés `observation_inchangee` sur une autre surface que
+`tn36`, dépouiller, n'améliorer que sur mesures.
+
+**Environnement (mesuré en ouverture, 05:4xZ).** Pile compose saine
+(`arc-replay`, `llm-replay` healthy), `make seed` complet, endpoint
+d'inférence en 200 (`/v1/models` via le pont 443 : `qwen3.6:35b` présent).
+
+**POINT TRANCHÉ — la surface est le jeu ARC de validation
+`tu93-0768757b`.** Motifs : c'est une surface distincte de `tn36` (déjà
+relevée deux fois, 0 événement sur 26 actions valides, zéro corroboré par
+les frames) ; le non-progrès y est documenté (0/9 niveaux, 40 actions
+valides sous v1.10, rapport `u31-v110-tu93.md`) ; et c'est le cas validé
+v1.10 au plus grand nombre d'actions valides, donc le plus de relevés
+`observation_inchangee` par unité de budget. Issues écartées : une série
+banc (mesure creuse, les bancs scorent au niveau ou au-dessus des
+références — motif suite 47 inchangé) ; rejouer `tn36` une troisième fois
+(aucune information nouvelle attendue sur la même surface). Ce rejeu d'UN
+jeu de validation ne constitue pas une tranche 2 (décision suite 46,
+addendum 7, inchangée).
+
+**Périmètre (écrit AVANT lancement, §A7.2).** Un seul jeu :
+`tu93-0768757b` ; plafonds par jeu (§A7.1, tous obligatoires) : 80
+actions/niveau, 300 actions/jeu, 1 200 s/jeu, 1 500 000 tokens/jeu,
+400 tours ; mode `state`, gardes H16 actives, `qwen3.6:35b`, fenêtre
+229 376 ; `--j-autorise-la-publication` au titre de l'autorisation du
+responsable (2026-08-30) ; `run-id` : `u31-obs3-tu93` ; une seule
+exécution live dans cette session (plafond de parallélisme global : 3).
+Attendu : accumulation de relevés `observation_inchangee` sur une seconde
+surface de non-progrès, pour instruire — ou écarter — l'égalité stricte
+comme signal d'un futur détecteur générique.
