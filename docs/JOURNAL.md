@@ -4024,3 +4024,22 @@ relevés accumulés prouvent qu'elle ne porte pas ce non-progrès). Aucun
 indice de jeu : la correction porte la relation seuil/budget, valable
 pour tout environnement. Spec révisée avant le code (§H10.2 et table des
 variables), preuves : unitaire du défaut documenté + campagne complète.
+
+## 2026-09-08 (suite 49, clôture) — seuil de stagnation livré et prouvé, campagne complète verte
+
+**Livré.** §H10.2 révisé (spec et README avant le code), défaut
+`AVO_SUP_STALL_ACTIONS` 60 → 20 (`src/avo/config.py`), unitaire du défaut
+documenté (`tests/unit/test_config.py`, motif dans le test). Balayage
+« zéro indice de jeu » : le diff ne porte que la constante générique de
+seuil.
+
+**Prouvé.** Preuves ciblées : 817 unitaires verts (2 086 sous-tests).
+Campagne complète (`make check`) : lint, typecheck, 817 unitaires,
+155 intégration, 10 E2E — tout vert, aucune boucle de correction.
+
+**Où reprendre.** U31, itération suivante : jouer une série live (une
+seule exécution par session) et OBSERVER le comportement du superviseur
+désormais atteignable — nombre d'interventions, contenu des diagnostics
+`[SUPERVISEUR]`, et si une redirection convertit de l'exploration en
+progrès (score/niveau) ; continuer d'accumuler `observation_inchangee` au
+passage. Vérifier l'endpoint en ouverture.

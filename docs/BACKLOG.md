@@ -1134,6 +1134,18 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-08 (suite 49, session planifiée)** — jouer et
+observer : série d'observation sur une seconde surface (run
+`u31-obs3-tu93`, `tu93-0768757b`, mêmes plafonds, scorecard `cc8af56e…`
+fermé, réconciliation exacte, rapport `docs/rapports/u31-obs3-tu93.md`) —
+0 `observation_inchangee` sur 41 actions valides, zéro corroboré par les
+frames (0 paire de `frame_de_decision` consécutives identiques sur 41) :
+deux surfaces concordent, l'égalité stricte ne porte pas ce non-progrès.
+Améliorer, désigné par les trois runs d'observation accumulés
+(`interventions: 0` partout, seuil 60 inatteignable sous 1 200 s/jeu) :
+défaut `AVO_SUP_STALL_ACTIONS` 60 → 20 (§H10.2 révisé avant le code,
+unitaire du défaut, campagne complète verte : 817/155/10).
+
 **Itération du 2026-09-06 (suite 48, session planifiée)** — jouer et
 observer : validation live de l'empreinte §H11.2 (run `u31-obs2-tn36`,
 `tn36-ef4dde99`, mêmes plafonds que le run d'observation, scorecard
