@@ -4083,3 +4083,60 @@ Attendu : ≥ 1 intervention du superviseur journalisée dans
 `metrics.jsonl`, son diagnostic dans le transcript, et la mesure de son
 effet — actions, exploration, progrès éventuel — contre le run de
 référence `u31-obs3-tu93` à budget constant.
+
+## 2026-09-09 (suite 50, addendum) — dépouillement `u31-sup1-tu93` : le superviseur intervient au seuil, sa redirection est exploitée, pas de conversion en progrès
+
+**Joué.** Run `u31-sup1-tu93` sur `tu93-0768757b` (live, mode `state`,
+gardes actives, plafonds §A7.1 obligatoires) : 0/9 niveaux, 36 actions
+valides, RHAE 0,00, arrêt au plafond de temps (1 200 s) ; 40 appels modèle,
+363 728 tokens de prompt, 22 215 générés, 3 redemandes de garde. Scorecard
+`1e13bc47-0172-43ea-9738-edb588c4020c` fermé, réconciliation exacte
+(0 divergence). Rapport : `docs/rapports/u31-sup1-tu93.md`.
+
+**Dépouillé — le mécanisme fonctionne de bout en bout, première
+observation positive.**
+
+- Intervention EXACTEMENT au seuil : action 20, motif « stagnation : 20
+  actions sans progrès (seuil 20) » — le correctif de la suite 49 fait ce
+  qu'il promettait (référence `u31-obs3-tu93`, même jeu et mêmes
+  plafonds : `interventions: 0` sous seuil 60).
+- Diagnostic `[SUPERVISEUR]` pertinent et générique : il constate la
+  boucle `action1/2/3`, relève qu'`ACTION4` n'a jamais été essayée, et
+  propose trois directions concrètes.
+- Redirection EXPLOITÉE : l'acteur joue `action4` aux actions 23 et 26 —
+  les premières `action4` de toute la série d'observation (obs2 + obs3 :
+  67 actions valides, zéro `action4`).
+- Pas de conversion en progrès : score et niveau inchangés ; après ~6
+  actions d'exploitation, ré-stagnation (`action1` ×8, actions 27–34)
+  jusqu'au plafond de temps.
+- `observation_inchangee` : 0 événement sur 36 actions valides, corroboré
+  par les frames (0 paire de `frame_de_decision` consécutives identiques
+  sur 35) — troisième surface concordante, conclusion des suites 48–49
+  inchangée.
+
+**Fait mesuré, question ouverte : une SECONDE intervention est
+structurellement inatteignable sous les budgets réels.** Le compteur de
+stagnation ne se remet à zéro que sur progrès (niveau complété ou entrée
+de lignée) : le motif est resté continûment vrai des actions 20 à 36, et
+seul le cooldown (`AVO_SUP_COOLDOWN=30`, prochaine fenêtre à l'action 50)
+a tu le superviseur — alors que les runs observés plafonnent à 26–41
+actions valides sous 1 200 s/jeu.
+
+**POINT TRANCHÉ — pas de correction du cooldown cette session.** Motifs :
+n = 1 sur la ré-stagnation post-intervention (une seule intervention
+observée depuis que le seuil est atteignable) ; le choix d'une valeur
+(12, 16, 20) est sous-déterminé par cette seule mesure, contrairement au
+cas de la suite 49 (mécanisme structurellement mort dans 100 % des runs
+observés) ; et le bénéfice d'une ré-intervention n'est pas établi (la
+première n'a pas converti). Règle U31 : pas d'amélioration inventée. La
+mesure s'accumule : si une seconde série supervisée reproduit la
+ré-stagnation sans ré-intervention possible, la relation cooldown/budget
+se corrigera sur mesures accumulées (même patron que
+`observation_inchangee` : trois relevés avant décision).
+
+**Où reprendre.** U31, itération suivante : jouer UNE série supervisée sur
+l'autre surface de non-progrès connue (`tn36-ef4dde99`, mêmes plafonds que
+`u31-obs2-tn36`) pour observer le superviseur sur une seconde surface —
+intervention attendue vers l'action 20, contenu du diagnostic, exploitation
+de la redirection, ré-stagnation éventuelle — puis statuer sur la relation
+cooldown/budget sur mesures accumulées. Vérifier l'endpoint en ouverture.

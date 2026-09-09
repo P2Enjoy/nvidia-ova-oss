@@ -1134,6 +1134,21 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-09 (suite 50, session planifiée)** — jouer et
+observer : première série avec superviseur atteignable (run
+`u31-sup1-tu93`, `tu93-0768757b`, plafonds identiques à `u31-obs3-tu93`,
+scorecard `1e13bc47…` fermé, réconciliation exacte, rapport
+`docs/rapports/u31-sup1-tu93.md`) — intervention EXACTEMENT au seuil
+(action 20, motif « stagnation : 20 actions sans progrès »), diagnostic
+`[SUPERVISEUR]` pertinent, redirection exploitée (`action4` jouée 2 fois,
+premières de toute la série d'observation), sans conversion en progrès
+(0/9 niveaux, 36 actions valides) ; `observation_inchangee` 0/36,
+corroboré par les frames — troisième surface concordante. Améliorer :
+rien — point tranché, la ré-stagnation post-intervention sans
+ré-intervention possible (cooldown 30 → fenêtre à l'action 50, runs
+observés 26–41 actions) est consignée et s'accumule avant toute
+correction (n = 1, pas d'amélioration inventée).
+
 **Itération du 2026-09-08 (suite 49, session planifiée)** — jouer et
 observer : série d'observation sur une seconde surface (run
 `u31-obs3-tu93`, `tu93-0768757b`, mêmes plafonds, scorecard `cc8af56e…`
