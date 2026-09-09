@@ -4043,3 +4043,43 @@ désormais atteignable — nombre d'interventions, contenu des diagnostics
 `[SUPERVISEUR]`, et si une redirection convertit de l'exploration en
 progrès (score/niveau) ; continuer d'accumuler `observation_inchangee` au
 passage. Vérifier l'endpoint en ouverture.
+
+## 2026-09-09 (suite 50, session planifiée) — U31 : première observation du superviseur atteignable (seuil 20)
+
+**Unité.** U31, reprise désignée par la suite 49 : jouer une série live et
+OBSERVER le comportement du superviseur anti-stagnation désormais
+atteignable (défaut `AVO_SUP_STALL_ACTIONS=20`, livré et prouvé suite 49) —
+nombre d'interventions, contenu des diagnostics `[SUPERVISEUR]`, et si une
+redirection convertit de l'exploration en progrès ; accumuler
+`observation_inchangee` au passage.
+
+**Environnement (mesuré en ouverture, 05:4xZ).** Pile compose saine
+(`arc-replay`, `llm-replay` healthy), `make seed` complet, endpoint
+d'inférence en 200 (`/v1/models` via le pont 443 : `qwen3.6:35b` présent).
+
+**POINT TRANCHÉ — la surface est le jeu ARC de validation `tu93-0768757b`,
+aux plafonds EXACTS de `u31-obs3-tu93`.** Motif : c'est la comparaison la
+plus instruite possible — même jeu, mêmes plafonds, même modèle ; le seul
+écart entre les deux runs est le seuil de stagnation (60 → 20), donc toute
+différence de comportement observée mesure l'effet du superviseur, et rien
+d'autre. Le run de référence a produit 41 actions valides sans aucun
+progrès : le seuil 20 y garantit au moins une intervention (~action 20),
+avec du budget restant pour observer l'exploitation de la redirection.
+Issues écartées : une autre surface de validation (comparaison à baseline
+non constante — on ne saurait pas attribuer l'écart au superviseur) ; une
+série banc (les bancs scorent au niveau des références, le superviseur n'y
+a pas de stagnation à détecter — motif suite 47 inchangé). Ce rejeu d'UN
+jeu de validation ne constitue pas une tranche 2 (décision suite 46,
+addendum 7, inchangée).
+
+**Périmètre (écrit AVANT lancement, §A7.2).** Un seul jeu :
+`tu93-0768757b` ; plafonds par jeu (§A7.1, tous obligatoires) : 80
+actions/niveau, 300 actions/jeu, 1 200 s/jeu, 1 500 000 tokens/jeu,
+400 tours ; mode `state` (défaut), gardes H16 actives, `qwen3.6:35b`,
+fenêtre 229 376 ; `--j-autorise-la-publication` au titre de l'autorisation
+du responsable (2026-08-30) ; `run-id` : `u31-sup1-tu93` ; une seule
+exécution live dans cette session (plafond de parallélisme global : 3).
+Attendu : ≥ 1 intervention du superviseur journalisée dans
+`metrics.jsonl`, son diagnostic dans le transcript, et la mesure de son
+effet — actions, exploration, progrès éventuel — contre le run de
+référence `u31-obs3-tu93` à budget constant.
