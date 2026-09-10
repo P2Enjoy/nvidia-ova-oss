@@ -1149,7 +1149,7 @@ mesures accumulées (2 runs supervisés sur 2 : motif continûment vrai
 post-intervention, superviseur tu par le seul cooldown, fenêtre
 seuil + 30 = 50 jamais atteinte sur des runs de 26–41 actions) : défaut
 `AVO_SUP_COOLDOWN` 30 → 12 (§H10.3 révisé avant le code, unitaire du
-défaut, campagne complète — voir preuves de session).
+défaut, campagne complète verte : 817/155/10).
 
 **Itération du 2026-09-09 (suite 50, session planifiée)** — jouer et
 observer : première série avec superviseur atteignable (run

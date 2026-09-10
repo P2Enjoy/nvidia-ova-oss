@@ -4228,3 +4228,11 @@ plafonds) et OBSERVER la seconde intervention désormais atteignable
 diagnostic, exploitation, conversion éventuelle ; au passage, second
 relevé sur la qualité des directions du superviseur (direction nommant
 des actions inexistantes, n = 1). Vérifier l'endpoint en ouverture.
+
+## 2026-09-10 (suite 51, clôture) — campagne complète verte
+
+**Prouvé.** Campagne complète (`make check`) après le correctif du
+cooldown : lint, typecheck (137 fichiers), 817 unitaires (2 086
+sous-tests), 155 intégration, 10 E2E — tout vert, aucune boucle de
+correction. Le point de reprise reste celui de l'addendum : une série
+supervisée sous cooldown 12 pour observer la seconde intervention.
