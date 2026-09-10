@@ -2,6 +2,23 @@
 
 ## [Non publié]
 
+### 2026-09-08/10 — U31 : le superviseur anti-stagnation devient atteignable sous les budgets réels (seuil 20, cooldown 12)
+
+- Mesure (séries d'observation et supervisées, suites 48–51) : sous le plafond
+  de 1 200 s/jeu, un run plafonne à 26–41 actions valides ; le seuil de
+  stagnation à 60 rendait le superviseur structurellement muet
+  (`interventions: 0` sur 100 % des runs), puis le cooldown à 30 plaçait toute
+  seconde fenêtre d'intervention à l'action 50, jamais atteinte, alors que le
+  motif de stagnation restait continûment vrai dans les deux runs supervisés.
+- §H10.2 : défaut `AVO_SUP_STALL_ACTIONS` 60 → 20 ; §H10.3 : défaut
+  `AVO_SUP_COOLDOWN` 30 → 12 (fenêtre du détecteur de cycle, plancher déjà
+  retenu). Les deux règles portent la relation seuil/budget, générique pour
+  tout environnement.
+- Preuves : unitaires des défauts documentés, campagnes complètes vertes ;
+  validation live : interventions exactement au seuil (action 20) sur deux
+  surfaces, redirections exploitées par l'acteur
+  (`docs/rapports/u31-sup1-tu93.md`, `docs/rapports/u31-sup2-tn36.md`).
+
 ### 2026-09-05 — U31 : le mode `state` annonce la forme d'appel des actions (prompts v1.10)
 
 - Mesure (dépouillement des 25 jeux de la tranche 1) : 161 actions invalides

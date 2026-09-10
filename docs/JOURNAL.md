@@ -4169,3 +4169,62 @@ global : 3). Attendu : ≥ 1 intervention du superviseur (référence
 effet contre `u31-obs2-tn36` à budget constant, et la mesure d'une
 éventuelle ré-stagnation post-intervention pour statuer sur le cooldown
 (patron « trois relevés avant décision », suite 50).
+
+## 2026-09-10 (suite 51, addendum) — dépouillement `u31-sup2-tn36` : seconde intervention au seuil, redirection exploitée, ré-intervention toujours inatteignable — cooldown corrigé (30 → 12)
+
+**Joué.** Run `u31-sup2-tn36` sur `tn36-ef4dde99` (live, mode `state`,
+gardes actives, plafonds §A7.1 obligatoires, identiques à
+`u31-obs2-tn36`) : 0/7 niveaux, 28 actions valides, RHAE 0,00, arrêt au
+plafond de temps (1 200 s) ; 38 appels modèle, 347 703 tokens de prompt,
+23 016 générés, 5 actions invalides, 1 retry de patch. Scorecard
+`06d3b740-10a5-4945-afc5-d89aad3ae0a4` fermé, réconciliation exacte
+(0 divergence). Rapport : `docs/rapports/u31-sup2-tn36.md`.
+
+**Dépouillé — le superviseur se confirme sur une seconde surface.**
+
+- Intervention EXACTEMENT au seuil : action 20, motif « stagnation : 20
+  actions sans progrès (seuil 20) » — seconde surface, même comportement
+  que `u31-sup1-tu93` (référence `u31-obs2-tn36`, même jeu et mêmes
+  plafonds : `interventions: 0` sous seuil 60).
+- Diagnostic `[SUPERVISEUR]` pertinent : il constate la boucle de clics
+  sur le bord supérieur (ligne 1, la coordonnée [1,2] jouée 8 fois sur
+  les actions 4–13) et propose trois directions vers les zones centrales
+  et basses. RÉSERVE consignée : sa direction 1 nomme des actions
+  inexistantes (« DOWN », « MOVE_DOWN ») — ce jeu n'expose qu'`action6`
+  (clic row/col) et `reset` ; les directions 2 et 3 ciblent des zones
+  concrètes et sont, elles, actionnables (n = 1, s'accumule avant toute
+  correction du contexte du superviseur).
+- Redirection EXPLOITÉE : les 8 actions post-intervention (21–28) visent
+  toutes les zones désignées ([9,19], [34,29], [34,18], [19,9], [15,20],
+  [14,9]×2, [14,8]) ; aucun retour à la boucle du bord supérieur.
+- Pas de conversion en progrès : score et niveau inchangés, 0/7.
+- `observation_inchangee` : 0 événement sur 28 actions valides, corroboré
+  par les frames (0 paire de `frame_de_decision` consécutives identiques
+  sur 27) — QUATRIÈME surface concordante, conclusion inchangée.
+
+**AMÉLIORATION LIVRÉE — `AVO_SUP_COOLDOWN` 30 → 12 (§H10.3), désignée par
+les mesures accumulées.** La suite 50 conditionnait la correction à une
+seconde série reproduisant la ré-stagnation sans ré-intervention
+possible : c'est fait. Dans les DEUX runs supervisés (n = 2, 100 %), le
+motif de stagnation est resté continûment vrai après l'intervention et
+seul le cooldown a tu le superviseur (fenêtre à l'action seuil + 30 = 50,
+jamais atteinte : les runs observés plafonnent à 26–41 actions valides
+sous 1 200 s/jeu). La borne de fréquence était une interdiction ; sans
+seconde fenêtre atteignable, le bénéfice d'une ré-intervention reste par
+construction immesurable. Valeur 12 : la fenêtre du détecteur de cycle,
+plancher déjà retenu par §H10.2 — seconde fenêtre à l'action 32, dans la
+plage des runs observés, sans intervention plus rapprochée que la fenêtre
+de détection ; aucune constante nouvelle, aucun indice de jeu (balayage
+§A5 : le diff ne porte que la constante générique). Spec et README révisés
+avant le code ; unitaire du défaut documenté (`tests/unit/test_config.py`).
+Écarté : attendre un troisième relevé (le fait corrigé est arithmétique et
+vaut pour 100 % des runs observés, comme le seuil de la suite 49) ; une
+valeur < 12 (interférerait avec la fenêtre de détection de cycle).
+
+**Où reprendre.** U31, itération suivante : jouer UNE série supervisée
+sous cooldown 12 (surface au choix parmi les deux connues, mêmes
+plafonds) et OBSERVER la seconde intervention désormais atteignable
+(attendue vers l'action 32 si la stagnation persiste) : contenu du second
+diagnostic, exploitation, conversion éventuelle ; au passage, second
+relevé sur la qualité des directions du superviseur (direction nommant
+des actions inexistantes, n = 1). Vérifier l'endpoint en ouverture.

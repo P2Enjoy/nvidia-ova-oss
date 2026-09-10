@@ -1134,6 +1134,23 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-10 (suite 51, session planifiée)** — jouer et
+observer : seconde série avec superviseur (run `u31-sup2-tn36`,
+`tn36-ef4dde99`, plafonds identiques à `u31-obs2-tn36`, scorecard
+`06d3b740…` fermé, réconciliation exacte, rapport
+`docs/rapports/u31-sup2-tn36.md`) — intervention EXACTEMENT au seuil
+(action 20), diagnostic pertinent (boucle de clics bord supérieur
+constatée ; réserve : sa direction 1 nomme des actions inexistantes,
+n = 1 consigné), redirection exploitée (les 8 actions post-intervention
+visent les zones désignées, aucun retour à la boucle), sans conversion
+(0/7, 28 actions valides) ; `observation_inchangee` 0/28, corroboré par
+les frames — quatrième surface concordante. Améliorer, désigné par les
+mesures accumulées (2 runs supervisés sur 2 : motif continûment vrai
+post-intervention, superviseur tu par le seul cooldown, fenêtre
+seuil + 30 = 50 jamais atteinte sur des runs de 26–41 actions) : défaut
+`AVO_SUP_COOLDOWN` 30 → 12 (§H10.3 révisé avant le code, unitaire du
+défaut, campagne complète — voir preuves de session).
+
 **Itération du 2026-09-09 (suite 50, session planifiée)** — jouer et
 observer : première série avec superviseur atteignable (run
 `u31-sup1-tu93`, `tu93-0768757b`, plafonds identiques à `u31-obs3-tu93`,
