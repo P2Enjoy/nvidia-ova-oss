@@ -337,7 +337,7 @@ def charger(
         actions_max_niveau=source.entier("AVO_ACTIONS_MAX_NIVEAU", 1000),
         actions_max_jeu=source.entier("AVO_ACTIONS_MAX_JEU", 5000),
         sup_stall_actions=source.entier("AVO_SUP_STALL_ACTIONS", 20),
-        sup_cooldown=source.entier("AVO_SUP_COOLDOWN", 30),
+        sup_cooldown=source.entier("AVO_SUP_COOLDOWN", 12),
         runs_dir=runs_dir,
         arc_api_key=arc,
         # En mode rejeu, la base ARC pointe la pile locale : le mode ne requiert

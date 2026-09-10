@@ -89,7 +89,13 @@ class TestModeRejeu(unittest.TestCase):
         # les budgets réels d'un run (26–41 actions valides mesurées en 1 200 s,
         # journal 2026-09-08 suite 49) ; 60 rendait le superviseur muet.
         self.assertEqual(config.sup_stall_actions, 20)
-        self.assertEqual(config.sup_cooldown, 30)
+        # §H10.3 : le cooldown par défaut doit laisser la seconde fenêtre
+        # d'intervention atteignable sous les mêmes budgets (seuil + cooldown
+        # dans la plage des runs observés, journal 2026-09-10 suite 51) ; 30
+        # plaçait cette fenêtre à l'action 50, jamais atteinte, et la borne de
+        # fréquence devenait une interdiction. 12 est la fenêtre du détecteur
+        # de cycle (§H10.2), plancher de fréquence déjà retenu.
+        self.assertEqual(config.sup_cooldown, 12)
         # En rejeu, la base ARC pointe la pile locale : le mode ne doit atteindre
         # aucun service qui publierait un scorecard (§H3.4, §A2.3).
         self.assertEqual(config.arc_base_url, ARC_REJEU)
