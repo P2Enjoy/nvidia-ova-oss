@@ -4140,3 +4140,32 @@ l'autre surface de non-progrès connue (`tn36-ef4dde99`, mêmes plafonds que
 intervention attendue vers l'action 20, contenu du diagnostic, exploitation
 de la redirection, ré-stagnation éventuelle — puis statuer sur la relation
 cooldown/budget sur mesures accumulées. Vérifier l'endpoint en ouverture.
+
+## 2026-09-10 (suite 51, session planifiée) — U31 : superviseur sur une seconde surface (`tn36-ef4dde99`)
+
+**Unité.** U31, reprise désignée par la suite 50 : jouer UNE série
+supervisée sur l'autre surface de non-progrès connue (`tn36-ef4dde99`)
+pour observer le superviseur anti-stagnation sur une seconde surface —
+intervention attendue vers l'action 20, contenu du diagnostic,
+exploitation de la redirection, ré-stagnation éventuelle — puis statuer
+sur la relation cooldown/budget sur mesures accumulées.
+
+**Environnement (mesuré en ouverture, 05:4xZ).** Pile compose saine
+(`arc-replay`, `llm-replay` healthy), `make seed` complet, endpoint
+d'inférence en 200 (`/v1/models` via le pont 443 : `qwen3.6:35b`
+présent), API ARC en 200.
+
+**Périmètre (écrit AVANT lancement, §A7.2).** Un seul jeu :
+`tn36-ef4dde99` ; plafonds par jeu (§A7.1, tous obligatoires), EXACTEMENT
+ceux de `u31-obs2-tn36` pour une comparaison à budget constant : 80
+actions/niveau, 300 actions/jeu, 1 200 s/jeu, 1 500 000 tokens/jeu,
+400 tours ; mode `state` (défaut), gardes H16 actives, `qwen3.6:35b`,
+fenêtre 229 376 ; `--j-autorise-la-publication` au titre de
+l'autorisation du responsable (2026-08-30) ; `run-id` : `u31-sup2-tn36` ;
+une seule exécution live dans cette session (plafond de parallélisme
+global : 3). Attendu : ≥ 1 intervention du superviseur (référence
+`u31-obs2-tn36` : 26 actions valides sans progrès sous seuil 60,
+`interventions: 0`), son diagnostic dans le transcript, la mesure de son
+effet contre `u31-obs2-tn36` à budget constant, et la mesure d'une
+éventuelle ré-stagnation post-intervention pour statuer sur le cooldown
+(patron « trois relevés avant décision », suite 50).
