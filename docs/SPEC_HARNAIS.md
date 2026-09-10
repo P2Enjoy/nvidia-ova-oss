@@ -147,7 +147,7 @@ TLS.
 | `AVO_ACTIONS_MAX_NIVEAU` | borne d'actions d'environnement par niveau (H8.3) | `1000` |
 | `AVO_ACTIONS_MAX_JEU` | borne d'actions d'environnement par jeu (H8.3) | `5000` |
 | `AVO_SUP_STALL_ACTIONS` | actions sans progrès avant intervention du superviseur (H10.2) | `20` |
-| `AVO_SUP_COOLDOWN` | actions minimales entre deux interventions (H10.3) | `30` |
+| `AVO_SUP_COOLDOWN` | actions minimales entre deux interventions (H10.3) | `12` |
 | `AVO_RUNS_DIR` | racine des artefacts | `runs/` |
 | `AVO_CONTEXT_MODE` | mode de contexte, `transcript` ou `state` (§H15.7) | `state` |
 | `AVO_LLM_MAX_CONCURRENT` | plafond de requêtes LLM simultanées par endpoint (§H4.9) ; `0` désactive | `3` |
@@ -520,8 +520,21 @@ jamais un environnement particulier.
 notes, dernières frames rendues en texte) qui produit un diagnostic et 2–3 directions
 alternatives ; le résultat est injecté dans le transcript principal comme message
 utilisateur balisé `[SUPERVISEUR]` (append-only, H5.1 respecté). Fréquence bornée :
-au plus une intervention par `AVO_SUP_COOLDOWN` actions (défaut 30). Chaque
-déclenchement et son motif sont journalisés dans `metrics.jsonl`.
+au plus une intervention par `AVO_SUP_COOLDOWN` actions (défaut 12). Le défaut du
+cooldown est dimensionné, comme le seuil de H10.2, par la relation avec les budgets
+réels d'un run : mesuré en campagne live (journal 2026-09-09 et 2026-09-10,
+suites 50–51), un plafond de temps de 1 200 s/jeu limite un run à 26–41 actions
+valides, et un cooldown de 30 plaçait la seconde fenêtre d'intervention à l'action
+seuil + 30 = 50, structurellement inatteignable dans 100 % des runs observés — la
+borne de fréquence devenait une interdiction : dans les deux runs supervisés, le
+motif de stagnation est resté continûment vrai après la première intervention et
+seul le cooldown a tu le superviseur. 12 est la fenêtre du détecteur de cycle
+(H10.2), plancher déjà retenu pour ne pas interférer avec l'exploration : la
+seconde fenêtre s'ouvre à l'action 32, dans la plage des runs observés, sans
+autoriser d'interventions plus rapprochées que la fenêtre de détection elle-même.
+Générique : la règle porte la relation cooldown/budget, jamais un environnement
+particulier. Chaque déclenchement et son motif sont journalisés dans
+`metrics.jsonl`.
 
 ## H11. Observabilité
 

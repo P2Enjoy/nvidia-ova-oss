@@ -137,7 +137,7 @@ Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors d
 | `AVO_CONTEXT_SOFT_RATIO` | Seuil de continuation en contexte frais, en fraction du budget de prompt (H5.3) | réel dans ]0,1[ | non (défaut `0.85`) | `0.85` |
 | `AVO_TOOL_STEPS_MAX` | Garde : nombre maximal d'appels d'outils par tour d'agent, au-delà duquel le tour est clos avec un message explicite | entier | non (défaut `40`) | `40` |
 | `AVO_ACTIONS_MAX_NIVEAU` / `AVO_ACTIONS_MAX_JEU` | Bornes d'actions d'environnement, par niveau et par jeu ; dépassement = arrêt propre avec la borne nommée | entier | non (défauts `1000` / `5000`) | `1000` |
-| `AVO_SUP_STALL_ACTIONS` / `AVO_SUP_COOLDOWN` | Superviseur : actions sans progrès avant intervention, et actions minimales entre deux interventions | entier | non (défauts `20` / `30`) | `20` |
+| `AVO_SUP_STALL_ACTIONS` / `AVO_SUP_COOLDOWN` | Superviseur : actions sans progrès avant intervention, et actions minimales entre deux interventions | entier | non (défauts `20` / `12`) | `20` |
 | `ARC_API_KEY` | Clé d'accès à l'API ARC Prize (ARC-AGI-3), envoyée en en-tête `X-API-Key` ; donne accès aux environnements officiels et à l'ouverture des scorecards | UUID | oui pour l'évaluation ARC-AGI-3, inutile pour le reste du harnais | `00000000-0000-0000-0000-000000000000` |
 | `ARC_BASE_URL` | Base de l'API ARC-AGI-3. En mode rejeu, elle pointe la pile locale et le client **refuse** tout autre hôte : les tests ne peuvent pas publier de scorecard par accident | URL `https://hôte[:port]` | non (défaut selon le mode) | `http://127.0.0.1:8765` |
 | `AVO_RUNS_DIR` | Racine des workspaces de run (artefacts) | chemin | non (défaut `runs/`) | `runs/` |
