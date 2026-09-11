@@ -4236,3 +4236,46 @@ cooldown : lint, typecheck (137 fichiers), 817 unitaires (2 086
 sous-tests), 155 intégration, 10 E2E — tout vert, aucune boucle de
 correction. Le point de reprise reste celui de l'addendum : une série
 supervisée sous cooldown 12 pour observer la seconde intervention.
+
+## 2026-09-11 (suite 52, session planifiée) — U31 : seconde intervention du superviseur sous cooldown 12
+
+**Unité.** U31, reprise désignée par la suite 51 : jouer UNE série
+supervisée sous `AVO_SUP_COOLDOWN=12` (livré et prouvé suite 51) pour
+OBSERVER la seconde intervention du superviseur désormais atteignable
+(attendue vers l'action 32 si la stagnation persiste) : contenu du second
+diagnostic, exploitation de la redirection, conversion éventuelle en
+progrès ; au passage, second relevé sur la qualité des directions du
+superviseur (direction nommant des actions inexistantes, n = 1, suite 51).
+
+**Environnement (mesuré en ouverture, 05:4xZ).** Pile compose saine
+(`arc-replay`, `llm-replay` healthy), `make seed` complet, endpoint
+d'inférence en 200 (`/v1/models` via le pont 443 : `qwen3.6:35b`
+présent), API ARC en 200. Construction de l'image : dépôt du CA du proxy
+dans `certs/` (procédure `certs/README.md`), nécessaire après le premier
+échec de `make up` sur `pip install` (proxy TLS interceptant, cas connu).
+
+**POINT TRANCHÉ — la surface est `tu93-0768757b`, aux plafonds EXACTS de
+`u31-obs3-tu93` et `u31-sup1-tu93`.** Motif : l'observation visée est la
+seconde fenêtre d'intervention, qui s'ouvre à l'action seuil + cooldown =
+20 + 12 = 32 ; elle doit être ATTEIGNABLE pour être observée. Sous ces
+plafonds, les runs `tu93` mesurés produisent 36–41 actions valides — la
+fenêtre 32 est dans la plage — quand les runs `tn36` plafonnent à 26–28 —
+la fenêtre y serait au bord ou hors de portée. À budget constant, la
+comparaison contre `u31-sup1-tu93` (même jeu, mêmes plafonds, seul le
+cooldown change : 30 → 12) attribue tout écart de comportement au
+cooldown, et rien d'autre. Écarté : `tn36-ef4dde99`, risque élevé par
+construction de finir sous 32 actions valides et de rendre l'observation
+impossible.
+
+**Périmètre (écrit AVANT lancement, §A7.2).** Un seul jeu :
+`tu93-0768757b` ; plafonds par jeu (§A7.1, tous obligatoires) : 80
+actions/niveau, 300 actions/jeu, 1 200 s/jeu, 1 500 000 tokens/jeu,
+400 tours ; mode `state` (défaut), gardes H16 actives, `qwen3.6:35b`,
+fenêtre 229 376 ; `--j-autorise-la-publication` au titre de
+l'autorisation du responsable (2026-08-30) ; `run-id` : `u31-sup3-tu93` ;
+une seule exécution live dans cette session (plafond de parallélisme
+global : 3). Attendu : 2 interventions du superviseur (la première vers
+l'action 20, la seconde vers l'action 32 si la stagnation persiste), le
+contenu des deux diagnostics dans le transcript, l'exploitation des
+redirections, une conversion éventuelle en progrès contre `u31-sup1-tu93`
+à budget constant, et le second relevé sur la qualité des directions.
