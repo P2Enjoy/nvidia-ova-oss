@@ -1134,6 +1134,23 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-11 (suite 52, session planifiée)** — jouer et
+observer : série supervisée sous cooldown 12 (run `u31-sup3-tu93`,
+`tu93-0768757b`, plafonds identiques à `u31-sup1-tu93`, scorecard
+`9fa6d34e…` fermé, réconciliation exacte, rapport
+`docs/rapports/u31-sup3-tu93.md`) — DEUX interventions, aux actions 20 et
+32, la seconde EXACTEMENT à seuil + cooldown : la correction de la
+suite 51 est validée en live. Seconde intervention sur la dernière action
+du run (exploitation inobservable, budget épuisé — relevé n = 1) ;
+diagnostics ne nommant que des actions existantes (la réserve suite 51
+reste à n = 1) ; redirection 1 intégrée aux hypothèses sans
+diversification des actions (`action1` × 12 post-intervention, relevé
+n = 1) ; pas de conversion (0/9, 3 runs supervisés sur 3) ;
+`observation_inchangee` 0/32 corroboré par les frames — cinquième
+concordance. Améliorer : rien — aucune mesure fraîche ne désigne
+d'amélioration, relevés à n = 1 consignés ; aucun code modifié, campagne
+complète non due (clause de preuves, précédent suite 48).
+
 **Itération du 2026-09-10 (suite 51, session planifiée)** — jouer et
 observer : seconde série avec superviseur (run `u31-sup2-tn36`,
 `tn36-ef4dde99`, plafonds identiques à `u31-obs2-tn36`, scorecard

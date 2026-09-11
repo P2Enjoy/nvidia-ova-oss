@@ -4279,3 +4279,67 @@ l'action 20, la seconde vers l'action 32 si la stagnation persiste), le
 contenu des deux diagnostics dans le transcript, l'exploitation des
 redirections, une conversion éventuelle en progrès contre `u31-sup1-tu93`
 à budget constant, et le second relevé sur la qualité des directions.
+
+## 2026-09-11 (suite 52, addendum) — dépouillement `u31-sup3-tu93` : la seconde fenêtre d'intervention est atteinte et utilisée — le cooldown 12 fait ce qu'il devait
+
+**Joué.** Run `u31-sup3-tu93` sur `tu93-0768757b` (live, mode `state`,
+gardes actives, plafonds §A7.1 obligatoires, identiques à `u31-sup1-tu93`) :
+0/9 niveaux, 32 actions valides, RHAE 0,00, arrêt au plafond de temps
+(1 200 s) ; 35 appels modèle, 320 228 tokens de prompt, 25 497 générés,
+1 action invalide, 0 continuation. Scorecard
+`9fa6d34e-94a8-4a93-8a41-bc383f8b553b` fermé, réconciliation exacte
+(0 divergence). Rapport : `docs/rapports/u31-sup3-tu93.md`.
+
+**Dépouillé — l'objet de la session est constaté.**
+
+- **DEUX interventions, aux actions 20 et 32** — la seconde EXACTEMENT à
+  seuil + cooldown (20 + 12), conformément à §H10.3 : la correction de la
+  suite 51 est validée en live, la seconde fenêtre n'est plus
+  structurellement inatteignable (référence `u31-sup1-tu93`, cooldown 30 :
+  1 seule intervention possible). Le compteur de stagnation ne se remet pas
+  à zéro à l'intervention (motif « 32 actions sans progrès ») : une fois la
+  stagnation installée, la cadence effective des interventions est le
+  cooldown — comportement conforme à la spécification.
+- **La seconde intervention tombe sur la DERNIÈRE action du run** (budget
+  de temps épuisé juste après) : son exploitation est inobservable ici, et
+  son diagnostic a coûté un appel modèle sans action restante pour le
+  suivre. Relevé consigné (n = 1, s'accumule) : le superviseur ignore le
+  budget restant au moment d'intervenir.
+- **Qualité des directions, second relevé : la réserve de la suite 51 ne se
+  reproduit PAS.** Les deux diagnostics ne nomment que des actions
+  existantes (`ACTION1`–`ACTION4`, déclarées dans l'en-tête de chaque
+  frame). La réserve « direction nommant des actions inexistantes » reste à
+  n = 1 (tn36 seul). Les deux diagnostics restent toutefois au conditionnel
+  sur la SÉMANTIQUE des actions (« probablement un mouvement », « si
+  ACTION4 est un clic ») : l'en-tête donne les noms, pas les effets — rien
+  de plus n'est connaissable sans jouer, aucun défaut.
+- **Redirection 1 : intégrée au modèle, sans diversification des
+  actions.** Après l'intervention de l'action 20, l'acteur adopte la cible
+  du diagnostic dans ses hypothèses (« la cible est le groupe 14 14 14 en
+  bas à droite », position suivie vers elle) mais rejoue `action1` × 12
+  (aucun `action4`), en s'y dirigeant selon son propre modèle de
+  déplacement. Contraste avec `u31-sup1-tu93` (2 × `action4` neuves après
+  redirection) : l'exploitation peut être cognitive sans être
+  comportementale. Relevé qualitatif consigné (n = 1).
+- **Pas de conversion en progrès** : 0/9, troisième run supervisé sans
+  conversion (3/3).
+- **`observation_inchangee` : 0 sur 32 actions valides**, corroboré par
+  l'archive des frames (0 paire de `frame_de_decision` consécutives
+  identiques sur 32) — CINQUIÈME surface/run concordant, conclusion
+  inchangée.
+
+**Améliorer : rien — point tranché, aucune mesure fraîche ne désigne
+d'amélioration.** L'objet de la session était d'observer la seconde
+fenêtre : elle fonctionne comme spécifié. Les trois relevés neufs
+(intervention en fin de budget, exploitation cognitive sans
+diversification, conditionnel sur la sémantique des actions) sont chacun à
+n = 1 et s'accumulent avant toute correction (« pas d'amélioration
+inventée », clause U31 ; précédents suites 48 et 50). Aucun code modifié :
+campagne complète non due (clause de preuves U31, précédent suite 48).
+
+**Où reprendre.** U31, itération suivante : rejouer UNE série supervisée au
+même périmètre (`tu93-0768757b`, mêmes plafonds, cooldown 12) pour tenter
+d'observer l'EXPLOITATION d'une seconde intervention — elle exige un run
+qui dépasse l'action 32, ce que la plage mesurée (32–41) permet — et
+accumuler les trois relevés à n = 1 ci-dessus. Vérifier l'endpoint en
+ouverture.
