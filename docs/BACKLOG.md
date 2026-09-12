@@ -1103,7 +1103,14 @@ plateau), la campagne ARC se joue. L'interdiction de benchmaxing
 illimité tant que le modèle est `qwen3.6:35b` et que l'inférence passe par le
 gateway LLM du responsable.
 
-## U31 — Boucle permanente de concours : jouer, observer, améliorer `[~]` **[LIVE]** (permanente)
+## U31 — Boucle permanente de concours : jouer, observer, améliorer `[~]` **[LIVE]** (permanente, SUSPENDUE)
+
+**SUSPENDUE (instruction du responsable, 2026-09-12)** : les implémentations du
+lot J (U32 → U37, enseignements GVS5H et bascule `qwen3.8:27b`) PRIMENT sur les
+itérations de U31. Les sessions planifiées prennent les unités du lot J dans
+l'ordre de leur numéro ; U31 reprend APRÈS U37, sous le modèle de travail
+`qwen3.8:27b`, le socle de mesure re-établi (U35) et le mode d'exécution que
+l'A/B réel aura désigné (U37).
 
 `@spec` A7 (campagne), H (harnais général) ; mission et bornes :
 `CLAUDE_PROJECT.md` (« Mission permanente », « Budget d'inférence »). Unité
@@ -1467,3 +1474,111 @@ d'échouer (contrainte 4 de `CLAUDE_PROJECT.md`).
 `avo.llm.concurrence`, client et transport amendés, 20 unitaires + 1
 intégration, campagne complète verte (684 unitaires, 153 intégration, 6 E2E,
 mypy strict 120 fichiers, build), `make smoke-live` vert sous le limiteur réel.
+
+# Lot J — Enseignements GVS5H et bascule `qwen3.8:27b` (instruction du responsable, 2026-09-12)
+
+Origine : lecture des sources `knowledge/arxiv-2608.26480-…` et
+`knowledge/github-slee-persis-gvs5h.md` (ajoutées le 2026-09-12), croisée avec
+les mesures accumulées des runs supervisés (journal suites 50–52). Le lot PRIME
+sur les itérations U31, qui reprennent après U36. Chaque unité suit CLAUDE.md
+§5 : spécification écrite et committée AVANT le code, balayage « zéro indice de
+jeu » (§A5) avant tout commit de code ou de prompt — les mécanismes retenus sont
+tous génériques.
+
+## U32 — Bascule du modèle de travail vers `qwen3.8:27b` et défauts d'échantillonnage `[~]`
+
+`@spec` H3.1 (modèle et variables d'échantillonnage, révisés le 2026-09-12),
+H4.2 (ordre canonique des options), A8.5 (environnement épinglé des cassettes).
+
+- Défaut `AVO_MODEL` → `qwen3.8:27b` ; cinq variables d'échantillonnage
+  optionnelles (`AVO_TOP_P` défaut `0.8`, `AVO_PRESENCE_PENALTY` défaut `1.5`,
+  `AVO_TOP_K`/`AVO_MIN_P`/`AVO_REPEAT_PENALTY` défaut `aucun`), sentinelle
+  `aucun` = paramètre retiré du corps ; motif : carte officielle du modèle,
+  mode non-thinking (H3.1).
+- Les cassettes E2E et de bancs étant GÉNÉRÉES (A8.5), elles se régénèrent sous
+  l'environnement épinglé révisé ; les cassettes ENREGISTRÉES sur l'endpoint
+  réel restent des artefacts `qwen3.6:35b` : leurs tests d'intégration épinglent
+  ce modèle et `aucun` sur les nouveaux paramètres, jusqu'à U35.
+- DoD : unitaires de config et de corps (défauts, bornes, sentinelle, ordre
+  canonique), cassettes régénérées, `make smoke-live` vert sous les nouveaux
+  défauts (modèle et échantillonnage constatés dans le corps émis), campagne
+  complète verte, README/DAT/CHANGELOG à jour.
+
+## U33 — Résumé de coupure des réponses tronquées `[ ]`
+
+`@spec` H17 (à écrire d'abord : chapitre nouveau), H4 (client, `done_reason`),
+H5.1 (append-only). Origine : GVS5H §3.1 (cut-off summarizer) et §4.2 (une
+coupure absorbée coûte un tour, pas la réponse ; la rumination emporte le budget).
+
+- Quand un appel de tour rend `done_reason=length` SANS action exploitable, un
+  appel court séparé (contexte propre, borné) résume la tentative partielle —
+  approche poursuivie, acquis, reste — et le résumé entre dans le contexte en
+  append avec la consigne générique de préférer une approche plus courte au tour
+  suivant. Comptabilité des appels tronqués (`metrics.jsonl`, rapport).
+- DoD : spec H17 committée avant le code ; unitaires (déclenchement sur
+  `length` sans action, non-déclenchement sinon, résumé injecté et journalisé) ;
+  intégration sur cassette générée à `length` ; campagne complète verte.
+
+## U34 — Proposition en contexte frais jointe à l'intervention du superviseur `[ ]`
+
+`@spec` H10.4 (à écrire d'abord : extension de H10). Origine mesurée : suite 52
+(redirection intégrée aux hypothèses SANS diversification des actions — l'ornière
+ancre les workers qui héritent du contexte) et GVS5H §4.4 (fresh-perspective
+workers contre l'ancrage).
+
+- À l'intervention (H10.3), le superviseur obtient AUSSI, d'un appel FRAIS sans
+  notes ni historique (énoncé de tâche brut + dernière observation), une
+  proposition indépendante, jointe au message `[SUPERVISEUR]` comme alternative
+  non ancrée. Configurable (`AVO_SUP_SONDE_FRAICHE`, défaut `true`) ;
+  journalisée.
+- DoD : spec H10.4 committée avant le code ; unitaires (appel frais sans fuite
+  de contexte, jonction au message, kill-switch) ; rejeu sur cassettes
+  générées ; campagne complète verte.
+
+## U35 — Socle de mesure sous `qwen3.8:27b` : cassettes vivantes et lignes de base `[ ]` **[LIVE]**
+
+`@spec` H4.7 (enregistrement du contrat), SPEC_BANCS (lignes de base). La
+bascule U32 rend le socle de mesure hérité (`qwen3.6:35b`) historique : les
+comparaisons de la reprise U31 exigent des bases du modèle de travail.
+
+- Re-enregistrer les cassettes vivantes (`make record-llm`, `make
+  test-int-live`) sous `qwen3.8:27b` et les défauts H3.1 ; lever l'épinglage
+  `qwen3.6:35b` des tests d'intégration concernés dans le même changement.
+- Rejouer les lignes de base des bancs U29 (a dépôt/entrepôt, b, c) sous le
+  modèle de travail, plafonds inchangés ; consigner les nouvelles bases au
+  journal et dans les références locales de `docs/SPEC_BANCS.md`.
+- DoD : cassettes committées, bases consignées, campagne complète verte.
+
+## U36 — Mode d'exécution `ledger` (manager–workers, exploratoire) `[ ]`
+
+`@spec` H18 (à écrire d'abord : chapitre nouveau). Origine : GVS5H §3.1 — le
+résultat central du papier pour la classe de taille de notre modèle de travail.
+Unité EXPLORATOIRE : si elle ne tient pas en deux sessions, la geler avec
+l'écart nommé et passer à U37 — l'A/B se mène alors avec les modes existants.
+
+- Troisième mode de contexte (`AVO_CONTEXT_MODE=ledger`) : patron
+  manager–workers GVS5H au-dessus de l'existant — plan, brainstorm sans code,
+  curation d'une task list bornée, worker par tâche en contexte frais, verdict
+  d'exécution traité comme vérité terrain, garde de non-progrès — état partagé
+  dans le workspace du run (H6), client H4, outils H7, journalisation H6/H11
+  inchangés. Générique : prompts sans aucun indice de tâche.
+- DoD : spec H18 committée avant le code ; unitaires du moteur ; A/B en rejeu
+  sur cassettes générées contre `transcript`/`state` (patron U27) ; campagne
+  complète verte.
+
+## U37 — A/B réel des modes d'exécution sous `qwen3.8:27b`, porte de reprise de U31 `[ ]` **[LIVE]**
+
+`@spec` H15.7 (modes de contexte), H18 si U36 est livrée, patron U28 (A/B réel
+à budget constant). Origine : GVS5H mesure +23,4 points pour la classe 27B
+orchestrée sur tâches de code — à VÉRIFIER sur notre endpoint et nos bancs,
+jamais transposé (CLAUDE_PROJECT, interdiction de benchmaxing ; les gains sont
+conditionnels au modèle).
+
+- Sur les bancs U29, comparer à budget constant les modes disponibles
+  (`transcript`, `state`, et `ledger` si U36 est livrée) sous `qwen3.8:27b` ;
+  significativité par appariement problème à problème (patron GVS5H §2.1) dans
+  la mesure des budgets ; désigner et CONSIGNER le mode par défaut de la
+  reprise U31.
+- DoD : runs réconciliés, rapport sous `docs/rapports/`, décision persistée
+  (spec/README/journal), campagne complète verte. La clôture de U37 LÈVE la
+  suspension de U31.

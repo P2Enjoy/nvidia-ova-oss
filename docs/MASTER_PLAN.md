@@ -17,12 +17,14 @@ spécification déjà écrite est une session en échec.
 
 ## 2. Ordre d'exécution
 
-Les unités du backlog s'exécutent **dans l'ordre de leur numéro** (U3, U4, …, U31),
+Les unités du backlog s'exécutent **dans l'ordre de leur numéro** (U3, U4, …, U37),
 sauf reprise désignée par la dernière entrée du journal, et sauf U25, gardée par son
 déclencheur (les résultats du harnais sur les bancs U29 — voir l'unité). Chaque
 unité tient dans une session et produit du code ; aucune unité documentaire ne
-reste ouverte. U31 est PERMANENTE (lot I) : quand aucune unité de construction ne
-reste, chaque session planifiée exécute une itération de U31.
+reste ouverte. U31 est PERMANENTE (lot I) mais SUSPENDUE par l'instruction du
+responsable du 2026-09-12 : tant qu'une unité du lot J reste `[ ]` ou `[~]`, les
+sessions planifiées prennent le lot J dans l'ordre U32 → U37 ; la clôture de U37
+lève la suspension et U31 redevient l'unité de chaque session planifiée.
 
 | Lot | Unités | Contenu |
 |---|---|---|
@@ -34,7 +36,8 @@ reste, chaque session planifiée exécute une itération de U31.
 | F — Campagne | U23–U25 | runner+rapport, campagne pilote, campagne étendue |
 | G — État structuré (SKILL.state) | U26–U29 | spec H15 + runtime Σ, mode `state` + A/B rejeu, A/B réel, benchmarks complémentaires (ouverts le 2026-09-01, terrain d'affinage) |
 | H — Méthode dans la structure | U30 | spec H16 + gardes de méthode dans les phases P→I→E→B |
-| I — Concours permanent | U31 | boucle permanente : jouer ARC Prize, observer, améliorer le harnais (mission du 2026-09-01) |
+| I — Concours permanent | U31 | boucle permanente : jouer ARC Prize, observer, améliorer le harnais (mission du 2026-09-01) — suspendue le temps du lot J |
+| J — Enseignements GVS5H (2026-09-12) | U32–U37 | bascule `qwen3.8:27b` + échantillonnage, résumé de coupure, sonde fraîche du superviseur, socle de mesure, mode `ledger` (exploratoire), A/B réel = porte de reprise |
 
 ## 3. Unités [LIVE] — règle pour le worker
 
@@ -111,7 +114,9 @@ Depuis les instructions du responsable du 2026-09-01, la boucle planifiée porte
 mission PERMANENTE : U31 — affiner le harnais sur les bancs génériques U29 (jouer,
 observer, améliorer), puis jouer la campagne ARC au périmètre U25 quand son
 déclencheur est atteint (scores comparables aux modèles de taille similaire, ou
-plateau — consigné dans U25). La condition
+plateau — consigné dans U25). Par instruction du responsable du 2026-09-12, cette
+mission est SUSPENDUE le temps du lot J (§2) : chaque session planifiée avance le
+lot J dans l'ordre, et la clôture de U37 rend U31 aux sessions. La condition
 d'arrêt « backlog terminé » (`docs/CloudWorker.md` §4.5, cas 1) ne s'applique donc
 plus tant que U31 est active : la boucle ne s'arrête que sur instruction du
 responsable, ou si U31 elle-même devient inexécutable — secrets absents, API ou

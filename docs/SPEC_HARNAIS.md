@@ -137,10 +137,15 @@ TLS.
 | `OLLAMA_HOST` | URL de base de l'endpoint | requis |
 | `OLLAMA_API_KEY` | Bearer | requis |
 | `OLLAMA_CONTEXT_LENGTH` | `options.num_ctx` demandé | requis |
-| `AVO_MODEL` | nom du modèle | `qwen3.6:35b` |
+| `AVO_MODEL` | nom du modèle | `qwen3.8:27b` |
 | `AVO_THINK` | raisonnement natif (H12) | `false` |
 | `AVO_NUM_PREDICT` | budget de sortie par appel | `4096` |
 | `AVO_TEMPERATURE` | température | `0.7` |
+| `AVO_TOP_P` | échantillonnage noyau (`options.top_p`) | `0.8` |
+| `AVO_TOP_K` | échantillonnage top-k (`options.top_k`) | `aucun` |
+| `AVO_MIN_P` | probabilité plancher (`options.min_p`) | `aucun` |
+| `AVO_REPEAT_PENALTY` | pénalité de répétition (`options.repeat_penalty`) | `aucun` |
+| `AVO_PRESENCE_PENALTY` | pénalité de présence (`options.presence_penalty`) | `1.5` |
 | `AVO_TIMEOUT_S` | timeout par appel LLM | `900` |
 | `AVO_CONTEXT_SOFT_RATIO` | seuil de continuation (H5.3) | `0.85` |
 | `AVO_TOOL_STEPS_MAX` | garde du nombre d'appels d'outils par tour (H7.2) | `40` |
@@ -156,6 +161,31 @@ TLS.
 | `AVO_GARDE_RETRIES` | redemandes d'une même garde par tour (§H16.0) | `2` |
 | `ARC_API_KEY` | API ARC Prize (SPEC_ARCAGI3) | requis pour le live uniquement |
 | `ARC_BASE_URL` | base API ARC | officielle en live, pile locale en rejeu |
+
+Les cinq paramètres d'échantillonnage (`AVO_TOP_P`, `AVO_TOP_K`, `AVO_MIN_P`,
+`AVO_REPEAT_PENALTY`, `AVO_PRESENCE_PENALTY`) sont OPTIONNELS : un paramètre absent
+du corps laisse s'appliquer la valeur du Modelfile servi par l'endpoint. La valeur
+littérale `aucun` retire explicitement le paramètre du corps, y compris quand le
+défaut du harnais en porte un — c'est le mécanisme d'épinglage des rejeux sur
+cassettes historiques. Bornes de validation : `top_p` dans (0, 1], `top_k` entier ≥ 1,
+`min_p` dans [0, 1], `repeat_penalty` dans (0, 2], `presence_penalty` dans [0, 2]
+(plage recommandée par la carte du modèle).
+
+Le modèle de travail par défaut est `qwen3.8:27b` (décision du responsable,
+2026-09-12 ; capacités vérifiées sur l'endpoint le même jour : `completion`,
+`vision`, `tools`, `thinking` — les quatre que le harnais exploite ; fenêtre native
+262 144, quantification Q4_K_M). Les défauts d'échantillonnage suivent la carte
+officielle du modèle pour le mode NON-THINKING — le mode du harnais, `AVO_THINK=false`
+(H12) : `temperature=0.7`, `top_p=0.8`, `top_k=20`, `min_p=0`, `presence_penalty=1.5`,
+`repetition_penalty=1.0`. Le Modelfile servi porte, lui, les valeurs du mode
+thinking (`temperature=1`, `top_p=0.95`, `presence_penalty=0`) : le harnais surcharge
+donc les deux paramètres qui diffèrent (`top_p`, `presence_penalty`) et laisse les
+trois autres absents, leurs valeurs servies coïncidant déjà avec la recommandation.
+`presence_penalty=1.5` est aussi la parade documentée du fournisseur contre les
+répétitions sans fin — le mode d'échec de rumination mesuré par transcripts dans
+l'export GVS5H (`knowledge/`). Générique : la règle est « suivre la recommandation
+du fournisseur pour le mode d'usage effectif », jamais un réglage par jeu ou par
+banc.
 
 **H3.2 — Budget utile.** `budget_prompt = floor(OLLAMA_CONTEXT_LENGTH / 1.15) −
 AVO_NUM_PREDICT`. La marge 1,15 reproduit celle du proxy (mesurée) ; si un `413`
@@ -180,7 +210,11 @@ raisonnement (`think`), `options.num_ctx`, champ `reasoning` séparé, compteurs
 
 **H4.2 — Requête.** POST `$OLLAMA_HOST/api/chat`, `Authorization: Bearer`, corps :
 `model`, `messages`, `stream: true`, `think` (H12), `tools` (schémas H7),
-`options: {num_ctx, num_predict, temperature}`. Timeout `AVO_TIMEOUT_S`.
+`options: {num_ctx, num_predict, temperature}` complété, dans cet ordre canonique,
+des paramètres d'échantillonnage configurés et non `aucun` (H3.1) : `top_p`,
+`top_k`, `min_p`, `repeat_penalty`, `presence_penalty` — une clé absente laisse la
+valeur du Modelfile servi ; l'ordre est canonique parce que les cassettes
+s'apparient sur le hachage du corps sérialisé. Timeout `AVO_TIMEOUT_S`.
 
 Motif de `stream: true`, mesuré le 2026-09-02 (campagne de banc h25) : le pont
 HTTPS 443 coupe la requête 40 s après son envoi si l'origine n'a pas encore rendu

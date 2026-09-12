@@ -19,7 +19,7 @@ Les éléments constitutifs, tirés des sources exportées dans [`knowledge/`](k
 **Implémentation avancée — lots A à D livrés en entier, lot E livré jusqu'au RHAE, runner de campagne livré.**
 
 - Fait : import des cinq sources de référence dans `knowledge/` (markdown + images + PDF) — papier AVO, billet NVIDIA, page VISTA, papier Tycho, papier SKILL.state (arXiv:2608.26263, ajouté le 2026-08-30).
-- Fait : endpoint d'inférence fourni par le responsable, **testé et validé de bout en bout** le 2026-08-27 (authentification, tool calling, contexte long réellement exploité) ; le modèle de travail est `qwen3.6:35b`, seul modèle de complétion servi par cet endpoint. Mesures et contraintes qui en découlent : `docs/JOURNAL.md`, entrée du 2026-08-27 (suite 2).
+- Fait : endpoint d'inférence fourni par le responsable, **testé et validé de bout en bout** le 2026-08-27 (authentification, tool calling, contexte long réellement exploité) ; le modèle de travail est `qwen3.8:27b` (décision du responsable, 2026-09-12 — capacités et complétion avec appel d'outil vérifiées sur l'endpoint le même jour ; `qwen3.6:35b` reste servi et fut le modèle des campagnes antérieures). Mesures et contraintes de l'endpoint : `docs/JOURNAL.md`, entrées du 2026-08-27 (suite 2) et du 2026-09-12.
 - Décidé : le benchmark de référence est **ARC-AGI-3, ensemble public** (décision prise par défaut le 2026-08-27 au titre de `CLAUDE.md` §1, « Autonomie de décision » ; motif et options écartées dans `docs/JOURNAL.md`). Aucun autre benchmark n'entre dans le périmètre initial ; les benchmarks interactifs du papier SKILL.state sont consignés comme extension possible, en attente d'arbitrage (`docs/BACKLOG.md`, U29).
 - Fait : **spécification complète écrite et committée** — `docs/SPEC_HARNAIS.md` (noyau agent, H1–H14), `docs/SPEC_ARCAGI3.md` (interface et évaluation, A1–A8), `docs/SPEC_BANCS.md` (bancs d'affinage, S1+), `docs/MASTER_PLAN.md` (ordre d'exécution, DoD commune), backlog en unités d'une session, chacune portant ses références de spécification et ses preuves.
 - Fait : **unités U3 à U21 et U23 à U27 livrées et vérifiées** (socle conteneurisé, client d'inférence sur cassettes réelles, contexte et notes, outils et boucle P→I→E→B, lignée et superviseur, rejeu ARC local et jeu `cible`, client API ARC, rendu et mémoire de frames, interface direct-interaction, RHAE, runner de campagne `run-arc`/`resume` avec rapport, E2E de partie complète sur rejeu, mode d'exécution `state` de la boucle H15 et son A/B contre `transcript` — `docs/rapports/ab_mode_contexte.md`). Campagne de preuves : 599 tests verts (467 unitaires, 132 d'intégration, 4 E2E), lint, format, mypy strict.
@@ -129,10 +129,15 @@ Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors d
 | `OLLAMA_HOST` | URL de base du serveur Ollama (surface compatible OpenAI sous `/v1`, API native sous `/api`) | URL `https://hôte[:port]` sans slash final | oui | `https://inference.example.com` |
 | `OLLAMA_API_KEY` | Clé d'authentification, envoyée en `Authorization: Bearer …` | chaîne opaque | oui | `sk-ollama-xxxxxxxx` |
 | `OLLAMA_CONTEXT_LENGTH` | Fenêtre de contexte demandée au serveur, en tokens (transmise en `options.num_ctx`) ; borne les budgets de contexte du harnais | entier | oui | `131072` |
-| `AVO_MODEL` | Nom du modèle servi par l'endpoint | chaîne | non (défaut `qwen3.6:35b`) | `qwen3.6:35b` |
+| `AVO_MODEL` | Nom du modèle servi par l'endpoint | chaîne | non (défaut `qwen3.8:27b`) | `qwen3.8:27b` |
 | `AVO_THINK` | Raisonnement natif du modèle (`think` sur `/api/chat`, politique H12) | booléen | non (défaut `false`) | `false` |
 | `AVO_NUM_PREDICT` | Budget de sortie par appel (`options.num_predict`) | entier | non (défaut `4096`) | `4096` |
 | `AVO_TEMPERATURE` | Température d'échantillonnage | réel borné | non (défaut `0.7`) | `0.7` |
+| `AVO_TOP_P` | Échantillonnage noyau (`options.top_p`) ; `aucun` retire le paramètre du corps | réel dans ]0,1] ou `aucun` | non (défaut `0.8`) | `0.8` |
+| `AVO_TOP_K` | Échantillonnage top-k (`options.top_k`) ; `aucun` retire le paramètre | entier ≥ 1 ou `aucun` | non (défaut `aucun`) | `20` |
+| `AVO_MIN_P` | Probabilité plancher (`options.min_p`) ; `aucun` retire le paramètre | réel dans [0,1] ou `aucun` | non (défaut `aucun`) | `0` |
+| `AVO_REPEAT_PENALTY` | Pénalité de répétition (`options.repeat_penalty`) ; `aucun` retire le paramètre | réel dans ]0,2] ou `aucun` | non (défaut `aucun`) | `1.0` |
+| `AVO_PRESENCE_PENALTY` | Pénalité de présence (`options.presence_penalty`), parade du fournisseur contre les répétitions sans fin ; `aucun` retire le paramètre | réel dans [0,2] ou `aucun` | non (défaut `1.5`) | `1.5` |
 | `AVO_TIMEOUT_S` | Timeout d'un appel LLM, en secondes | entier | non (défaut `900`) | `900` |
 | `AVO_CONTEXT_SOFT_RATIO` | Seuil de continuation en contexte frais, en fraction du budget de prompt (H5.3) | réel dans ]0,1[ | non (défaut `0.85`) | `0.85` |
 | `AVO_TOOL_STEPS_MAX` | Garde : nombre maximal d'appels d'outils par tour d'agent, au-delà duquel le tour est clos avec un message explicite | entier | non (défaut `40`) | `40` |

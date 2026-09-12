@@ -4393,3 +4393,66 @@ mesure sur l'endpoint (U29/U31), pas par transposition.
 **Où reprendre (boucle planifiée).** Inchangé — le point de reprise U31
 reste celui de la suite 52 : une série supervisée au même périmètre pour
 observer l'exploitation d'une seconde intervention.
+
+## 2026-09-12 (session interactive, suite) — instruction du responsable : bascule `qwen3.8:27b`, paramètres d'échantillonnage, lot J prioritaire sur U31
+
+**Instructions du responsable (deux messages).** 1) « Passons au qwen3.8
+dorénavant » : tester le bon fonctionnement, analyser et consigner au backlog
+les évolutions GVS5H intéressantes pour le harnais, et PRIORISER ces
+implémentations sur la tâche permanente de run des bancs (U31), à reprendre
+une fois tout développé. 2) Ajuster les paramètres d'inférence, jugés peu
+adaptés (notamment la pénalité de répétition).
+
+**Testé (ouverture, avant toute décision).** Endpoint via le pont 443 :
+`/api/show` de `qwen3.8:27b` → capacités `completion`, `vision`, `tools`,
+`thinking` (les quatre exploitées par le harnais), 27,3B, Q4_K_M, fenêtre
+native 262 144 ; `/v1/chat/completions` → complétion nette en 19 s
+(`finish: stop`, raisonnement exposé) ; appel d'outil → `tool_calls` bien
+formé en 7,5 s. Le modèle est fonctionnel sur les deux surfaces.
+
+**Mesuré — les paramètres servis vs la carte officielle.** Le Modelfile de
+l'endpoint sert les valeurs du mode THINKING (`temperature=1`, `top_p=0.95`,
+`top_k=20`, `min_p=0`, `repeat_penalty=1`, `presence_penalty=0`). La carte
+officielle du modèle (relevée le 2026-09-12 sur le dépôt du fournisseur)
+recommande pour le mode NON-THINKING — le nôtre, `AVO_THINK=false` :
+`temperature=0.7`, `top_p=0.80`, `top_k=20`, `min_p=0`,
+`presence_penalty=1.5`, `repetition_penalty=1.0`. L'intuition du responsable
+est confirmée, avec une précision : le paramètre inadapté n'est pas
+`repeat_penalty` (1.0 = recommandation du fournisseur, la pénalité de
+répétition dégradant les sorties structurées) mais `top_p` (0.95 servi contre
+0.80 recommandé) et `presence_penalty` (0 servi contre 1.5 recommandé — la
+parade documentée contre les répétitions sans fin, le mode d'échec de
+rumination mesuré par transcripts dans GVS5H §4.2).
+
+**POINTS TRANCHÉS (spec révisée avant le code).**
+
+1. Défaut `AVO_MODEL` → `qwen3.8:27b` (H3.1) — décision du responsable ; la
+   règle de budget de `CLAUDE_PROJECT.md` suit son instruction (gateway
+   inchangé).
+2. Cinq variables d'échantillonnage optionnelles (H3.1, H4.2) : défauts
+   `AVO_TOP_P=0.8` et `AVO_PRESENCE_PENALTY=1.5` (les deux écarts à la
+   recommandation non-thinking), `AVO_TOP_K`/`AVO_MIN_P`/`AVO_REPEAT_PENALTY`
+   absents par défaut (les valeurs servies coïncident déjà). Sentinelle
+   `aucun` = paramètre retiré du corps. Règle générique : suivre la
+   recommandation du fournisseur pour le mode d'usage effectif — aucun réglage
+   par jeu ni par banc. Écarté : surcharger les cinq (surcharge inutile),
+   `repeat_penalty` > 1 (contre-indiqué par le fournisseur pour les sorties
+   structurées).
+3. Cassettes : les E2E/bancs sont GÉNÉRÉES (A8.5) → régénération sous
+   l'environnement épinglé révisé (`AVO_MODEL=qwen3.8:27b`, `AVO_TOP_P=0.8`,
+   `AVO_PRESENCE_PENALTY=1.5`) ; les cassettes ENREGISTRÉES sur l'endpoint
+   réel restent des artefacts `qwen3.6:35b` — leurs tests épinglent ce modèle
+   et `aucun`, jusqu'au re-enregistrement (U35).
+4. Analyse GVS5H → LOT J au backlog (U32–U37), PRIORITAIRE sur U31
+   (suspendue, MASTER_PLAN §2/§7) : U32 bascule modèle + échantillonnage
+   (cette session) ; U33 résumé de coupure (GVS5H §3.1/§4.2) ; U34 proposition
+   en contexte frais à l'intervention du superviseur (suite 52 + GVS5H §4.4) ;
+   U35 socle de mesure sous `qwen3.8:27b` [LIVE] ; U36 mode `ledger`
+   exploratoire (GVS5H §3.1) ; U37 A/B réel des modes [LIVE], porte de reprise
+   de U31. Écarté : « verdict d'exécution = vérité terrain » (déjà le cas,
+   A5.3) ; transposer les gains GVS5H sans mesure (interdiction de
+   benchmaxing ; gains conditionnels au modèle).
+
+**Reste de la session.** Code U32 (config + client + tests + cassettes
+régénérées), preuves ciblées, `make smoke-live`, campagne complète, backlog au
+véritable état.
