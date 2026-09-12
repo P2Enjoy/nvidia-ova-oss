@@ -24,7 +24,8 @@ banc c `tau` détail h20 seeds 1–10, utilisateur `llm` (pass) ; ARC : plafonds
 |---|---|---|---|
 | v1.9 | `qwen3.6:35b` | 0,77 (0,96/0,92/0,44) | journal, suite 23 |
 | v1.9 (réplication) | `qwen3.6:35b` | 0,653 (0,48/0,96/0,52) | journal, suite 24 |
-| v1.10 | `qwen3.6:35b` | **0,707** (0,96/0,44/0,72) | journal, suite 46 add. 3 |
+| v1.10 | `qwen3.6:35b` | 0,707 (0,96/0,44/0,72) | journal, suite 46 add. 3 |
+| v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | **0,867** (0,64/0,96/1,00) | journal, 2026-09-12 (U36) |
 
 Bande de variance inter-réplications de cet environnement : [0,653 ; 0,77] —
 l'entrepôt est dominé par la variance de runs, pas par les refus de forme.
