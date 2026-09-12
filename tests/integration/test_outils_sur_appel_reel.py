@@ -104,14 +104,17 @@ class TestOutilsSurAppelReel(unittest.TestCase):
 
     def test_l_appel_demande_par_le_vrai_modele_est_route_et_execute(self) -> None:
         config, appels = self._appel_reel()
+        # La commande exacte est celle que le modèle a demandée à l'enregistrement :
+        # l'assertion suit le contrat enregistré, pas une valeur figée à la main.
+        commande = str(appels[0].arguments["command"])
         resultat = self.registre.executer(appels, Transcript.ouvrir("sys"), config.tool_steps_max)
         self.assertEqual(resultat.executes, 1)
         self.assertFalse(resultat.garde_franchie)
-        self.assertEqual(self.commandes, ["ls /tmp"])
+        self.assertEqual(self.commandes, [commande])
         message = resultat.transcript.pour_api()[-1]
         self.assertEqual(message["role"], "tool")
         self.assertEqual(message["name"], "run_shell")
-        self.assertIn("ls /tmp", message["content"])
+        self.assertIn(commande, message["content"])
 
     def test_le_registre_expose_au_modele_le_meme_schema_qu_enregistre(self) -> None:
         """Le schéma envoyé doit être celui sur lequel le contrat a été mesuré."""
@@ -146,7 +149,7 @@ class TestOutilsSurAppelReel(unittest.TestCase):
         contenus = [m["content"] for m in resultat.transcript.pour_api()[1:]]
         self.assertEqual(len(contenus), 4)
         self.assertTrue(contenus[0].startswith(PREFIXE_ERREUR))
-        self.assertIn("ls /tmp", contenus[1])
+        self.assertIn(str(appels[0].arguments["command"]), contenus[1])
         self.assertTrue(contenus[2].startswith(f"{PREFIXE_ERREUR}: outil_inconnu"))
         self.assertEqual(self.notes.lire(GUIDE), "malgré tout")
 

@@ -73,14 +73,9 @@ class TestClientSurContratReel(unittest.TestCase):
             env={
                 "OLLAMA_HOST": self.base,
                 "OLLAMA_API_KEY": cle,
-                # Cassettes ENREGISTRÉES sur l'endpoint réel : artefacts
-                # `qwen3.6:35b` sans paramètres d'échantillonnage (§H3.1) — le
-                # corps rejoué doit hacher à l'identique, indépendamment des
-                # défauts courants du harnais. Levée prévue au re-enregistrement
-                # (backlog U36).
-                "AVO_MODEL": "qwen3.6:35b",
-                "AVO_TOP_P": "aucun",
-                "AVO_PRESENCE_PENALTY": "aucun",
+                # Cassettes ENREGISTRÉES sur l'endpoint réel : le rejeu épingle
+                # l'environnement d'enregistrement partagé (§H4.7, backlog U36).
+                **ENV_CASSETTES_REELLES,
             },
             racine=Path("/inexistant"),
         )
@@ -92,7 +87,7 @@ class TestClientSurContratReel(unittest.TestCase):
         resultat = self._client().chat(
             _messages_chat_simple(), num_ctx=8192, num_predict=64, temperature=0
         )
-        self.assertEqual(resultat.modele, "qwen3.6:35b")
+        self.assertEqual(resultat.modele, ENV_CASSETTES_REELLES["AVO_MODEL"])
         self.assertGreater(resultat.prompt_eval_count, 0)
         self.assertGreater(resultat.eval_count, 0)
         self.assertIsNotNone(resultat.done_reason)

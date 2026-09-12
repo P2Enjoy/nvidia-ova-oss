@@ -70,12 +70,9 @@ class TestRunComplet(unittest.TestCase):
             env={
                 "OLLAMA_HOST": self.base,
                 "OLLAMA_API_KEY": CLE,
-                # Cassettes ENREGISTRÉES sur l'endpoint réel : artefacts
-                # `qwen3.6:35b` sans paramètres d'échantillonnage (§H3.1),
-                # épinglés jusqu'au re-enregistrement (backlog U36).
-                "AVO_MODEL": "qwen3.6:35b",
-                "AVO_TOP_P": "aucun",
-                "AVO_PRESENCE_PENALTY": "aucun",
+                # Cassettes ENREGISTRÉES sur l'endpoint réel : le rejeu épingle
+                # l'environnement d'enregistrement partagé (§H4.7, backlog U36).
+                **ENV_CASSETTES_REELLES,
             },
             racine=Path("/inexistant"),
         )
@@ -124,7 +121,7 @@ class TestRunComplet(unittest.TestCase):
         appels = [ligne for ligne in espace.lire_metriques() if ligne["type"] == "appel_llm"]
         self.assertEqual(len(appels), 1)
         self.assertGreater(appels[0]["prompt_eval_count"], 0)
-        self.assertEqual(appels[0]["modele"], "qwen3.6:35b")
+        self.assertEqual(appels[0]["modele"], ENV_CASSETTES_REELLES["AVO_MODEL"])
 
     def test_la_comptabilite_se_calibre_sur_le_compte_reel(self) -> None:
         _, registre = self._executer_un_echange()
