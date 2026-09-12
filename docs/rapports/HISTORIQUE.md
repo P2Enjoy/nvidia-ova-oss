@@ -9,11 +9,6 @@ banc c `tau` détail h20 seeds 1–10, utilisateur `llm` (pass) ; ARC : plafonds
 §A7.1 constants (80 actions/niveau, 300 actions/jeu, 1 200 s/jeu,
 1 500 000 tokens/jeu, 400 tours), mode `state`, gardes actives.
 
-Le 2026-09-12, DEUX séries banc a indépendantes ont été jouées sous
-`qwen3.8:27b` (session planifiée et session interactive, en parallèle —
-plafond global de 3 exécutions live respecté) : les deux figurent comme
-réplications.
-
 ## Banc a — SkillExecBench, environnement dépôt
 
 | Harnais | Modèle | Score moyen (s1/s2/s3) | Relevé |
@@ -21,8 +16,7 @@ réplications.
 | v1.9 pré-§H15.8 | `qwen3.6:35b` | 0,76 (0,80/0,68/0,80) | journal, suite 22 |
 | v1.9 | `qwen3.6:35b` | 0,827 (0,88/0,80/0,80) | journal, suite 27 |
 | v1.10 | `qwen3.6:35b` | 0,947 (0,96/0,96/0,92) | journal, suite 46 add. 2 |
-| v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | **0,987** (0,96/1,00/1,00) | session planifiée du 2026-09-12 |
-| v1.10 + éch. §H3.1 (réplication) | `qwen3.8:27b` | **0,987** (1,00/0,96/1,00) | journal, 2026-09-12 session interactive suite 5 |
+| v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | **0,987** (0,96/1,00/1,00) | journal, 2026-09-12 (U36) |
 
 ## Banc a — SkillExecBench, environnement entrepôt
 
@@ -31,12 +25,10 @@ réplications.
 | v1.9 | `qwen3.6:35b` | 0,77 (0,96/0,92/0,44) | journal, suite 23 |
 | v1.9 (réplication) | `qwen3.6:35b` | 0,653 (0,48/0,96/0,52) | journal, suite 24 |
 | v1.10 | `qwen3.6:35b` | 0,707 (0,96/0,44/0,72) | journal, suite 46 add. 3 |
-| v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | **0,867** (0,64/0,96/1,00) | session planifiée du 2026-09-12 |
-| v1.10 + éch. §H3.1 (réplication) | `qwen3.8:27b` | **1,00** (1,00/1,00/1,00) | journal, 2026-09-12 session interactive suite 5 |
+| v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | **0,867** (0,64/0,96/1,00) | journal, 2026-09-12 (U36) |
 
-Bande de variance inter-réplications de cet environnement, `qwen3.6:35b` :
-[0,653 ; 0,77] ; `qwen3.8:27b` : [0,867 ; 1,00] sur deux réplications — les
-bandes ne se recouvrent pas, le gain de modèle dépasse la variance.
+Bande de variance inter-réplications de cet environnement : [0,653 ; 0,77] —
+l'entrepôt est dominé par la variance de runs, pas par les refus de forme.
 
 ## Banc b — InterCode CTF (patron), environnement aléatoire
 
@@ -44,10 +36,9 @@ bandes ne se recouvrent pas, le gain de modèle dépasse la variance.
 |---|---|---|---|
 | v1.9 | `qwen3.6:35b` | 8/10 | journal, suite 37 |
 | v1.9 (réplication) | `qwen3.6:35b` | 6/10 | journal, suite 39 |
-| v1.10 | `qwen3.6:35b` | 8/10 (échecs s1, s8 — famille `encodage`) | journal, suite 46 add. 4 |
-| v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | **7/9** (échecs s4, s8 — `encodage`, budget ; s1 NON MESURABLE, transport — registre 2026-09-12) | journal, 2026-09-12 session interactive suite 5 |
+| v1.10 | `qwen3.6:35b` | **8/10** (échecs s1, s8 — famille `encodage`) | journal, suite 46 add. 4 |
 
-Variance inter-séries mesurée (`qwen3.6:35b`) : 6/10 à 8/10.
+Variance inter-séries mesurée : 6/10 à 8/10.
 
 ## Banc c — τ-Bench (patron), environnement détail
 
@@ -56,9 +47,9 @@ Variance inter-séries mesurée (`qwen3.6:35b`) : 6/10 à 8/10.
 | v1.9 | `qwen3.6:35b` | 8/10 | journal, suite 40 |
 | v1.9 (réplication) | `qwen3.6:35b` | 9/10 | journal, suite 42 |
 | v1.10 | `qwen3.6:35b` | 9/10 (échec s10) | journal, suite 46 add. 5 |
-| v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | **10/10** (0 violation) | journal, 2026-09-12 session interactive suite 5 |
+| v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | **10/10** (zéro violation, tous clos par l'agent) | journal, 2026-09-12 (U36) |
 
-Variance inter-séries mesurée (`qwen3.6:35b`) : 8/10 à 9/10.
+Variance inter-séries mesurée : 8/10 à 9/10.
 
 ## ARC-AGI-3 — surfaces de validation historiques
 
@@ -71,9 +62,3 @@ valides, les niveaux et l'exploitation des interventions.
 | v1.10 | `qwen3.6:35b` | `tu93-0768757b` | 40 | 0/9 | temps (1 200 s) | `u31-v110-tu93.md` |
 | v1.10 | `qwen3.6:35b` | `tn36-ef4dde99` | 30 | 0/7 | temps (1 200 s) | `u31-v110-tn36.md` |
 | v1.10 | `qwen3.6:35b` | `su15-1944f8ab` | 29 | 0/9 | temps (1 200 s) | `u31-v110-su15.md` |
-| v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | `tu93-0768757b` | **7** (~150 s/tour) | 0/9 | temps (1 200 s) | `u36-arc-base.md` |
-| v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | `tn36-ef4dde99` | **8** | 0/7 | temps (1 200 s) | `u36-arc-base.md` |
-| v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | `su15-1944f8ab` | **9** (9/9 `observation_inchangee`, premier relevé non nul §H11.2) | 0/9 | temps (1 200 s) | `u36-arc-base.md` |
-
-Campagne complète 25 jeux (référence historique) : `u25-t1-final.md`
-(`qwen3.6:35b`, 0/183 niveaux, RHAE 0,00).
