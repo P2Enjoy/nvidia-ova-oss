@@ -44,9 +44,13 @@ DOSSIER_CASSETTES = Path("tests/fixtures/llm/cassettes")
 #: (générateur d'état, rapport A/B).
 ENV_EPINGLE: dict[str, str] = {
     "OLLAMA_CONTEXT_LENGTH": "229376",
-    "AVO_MODEL": "qwen3.6:35b",
+    "AVO_MODEL": "qwen3.8:27b",
     "AVO_THINK": "false",
     "AVO_TEMPERATURE": "0.7",
+    # §H3.1 : défauts d'échantillonnage du modèle de travail, épinglés
+    # explicitement — les cassettes GÉNÉRÉES encodent ces corps (§A8.5).
+    "AVO_TOP_P": "0.8",
+    "AVO_PRESENCE_PENALTY": "1.5",
     "AVO_CONTEXT_SOFT_RATIO": "0.85",
     "AVO_TOOL_STEPS_MAX": "40",
     "AVO_SUP_STALL_ACTIONS": "60",

@@ -7,6 +7,9 @@
 @spec docs/BACKLOG.md U27 — `AVO_CONTEXT_MODE` (§H15.7, §H15.8)
 @spec docs/BACKLOG.md U30 — `AVO_GARDES`, `AVO_GARDE_RETRIES` (§H16.0)
 @spec docs/BACKLOG.md U32 — `AVO_LLM_MAX_CONCURRENT`, `AVO_LLM_SLOTS_DIR` (§H4.9)
+@spec docs/BACKLOG.md U33 — modèle de travail `qwen3.8:27b` et échantillonnage
+      optionnel `AVO_TOP_P`/`AVO_TOP_K`/`AVO_MIN_P`/`AVO_REPEAT_PENALTY`/
+      `AVO_PRESENCE_PENALTY`, sentinelle `aucun` (§H3.1)
 
 Deux principes gouvernent ce module :
 
@@ -51,6 +54,10 @@ CONTEXTE_DEFAUT_REJEU: Final = 131072
 
 _VRAI = frozenset({"1", "true", "vrai", "oui", "yes", "on"})
 _FAUX = frozenset({"0", "false", "faux", "non", "no", "off"})
+
+#: Valeur littérale qui retire un paramètre d'échantillonnage optionnel du corps
+#: de requête (§H3.1) : le Modelfile servi par l'endpoint s'applique alors.
+SENTINELLE_ABSENT = "aucun"
 
 
 class Mode(StrEnum):
@@ -156,6 +163,50 @@ class _Source:
             raise ConfigInvalide(f"{nom} : valeur attendue entre {mini} et {maxi}, reçue {valeur}.")
         return valeur
 
+    def reel_optionnel(
+        self,
+        nom: str,
+        defaut: float | None,
+        mini: float,
+        maxi: float,
+        *,
+        mini_strict: bool = False,
+    ) -> float | None:
+        """Comme `reel`, mais la valeur littérale `aucun` retire le paramètre (§H3.1)."""
+        brut = self.brut(nom)
+        if brut is None:
+            return defaut
+        if brut.strip().lower() == SENTINELLE_ABSENT:
+            return None
+        try:
+            valeur = float(brut)
+        except ValueError as erreur:
+            raise ConfigInvalide(
+                f"{nom} : nombre ou « {SENTINELLE_ABSENT} » attendu, valeur reçue « {brut} »."
+            ) from erreur
+        hors_bornes = valeur <= mini if mini_strict else valeur < mini
+        if hors_bornes or valeur > maxi:
+            borne = f"]{mini}, {maxi}]" if mini_strict else f"[{mini}, {maxi}]"
+            raise ConfigInvalide(f"{nom} : valeur attendue dans {borne}, reçue {valeur}.")
+        return valeur
+
+    def entier_optionnel(self, nom: str, defaut: int | None, mini: int) -> int | None:
+        """Comme `entier`, mais la valeur littérale `aucun` retire le paramètre (§H3.1)."""
+        brut = self.brut(nom)
+        if brut is None:
+            return defaut
+        if brut.strip().lower() == SENTINELLE_ABSENT:
+            return None
+        try:
+            valeur = int(brut)
+        except ValueError as erreur:
+            raise ConfigInvalide(
+                f"{nom} : entier ou « {SENTINELLE_ABSENT} » attendu, valeur reçue « {brut} »."
+            ) from erreur
+        if valeur < mini:
+            raise ConfigInvalide(f"{nom} : entier ≥ {mini} attendu, reçu {valeur}.")
+        return valeur
+
     def booleen(self, nom: str, defaut: bool) -> bool:
         brut = self.brut(nom)
         if brut is None:
@@ -201,6 +252,14 @@ class Config:
     think: bool
     num_predict: int
     temperature: float
+    # Échantillonnage optionnel (§H3.1) : None = clé absente du corps, la valeur
+    # du Modelfile servi s'applique. Les défauts non-None suivent la carte du
+    # modèle de travail en mode non-thinking (top_p 0.8, presence_penalty 1.5).
+    top_p: float | None
+    top_k: int | None
+    min_p: float | None
+    repeat_penalty: float | None
+    presence_penalty: float | None
     timeout_s: int
     ratio_continuation: float
     tool_steps_max: int
@@ -253,6 +312,11 @@ class Config:
             "num_predict": self.num_predict,
             "think": self.think,
             "temperature": self.temperature,
+            "top_p": self.top_p,
+            "top_k": self.top_k,
+            "min_p": self.min_p,
+            "repeat_penalty": self.repeat_penalty,
+            "presence_penalty": self.presence_penalty,
             "timeout_s": self.timeout_s,
             "ratio_continuation": self.ratio_continuation,
             "tool_steps_max": self.tool_steps_max,
@@ -327,10 +391,19 @@ def charger(
         ollama_host=_valider_url("OLLAMA_HOST", hote),
         ollama_api_key=cle,
         contexte_demande=contexte,
-        modele=source.texte("AVO_MODEL", "qwen3.6:35b"),
+        modele=source.texte("AVO_MODEL", "qwen3.8:27b"),
         think=source.booleen("AVO_THINK", False),
         num_predict=source.entier("AVO_NUM_PREDICT", 4096),
         temperature=source.reel("AVO_TEMPERATURE", 0.7, 0.0, 2.0),
+        # Défauts non-thinking de la carte du modèle de travail (§H3.1) : seuls
+        # top_p et presence_penalty diffèrent du Modelfile servi.
+        top_p=source.reel_optionnel("AVO_TOP_P", 0.8, 0.0, 1.0, mini_strict=True),
+        top_k=source.entier_optionnel("AVO_TOP_K", None, 1),
+        min_p=source.reel_optionnel("AVO_MIN_P", None, 0.0, 1.0),
+        repeat_penalty=source.reel_optionnel(
+            "AVO_REPEAT_PENALTY", None, 0.0, 2.0, mini_strict=True
+        ),
+        presence_penalty=source.reel_optionnel("AVO_PRESENCE_PENALTY", 1.5, 0.0, 2.0),
         timeout_s=source.entier("AVO_TIMEOUT_S", 900),
         ratio_continuation=source.reel("AVO_CONTEXT_SOFT_RATIO", 0.85, 0.05, 1.0),
         tool_steps_max=source.entier("AVO_TOOL_STEPS_MAX", 40),

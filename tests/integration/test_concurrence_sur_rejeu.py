@@ -23,6 +23,7 @@ from avo.llm.client import LLMClient, ReponseHTTP, transport_urllib
 from avo.llm.concurrence import dossier_endpoint
 from llm_replay.record import OUTILS, _messages_chat_outils
 from llm_replay.server import creer_serveur
+from tests.integration.cassettes_reelles import ENV_CASSETTES_REELLES
 
 CASSETTE = Path("tests/fixtures/llm/cassettes/contrat_endpoint.jsonl")
 CLE = "sk-cle-de-rejeu-concurrence"
@@ -63,6 +64,7 @@ class TestConcurrenceSurRejeu(unittest.TestCase):
                 "OLLAMA_CONTEXT_LENGTH": "8192",
                 "ARC_API_KEY": "00000000-0000-0000-0000-000000000000",
                 "AVO_LLM_SLOTS_DIR": str(self.slots),
+                **ENV_CASSETTES_REELLES,
             },
             racine=Path("/inexistant"),
         )

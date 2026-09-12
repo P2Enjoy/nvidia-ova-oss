@@ -20,6 +20,7 @@ from avo.context.contexte import BudgetIncoherent, Contexte
 from avo.llm.client import ContextOverflow, LLMClient
 from llm_replay.record import _messages_chat_simple, _messages_chat_trop_grand
 from llm_replay.server import creer_serveur
+from tests.integration.cassettes_reelles import ENV_CASSETTES_REELLES
 
 CASSETTE = Path("tests/fixtures/llm/cassettes/contrat_endpoint.jsonl")
 CLE = "sk-cle-de-rejeu-de-la-continuation"
@@ -47,7 +48,12 @@ class TestContinuationSurServeurRejoue(unittest.TestCase):
         cls.fil.join(timeout=5)
 
     def _config(self, **surcharges: str) -> Config:
-        env = {"OLLAMA_HOST": self.base, "OLLAMA_API_KEY": CLE, **surcharges}
+        env = {
+            "OLLAMA_HOST": self.base,
+            "OLLAMA_API_KEY": CLE,
+            **ENV_CASSETTES_REELLES,
+            **surcharges,
+        }
         return charger(Mode.REJEU, env=env, racine=Path("/inexistant"))
 
     def _client(self, config: Config) -> LLMClient:

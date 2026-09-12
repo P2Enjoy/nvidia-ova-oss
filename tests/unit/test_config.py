@@ -5,6 +5,8 @@
           §H3.3 (validation nommée), §H3.4 (modes), §H4.6 (aucun secret journalisé)
 @verifies docs/BACKLOG.md U27 — `AVO_CONTEXT_MODE` (§H15.7)
 @verifies docs/BACKLOG.md U31 — défaut du seuil de stagnation atteignable (§H10.2)
+@verifies docs/BACKLOG.md U33 — modèle de travail et échantillonnage optionnel,
+          sentinelle `aucun`, bornes (§H3.1)
 """
 
 from __future__ import annotations
@@ -78,7 +80,16 @@ class TestModeRejeu(unittest.TestCase):
 
     def test_les_defauts_documentes_sont_appliques(self) -> None:
         config = charger(Mode.REJEU, env={}, racine=Path("/inexistant"))
-        self.assertEqual(config.modele, "qwen3.6:35b")
+        # §H3.1 : le modèle de travail par défaut (décision du responsable,
+        # 2026-09-12) et les défauts d'échantillonnage de sa carte officielle en
+        # mode non-thinking — seuls top_p et presence_penalty diffèrent du
+        # Modelfile servi, les trois autres restent absents du corps.
+        self.assertEqual(config.modele, "qwen3.8:27b")
+        self.assertEqual(config.top_p, 0.8)
+        self.assertEqual(config.presence_penalty, 1.5)
+        self.assertIsNone(config.top_k)
+        self.assertIsNone(config.min_p)
+        self.assertIsNone(config.repeat_penalty)
         self.assertFalse(config.think)
         self.assertEqual(config.num_predict, 4096)
         self.assertEqual(config.temperature, 0.7)
@@ -141,6 +152,54 @@ class TestPrecedenceDesSources(unittest.TestCase):
         (Path(dossier) / ".env").write_text("AVO_MODEL=depuis-fichier\n", encoding="utf-8")
         config = charger(Mode.REJEU, env={}, racine=Path(dossier))
         self.assertEqual(config.modele, "depuis-fichier")
+
+
+class TestEchantillonnageOptionnel(unittest.TestCase):
+    """§H3.1 : paramètres optionnels, sentinelle `aucun`, bornes nommées."""
+
+    def _charger(self, **surcharges: str) -> Config:
+        return charger(Mode.REJEU, env=surcharges, racine=Path("/inexistant"))
+
+    def test_la_sentinelle_aucun_retire_un_defaut_porte(self) -> None:
+        config = self._charger(AVO_TOP_P="aucun", AVO_PRESENCE_PENALTY="AUCUN")
+        self.assertIsNone(config.top_p)
+        self.assertIsNone(config.presence_penalty)
+
+    def test_une_valeur_explicite_est_lue_et_bornee(self) -> None:
+        config = self._charger(
+            AVO_TOP_P="0.95",
+            AVO_TOP_K="20",
+            AVO_MIN_P="0",
+            AVO_REPEAT_PENALTY="1.0",
+            AVO_PRESENCE_PENALTY="0",
+        )
+        self.assertEqual(config.top_p, 0.95)
+        self.assertEqual(config.top_k, 20)
+        self.assertEqual(config.min_p, 0.0)
+        self.assertEqual(config.repeat_penalty, 1.0)
+        self.assertEqual(config.presence_penalty, 0.0)
+
+    def test_top_p_nul_refuse_borne_inferieure_stricte(self) -> None:
+        with self.assertRaises(ConfigInvalide) as capture:
+            self._charger(AVO_TOP_P="0")
+        self.assertIn("AVO_TOP_P", str(capture.exception))
+
+    def test_presence_penalty_hors_plage_refusee(self) -> None:
+        with self.assertRaises(ConfigInvalide) as capture:
+            self._charger(AVO_PRESENCE_PENALTY="2.5")
+        self.assertIn("AVO_PRESENCE_PENALTY", str(capture.exception))
+
+    def test_top_k_nul_refuse(self) -> None:
+        with self.assertRaises(ConfigInvalide) as capture:
+            self._charger(AVO_TOP_K="0")
+        self.assertIn("AVO_TOP_K", str(capture.exception))
+
+    def test_valeur_illisible_nomme_la_variable_et_la_sentinelle(self) -> None:
+        with self.assertRaises(ConfigInvalide) as capture:
+            self._charger(AVO_MIN_P="beaucoup")
+        message = str(capture.exception)
+        self.assertIn("AVO_MIN_P", message)
+        self.assertIn("aucun", message)
 
 
 class TestValidation(unittest.TestCase):

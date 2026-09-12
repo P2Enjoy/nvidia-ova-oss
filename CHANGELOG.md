@@ -2,6 +2,27 @@
 
 ## [Non publié]
 
+### 2026-09-12 — U33 : modèle de travail `qwen3.8:27b` et échantillonnage aligné sur la carte du modèle
+
+- Instruction du responsable : bascule du modèle de travail. Défaut `AVO_MODEL`
+  → `qwen3.8:27b` (§H3.1) ; capacités (`completion`, `vision`, `tools`,
+  `thinking`), complétion et appel d'outil vérifiés en direct sur l'endpoint
+  via le pont 443, `make smoke-live` TOUT VERT.
+- Cinq paramètres d'échantillonnage optionnels dans la configuration et le
+  corps de requête (§H3.1, §H4.2, ordre canonique) : `AVO_TOP_P` (défaut
+  `0.8`), `AVO_PRESENCE_PENALTY` (défaut `1.5`), `AVO_TOP_K`, `AVO_MIN_P`,
+  `AVO_REPEAT_PENALTY` (défaut `aucun`) ; la sentinelle `aucun` retire le
+  paramètre du corps. Motif : le Modelfile servi porte les valeurs du mode
+  thinking, la carte officielle recommande pour le mode non-thinking — celui
+  du harnais — `top_p=0.8` et `presence_penalty=1.5` (parade documentée contre
+  les répétitions sans fin).
+- Cassettes E2E et de bancs régénérées sous l'environnement épinglé révisé
+  (§A8.5) ; les cassettes enregistrées sur l'endpoint réel restent des
+  artefacts `qwen3.6:35b`, épinglés dans leurs tests
+  (`tests/integration/cassettes_reelles.py`) jusqu'au re-enregistrement (U36).
+- Backlog : lot J (U33–U38, enseignements GVS5H) consigné et PRIORITAIRE ;
+  U31 suspendue jusqu'à la clôture de U38 (MASTER_PLAN §2/§7).
+
 ### 2026-09-08/10 — U31 : le superviseur anti-stagnation devient atteignable sous les budgets réels (seuil 20, cooldown 12)
 
 - Mesure (séries d'observation et supervisées, suites 48–51) : sous le plafond

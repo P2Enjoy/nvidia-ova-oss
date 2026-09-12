@@ -6,6 +6,8 @@
 @spec docs/SPEC_HARNAIS.md §H12 (politique de raisonnement, via la configuration)
 @spec docs/BACKLOG.md U32 — limitation de concurrence par endpoint (§H4.9 :
       jeton avant chaque tentative, `429` → `RateLimited` retentée)
+@spec docs/BACKLOG.md U33 — paramètres d'échantillonnage optionnels dans le corps,
+      ordre canonique (§H3.1, §H4.2)
 
 Le client ne connaît ni la boucle agent ni les outils : il traduit un échange de
 messages en un appel HTTP et rend un résultat typé. Le transport est injectable, ce
@@ -251,6 +253,19 @@ def construire_corps(
         },
         "messages": [dict(message) for message in messages],
     }
+    # Échantillonnage optionnel (§H3.1), dans l'ordre canonique de §H4.2 : les
+    # cassettes s'apparient sur le hachage du corps sérialisé, l'ordre d'insertion
+    # doit donc être stable. Une valeur None laisse la clé absente — le Modelfile
+    # servi s'applique.
+    for cle, valeur in (
+        ("top_p", config.top_p),
+        ("top_k", config.top_k),
+        ("min_p", config.min_p),
+        ("repeat_penalty", config.repeat_penalty),
+        ("presence_penalty", config.presence_penalty),
+    ):
+        if valeur is not None:
+            corps["options"][cle] = valeur
     if tools:
         corps["tools"] = [dict(outil) for outil in tools]
     return corps

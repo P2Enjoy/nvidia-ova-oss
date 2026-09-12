@@ -29,6 +29,7 @@ from llm_replay.record import (
     _messages_chat_trop_grand,
 )
 from llm_replay.server import creer_serveur
+from tests.integration.cassettes_reelles import ENV_CASSETTES_REELLES
 
 CASSETTE = Path("tests/fixtures/llm/cassettes/contrat_endpoint.jsonl")
 CLE = "cle-de-rejeu"
@@ -69,7 +70,18 @@ class TestClientSurContratReel(unittest.TestCase):
     def _config(self, cle: str = CLE) -> Config:
         return charger(
             Mode.REJEU,
-            env={"OLLAMA_HOST": self.base, "OLLAMA_API_KEY": cle},
+            env={
+                "OLLAMA_HOST": self.base,
+                "OLLAMA_API_KEY": cle,
+                # Cassettes ENREGISTRÉES sur l'endpoint réel : artefacts
+                # `qwen3.6:35b` sans paramètres d'échantillonnage (§H3.1) — le
+                # corps rejoué doit hacher à l'identique, indépendamment des
+                # défauts courants du harnais. Levée prévue au re-enregistrement
+                # (backlog U36).
+                "AVO_MODEL": "qwen3.6:35b",
+                "AVO_TOP_P": "aucun",
+                "AVO_PRESENCE_PENALTY": "aucun",
+            },
             racine=Path("/inexistant"),
         )
 
@@ -126,6 +138,7 @@ class TestClientSurContratReel(unittest.TestCase):
                 "OLLAMA_HOST": self.base,
                 "OLLAMA_API_KEY": CLE,
                 "OLLAMA_CONTEXT_LENGTH": "1000000",
+                **ENV_CASSETTES_REELLES,
             },
             racine=Path("/inexistant"),
         )

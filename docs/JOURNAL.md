@@ -4442,17 +4442,17 @@ rumination mesuré par transcripts dans GVS5H §4.2).
    l'environnement épinglé révisé (`AVO_MODEL=qwen3.8:27b`, `AVO_TOP_P=0.8`,
    `AVO_PRESENCE_PENALTY=1.5`) ; les cassettes ENREGISTRÉES sur l'endpoint
    réel restent des artefacts `qwen3.6:35b` — leurs tests épinglent ce modèle
-   et `aucun`, jusqu'au re-enregistrement (U35).
-4. Analyse GVS5H → LOT J au backlog (U32–U37), PRIORITAIRE sur U31
-   (suspendue, MASTER_PLAN §2/§7) : U32 bascule modèle + échantillonnage
-   (cette session) ; U33 résumé de coupure (GVS5H §3.1/§4.2) ; U34 proposition
+   et `aucun`, jusqu'au re-enregistrement (U36).
+4. Analyse GVS5H → LOT J au backlog (U33–U38), PRIORITAIRE sur U31
+   (suspendue, MASTER_PLAN §2/§7) : U33 bascule modèle + échantillonnage
+   (cette session) ; U34 résumé de coupure (GVS5H §3.1/§4.2) ; U35 proposition
    en contexte frais à l'intervention du superviseur (suite 52 + GVS5H §4.4) ;
-   U35 socle de mesure sous `qwen3.8:27b` [LIVE] ; U36 mode `ledger`
-   exploratoire (GVS5H §3.1) ; U37 A/B réel des modes [LIVE], porte de reprise
+   U36 socle de mesure sous `qwen3.8:27b` [LIVE] ; U37 mode `ledger`
+   exploratoire (GVS5H §3.1) ; U38 A/B réel des modes [LIVE], porte de reprise
    de U31. Écarté : « verdict d'exécution = vérité terrain » (déjà le cas,
    A5.3) ; transposer les gains GVS5H sans mesure (interdiction de
    benchmaxing ; gains conditionnels au modèle).
 
-**Reste de la session.** Code U32 (config + client + tests + cassettes
+**Reste de la session.** Code U33 (config + client + tests + cassettes
 régénérées), preuves ciblées, `make smoke-live`, campagne complète, backlog au
 véritable état.

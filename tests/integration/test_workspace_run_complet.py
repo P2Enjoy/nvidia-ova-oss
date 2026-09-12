@@ -27,6 +27,7 @@ from avo.memory.workspace import SOUS_DOSSIERS, Workspace
 from avo.runlog import configurer_journalisation
 from llm_replay.record import _messages_chat_simple
 from llm_replay.server import creer_serveur
+from tests.integration.cassettes_reelles import ENV_CASSETTES_REELLES
 
 CASSETTE = Path("tests/fixtures/llm/cassettes/contrat_endpoint.jsonl")
 CLE = "sk-cle-de-rejeu-suffisamment-longue"
@@ -66,7 +67,16 @@ class TestRunComplet(unittest.TestCase):
     def _config(self) -> Config:
         return charger(
             Mode.REJEU,
-            env={"OLLAMA_HOST": self.base, "OLLAMA_API_KEY": CLE},
+            env={
+                "OLLAMA_HOST": self.base,
+                "OLLAMA_API_KEY": CLE,
+                # Cassettes ENREGISTRÉES sur l'endpoint réel : artefacts
+                # `qwen3.6:35b` sans paramètres d'échantillonnage (§H3.1),
+                # épinglés jusqu'au re-enregistrement (backlog U36).
+                "AVO_MODEL": "qwen3.6:35b",
+                "AVO_TOP_P": "aucun",
+                "AVO_PRESENCE_PENALTY": "aucun",
+            },
             racine=Path("/inexistant"),
         )
 
@@ -166,7 +176,11 @@ class TestJournalisationDuClient(unittest.TestCase):
         try:
             config = charger(
                 Mode.REJEU,
-                env={"OLLAMA_HOST": f"http://{hote!s}:{port}", "OLLAMA_API_KEY": CLE},
+                env={
+                    "OLLAMA_HOST": f"http://{hote!s}:{port}",
+                    "OLLAMA_API_KEY": CLE,
+                    **ENV_CASSETTES_REELLES,
+                },
                 racine=Path("/inexistant"),
             )
             resultat = LLMClient(config, dormir=lambda _: None).chat(

@@ -31,6 +31,7 @@ from avo.memory.notes import (
 from avo.tools.registre import PREFIXE_ERREUR, RegistreOutils, outil_depuis_schema
 from llm_replay.record import OUTILS, _messages_chat_outils
 from llm_replay.server import creer_serveur
+from tests.integration.cassettes_reelles import ENV_CASSETTES_REELLES
 
 CASSETTE = Path("tests/fixtures/llm/cassettes/contrat_endpoint.jsonl")
 CLE = "sk-cle-de-rejeu-des-outils"
@@ -89,7 +90,7 @@ class TestOutilsSurAppelReel(unittest.TestCase):
     def _config(self) -> Config:
         return charger(
             Mode.REJEU,
-            env={"OLLAMA_HOST": self.base, "OLLAMA_API_KEY": CLE},
+            env={"OLLAMA_HOST": self.base, "OLLAMA_API_KEY": CLE, **ENV_CASSETTES_REELLES},
             racine=Path("/inexistant"),
         )
 
@@ -152,7 +153,12 @@ class TestOutilsSurAppelReel(unittest.TestCase):
     def test_la_garde_configuree_s_applique_a_l_execution(self) -> None:
         config = charger(
             Mode.REJEU,
-            env={"OLLAMA_HOST": self.base, "OLLAMA_API_KEY": CLE, "AVO_TOOL_STEPS_MAX": "2"},
+            env={
+                "OLLAMA_HOST": self.base,
+                "OLLAMA_API_KEY": CLE,
+                "AVO_TOOL_STEPS_MAX": "2",
+                **ENV_CASSETTES_REELLES,
+            },
             racine=Path("/inexistant"),
         )
         self.assertEqual(config.tool_steps_max, 2)

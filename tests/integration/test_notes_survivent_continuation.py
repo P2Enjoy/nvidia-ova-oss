@@ -24,6 +24,7 @@ from avo.memory.notes import GUIDE, WORKING, Notes, note_write
 from avo.memory.workspace import Workspace
 from llm_replay.record import _messages_chat_simple
 from llm_replay.server import creer_serveur
+from tests.integration.cassettes_reelles import ENV_CASSETTES_REELLES
 
 CASSETTE = Path("tests/fixtures/llm/cassettes/contrat_endpoint.jsonl")
 CLE = "sk-cle-de-rejeu-des-notes"
@@ -58,7 +59,12 @@ class TestNotesEtContinuation(unittest.TestCase):
         self._dossier.cleanup()
 
     def _config(self, **surcharges: str) -> Config:
-        env = {"OLLAMA_HOST": self.base, "OLLAMA_API_KEY": CLE, **surcharges}
+        env = {
+            "OLLAMA_HOST": self.base,
+            "OLLAMA_API_KEY": CLE,
+            **ENV_CASSETTES_REELLES,
+            **surcharges,
+        }
         return charger(Mode.REJEU, env=env, racine=Path("/inexistant"))
 
     def _monter_run(self, **surcharges: str) -> tuple[Workspace, Notes, Contexte]:

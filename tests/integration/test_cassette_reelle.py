@@ -29,12 +29,13 @@ from llm_replay.cassette import (
 )
 from llm_replay.record import CLE_INVALIDE, SCENARIOS
 from llm_replay.server import creer_serveur
+from tests.integration.cassettes_reelles import ENV_CASSETTES_REELLES
 
 CASSETTE = Path("tests/fixtures/llm/cassettes/contrat_endpoint.jsonl")
 
 #: Configuration reproduisant celle employée à l'enregistrement : modèle et
 #: raisonnement par défaut, options portées par chaque scénario.
-_CONFIG_SCENARIOS = charger(Mode.REJEU, env={}, racine=Path("/inexistant"))
+_CONFIG_SCENARIOS = charger(Mode.REJEU, env=dict(ENV_CASSETTES_REELLES), racine=Path("/inexistant"))
 CLE = "cle-de-rejeu"
 
 

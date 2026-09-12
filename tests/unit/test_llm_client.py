@@ -4,6 +4,8 @@
 @verifies docs/SPEC_HARNAIS.md §H4.2 (requête), §H4.3 (réponse typée),
           §H4.4 (erreurs typées), §H4.5 (retries bornés avec jitter),
           §H4.6 (aucun secret journalisé)
+@verifies docs/BACKLOG.md U33 — échantillonnage optionnel dans le corps, ordre
+          canonique et sentinelle `aucun` (§H3.1, §H4.2)
 
 Le transport, l'attente et l'aléa sont injectés : la politique de retry est éprouvée
 sans réseau et sans attente réelle.
@@ -76,11 +78,50 @@ class TestConstructionDuCorps(unittest.TestCase):
 
     def test_champs_obligatoires_presents(self) -> None:
         corps = construire_corps(_config(), _MESSAGES)
-        self.assertEqual(corps["model"], "qwen3.6:35b")
+        self.assertEqual(corps["model"], "qwen3.8:27b")
         self.assertTrue(corps["stream"])
         self.assertFalse(corps["think"])
         self.assertEqual(corps["messages"], _MESSAGES)
+        # §H3.1/§H4.2 : les défauts portent top_p et presence_penalty, dans
+        # l'ordre canonique — les cassettes s'apparient sur le hachage du corps.
+        self.assertEqual(
+            list(corps["options"]),
+            ["num_ctx", "num_predict", "temperature", "top_p", "presence_penalty"],
+        )
+        self.assertEqual(corps["options"]["top_p"], 0.8)
+        self.assertEqual(corps["options"]["presence_penalty"], 1.5)
+
+    def test_la_sentinelle_aucun_rend_le_trio_historique(self) -> None:
+        """§H3.1 : `aucun` retire le paramètre — l'épinglage des cassettes historiques."""
+        corps = construire_corps(
+            _config(AVO_TOP_P="aucun", AVO_PRESENCE_PENALTY="aucun"), _MESSAGES
+        )
         self.assertEqual(set(corps["options"]), {"num_ctx", "num_predict", "temperature"})
+
+    def test_l_ordre_canonique_est_stable_avec_tous_les_parametres(self) -> None:
+        corps = construire_corps(
+            _config(
+                AVO_TOP_P="0.95",
+                AVO_TOP_K="20",
+                AVO_MIN_P="0",
+                AVO_REPEAT_PENALTY="1.0",
+                AVO_PRESENCE_PENALTY="0.5",
+            ),
+            _MESSAGES,
+        )
+        self.assertEqual(
+            list(corps["options"]),
+            [
+                "num_ctx",
+                "num_predict",
+                "temperature",
+                "top_p",
+                "top_k",
+                "min_p",
+                "repeat_penalty",
+                "presence_penalty",
+            ],
+        )
 
     def test_les_outils_ne_sont_presents_que_s_ils_sont_fournis(self) -> None:
         self.assertNotIn("tools", construire_corps(_config(), _MESSAGES))
@@ -89,7 +130,13 @@ class TestConstructionDuCorps(unittest.TestCase):
 
     def test_les_surcharges_priment_sur_la_configuration(self) -> None:
         corps = construire_corps(_config(), _MESSAGES, num_ctx=8192, num_predict=64, temperature=0)
-        self.assertEqual(corps["options"], {"num_ctx": 8192, "num_predict": 64, "temperature": 0})
+        self.assertEqual(corps["options"]["num_ctx"], 8192)
+        self.assertEqual(corps["options"]["num_predict"], 64)
+        self.assertEqual(corps["options"]["temperature"], 0)
+        # Les surcharges ne touchent pas l'échantillonnage : les défauts §H3.1
+        # de la configuration restent présents.
+        self.assertEqual(corps["options"]["top_p"], 0.8)
+        self.assertEqual(corps["options"]["presence_penalty"], 1.5)
 
     def test_think_suit_la_configuration(self) -> None:
         corps = construire_corps(_config(AVO_THINK="true", AVO_NUM_PREDICT="8192"), _MESSAGES)

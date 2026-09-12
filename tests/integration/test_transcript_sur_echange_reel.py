@@ -22,6 +22,7 @@ from avo.context.transcript import Transcript
 from avo.llm.client import LLMClient
 from llm_replay.record import _messages_chat_simple
 from llm_replay.server import creer_serveur
+from tests.integration.cassettes_reelles import ENV_CASSETTES_REELLES
 
 CASSETTE = Path("tests/fixtures/llm/cassettes/contrat_endpoint.jsonl")
 CLE = "sk-cle-de-rejeu-du-transcript"
@@ -51,7 +52,7 @@ class TestTranscriptSurEchangeReel(unittest.TestCase):
     def _client(self) -> LLMClient:
         config = charger(
             Mode.REJEU,
-            env={"OLLAMA_HOST": self.base, "OLLAMA_API_KEY": CLE},
+            env={"OLLAMA_HOST": self.base, "OLLAMA_API_KEY": CLE, **ENV_CASSETTES_REELLES},
             racine=Path("/inexistant"),
         )
         return LLMClient(config, dormir=lambda _: None)
