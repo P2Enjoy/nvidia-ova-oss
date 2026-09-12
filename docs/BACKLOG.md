@@ -1485,7 +1485,7 @@ sur les itérations U31, qui reprennent après U37. Chaque unité suit CLAUDE.md
 jeu » (§A5) avant tout commit de code ou de prompt — les mécanismes retenus sont
 tous génériques.
 
-## U33 — Bascule du modèle de travail vers `qwen3.8:27b` et défauts d'échantillonnage `[~]`
+## U33 — Bascule du modèle de travail vers `qwen3.8:27b` et défauts d'échantillonnage `[x]`
 
 `@spec` H3.1 (modèle et variables d'échantillonnage, révisés le 2026-09-12),
 H4.2 (ordre canonique des options), A8.5 (environnement épinglé des cassettes).
@@ -1503,6 +1503,16 @@ H4.2 (ordre canonique des options), A8.5 (environnement épinglé des cassettes)
   canonique), cassettes régénérées, `make smoke-live` vert sous les nouveaux
   défauts (modèle et échantillonnage constatés dans le corps émis), campagne
   complète verte, README/DAT/CHANGELOG à jour.
+
+**Livrée et intégralement vérifiée le 2026-09-12** (journal du même jour) :
+config + client (`reel_optionnel`/`entier_optionnel`, sentinelle `aucun`, ordre
+canonique §H4.2), 6 unitaires d'échantillonnage + 3 de corps neufs, cassettes
+générées régénérées (7 fichiers), rejeux sur cassettes réelles épinglés
+(`tests/integration/cassettes_reelles.py`), `make smoke-live` TOUT VERT
+(version, modèles servis, complétion, appel d'outil), campagne complète verte
+(lint, mypy 138 fichiers, 825 unitaires, 155 intégration, 10 E2E) + build.
+DAT sans objet (aucune mention de modèle). Reste hérité : cassettes réelles
+encore `qwen3.6:35b` → U36.
 
 ## U34 — Résumé de coupure des réponses tronquées `[ ]`
 

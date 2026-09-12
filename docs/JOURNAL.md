@@ -4456,3 +4456,32 @@ rumination mesuré par transcripts dans GVS5H §4.2).
 **Reste de la session.** Code U33 (config + client + tests + cassettes
 régénérées), preuves ciblées, `make smoke-live`, campagne complète, backlog au
 véritable état.
+
+## 2026-09-12 (session interactive, clôture) — U33 livrée : `qwen3.8:27b` par défaut, échantillonnage aligné, tout vert
+
+**Codé et prouvé.** `avo.config` : cinq paramètres d'échantillonnage
+optionnels (`reel_optionnel`/`entier_optionnel`, sentinelle `aucun`, bornes
+nommées), défauts `top_p=0.8` et `presence_penalty=1.5`, `AVO_MODEL` par
+défaut `qwen3.8:27b`, résumé journalisable enrichi. `avo.llm.client` : corps
+§H4.2 complété des paramètres configurés, ordre canonique (appariement des
+cassettes par hachage). Tests : 6 unitaires d'échantillonnage neufs, 3 de
+corps ; épinglage partagé des rejeux sur cassettes RÉELLES
+(`tests/integration/cassettes_reelles.py`, artefacts `qwen3.6:35b`, levée à
+U36) appliqué à 8 fichiers ; `ENV_EPINGLE` E2E révisé et les 7 cassettes
+GÉNÉRÉES régénérées (`make seed-e2e`, régénération vérifiée).
+
+**Preuves.** `make smoke-live` TOUT VERT contre l'endpoint réel (version
+0.32.14, `qwen3.8:27b` servi, complétion courte, appel d'outil `run_shell`).
+Campagne complète verte : lint + format, mypy strict (138 fichiers),
+825 unitaires, 155 intégration, 10 E2E ; `make build` OK. U33 `[x]`.
+
+**Incident de numérotation, corrigé en session.** Le lot J a d'abord été
+numéroté U32–U37 en collision avec l'U32 historique (limiteur de
+concurrence, `[x]`) ; renuméroté U33–U38 dans backlog, MASTER_PLAN et
+journal avant tout code. Deux messages de commit poussés portent l'ancienne
+numérotation (2c3a140, et le commit documentaire) — l'historique ne se
+réécrit pas, les fichiers font foi.
+
+**Où reprendre (boucle planifiée).** Lot J dans l'ordre : U34 (résumé de
+coupure, spec H17 à écrire d'abord). U31 reste suspendue jusqu'à la clôture
+de U38 (MASTER_PLAN §2/§7).
