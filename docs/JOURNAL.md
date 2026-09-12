@@ -4550,3 +4550,29 @@ banc × version × modèle × score, accepté par le responsable).
 **Références à battre ou situer (v1.10, `qwen3.6:35b`, suite 46)** : dépôt
 0,947 ; entrepôt 0,707 (bande [0,653 ; 0,77]) ; CTF 8/10 (variance
 inter-séries mesurée : 6/10 à 8/10) ; τ 9/10.
+
+## 2026-09-12 (session interactive, suite 4) — périmètre du passage ARC de référence sous `qwen3.8:27b`, écrit avant lancement
+
+**Instruction du responsable.** Ajouter un passage ARC au socle U36, comme
+base de comparaison du changement de modèle avant le dev (U34/U35/U37) que
+la boucle planifiée prendra ensuite.
+
+**POINT TRANCHÉ — trois jeux de validation, pas une campagne 25 jeux.**
+Surfaces : `tu93-0768757b`, `tn36-ef4dde99`, `su15-1944f8ab` — exactement
+celles des validations v1.10 (`u31-v110-*`) et des séries supervisées
+(`u31-sup*`) : ce sont les seuls jeux pour lesquels l'historique porte des
+mesures fines (actions valides, interventions, exploitation) à comparer.
+Une campagne complète relève du périmètre U25 et de son déclencheur.
+
+**Périmètre (écrit AVANT lancement, §A7.2).** UNE campagne, trois jeux
+séquentiels ; plafonds par jeu (§A7.1, tous obligatoires), EXACTEMENT ceux
+des références pour une comparaison à paramètres constants : 80
+actions/niveau, 300 actions/jeu, 1 200 s/jeu, 1 500 000 tokens/jeu,
+400 tours ; mode `state`, gardes actives, `qwen3.8:27b` et défauts
+d'échantillonnage §H3.1 (l'objet de la mesure), fenêtre 229 376 ;
+`--j-autorise-la-publication` au titre de l'autorisation du responsable
+(2026-08-30) ; `run-id` : `u36-arc-base` ; lancement APRÈS la fin des
+quatre séries de banc (une seule exécution live à la fois, plafond global
+3). Attendu, contre l'historique par jeu : actions valides (référentiel
+26–41 sous qwen3.6), niveaux/RHAE, interventions du superviseur et leur
+exploitation, incidents. Durée attendue ≈ 65–75 min (3 × 1 200 s + retours).
