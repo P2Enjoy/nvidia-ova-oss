@@ -4629,3 +4629,44 @@ les logs de session ; ARC : `docs/rapports/u36-arc-base.md`, scorecard
 écrire d'abord, puis U35, U37, et U38 sur ce socle. U36 reste `[~]` : les
 lignes de base sont ÉTABLIES (cette session), le re-enregistrement des
 cassettes vivantes reste à solder. U31 suspendue jusqu'à U38 (inchangé).
+
+## 2026-09-12 (session planifiée) — U36 CLOSE : réplications des lignes de base, cassettes vivantes ré-enregistrées, épinglage levé
+
+**Jouer (27 épisodes live, séquentiel, une exécution à la fois).** Réplication
+indépendante des quatre séries de banc sous `qwen3.8:27b`, en parallèle de la
+session interactive (plafond global 3 respecté ; les deux séries figurent dans
+`docs/rapports/HISTORIQUE.md`) : dépôt **0,987** (0,96/1,00/1,00, zéro
+invalide, résolution 16/17) ; entrepôt **0,867** (0,64/0,96/1,00, premier
+épisode entrepôt parfait de cette série) ; CTF **7/10** — s1 mort une fois sur
+`ServerError` 500 puis rejeu unique ABOUTI (échec sémantique `encodage`,
+budget), échecs s1/s4/s8 tous `encodage` comme la série sœur ; τ **10/10**
+(0 violation, 4–6 tours/épisode). Épisodes ~20 min sous ce modèle (contre ~4
+sous qwen3.6) : le débit de l'endpoint domine la durée des séries.
+
+**Coder/livrer (solde de l'unité).** Cassettes vivantes ré-enregistrées
+(`make record-llm`, 7 échanges — `qwen3.8:27b`, `top_p 0.8`,
+`presence_penalty 1.5` constatés dans les corps) ; épinglage `qwen3.6` levé :
+`ENV_CASSETTES_REELLES` épingle désormais l'environnement d'ENREGISTREMENT
+courant (patron conservé, valeurs à jour), les deux épinglages inline restants
+(`test_workspace_run_complet`, `test_client_sur_cassette_reelle`) s'y
+rattachent, et les assertions figées suivent le contrat enregistré (modèle via
+le dictionnaire partagé ; commande d'outil lue dans l'appel enregistré — le
+nouveau contrat porte `ls -la /tmp` là où l'ancien portait `ls /tmp`).
+SPEC_BANCS §S1.6 ajouté : les références locales des bancs pointent
+`HISTORIQUE.md`. Registre : entrée transport nuancée par la réplication
+(rejeu abouti — non systématique).
+
+**Incident de collaboration, corrigé en session.** Ma résolution du rebase sur
+`HISTORIQUE.md` a d'abord écrasé les lignes de la session interactive
+(réplications, lignes ARC) ; constaté à la relecture, restauré depuis
+`04f6cc3` et fusionné proprement (commit `3bcbeb9`).
+
+**Preuves.** `make smoke-live` TOUT VERT à l'ouverture ; 155 intégration
+verts après levée d'épinglage ; `make test-int-live` vert ; campagne complète
+verte (lint + format, mypy strict 138 fichiers, 825 unitaires,
+155 intégration, 10 E2E sur pile montée et seedée) ; `make build` OK.
+U36 passe `[x]` (backlog mis au réel, CHANGELOG [Non publié] complété).
+
+**Où reprendre (boucle planifiée).** U34 — résumé de coupure, spec H17 à
+écrire et committer AVANT le code ; puis U35, U37, U38 sur le socle U36.
+U31 suspendue jusqu'à U38 (inchangé).

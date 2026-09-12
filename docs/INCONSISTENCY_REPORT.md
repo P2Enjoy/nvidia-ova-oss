@@ -26,6 +26,13 @@ registre devient vide, le fichier lui-même est supprimé du dépôt (CLAUDE.md 
   de flux relève du chantier « résumé de coupure » (U34, spec H17) qui peut
   l'instruire, ou d'une reprise de flux au niveau transport (§H4) si les
   mesures s'accumulent.
+- **Nuance mesurée (session planifiée du même jour, série b indépendante).**
+  Sur la réplication, le seed 1 est mort une fois sur un incident d'endpoint
+  (`ServerError` HTTP 500, 21 actions) et son rejeu unique a ABOUTI sans mort
+  de transport (30 actions, budget épuisé, échec sémantique `encodage`) :
+  le mode d'échec n'est pas systématique sur ce seed, et la réplication est
+  mesurable en 10 épisodes (7/10, `HISTORIQUE.md`). L'accumulation de mesures
+  pour une reprise de flux transport reste à l'identique.
 
 ### 2026-09-01 — `scripts/smoke_pile.sh` : le contrôle `RESET` ne suit plus le contrat du rejoueur ARC
 

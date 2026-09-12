@@ -2,6 +2,23 @@
 
 ## [Non publié]
 
+### 2026-09-12 — U36 : socle de mesure sous `qwen3.8:27b` — lignes de base répliquées, cassettes vivantes ré-enregistrées
+
+- Lignes de base des quatre bancs sous le modèle de travail, deux séries
+  indépendantes chacune (sessions parallèles du jour) : dépôt 0,987/0,987,
+  entrepôt 1,00/0,867, CTF 7/9 et 7/10, τ 10/10 ×2 ; passage ARC
+  `u36-arc-base` sur les trois surfaces de validation (7–9 actions valides/jeu
+  à plafonds constants, ~150 s/tour). Tableau consolidé :
+  `docs/rapports/HISTORIQUE.md`, référencé par `docs/SPEC_BANCS.md` §S1.6.
+- Cassettes vivantes ré-enregistrées (`make record-llm`) sous `qwen3.8:27b`
+  et les défauts §H3.1 ; épinglage `qwen3.6:35b` levé —
+  `ENV_CASSETTES_REELLES` épingle désormais l'environnement d'enregistrement
+  courant et les assertions suivent le contrat enregistré. 155 tests
+  d'intégration et `make test-int-live` verts.
+- Registre : incident transport `IncompleteRead` du pont sur longues
+  générations (CTF s1) consigné, nuancé par la réplication (rejeu abouti :
+  non systématique).
+
 ### 2026-09-12 — U33 : modèle de travail `qwen3.8:27b` et échantillonnage aligné sur la carte du modèle
 
 - Instruction du responsable : bascule du modèle de travail. Défaut `AVO_MODEL`
@@ -17,9 +34,9 @@
   du harnais — `top_p=0.8` et `presence_penalty=1.5` (parade documentée contre
   les répétitions sans fin).
 - Cassettes E2E et de bancs régénérées sous l'environnement épinglé révisé
-  (§A8.5) ; les cassettes enregistrées sur l'endpoint réel restent des
-  artefacts `qwen3.6:35b`, épinglés dans leurs tests
-  (`tests/integration/cassettes_reelles.py`) jusqu'au re-enregistrement (U36).
+  (§A8.5) ; les cassettes enregistrées sur l'endpoint réel, alors artefacts
+  `qwen3.6:35b`, ont été ré-enregistrées sous le modèle de travail par U36
+  (même jour, entrée ci-dessus).
 - Backlog : lot J (U33–U38, enseignements GVS5H) consigné et PRIORITAIRE ;
   U31 suspendue jusqu'à la clôture de U38 (MASTER_PLAN §2/§7).
 

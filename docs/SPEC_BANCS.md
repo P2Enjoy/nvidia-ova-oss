@@ -74,6 +74,16 @@ src/avo/bancs/tau/score.py               # §S17 : évaluateur d'état final et 
 src/avo/bancs/tau/adaptateur.py          # §S18 : outils + contexte de tâche + CLI
 ```
 
+**S1.6 — Références locales.** Les lignes de base MESURÉES du harnais sur les
+trois bancs (par version du harnais et par modèle de travail, séries de
+référence §S5.3, §S11.3 et §S17.3) sont consolidées dans un tableau unique :
+`docs/rapports/HISTORIQUE.md`. Ce tableau est la référence locale des
+comparaisons avant/après (déclencheur U25, A/B d'améliorations) ; il se met à
+jour dans le même changement que toute nouvelle série de référence, et les
+relevés détaillés restent dans `docs/JOURNAL.md`. Les références PUBLIÉES de la
+source (§S5.4, §S11.4, §S17.4) ne s'y substituent pas : elles n'orientent que le
+déclencheur U25.
+
 Les tests suivent le miroir habituel (`tests/unit/bancs/…`, `tests/integration/…`).
 
 ---

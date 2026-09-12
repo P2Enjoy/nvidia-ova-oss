@@ -1497,8 +1497,8 @@ H4.2 (ordre canonique des options), A8.5 (environnement épinglé des cassettes)
   mode non-thinking (H3.1).
 - Les cassettes E2E et de bancs étant GÉNÉRÉES (A8.5), elles se régénèrent sous
   l'environnement épinglé révisé ; les cassettes ENREGISTRÉES sur l'endpoint
-  réel restent des artefacts `qwen3.6:35b` : leurs tests d'intégration épinglent
-  ce modèle et `aucun` sur les nouveaux paramètres, jusqu'à U36.
+  réel, alors artefacts `qwen3.6:35b` épinglés dans leurs tests, ont été
+  ré-enregistrées sous le modèle de travail par U36.
 - DoD : unitaires de config et de corps (défauts, bornes, sentinelle, ordre
   canonique), cassettes régénérées, `make smoke-live` vert sous les nouveaux
   défauts (modèle et échantillonnage constatés dans le corps émis), campagne
@@ -1511,8 +1511,8 @@ générées régénérées (7 fichiers), rejeux sur cassettes réelles épinglé
 (`tests/integration/cassettes_reelles.py`), `make smoke-live` TOUT VERT
 (version, modèles servis, complétion, appel d'outil), campagne complète verte
 (lint, mypy 138 fichiers, 825 unitaires, 155 intégration, 10 E2E) + build.
-DAT sans objet (aucune mention de modèle). Reste hérité : cassettes réelles
-encore `qwen3.6:35b` → U36.
+DAT sans objet (aucune mention de modèle). Le reste hérité — cassettes réelles
+encore `qwen3.6:35b` — est soldé par U36.
 
 ## U34 — Résumé de coupure des réponses tronquées `[ ]`
 
@@ -1545,30 +1545,34 @@ workers contre l'ancrage).
   de contexte, jonction au message, kill-switch) ; rejeu sur cassettes
   générées ; campagne complète verte.
 
-## U36 — Socle de mesure sous `qwen3.8:27b` : cassettes vivantes et lignes de base `[~]` **[LIVE]**
+## U36 — Socle de mesure sous `qwen3.8:27b` : cassettes vivantes et lignes de base `[x]` **[LIVE]**
 
-**AVANCÉE EN TÊTE DU LOT J (instruction du responsable, 2026-09-12)** : la
-partie « lignes de base des bancs » s'exécute AVANT U34/U35/U37, pour que le
-changement de modèle ait sa base de comparaison propre avant tout
-enrichissement du harnais. Le re-enregistrement des cassettes vivantes reste
-dans l'unité, à solder avant sa clôture.
+**Avancée en tête du lot J (instruction du responsable, 2026-09-12)** : les
+lignes de base AVANT U34/U35/U37, pour que le changement de modèle ait sa base
+de comparaison propre avant tout enrichissement du harnais.
 
-`@spec` H4.7 (enregistrement du contrat), SPEC_BANCS (lignes de base). La
-bascule U33 rend le socle de mesure hérité (`qwen3.6:35b`) historique : les
-comparaisons de la reprise U31 exigent des bases du modèle de travail.
+`@spec` H4.7 (enregistrement du contrat), SPEC_BANCS §S1.6 (références
+locales). La bascule U33 rendait le socle `qwen3.6:35b` historique.
 
-- Re-enregistrer les cassettes vivantes (`make record-llm`, `make
-  test-int-live`) sous `qwen3.8:27b` et les défauts H3.1 ; lever l'épinglage
-  `qwen3.6:35b` des tests d'intégration concernés dans le même changement.
-- ~~Rejouer les lignes de base des bancs U29~~ **FAIT le 2026-09-12 (session
-  interactive, suite 5)** : dépôt 0,987, entrepôt 1,00, CTF 7/9 (s1 non
-  mesurable — transport, registre 2026-09-12), τ 10/10, plus passage ARC
-  `u36-arc-base` (7–9 actions/jeu à plafonds constants, scorecard `3194350d…`
-  fermé) ; consolidé dans `docs/rapports/HISTORIQUE.md`. Reste : les
-  références locales de `docs/SPEC_BANCS.md` à réviser avec le
-  re-enregistrement.
-- DoD : cassettes committées, bases consignées (fait), campagne complète
-  verte à la clôture.
+**Livrée et intégralement vérifiée le 2026-09-12** (deux sessions parallèles,
+journal suite 5 et session planifiée du même jour) :
+
+- Lignes de base des quatre bancs sous `qwen3.8:27b`, chacune RÉPLIQUÉE par
+  deux séries indépendantes : dépôt 0,987/0,987 ; entrepôt 1,00/0,867 (bandes
+  qwen3.6 et qwen3.8 disjointes) ; CTF 7/9 (s1 non mesurable — transport,
+  registre 2026-09-12) et 7/10 en réplication (s1 rejoué une fois, échecs
+  tous `encodage`) ; τ 10/10 ×2. Passage ARC `u36-arc-base` (scorecard
+  `3194350d…` fermé) : 7–9 actions valides/jeu à plafonds constants contre
+  26–41 sous qwen3.6 (~150 s/tour), premier relevé `observation_inchangee`
+  non nul (su15, 9/9). Consolidé dans `docs/rapports/HISTORIQUE.md`,
+  référencé par SPEC_BANCS §S1.6.
+- Cassettes vivantes ré-enregistrées (`make record-llm`, 7 échanges,
+  `qwen3.8:27b` + défauts §H3.1 dans les corps) ; épinglage `qwen3.6` levé :
+  `ENV_CASSETTES_REELLES` épingle l'environnement d'enregistrement courant,
+  les épinglages inline et les assertions figées (modèle, commande d'outil)
+  suivent désormais le contrat enregistré. `make test-int-live` vert.
+- Campagne complète verte à la clôture : lint + format, mypy strict
+  (138 fichiers), 825 unitaires, 155 intégration, 10 E2E, build.
 
 ## U37 — Intégration du patron ledger DANS la boucle et l'état existants `[ ]`
 
