@@ -5,6 +5,28 @@ registre devient vide, le fichier lui-même est supprimé du dépôt (CLAUDE.md 
 
 ## Ouverts
 
+### 2026-09-12 — Transport : `IncompleteRead` répété du pont 443 sur les longues générations, épisode CTF seed 1 non mesurable
+
+- **Constat.** Sur le défi `encodage` du seed 1 (banc b), l'appel `/api/chat`
+  est coupé en plein flux (`http.client.IncompleteRead`, 94 634 octets lus au
+  premier run, 12 300 au rejeu), l'échelle de relances H4.5 (5 tentatives,
+  attentes jusqu'à 90 s) s'épuise et l'épisode meurt.
+- **Mesure.** Deux exécutions indépendantes le 2026-09-12 (05:27Z après ~22 min
+  de jeu ; rejeu 09:12Z, 14 relances au total dans l'épisode), une seule
+  exécution live en cours à chaque fois (le plafond de parallélisme n'est pas
+  en cause). Les 25 autres épisodes du même socle et la campagne ARC ont
+  traversé le même pont sans mourir : le mode d'échec est corrélé aux
+  générations LONGUES de ce défi (le modèle raisonne longtemps), pas à la
+  charge. Même signature que la coupure mi-flux décrite pour un gateway dans
+  l'export GVS5H (§4.5, `IncompleteRead`).
+- **Issue retenue.** Ligne de base du banc b consignée sur les 9 épisodes
+  aboutis (7/9), seed 1 marqué NON MESURABLE sur cette infrastructure — pas un
+  échec du modèle. Correction étrangère à l'unité en cours (U36, socle de
+  mesure) : le comportement du client reste inchangé ; la reprise sur coupure
+  de flux relève du chantier « résumé de coupure » (U34, spec H17) qui peut
+  l'instruire, ou d'une reprise de flux au niveau transport (§H4) si les
+  mesures s'accumulent.
+
 ### 2026-09-01 — `scripts/smoke_pile.sh` : le contrôle `RESET` ne suit plus le contrat du rejoueur ARC
 
 - **Constat.** Le script de fumée envoie `POST /api/cmd/RESET` avec un corps `{}`

@@ -4576,3 +4576,56 @@ quatre séries de banc (une seule exécution live à la fois, plafond global
 3). Attendu, contre l'historique par jeu : actions valides (référentiel
 26–41 sous qwen3.6), niveaux/RHAE, interventions du superviseur et leur
 exploitation, incidents. Durée attendue ≈ 65–75 min (3 × 1 200 s + retours).
+
+## 2026-09-12 (session interactive, suite 5) — dépouillement du socle U36 : lignes de base `qwen3.8:27b` établies sur les quatre bancs et sur ARC
+
+**Joué (26 épisodes de banc + 1 rejeu + campagne ARC 3 jeux, séquentiel, une
+exécution live à la fois).** Chiffres consolidés dans
+`docs/rapports/HISTORIQUE.md` (créé) ; détail par épisode ci-dessous et dans
+les logs de session ; ARC : `docs/rapports/u36-arc-base.md`, scorecard
+`3194350d-9d56-4033-ab8d-c1cd0d08f9be` fermé, réconciliation exacte ×3.
+
+- **Banc a dépôt : 0,987** (1,00/0,96/1,00) contre 0,947 (v1.10/qwen3.6).
+- **Banc a entrepôt : 1,00** (1,00/1,00/1,00) contre 0,707, bande historique
+  [0,653 ; 0,77] — l'environnement dont la variance dominait sous qwen3.6
+  sort parfait, y compris le seed 2 (0,44–0,96 selon les séries).
+- **Banc c : 10/10** contre 9/10 — le seed 10 (l'unique échec v1.10, retour
+  éligible clos sans transaction) passe avec sa transaction ; 0 violation sur
+  la série ; épisodes en ~2 min.
+- **Banc b : 7/9 sur épisodes aboutis** (capturés s2 3 act., s3 19, s5 9,
+  s6 7, s7 29, s9 6, s10 7 ; échecs s4 et s8, famille `encodage`, budget
+  épuisé — s8 est une perte contre qwen3.6 qui le capturait) ; **seed 1 NON
+  MESURABLE** : deux morts de transport identiques (`IncompleteRead` du pont
+  sur longues générations, échelle H4.5 épuisée ; premier run ~22 min de jeu,
+  rejeu unique conforme au périmètre également mort) — consigné au registre
+  (2026-09-12), pas un échec du modèle. Référence : 8/10, variance mesurée
+  6–8. La famille `encodage` est le point faible des deux modèles.
+- **ARC (`u36-arc-base`, tu93/tn36/su15, plafonds constants) : 0/25 niveaux,
+  RHAE 0,00 — comme toutes les références — mais 7/8/9 actions valides par
+  jeu contre 26–41 sous qwen3.6** : ~150 s par tour (grandes grilles en mode
+  state), le plafond de 1 200 s tronque ~4× plus tôt. Zéro intervention du
+  superviseur (seuil 20 inatteignable à 7–9 actions). Et PREMIER relevé non
+  nul de `observation_inchangee` depuis sa création (§H11.2) : 9/9 actions
+  sur `su15` (toutes `action6`) — l'observation n'a jamais changé de tout le
+  run ; cinq runs qwen3.6 étaient à zéro strict. La métrique attrape enfin
+  le non-progrès par identité, sur ce couple modèle-surface.
+
+**Enseignements pour le lot J (mesurés aujourd'hui, à instruire par le dev).**
+
+1. Sur les bancs — tâches à texte court — `qwen3.8:27b` domine partout où la
+   référence n'était pas déjà au plafond ; le socle de comparaison U38 est
+   sain et serré (dépôt 0,987, entrepôt 1,00, τ 10/10 : l'A/B se jouera
+   surtout sur le banc b et sur la stabilité).
+2. Sur ARC — grandes grilles — la latence par tour divise les actions par 4 à
+   budget constant : les périmètres ARC futurs se choisissent LARGES
+   (« Exactitude avant tout », CLAUDE_PROJECT) et la comparaison contre les
+   runs qwen3.6 se lit en actions/temps, jamais en niveaux seuls.
+3. Le mode d'échec transport sur longues générations (registre 2026-09-12)
+   et le zéro-action-utile de `su15` alimentent directement U34 (résumé de
+   coupure) et la lecture superviseur/stagnation (le détecteur d'identité
+   d'observation a maintenant une surface où mordre).
+
+**Où reprendre (boucle planifiée).** U34 — résumé de coupure, spec H17 à
+écrire d'abord, puis U35, U37, et U38 sur ce socle. U36 reste `[~]` : les
+lignes de base sont ÉTABLIES (cette session), le re-enregistrement des
+cassettes vivantes reste à solder. U31 suspendue jusqu'à U38 (inchangé).

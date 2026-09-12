@@ -1560,10 +1560,15 @@ comparaisons de la reprise U31 exigent des bases du modèle de travail.
 - Re-enregistrer les cassettes vivantes (`make record-llm`, `make
   test-int-live`) sous `qwen3.8:27b` et les défauts H3.1 ; lever l'épinglage
   `qwen3.6:35b` des tests d'intégration concernés dans le même changement.
-- Rejouer les lignes de base des bancs U29 (a dépôt/entrepôt, b, c) sous le
-  modèle de travail, plafonds inchangés ; consigner les nouvelles bases au
-  journal et dans les références locales de `docs/SPEC_BANCS.md`.
-- DoD : cassettes committées, bases consignées, campagne complète verte.
+- ~~Rejouer les lignes de base des bancs U29~~ **FAIT le 2026-09-12 (session
+  interactive, suite 5)** : dépôt 0,987, entrepôt 1,00, CTF 7/9 (s1 non
+  mesurable — transport, registre 2026-09-12), τ 10/10, plus passage ARC
+  `u36-arc-base` (7–9 actions/jeu à plafonds constants, scorecard `3194350d…`
+  fermé) ; consolidé dans `docs/rapports/HISTORIQUE.md`. Reste : les
+  références locales de `docs/SPEC_BANCS.md` à réviser avec le
+  re-enregistrement.
+- DoD : cassettes committées, bases consignées (fait), campagne complète
+  verte à la clôture.
 
 ## U37 — Intégration du patron ledger DANS la boucle et l'état existants `[ ]`
 
