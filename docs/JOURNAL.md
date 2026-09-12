@@ -4485,3 +4485,34 @@ réécrit pas, les fichiers font foi.
 **Où reprendre (boucle planifiée).** Lot J dans l'ordre : U34 (résumé de
 coupure, spec H17 à écrire d'abord). U31 reste suspendue jusqu'à la clôture
 de U38 (MASTER_PLAN §2/§7).
+
+## 2026-09-12 (session interactive, suite 2) — directive du responsable : intégrer, ne pas multiplier les modes ; l'exactitude prime le coût
+
+**Instruction du responsable.** Un papier sert à AMÉLIORER le harnais
+existant, pas à empiler des modes de fonctionnement ; plusieurs patrons de
+contexte sont admis mais la COMBINAISON qui améliore le résultat est
+préférée ; le coût d'inférence et la latence ne comptent pas (instance
+gratuite) — seuls l'exactitude et le résultat gouvernent.
+
+**Persisté.** Deux règles ajoutées à `CLAUDE_PROJECT.md` (« Intégration
+plutôt que modes », « Exactitude avant tout » — les plafonds §A7.1 demeurent
+des gardes d'arrêt propre, leurs valeurs se choisissent LARGES : un budget
+qui tronque l'observation est un défaut de périmètre, pas une économie).
+
+**Lot J redessiné en conséquence (aucun code encore écrit sur ces unités).**
+
+- U37 réécrite : plus de mode `ledger` séparé. Constat d'architecture : le
+  « worker » GVS5H (appel frais borné recevant énoncé + état partagé + tâche)
+  est déjà notre mode `state` (P, Σ, Oₜ) ; la moitié manquante est le rôle
+  MANAGER, et elle s'intègre aux structures existantes — plan/tâches borné et
+  curé DANS Σ, pas d'idéation multi-approches obligatoire avant la première
+  action d'un épisode (extension de la garde « hypothèses non vides »),
+  curation du plan par le superviseur à l'intervention. Chaque mécanisme avec
+  interrupteur de configuration.
+- U38 réécrite : l'A/B réel compare le harnais ENRICHI (U34 + U35 + U37) au
+  harnais nu dans le MÊME mode `state`, et désigne les mécanismes qui restent
+  allumés ; le coût n'entre pas dans la décision.
+- U34 (résumé de coupure) et U35 (sonde fraîche du superviseur) inchangées :
+  elles étaient déjà des intégrations, et se composent avec U37.
+
+**Où reprendre (boucle planifiée).** Inchangé : U34, spec H17 d'abord.

@@ -50,6 +50,21 @@ Implémentation open source du harnais d'agent **AVO** (papier arXiv:2603.24517)
   similaire sur les bancs publics, ou score qui a cessé de progresser. L'unité
   permanente U31 du backlog décrit le cycle, `docs/MASTER_PLAN.md` §7 la condition
   d'arrêt. L'interdiction de benchmaxing s'applique sans exception.
+- **Intégration plutôt que modes (règle du responsable, 2026-09-12)** : un
+  enseignement tiré d'un papier AMÉLIORE le harnais existant — mécanisme
+  composable, intégré à la boucle, à l'état ou au superviseur, avec interrupteur
+  de configuration — et ne crée pas un mode de fonctionnement parallèle
+  supplémentaire. Les patrons de contexte existants demeurent, et toute
+  nouveauté cherche d'abord la COMBINAISON avec eux qui améliore le résultat ;
+  un patron alternatif n'est retenu à part que s'il ne peut pas se combiner.
+- **Exactitude avant tout (règle du responsable, 2026-09-12)** : le coût
+  d'inférence et la latence ne sont JAMAIS des arguments de conception ni
+  d'arbitrage dans ce projet — l'instance d'inférence est gratuite ; seuls
+  l'exactitude et le résultat comptent. Des appels supplémentaires (sonde,
+  résumé, curation, vérification) se prennent dès qu'ils peuvent améliorer le
+  résultat. Les plafonds de campagne (§A7.1) demeurent obligatoires comme
+  gardes d'arrêt propre, mais leurs valeurs se choisissent LARGES : un budget
+  qui tronque l'observation est un défaut de périmètre, pas une économie.
 - **Répartition des rôles (règle du responsable, 2026-08-31)** : c'est le HARNAIS qui joue ARC — lui seul choisit ses actions, infère les règles en interagissant et détermine ses stratégies, conformément aux publications de `knowledge/` (direct-interaction VISTA, boucle AVO). La session d'ingénierie ne joue JAMAIS un jeu à la place du harnais, ne lui souffle aucune réponse et ne détermine aucune stratégie en son nom : son rôle est de coder le harnais, de le lancer (`run-arc`), d'observer son comportement sur les résultats collectés, et d'améliorer son fonctionnement GÉNÉRAL — boucle, prompts, outils, mémoire, superviseur — sans s'éloigner de la méthode et de l'implémentation des publications de référence. Quand le harnais échoue faute d'information — règle inconnue, effet d'action non compris, environnement qui dévie —, la correction n'est jamais de lui fournir l'information manquante : c'est de lui donner le réflexe GÉNÉRIQUE d'aller la chercher lui-même, par l'expérimentation et l'inspection, et par un prompt qui installe ce réflexe. Seule la plomberie hors-jeu (contrat de fil, authentification, transport — la sonde U22 en est l'exemple) se mesure et se corrige directement par la session : elle ne décide d'aucun coup de jeu.
 
 ## Spécifications et plan

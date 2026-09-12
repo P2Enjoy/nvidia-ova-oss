@@ -37,7 +37,7 @@ lève la suspension et U31 redevient l'unité de chaque session planifiée.
 | G — État structuré (SKILL.state) | U26–U29 | spec H15 + runtime Σ, mode `state` + A/B rejeu, A/B réel, benchmarks complémentaires (ouverts le 2026-09-01, terrain d'affinage) |
 | H — Méthode dans la structure | U30 | spec H16 + gardes de méthode dans les phases P→I→E→B |
 | I — Concours permanent | U31 | boucle permanente : jouer ARC Prize, observer, améliorer le harnais (mission du 2026-09-01) — suspendue le temps du lot J |
-| J — Enseignements GVS5H (2026-09-12) | U33–U38 | bascule `qwen3.8:27b` + échantillonnage, résumé de coupure, sonde fraîche du superviseur, socle de mesure, mode `ledger` (exploratoire), A/B réel = porte de reprise |
+| J — Enseignements GVS5H (2026-09-12) | U33–U38 | bascule `qwen3.8:27b` + échantillonnage, résumé de coupure, sonde fraîche du superviseur, socle de mesure, intégration du patron ledger dans la boucle et Σ (pas de mode nouveau), A/B réel harnais enrichi = porte de reprise |
 
 ## 3. Unités [LIVE] — règle pour le worker
 

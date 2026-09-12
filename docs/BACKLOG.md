@@ -1109,8 +1109,8 @@ gateway LLM du responsable.
 lot J (U33 → U38, enseignements GVS5H et bascule `qwen3.8:27b`) PRIMENT sur les
 itérations de U31. Les sessions planifiées prennent les unités du lot J dans
 l'ordre de leur numéro ; U31 reprend APRÈS U38, sous le modèle de travail
-`qwen3.8:27b`, le socle de mesure re-établi (U36) et le mode d'exécution que
-l'A/B réel aura désigné (U38).
+`qwen3.8:27b`, le socle de mesure re-établi (U36) et les mécanismes du harnais
+enrichi que l'A/B réel aura désignés (U38).
 
 `@spec` A7 (campagne), H (harnais général) ; mission et bornes :
 `CLAUDE_PROJECT.md` (« Mission permanente », « Budget d'inférence »). Unité
@@ -1559,36 +1559,47 @@ comparaisons de la reprise U31 exigent des bases du modèle de travail.
   journal et dans les références locales de `docs/SPEC_BANCS.md`.
 - DoD : cassettes committées, bases consignées, campagne complète verte.
 
-## U37 — Mode d'exécution `ledger` (manager–workers, exploratoire) `[ ]`
+## U37 — Intégration du patron ledger DANS la boucle et l'état existants `[ ]`
 
-`@spec` H18 (à écrire d'abord : chapitre nouveau). Origine : GVS5H §3.1 — le
-résultat central du papier pour la classe de taille de notre modèle de travail.
-Unité EXPLORATOIRE : si elle ne tient pas en deux sessions, la geler avec
-l'écart nommé et passer à U38 — l'A/B se mène alors avec les modes existants.
+`@spec` H18 (à écrire d'abord : chapitre nouveau), H15 (état Σ), H10
+(superviseur). Origine : GVS5H §3.1 — le résultat central du papier pour la
+classe de taille de notre modèle de travail. **Règle du responsable
+(2026-09-12, CLAUDE_PROJECT « Intégration plutôt que modes ») : PAS de mode de
+fonctionnement supplémentaire.** Le worker GVS5H — appel frais borné recevant
+(énoncé, état partagé, tâche) — est déjà notre mode `state` (P, Σ, Oₜ) : ce
+qui manque est la moitié MANAGER, et elle s'intègre aux structures existantes.
 
-- Troisième mode de contexte (`AVO_CONTEXT_MODE=ledger`) : patron
-  manager–workers GVS5H au-dessus de l'existant — plan, brainstorm sans code,
-  curation d'une task list bornée, worker par tâche en contexte frais, verdict
-  d'exécution traité comme vérité terrain, garde de non-progrès — état partagé
-  dans le workspace du run (H6), client H4, outils H7, journalisation H6/H11
-  inchangés. Générique : prompts sans aucun indice de tâche.
-- DoD : spec H18 committée avant le code ; unitaires du moteur ; A/B en rejeu
-  sur cassettes générées contre `transcript`/`state` (patron U27) ; campagne
-  complète verte.
+- **Plan et tâches dans Σ** : l'état structuré gagne un champ plan/tâches
+  BORNÉ et CURÉ (fusionner les doublons, clore, écarter le périmé — la
+  discipline du prompt de curation GVS5H), patché comme le reste de Σ, garde
+  H16 à l'appui.
+- **Idéation d'ouverture** : avant la première action d'un épisode, un pas
+  d'idéation SANS action énumère plusieurs approches réellement distinctes
+  dans Σ (extension de la garde existante « hypothèses non vides », H16).
+- **Curation par le superviseur** : à l'intervention (H10.3), le superviseur
+  peut aussi curer le plan/tâches de Σ — il redirige déjà ; il gagne le geste
+  de manager. (La sonde fraîche est U35 ; les deux se composent.)
+- Chaque mécanisme a son interrupteur de configuration ; prompts génériques,
+  balayage « zéro indice de jeu » (§A5).
+- DoD : spec H18 committée avant le code ; unitaires ; A/B en rejeu sur
+  cassettes générées — harnais enrichi contre harnais nu, même mode `state`
+  (patron U27) ; campagne complète verte.
 
-## U38 — A/B réel des modes d'exécution sous `qwen3.8:27b`, porte de reprise de U31 `[ ]` **[LIVE]**
+## U38 — A/B réel du harnais enrichi sous `qwen3.8:27b`, porte de reprise de U31 `[ ]` **[LIVE]**
 
-`@spec` H15.7 (modes de contexte), H18 si U37 est livrée, patron U28 (A/B réel
-à budget constant). Origine : GVS5H mesure +23,4 points pour la classe 27B
-orchestrée sur tâches de code — à VÉRIFIER sur notre endpoint et nos bancs,
-jamais transposé (CLAUDE_PROJECT, interdiction de benchmaxing ; les gains sont
-conditionnels au modèle).
+`@spec` H15.7, H17, H10.4, H18, patron U28 (A/B réel à budget constant).
+Origine : GVS5H mesure +23,4 points pour la classe 27B sur tâches de code — à
+VÉRIFIER sur notre endpoint et nos bancs, jamais transposé (CLAUDE_PROJECT,
+interdiction de benchmaxing ; les gains sont conditionnels au modèle).
 
-- Sur les bancs U29, comparer à budget constant les modes disponibles
-  (`transcript`, `state`, et `ledger` si U37 est livrée) sous `qwen3.8:27b` ;
-  significativité par appariement problème à problème (patron GVS5H §2.1) dans
-  la mesure des budgets ; désigner et CONSIGNER le mode par défaut de la
-  reprise U31.
+- Sur les bancs U29, comparer à budget constant le harnais ENRICHI (U34, U35,
+  U37 activés) au harnais nu, dans le même mode `state`, sous `qwen3.8:27b` ;
+  significativité par appariement problème à problème (patron GVS5H §2.1)
+  dans la mesure des budgets ; désigner et CONSIGNER les mécanismes qui
+  restent allumés par défaut à la reprise U31. Le coût en tokens ou en durée
+  n'entre PAS dans la décision (CLAUDE_PROJECT « Exactitude avant tout ») :
+  seule l'exactitude tranche, et les budgets du périmètre se choisissent
+  larges.
 - DoD : runs réconciliés, rapport sous `docs/rapports/`, décision persistée
   (spec/README/journal), campagne complète verte. La clôture de U38 LÈVE la
   suspension de U31.
