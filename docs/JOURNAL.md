@@ -4343,3 +4343,53 @@ d'observer l'EXPLOITATION d'une seconde intervention — elle exige un run
 qui dépasse l'action 32, ce que la plage mesurée (32–41) permet — et
 accumuler les trois relevés à n = 1 ci-dessus. Vérifier l'endpoint en
 ouverture.
+
+## 2026-09-12 (session interactive) — knowledge : ajout du papier GVS5H (arXiv:2608.26480) et de son dépôt compagnon
+
+**Demande du responsable.** Lire et ajouter à `knowledge/` deux sources :
+le papier arXiv:2608.26480 (« Zero-Shot Self-Orchestration with
+Ledger-Based Control for Improved LLM Coding Performance », Persis
+Capital, 27 août 2026) et son dépôt compagnon
+<https://github.com/slee-persis/GVS5H>.
+
+**Fait.**
+
+- PDF arXiv téléchargé (1 452 876 octets, 27 pages) → `knowledge/pdf/arxiv-2608.26480.pdf` ;
+  texte intégral extrait (`pdftotext`, installé via apt) et export Markdown
+  fidèle écrit : `knowledge/arxiv-2608.26480-gvs5h-zero-shot-self-orchestration.md`
+  (abstract, 5 sections, 9 tableaux, légendes des 7 figures, 34 références).
+- Dépôt GVS5H cloné (commit `e46c574763e8`, 2026-09-11) et exporté :
+  `knowledge/github-slee-persis-gvs5h.md` — structure, README original,
+  licences (MIT / CC BY 4.0 par chemin), et le scaffold v2 en entier :
+  workspace « ledger », constantes, gardes, boucle, et les prompts VERBATIM
+  (manager-plan, brainstorm, manage/curation, worker, résumeur de coupure,
+  retours de tests d'échantillons) depuis
+  `codebase/v2-current/escalation/multiagent.py`.
+- Figures : les deux PNG d'assets du dépôt mis en miroir sous
+  `knowledge/images/github-gvs5h/` (figures 1–2 du papier) ; figure 7
+  (flux de contrôle manager–worker) rendue depuis le PDF sous
+  `knowledge/images/arxiv-2608.26480/`.
+- `knowledge/README.md` : deux lignes ajoutées au tableau des sources,
+  point 6 ajouté aux enseignements (orchestration inference-time : gains
+  conditionnels — `qwen3.6:35b` perdant type, `qwen3.8:27b` grand gagnant ;
+  rumination au-delà du plafond et parade générique « borner chaque appel,
+  forcer l'idée sur le disque ») ; mentions rendues fausses corrigées
+  (date de récupération unique, « les deux PDF »). `CLAUDE_PROJECT.md` :
+  « cinq sources » corrigé en liste ouverte pointant le tableau du README.
+
+**Divergence consignée (dans l'export du dépôt).** L'abstract du README
+GVS5H (88,0 / 90,4 / 69,2 → 92,4) diffère du PDF arXiv v1 (85,0 / 87,4 /
+63,0 → 86,4) : le dépôt porte un état plus récent que l'arXiv v1. L'export
+papier suit le PDF arXiv (foi pour la version publiée), l'export dépôt le
+signale.
+
+**Pertinence notée pour le harnais** (aucun code modifié — l'ajout de
+sources n'en désigne pas) : mêmes ingrédients que le harnais mesurés en
+appariement strict (workspace persistant, notes bornées, contextes frais,
+garde de non-progrès, verdict d'exécution = vérité terrain) ; gains
+CONDITIONNELS au modèle — toute conclusion pour ce dépôt passera par la
+mesure sur l'endpoint (U29/U31), pas par transposition.
+
+**Où reprendre (boucle planifiée).** Inchangé — le point de reprise U31
+reste celui de la suite 52 : une série supervisée au même périmètre pour
+observer l'exploitation d'une seconde intervention.

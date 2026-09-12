@@ -8,7 +8,7 @@ Implémentation open source du harnais d'agent **AVO** (papier arXiv:2603.24517)
 
 ## Sources de référence
 
-- `knowledge/` contient les exports fidèles des cinq sources (papier AVO, blog NVIDIA, page VISTA, papier Tycho, papier SKILL.state) avec images et PDF. **Lire `knowledge/README.md` avant tout travail sur le harnais.**
+- `knowledge/` contient les exports fidèles des sources de référence (papier AVO, blog NVIDIA, page VISTA, papier Tycho, papier SKILL.state, papier GVS5H et son dépôt compagnon) avec images et PDF ; leur liste à jour est le tableau de `knowledge/README.md`. **Lire `knowledge/README.md` avant tout travail sur le harnais.**
 - Ces exports sont des instantanés en lecture seule : ne pas les modifier à la main ; en cas de divergence avec la source, re-générer l'export et le consigner dans `docs/JOURNAL.md`.
 - En cas de doute d'interprétation, le PDF sous `knowledge/pdf/` fait foi.
 
