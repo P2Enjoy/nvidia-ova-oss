@@ -1545,7 +1545,13 @@ workers contre l'ancrage).
   de contexte, jonction au message, kill-switch) ; rejeu sur cassettes
   générées ; campagne complète verte.
 
-## U36 — Socle de mesure sous `qwen3.8:27b` : cassettes vivantes et lignes de base `[ ]` **[LIVE]**
+## U36 — Socle de mesure sous `qwen3.8:27b` : cassettes vivantes et lignes de base `[~]` **[LIVE]**
+
+**AVANCÉE EN TÊTE DU LOT J (instruction du responsable, 2026-09-12)** : la
+partie « lignes de base des bancs » s'exécute AVANT U34/U35/U37, pour que le
+changement de modèle ait sa base de comparaison propre avant tout
+enrichissement du harnais. Le re-enregistrement des cassettes vivantes reste
+dans l'unité, à solder avant sa clôture.
 
 `@spec` H4.7 (enregistrement du contrat), SPEC_BANCS (lignes de base). La
 bascule U33 rend le socle de mesure hérité (`qwen3.6:35b`) historique : les

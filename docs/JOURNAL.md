@@ -4516,3 +4516,37 @@ qui tronque l'observation est un défaut de périmètre, pas une économie).
   elles étaient déjà des intégrations, et se composent avec U37.
 
 **Où reprendre (boucle planifiée).** Inchangé : U34, spec H17 d'abord.
+
+## 2026-09-12 (session interactive, suite 3) — U36 avancée : lignes de base des bancs sous `qwen3.8:27b`, périmètre écrit avant lancement
+
+**Instruction du responsable.** Faire tourner les bancs AVANT les nouvelles
+unités (U34/U35/U37) : le changement de modèle doit avoir sa base de
+comparaison propre. La partie « lignes de base » de U36 passe donc en tête
+du lot J ; le re-enregistrement des cassettes vivantes reste à solder dans
+U36.
+
+**Périmètre (écrit AVANT lancement).** Les QUATRE séries de référence,
+STRICTEMENT aux paramètres des lignes v1.10 (comparaison à paramètres
+constants : seuls changent le modèle — `qwen3.8:27b` — et les défauts
+d'échantillonnage §H3.1 livrés avec lui en U33, ce qui est précisément
+l'objet de la mesure) :
+
+1. banc a dépôt : `banc skillexec --env depot --seed 1..3 --horizon 25 --mode live` (bruit 0) ;
+2. banc a entrepôt : `banc skillexec --env entrepot --seed 1..3 --horizon 25 --mode live` (bruit 0) ;
+3. banc b : `banc ctf --env aleatoire --seed 1..10 --horizon 30 --mode live` (exécuteur `conteneur`) ;
+4. banc c : `banc tau --env detail --seed 1..10 --horizon 20 --mode live`.
+
+Mode `state`, gardes actives, séquentiel, UNE exécution live à la fois
+(plafond de parallélisme global 3, une seule ici). Exécution depuis l'HÔTE
+(harnais zéro dépendance §H2.1, Python 3.11.15 ≥ 3.11 vérifié, CLI
+fonctionnelle) : l'exécuteur `conteneur` du banc b appelle le CLI `docker`,
+indisponible dans l'image de run — c'est la voie que la suite 46 laissait à
+retrouver. Endpoint vérifié en ouverture de session (smoke-live TOUT VERT).
+Un épisode mort sur incident d'endpoint (rafale 500, motif connu) est rejoué
+une fois, comme aux suites précédentes. Dépouillement : scores au journal,
+et production de `docs/rapports/HISTORIQUE.md` (tableau consolidé
+banc × version × modèle × score, accepté par le responsable).
+
+**Références à battre ou situer (v1.10, `qwen3.6:35b`, suite 46)** : dépôt
+0,947 ; entrepôt 0,707 (bande [0,653 ; 0,77]) ; CTF 8/10 (variance
+inter-séries mesurée : 6/10 à 8/10) ; τ 9/10.
