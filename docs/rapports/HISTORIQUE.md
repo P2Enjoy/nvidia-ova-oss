@@ -15,7 +15,8 @@ banc c `tau` détail h20 seeds 1–10, utilisateur `llm` (pass) ; ARC : plafonds
 |---|---|---|---|
 | v1.9 pré-§H15.8 | `qwen3.6:35b` | 0,76 (0,80/0,68/0,80) | journal, suite 22 |
 | v1.9 | `qwen3.6:35b` | 0,827 (0,88/0,80/0,80) | journal, suite 27 |
-| v1.10 | `qwen3.6:35b` | **0,947** (0,96/0,96/0,92) | journal, suite 46 add. 2 |
+| v1.10 | `qwen3.6:35b` | 0,947 (0,96/0,96/0,92) | journal, suite 46 add. 2 |
+| v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | **0,987** (0,96/1,00/1,00) | journal, 2026-09-12 (U36) |
 
 ## Banc a — SkillExecBench, environnement entrepôt
 
