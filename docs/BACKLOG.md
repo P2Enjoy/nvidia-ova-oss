@@ -1514,20 +1514,30 @@ générées régénérées (7 fichiers), rejeux sur cassettes réelles épinglé
 DAT sans objet (aucune mention de modèle). Le reste hérité — cassettes réelles
 encore `qwen3.6:35b` — est soldé par U36.
 
-## U34 — Résumé de coupure des réponses tronquées `[~]`
+## U34 — Résumé de coupure des réponses tronquées `[x]`
 
-`@spec` H17 (écrit le 2026-09-13), H4 (client, `done_reason`),
-H5.1 (append-only). Origine : GVS5H §3.1 (cut-off summarizer) et §4.2 (une
-coupure absorbée coûte un tour, pas la réponse ; la rumination emporte le budget).
+`@spec` H17, H4 (client, `done_reason`), H5.1 (append-only). Origine : GVS5H
+§3.1 (cut-off summarizer) et §4.2 (une coupure absorbée coûte un tour, pas la
+réponse ; la rumination emporte le budget).
 
-- Quand un appel de tour rend `done_reason=length` SANS action exploitable, un
-  appel court séparé (contexte propre, borné) résume la tentative partielle —
-  approche poursuivie, acquis, reste — et le résumé entre dans le contexte en
-  append avec la consigne générique de préférer une approche plus courte au tour
-  suivant. Comptabilité des appels tronqués (`metrics.jsonl`, rapport).
-- DoD : spec H17 committée avant le code ; unitaires (déclenchement sur
-  `length` sans action, non-déclenchement sinon, résumé injecté et journalisé) ;
-  intégration sur cassette générée à `length` ; campagne complète verte.
+**Livrée et intégralement vérifiée le 2026-09-13** (session planifiée, spec
+H17 committée avant le code) :
+
+- Déclenchement sur `done_reason=length` SANS action exploitable — décodage de
+  pas en échec (mode `state`), Implementation sans appel d'action (mode
+  `transcript`) ; appel de résumé séparé en contexte propre et borné (entrée
+  20 000 caractères tête+queue, sortie ≤ 1 024 tokens) ; résumé injecté en
+  append (canal d'erreur du pas suivant, ou observation du transcript) avec la
+  consigne générique « approche plus courte ». Interrupteur
+  `AVO_COUPURE_RESUME` (défaut `true`), dégradation propre sur erreur du
+  client hors `AuthError`. Comptabilité : métriques `coupure` et `llm` phase
+  `resume_coupure`, `resumes_coupure` au bilan, au `ResultatJeu` et au rapport
+  de campagne. Prompts v1.11, consignes au balayage « zéro indice de jeu ».
+- Preuves : 11 unitaires dédiés (déclenchement/non-déclenchement dans les deux
+  modes, bornes, dégradation, interrupteur), 2 intégrations sur cassette
+  générée à `length` rejouée par le vrai rejoueur HTTP. Campagne complète
+  verte : lint + format, mypy strict (140 fichiers), 836 unitaires,
+  157 intégration, 10 E2E, build.
 
 ## U35 — Proposition en contexte frais jointe à l'intervention du superviseur `[ ]`
 

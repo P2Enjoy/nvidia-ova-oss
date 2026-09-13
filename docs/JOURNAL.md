@@ -4670,3 +4670,40 @@ U36 passe `[x]` (backlog mis au réel, CHANGELOG [Non publié] complété).
 **Où reprendre (boucle planifiée).** U34 — résumé de coupure, spec H17 à
 écrire et committer AVANT le code ; puis U35, U37, U38 sur le socle U36.
 U31 suspendue jusqu'à U38 (inchangé).
+
+## 2026-09-13 (session planifiée) — U34 CLOSE : résumé de coupure des réponses tronquées (H17)
+
+**Spécifié puis codé (dans cet ordre, commits `0a1bad1` puis `a2989da`).**
+Chapitre H17 écrit et committé avant le code : déclenchement sur
+`done_reason=length` SANS action exploitable (mode `state` : décodage de pas
+en échec ; mode `transcript` : Implementation sans appel d'action), appel de
+résumé séparé en contexte propre et borné (entrée 20 000 caractères
+tête+queue, sortie ≤ 1 024 tokens via la surcharge `num_predict`), injection
+en append avec la consigne générique « approche plus courte » (canal d'erreur
+du pas suivant en `state`, observation du transcript en `transcript`),
+interrupteur `AVO_COUPURE_RESUME` (défaut `true`), dégradation propre sur
+toute erreur du client hors `AuthError`. Comptabilité : événement `coupure`
+et appel `llm` phase `resume_coupure` dans `metrics.jsonl`, `resumes_coupure`
+au bilan, au `ResultatJeu` (relecture des runs antérieurs à zéro) et aux
+événements du rapport. Prompts v1.11, nouvelles consignes entrées au
+balayage « zéro indice de jeu » (§A5).
+
+**Preuves.** 11 unitaires dédiés (`test_resume_coupure.py` : déclenchement et
+non-déclenchement dans les deux modes, tronquée-mais-décodable non résumée,
+interrupteur, bornes de l'entrée, dégradation sur 500 ×6 et sur résumé vide,
+compteur au bilan) ; 2 intégrations (`test_coupure_sur_rejeu.py`, cassette
+GÉNÉRÉE à `length` rejouée par le vrai rejoueur HTTP — le corps de la
+nouvelle tentative porte le résumé, l'appariement du rejoueur le prouvant
+une seconde fois). Campagne complète verte à la clôture : lint + format
+(141 fichiers), mypy strict (140 fichiers), 836 unitaires, 157 intégration,
+10 E2E sur pile montée et seedée ; `make build` OK. U34 passe `[x]`.
+
+**Environnement.** Reconstruction de l'image dev : le proxy TLS de la machine
+exige son CA dans `certs/` (procédure `certs/README.md`, câblée U3) — copie de
+`/root/.ccr/ca-bundle.crt`, ignorée par git, puis `make up` et `make seed`
+verts (llm-replay et arc-replay `healthy`).
+
+**Où reprendre (boucle planifiée).** U35 — proposition en contexte frais
+jointe à l'intervention du superviseur : spec H10.4 à écrire et committer
+AVANT le code ; puis U37 (spec H18), puis U38 (A/B réel, porte de reprise de
+U31). U31 suspendue jusqu'à U38 (inchangé).
