@@ -2,6 +2,28 @@
 
 ## [Non publié]
 
+### 2026-09-13 — U34 : résumé de coupure des réponses tronquées (H17)
+
+- Spécification H17 (`docs/SPEC_HARNAIS.md`) : quand un appel de tour rend
+  `done_reason=length` SANS action exploitable (bloc de pas illisible en mode
+  `state`, Implementation sans appel d'action en mode `transcript`), un appel
+  court séparé — contexte propre, entrée tronquée tête+queue, sortie plafonnée —
+  résume la tentative partielle (approche, acquis, reste), et le résumé entre au
+  contexte du tour suivant avec la consigne générique de préférer une approche
+  plus courte. Origine : GVS5H §3.1 (cut-off summarizer) et §4.2.
+- `AVO_COUPURE_RESUME` (défaut `true`) débraye le mécanisme ; toute erreur de
+  l'appel de résumé dégrade proprement (comportement d'avant H17), seule
+  `AuthError` se propage.
+- Comptabilité : événement `coupure` et appel `llm` phase `resume_coupure`
+  dans `metrics.jsonl`, compteur `resumes_coupure` au bilan, au `ResultatJeu`
+  et dans les événements du rapport de campagne (zéro pour les runs
+  antérieurs). Prompts v1.11 (consignes du résumé, entrées au balayage
+  « zéro indice de jeu »).
+- Preuves : 10 unitaires dédiés (déclenchement et non-déclenchement dans les
+  deux modes, bornes de l'appel, dégradation 500 et résumé vide,
+  interrupteur), 2 d'intégration sur cassette générée à `length` rejouée par
+  le vrai rejoueur HTTP.
+
 ### 2026-09-12 — U36 : socle de mesure sous `qwen3.8:27b` — lignes de base répliquées, cassettes vivantes ré-enregistrées
 
 - Lignes de base des quatre bancs sous le modèle de travail, deux séries

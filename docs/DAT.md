@@ -108,6 +108,15 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
   sur une action non jouée), et le champ commun `hypotheses` ne se vide pas en
   cours de run (vidage = `EtatInvalide`, retry immédiat) — H16.1, mesures au
   journal (suite 21).
+- Résumé de coupure (H17, U34) : une réponse tronquée par la limite de sortie
+  SANS action exploitable (bloc de pas illisible en mode `state`, Implementation
+  sans appel d'action en mode `transcript`) est résumée par un appel court
+  séparé en contexte propre et borné, et le résumé — approche, acquis, reste —
+  entre au contexte du tour suivant avec la consigne générique de préférer une
+  approche plus courte. Débrayable (`AVO_COUPURE_RESUME`), dégradation propre
+  sur erreur de l'appel de résumé, comptabilité `coupure`/`resume_coupure` dans
+  `metrics.jsonl` et `resumes_coupure` au bilan et au rapport. Origine : GVS5H
+  §3.1 (cut-off summarizer) et §4.2.
 - Lignée = git jetable par run, jamais le dépôt projet (H9.3).
 - Instanciation ARC du couple (xᵢ, f) : connaissance validée / (niveaux, −actions)
   — décision documentée H9.2, les sources ne publiant pas ce détail.

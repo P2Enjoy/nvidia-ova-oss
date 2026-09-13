@@ -6,6 +6,7 @@
 @spec docs/BACKLOG.md U27 — `PROTOCOLE_ETAT` (§H15.1, §H15.8)
 @spec docs/BACKLOG.md U30 — invites des gardes de méthode (§H16.1–§H16.4)
 @spec docs/BACKLOG.md U31 — `protocole_etat` engendré depuis le schéma de Σ (§H15.9)
+@spec docs/BACKLOG.md U34 — consignes du résumé de coupure (§H17.2, §H17.3)
 
 **Contrainte fondatrice, vérifiée par test** : aucun de ces textes ne décrit les
 règles, les objets ni le but d'un jeu. L'agent reçoit les actions disponibles et rien
@@ -24,7 +25,7 @@ from avo.context.etat import ARC_V1, CHAMP_HYPOTHESES, DICTIONNAIRE, FORMES, Sch
 
 #: Version des prompts. Change dès qu'un texte change : le rapport d'une campagne
 #: doit pouvoir dire sous quelle formulation ses résultats ont été obtenus.
-VERSION: Final = "1.10"
+VERSION: Final = "1.11"
 
 #: Contrat de tâche, posé une fois en tête de segment (§A5.1, calqué sur VISTA).
 SYSTEME: Final = """Tu joues à un jeu inconnu, tour par tour, sur une grille de
@@ -254,6 +255,32 @@ def evaluation_gardee(prediction: str) -> str:
 def verdict_a_qualifier(prediction: str) -> str:
     """Rappel du mode `state` (§H16.3) : la prédiction du pas précédent à qualifier."""
     return f"Tu avais prédit : « {prediction} ». Qualifie cette prédiction (VERDICT)."
+
+
+#: Consigne système de l'appel de résumé de coupure (§H17.2) : contexte propre,
+#: aucun outil, aucune connaissance de la tâche — le texte partiel seul.
+SYSTEME_RESUME_COUPURE: Final = """Le texte suivant est une tentative de réponse
+interrompue par une limite de longueur avant d'aboutir. Résume-la en quelques
+phrases, en trois points : l'approche poursuivie, les acquis (ce qui est établi ou
+déjà trouvé), et le reste à faire. N'ajoute rien qui ne figure pas dans le texte."""
+
+#: Marqueur inséré entre la tête et la queue d'une tentative trop longue pour
+#: entrer entière dans l'appel de résumé (§H17.2).
+MARQUEUR_COUPE_RESUME: Final = "\n[… milieu coupé …]\n"
+
+
+def resume_coupure_bloc(resume: str) -> str:
+    """Bloc d'injection du résumé de coupure (§H17.3) : résumé, puis consigne.
+
+    La consigne est générique — préférer une approche plus courte — et ne dit
+    jamais quoi répondre : le harnais n'interprète pas le résumé, il l'ajoute.
+    """
+    return (
+        "Ta réponse précédente a été tronquée par la limite de sortie avant "
+        f"d'aboutir. Résumé de ta tentative partielle : {resume}\n"
+        "Au tour suivant, préfère une approche plus courte et plus directe : "
+        "appuie-toi sur ces acquis au lieu de refaire le raisonnement entier."
+    )
 
 
 def prompt_de_phase(phase: str) -> str:

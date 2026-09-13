@@ -2,7 +2,8 @@
 
 @verifies docs/BACKLOG.md U13 — Boucle agent P→I→E→B
 @verifies docs/SPEC_HARNAIS.md §H8.1 (états et transitions pilotées par les événements)
-@verifies docs/SPEC_ARCAGI3.md §A5.1 (aucune règle de jeu dans les prompts)
+@verifies docs/SPEC_ARCAGI3.md §A5.1 (aucune règle de jeu dans les prompts — les
+          consignes du résumé de coupure §H17.2/§H17.3, U34, entrent au balayage)
 """
 
 from __future__ import annotations
@@ -97,6 +98,8 @@ class TestPromptsSansRegleDeJeu(unittest.TestCase):
         prompts.EVALUATION,
         prompts.BUG_FIXING,
         prompts.BORNE_PROCHE,
+        prompts.SYSTEME_RESUME_COUPURE,
+        prompts.resume_coupure_bloc("resume-de-test"),
     )
 
     #: Termes qui trahiraient une connaissance du jeu ou de son but.

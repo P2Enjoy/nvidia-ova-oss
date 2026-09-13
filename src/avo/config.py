@@ -7,6 +7,7 @@
 @spec docs/BACKLOG.md U27 — `AVO_CONTEXT_MODE` (§H15.7, §H15.8)
 @spec docs/BACKLOG.md U30 — `AVO_GARDES`, `AVO_GARDE_RETRIES` (§H16.0)
 @spec docs/BACKLOG.md U32 — `AVO_LLM_MAX_CONCURRENT`, `AVO_LLM_SLOTS_DIR` (§H4.9)
+@spec docs/BACKLOG.md U34 — `AVO_COUPURE_RESUME` (§H17.4)
 @spec docs/BACKLOG.md U33 — modèle de travail `qwen3.8:27b` et échantillonnage
       optionnel `AVO_TOP_P`/`AVO_TOP_K`/`AVO_MIN_P`/`AVO_REPEAT_PENALTY`/
       `AVO_PRESENCE_PENALTY`, sentinelle `aucun` (§H3.1)
@@ -275,6 +276,7 @@ class Config:
     garde_retries: int
     llm_max_concurrent: int
     llm_slots_dir: Path
+    coupure_resume: bool
 
     @property
     def budget_prompt(self) -> int:
@@ -331,6 +333,7 @@ class Config:
             "garde_retries": self.garde_retries,
             "llm_max_concurrent": self.llm_max_concurrent,
             "llm_slots_dir": str(self.llm_slots_dir),
+            "coupure_resume": self.coupure_resume,
             "ollama_api_key": "<masquée>",
             "arc_api_key": "<masquée>" if self.arc_api_key else None,
         }
@@ -427,6 +430,7 @@ def charger(
         garde_retries=source.entier("AVO_GARDE_RETRIES", 2),
         llm_max_concurrent=source.entier_nul_ou_positif("AVO_LLM_MAX_CONCURRENT", 3),
         llm_slots_dir=Path(source.texte("AVO_LLM_SLOTS_DIR", str(runs_dir / ".llm-slots"))),
+        coupure_resume=source.booleen("AVO_COUPURE_RESUME", True),
     )
 
     if config.think and config.num_predict < NUM_PREDICT_MIN_AVEC_THINK:

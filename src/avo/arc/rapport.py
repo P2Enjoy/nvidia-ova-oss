@@ -4,6 +4,7 @@
 @spec docs/SPEC_ARCAGI3.md §A7.3 (contenu du rapport), §A7.4 (le rapport est une
       fonction pure du résultat et des métriques), §A6 (RHAE)
 @spec docs/SPEC_HARNAIS.md §H6.1 (`report.md` dans le workspace), §H11.2 (métriques)
+@spec docs/BACKLOG.md U34 — ligne des résumés de coupure dans les événements (§H17.5)
 
 Fonction **pure** : elle ne rejoue rien, n'interroge aucun service et ne devine
 aucun chiffre. Tout ce qu'elle écrit vient du résultat de campagne ou des métriques
@@ -109,6 +110,7 @@ def evenements(jeux: Sequence[ResultatJeu]) -> str:
             f"- refus de contexte (HTTP 413) absorbés : **{sum(j.depassements for j in jeux)}**",
             f"- interventions du superviseur : **{sum(j.interventions for j in jeux)}**",
             f"- versions committées à la lignée : **{sum(j.versions_committees for j in jeux)}**",
+            f"- résumés de coupure injectés (§H17) : **{sum(j.resumes_coupure for j in jeux)}**",
             f"- parties perdues (game over) : **{sum(j.game_overs for j in jeux)}**",
         ]
     )

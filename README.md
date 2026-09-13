@@ -151,6 +151,7 @@ Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors d
 | `AVO_GARDE_RETRIES` | Redemandes d'une même garde dans un même tour, avant l'issue écrite en H16 (tour clos sans action, ou verdict réputé contredit) | entier | non (défaut `2`) | `2` |
 | `AVO_LLM_MAX_CONCURRENT` | Plafond de requêtes LLM simultanées par endpoint (H4.9) : l'excédent patiente au lieu d'échouer ; `0` désactive | entier ≥ 0 | non (défaut `3`, limite du port public) | `3` |
 | `AVO_LLM_SLOTS_DIR` | Répertoire des jetons de concurrence (H4.9) ; pointer un chemin réellement partagé pour coordonner plusieurs processus ou sessions | chemin | non (défaut `<AVO_RUNS_DIR>/.llm-slots`) | `runs/.llm-slots` |
+| `AVO_COUPURE_RESUME` | Résumé de coupure (H17) : une réponse tronquée par la limite de sortie sans action exploitable est résumée par un appel court séparé, et le résumé entre au contexte du tour suivant | booléen | non (défaut `true`) | `true` |
 
 Trois variables d'**outillage** sont lues dans l'environnement du shell par `make` et les scripts — pas dans `.env` (`make` ne le lit pas) : `AVO_NO_DOCKER` (mode dégradé sans Docker, stdlib seule), `AVO_PORT_LLM_REPLAY` (défaut `11435`) et `AVO_PORT_ARC_REPLAY` (défaut `8765`), ports publiés de la pile locale.
 

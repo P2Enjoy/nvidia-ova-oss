@@ -14,6 +14,9 @@
 @spec docs/BACKLOG.md U30 — gardes de méthode dans les phases (§H16.1 garde
       documentaire, §H16.2 garde de prédiction, §H16.3 garde d'évaluation,
       §H16.4 garde de persistance, §H16.5 observabilité)
+@spec docs/BACKLOG.md U34 — résumé de coupure des réponses tronquées (§H17.1
+      déclenchement, §H17.2 appel séparé borné, §H17.3 injection en append,
+      §H17.4 interrupteur, §H17.5 comptabilité)
 
 La boucle ne connaît aucun jeu. Elle parle à un `Environnement` par un contrat
 minimal, ce qui permet de l'éprouver sur un environnement factice en mémoire avant
@@ -42,7 +45,14 @@ from avo.context.etat import (
 from avo.context.etat import Etat as EtatStructure
 from avo.context.etat import appliquer as appliquer_pas
 from avo.lineage import Lignee
-from avo.llm.client import ChatResult, ContextOverflow, LLMClient, ToolCall
+from avo.llm.client import (
+    AuthError,
+    ChatResult,
+    ContextOverflow,
+    LLMClient,
+    LLMError,
+    ToolCall,
+)
 from avo.loop import prompts
 from avo.loop.etats import Evenement, Phase, suivant
 from avo.memory.notes import GUIDE, WORKING, Notes
@@ -64,6 +74,13 @@ OUTILS_PAR_PHASE: dict[Phase, tuple[str, ...]] = {
 
 #: Fraction du budget d'actions au-delà de laquelle l'agent est prévenu (§H8.3).
 SEUIL_AVERTISSEMENT_BORNE = 0.9
+
+#: Bornes de l'appel de résumé de coupure (§H17.2). L'entrée est tronquée à parts
+#: égales tête et queue — la fin d'une génération coupée porte souvent la solution
+#: déjà atteinte, le début porte l'approche (GVS5H §2.3) ; la sortie est plafonnée
+#: par la surcharge `num_predict` du client (§H4.2).
+ENTREE_RESUME_MAX: Final = 20_000
+NUM_PREDICT_RESUME: Final = 1024
 
 #: Ligne de prédiction du mode `state` (§H16.2) : extraite avant que le reste du
 #: raisonnement ne soit jeté (§H15.1).
@@ -199,6 +216,8 @@ class Bilan:
     taille_prompt_totale: int = 0
     #: Redemandes de garde totales du run (§H16.5).
     redemandes_gardes: int = 0
+    #: Résumés de coupure réellement injectés (§H17.5).
+    resumes_coupure: int = 0
 
     def resume(self) -> dict[str, Any]:
         return {
@@ -217,6 +236,7 @@ class Bilan:
             "retries_patch": self.retries_patch,
             "taille_prompt_totale": self.taille_prompt_totale,
             "redemandes_gardes": self.redemandes_gardes,
+            "resumes_coupure": self.resumes_coupure,
             "prompts_version": prompts.VERSION,
         }
 
@@ -338,6 +358,73 @@ class BoucleAgent:
         """Écrit une métrique si un workspace est branché (§H11.2)."""
         if self.workspace is not None:
             self.workspace.metrique(type_evenement, jeu=self.jeu, **champs)
+
+    def _resumer_coupure(self, resultat: ChatResult, mode: str) -> str | None:
+        """Résume une tentative tronquée par un appel séparé, propre et borné (§H17.2).
+
+        Rend le résumé à injecter, ou `None` quand le mécanisme est désactivé
+        (§H17.4) ou que l'appel de résumé a dégradé — le tour se comporte alors
+        comme avant H17, jamais une panne. Seule `AuthError` se propage : elle est
+        fatale partout (§H4.4) et un résumé n'y survivrait pas davantage.
+        """
+        if not self.config.coupure_resume:
+            return None
+        partiel = "\n".join(part for part in (resultat.reasoning, resultat.content) if part)
+        if len(partiel) > ENTREE_RESUME_MAX:
+            moitie = ENTREE_RESUME_MAX // 2
+            partiel = partiel[:moitie] + prompts.MARQUEUR_COUPE_RESUME + partiel[-moitie:]
+        messages = [
+            {"role": "system", "content": prompts.SYSTEME_RESUME_COUPURE},
+            {"role": "user", "content": partiel},
+        ]
+        try:
+            reponse = self.client.chat(
+                messages,
+                tools=None,
+                num_predict=min(self.config.num_predict, NUM_PREDICT_RESUME),
+            )
+        except AuthError:
+            raise
+        except LLMError as erreur:
+            self._metrique(
+                "coupure",
+                mode=mode,
+                resume=False,
+                caracteres_entree=len(partiel),
+                caracteres_resume=0,
+                erreur=type(erreur).__name__,
+            )
+            return None
+        self.bilan.tokens_prompt += reponse.prompt_eval_count
+        self.bilan.tokens_generes += reponse.eval_count
+        self._metrique(
+            "llm",
+            phase="resume_coupure",
+            tokens_prompt=reponse.prompt_eval_count,
+            tokens_generes=reponse.eval_count,
+            duree_ms=reponse.total_duration_ms,
+            tronquee=reponse.tronquee,
+        )
+        resume = (reponse.content or "").strip()
+        if not resume:
+            self._metrique(
+                "coupure",
+                mode=mode,
+                resume=False,
+                caracteres_entree=len(partiel),
+                caracteres_resume=0,
+                erreur="resume_vide",
+            )
+            return None
+        self.bilan.resumes_coupure += 1
+        self._metrique(
+            "coupure",
+            mode=mode,
+            resume=True,
+            caracteres_entree=len(partiel),
+            caracteres_resume=len(resume),
+        )
+        return resume
 
     def _etat_de_continuation(self) -> str:
         """État écrit PAR LE HARNAIS, pour le chemin réactif (§H5.4, §H8.4).
@@ -582,6 +669,13 @@ class BoucleAgent:
         if appel is None:
             # Aucun outil d'action appelé : le tour n'a pas agi. On revient planifier
             # plutôt que de forcer une action que le modèle n'a pas choisie.
+            # §H17.1 : si la réponse a été TRONQUÉE sans action exploitable, la
+            # tentative partielle est résumée et le résumé entre au transcript en
+            # append (§H17.3) — le tour suivant s'y appuie au lieu de tout refaire.
+            if implementation.tronquee:
+                resume = self._resumer_coupure(implementation, mode="transcript")
+                if resume is not None:
+                    self.contexte.ajouter_observation(prompts.resume_coupure_bloc(resume))
             self.phase = Phase.PLANNING
             tour.phase_finale = self.phase
             _journal.info("tour sans action", extra={"tour": numero})
@@ -959,6 +1053,15 @@ class BoucleAgent:
                         ) from erreur
                     compteur = compteur.echec()
                     erreur_precedente = str(erreur)
+                    # §H17.1 : une réponse TRONQUÉE qui échoue au décodage — la
+                    # coupure a mangé le bloc JSON — est résumée par un appel
+                    # séparé ; le résumé rejoint le message d'erreur de la
+                    # nouvelle tentative (§H17.3), l'erreur nommée gardant la
+                    # primauté (§H16.0.6).
+                    if resultat.tronquee:
+                        resume = self._resumer_coupure(resultat, mode="state")
+                        if resume is not None:
+                            erreur_precedente = f"{erreur}\n\n{prompts.resume_coupure_bloc(resume)}"
                     tour.retries_patch += 1
                     self.bilan.retries_patch += 1
                     self._metrique("retry_patch", tentative=compteur.consommees, erreur=str(erreur))
