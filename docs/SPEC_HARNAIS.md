@@ -1,10 +1,10 @@
 # Spécification du harnais AVO — noyau agent
 
 Référence stable pour les commentaires `@spec` : `docs/SPEC_HARNAIS.md §Hn`.
-Unités de backlog couvertes : U3–U15, U26–U27, U30 (voir `docs/BACKLOG.md`).
+Unités de backlog couvertes : U3–U15, U26–U27, U30, U34 (voir `docs/BACKLOG.md`).
 Sources faisant foi : exports de `knowledge/` (papier AVO arXiv:2603.24517, billet NVIDIA
 2026-08-21, page VISTA, papier Tycho arXiv:2607.28287, papier SKILL.state
-arXiv:2608.26263 pour §H15). En cas d'écart entre cette spécification et une source, la
+arXiv:2608.26263 pour §H15, papier GVS5H arXiv:2608.26480 pour §H17). En cas d'écart entre cette spécification et une source, la
 source fait foi et l'écart se consigne dans `docs/INCONSISTENCY_REPORT.md`.
 
 Chaque exigence porte un identifiant stable `Hn.m` cité par les `@spec` du code.
@@ -1258,3 +1258,88 @@ sur `cible` (partie jouée sous gardes, artefacts dans le workspace), E2E rejeu
 (cassettes régénérées sous gardes), et comparaison avant/après gardes sur `cible`
 (`AVO_GARDES=false` contre `true`, comportement observé du harnais — jamais un jeu
 officiel particulier).
+
+## H17. Résumé de coupure des réponses tronquées
+
+Origine mesurée : GVS5H §3.1 (cut-off summarizer du scaffold v2 — « a worker that
+hits the token cap mid-attempt has its partial thinking summarized by a fresh short
+call so its ideas still reach the manager ») et §4.2 (une coupure absorbée coûte un
+tour, pas la réponse ; la rumination — le modèle qui re-vérifie sa solution en
+boucle — emporte le budget de sortie sans jamais émettre la réponse). Relevé local :
+ligne de base U36 (`u36-arc-base`), la latence par tour sous `qwen3.8:27b` rend
+chaque appel perdu quatre fois plus coûteux qu'avant ; un pas tronqué dont la
+tentative est jetée se paie plein tarif.
+
+**H17.1 — Déclenchement.** Le mécanisme se déclenche quand un appel de tour rend
+`done_reason: "length"` (`ChatResult.tronquee`) **SANS action exploitable** :
+
+- **mode `state`** : la réponse tronquée échoue au décodage du pas
+  (`PatchMalforme` ou `EtatInvalide`, §H15.4) — la coupure a mangé le bloc JSON.
+  Une réponse tronquée dont le bloc décode porte son action : elle n'est PAS
+  résumée, le tour l'exploite normalement ;
+- **mode `transcript`** : la réponse d'Implementation ne demande aucun appel
+  d'outil d'ACTION valide — le tour n'a pas agi (« tour sans action », §H8.2).
+  Les autres phases ne déclenchent pas : leur texte, même coupé, est exploitable
+  tel quel puisqu'il entre au transcript.
+
+Un appel tronqué AVEC action exploitable ne déclenche jamais : la comptabilité
+(`tronquee` de la métrique `llm`, §H11.2) le compte déjà, et le résumer coûterait
+un appel pour rien.
+
+**H17.2 — L'appel de résumé : séparé, propre, borné.** Le résumé est produit par un
+appel court SÉPARÉ, en contexte propre (deux messages : consigne système générique
+de résumé + la tentative partielle), jamais sur le segment du run :
+
+- **entrée bornée** : la tentative partielle (`reasoning` puis `content`) est
+  tronquée à `ENTREE_RESUME_MAX` caractères en conservant tête et queue à parts
+  égales, séparées d'un marqueur explicite — la fin d'une génération coupée porte
+  souvent la solution déjà atteinte (GVS5H §2.3), le début porte l'approche ;
+- **sortie bornée** : `num_predict` de l'appel = min(configuré,
+  `NUM_PREDICT_RESUME`) via la surcharge typée du client (§H4.2) ; aucun outil,
+  aucune note, aucun historique ;
+- **consigne générique** : résumer l'approche poursuivie, les acquis, le reste à
+  faire — versionnée dans `src/avo/loop/prompts.py`, sans aucun indice de jeu ni
+  de domaine (§A5) ;
+- **dégradation, jamais une panne** : toute erreur du client sur cet appel
+  (`ContextOverflow`, `ServerError`, `TransportError`, `ProtocolError`,
+  `RateLimited`) dégrade le mécanisme — pas de résumé, le tour se comporte comme
+  avant H17 — et s'écrit en métrique. `AuthError` se propage : elle est fatale
+  partout (§H4.4) et un résumé n'y survivrait pas davantage. Un résumé lui-même
+  tronqué est conservé tel quel : borné par construction, il reste un résumé.
+
+**H17.3 — Injection en append.** Le résumé entre dans le contexte du tour suivant,
+en append, accompagné de la consigne générique de préférer une approche plus
+courte et plus directe :
+
+- **mode `state`** : le résumé rejoint le message d'erreur du mécanisme de
+  nouvelle tentative (§H15.4, canal `erreur_precedente`) — le pas suivant lit
+  l'erreur nommée, le résumé de la tentative perdue, puis la consigne, avant le
+  protocole ré-émis. La primauté de l'erreur nommée (§H16.0.6) est conservée ;
+- **mode `transcript`** : le résumé est ajouté au transcript comme observation
+  (`ajouter_observation`, append-only §H5.1) avant le retour en Planning ; le
+  tour suivant le lit comme n'importe quelle observation.
+
+Le harnais n'interprète JAMAIS le résumé (même principe que l'intervention du
+superviseur, §H10.3) : il l'ajoute, et le modèle s'y confronte.
+
+**H17.4 — Interrupteur.** `AVO_COUPURE_RESUME` (booléen, défaut `true`). À
+`false`, aucun appel de résumé n'est émis et le comportement redevient celui
+d'avant H17 — même patron que les interrupteurs de gardes (§H16.0.3) : le
+mécanisme se mesure en A/B, il ne s'impose pas sans mesure.
+
+**H17.5 — Comptabilité.** Chaque déclenchement écrit dans `metrics.jsonl`
+(§H11.2) un événement `coupure` : `mode` (state/transcript), `resume` (booléen —
+faux quand l'appel de résumé a dégradé), `caracteres_entree`,
+`caracteres_resume`, `erreur` (le type, uniquement en dégradation). L'appel de
+résumé s'écrit comme tout appel LLM (métrique `llm`, phase `resume_coupure`) et
+ses tokens entrent au bilan. Le bilan de run porte `resumes_coupure` (résumés
+réellement injectés) ; le rapport de campagne (§A7.3) l'affiche dans ses
+événements, à zéro par défaut pour les runs antérieurs à H17.
+
+**H17.6 — Preuves exigées (U34).** Unitaires : déclenchement sur `length` sans
+action exploitable (les deux modes), non-déclenchement (réponse non tronquée ;
+tronquée avec action exploitable ; interrupteur à `false`), résumé injecté au bon
+canal, dégradation sur erreur du client, métriques écrites. Intégration : cassette
+GÉNÉRÉE portant une réponse à `done_reason: "length"` sans bloc exploitable,
+rejouée par le vrai rejoueur HTTP — le run absorbe la coupure, le résumé figure
+dans le corps de l'appel suivant, `metrics.jsonl` porte l'événement.

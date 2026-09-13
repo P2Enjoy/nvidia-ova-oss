@@ -1514,9 +1514,9 @@ générées régénérées (7 fichiers), rejeux sur cassettes réelles épinglé
 DAT sans objet (aucune mention de modèle). Le reste hérité — cassettes réelles
 encore `qwen3.6:35b` — est soldé par U36.
 
-## U34 — Résumé de coupure des réponses tronquées `[ ]`
+## U34 — Résumé de coupure des réponses tronquées `[~]`
 
-`@spec` H17 (à écrire d'abord : chapitre nouveau), H4 (client, `done_reason`),
+`@spec` H17 (écrit le 2026-09-13), H4 (client, `done_reason`),
 H5.1 (append-only). Origine : GVS5H §3.1 (cut-off summarizer) et §4.2 (une
 coupure absorbée coûte un tour, pas la réponse ; la rumination emporte le budget).
 
