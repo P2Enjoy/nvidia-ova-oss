@@ -1,12 +1,15 @@
 """Le superviseur face à une stagnation, contre le rejeu HTTP réel.
 
 @verifies docs/BACKLOG.md U15 — Superviseur
+@verifies docs/BACKLOG.md U35 — Sonde fraîche jointe à l'intervention, rejouée
+          par le vrai rejoueur HTTP (§H10.4)
 @verifies docs/SPEC_HARNAIS.md §H10.2 (déclencheurs), §H10.3 (intervention, cooldown,
           journalisation dans metrics.jsonl), §H5.1 (injection append-only)
 @verifies docs/SPEC_HARNAIS.md §H6.1 (le run porte la trace de l'intervention)
 
 L'appel du superviseur passe par le vrai client et le vrai serveur de rejeu : c'est
-un appel LLM séparé, avec son propre contexte, comme en production.
+un appel LLM séparé, avec son propre contexte, comme en production — le diagnostic
+ET la sonde fraîche, deux échanges appariés par le rejoueur.
 """
 
 from __future__ import annotations
@@ -25,7 +28,7 @@ from avo.context.transcript import Transcript
 from avo.llm.client import LLMClient, ReponseHTTP
 from avo.memory.notes import GUIDE, Notes, note_write
 from avo.memory.workspace import Workspace
-from avo.supervisor import BALISE, Superviseur
+from avo.supervisor import BALISE, INTITULE_SONDE, Superviseur
 from llm_replay.cassette import (
     AUTH_VALIDE,
     Cassette,
@@ -39,6 +42,7 @@ from llm_replay.server import creer_serveur
 CASSETTE_REELLE = Path("tests/fixtures/llm/cassettes/contrat_endpoint.jsonl")
 CLE = "sk-cle-de-rejeu-du-superviseur"
 DIRECTIVE = "Tu répètes la même action : explore le bord opposé de la grille."
+ENONCE = "ÉNONCÉ DE LA TÂCHE, TEL QUE L'ACTEUR LE REÇOIT"
 
 
 def _gabarit() -> dict[str, Any]:
@@ -155,6 +159,7 @@ class TestSuperviseurSurStagnation(unittest.TestCase):
             motif,
             notes.pour_segment_frais(),
             "grille",
+            enonce=ENONCE,
         )
 
     def test_la_stagnation_declenche_une_intervention_reelle(self) -> None:
@@ -166,15 +171,21 @@ class TestSuperviseurSurStagnation(unittest.TestCase):
         transcript = Transcript.ouvrir("sys").utilisateur("observation")
         avant = transcript
         transcript, intervention = superviseur.intervenir(
-            transcript, str(motif), notes.pour_segment_frais(), "grille"
+            transcript, str(motif), notes.pour_segment_frais(), "grille", enonce=ENONCE
         )
         self.assertEqual(intervention.directive, DIRECTIVE)
         self.assertTrue(transcript.prolonge(avant))
-        self.assertTrue(transcript.pour_api()[-1]["content"].startswith(BALISE))
+        dernier = transcript.pour_api()[-1]["content"]
+        self.assertTrue(dernier.startswith(BALISE))
+        # §H10.4 : la sonde fraîche a traversé le rejoueur HTTP réel comme un
+        # second échange apparié, et sa proposition rejoint le MÊME message.
+        self.assertEqual(intervention.proposition, DIRECTIVE)
+        self.assertIn(INTITULE_SONDE, dernier)
 
         espace.metrique("superviseur", superviseur=superviseur.resume())
         derniere = espace.lire_metriques()[-1]
         self.assertEqual(derniere["superviseur"]["interventions"], 1)
+        self.assertEqual(derniere["superviseur"]["sondes_fraiches"], 1)
         self.assertIn("stagnation", derniere["superviseur"]["motifs"][0])
 
     def test_le_cooldown_est_respecte_sur_une_trajectoire_reelle(self) -> None:
@@ -186,6 +197,7 @@ class TestSuperviseurSurStagnation(unittest.TestCase):
             motif,
             notes.pour_segment_frais(),
             "grille",
+            enonce=ENONCE,
         )
         self._stagner(superviseur, 4)
         self.assertIsNone(superviseur.doit_intervenir(), "le cooldown doit bloquer")
@@ -200,6 +212,7 @@ class TestSuperviseurSurStagnation(unittest.TestCase):
             motif,
             notes.pour_segment_frais(),
             "grille",
+            enonce=ENONCE,
         )
         espace.metrique("superviseur", motif=motif, superviseur=superviseur.resume())
         contenu = espace.metriques.read_text(encoding="utf-8")
@@ -216,6 +229,7 @@ class TestSuperviseurSurStagnation(unittest.TestCase):
             motif,
             notes.pour_segment_frais(),
             "grille",
+            enonce=ENONCE,
         )
         self.assertEqual(len(superviseur.interventions), 1)
         self.assertIn(BALISE, transcript.pour_api()[-1]["content"])
