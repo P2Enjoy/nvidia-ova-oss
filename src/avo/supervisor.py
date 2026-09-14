@@ -1,8 +1,10 @@
 """Superviseur : détecte la stagnation, puis redirige — sans jamais agir.
 
 @spec docs/BACKLOG.md U15 — Superviseur
+@spec docs/BACKLOG.md U35 — Sonde fraîche jointe à l'intervention (§H10.4)
 @spec docs/SPEC_HARNAIS.md §H10.1 (rôle, séparation stricte des pouvoirs),
       §H10.2 (déclencheurs mesurables), §H10.3 (intervention, cooldown, journalisation),
+      §H10.4 (sonde fraîche : appel séparé sans historique, dégradation propre),
       §H5.1 (injection append-only dans le transcript principal)
 
 Mécanisme du papier AVO §3.3 : sur une recherche longue, deux échecs guettent —
@@ -29,12 +31,12 @@ from typing import Any, Final
 
 from avo.config import Config
 from avo.context.transcript import Transcript
-from avo.llm.client import LLMClient
+from avo.llm.client import AuthError, LLMClient, LLMError
 
 _journal = logging.getLogger("avo.superviseur")
 
 #: Version des prompts du superviseur, comme pour ceux de la boucle (§H8.1).
-VERSION: Final = "1.0"
+VERSION: Final = "1.1"
 
 #: Fenêtre d'observation des cycles improductifs, et nombre de répétitions qui la
 #: rend suspecte (§H10.2).
@@ -55,6 +57,21 @@ rediriges.
 Rends deux choses, brièvement : ce qui bloque selon toi, puis deux ou trois
 directions alternatives concrètes que l'agent n'a pas encore essayées. Sois
 spécifique et court."""
+
+SYSTEME_SONDE: Final = """Tu découvres une tâche : on te donne son énoncé et la
+dernière observation, rien d'autre. Aucun travail antérieur ne t'est connu et tu
+n'en supposes aucun.
+
+Propose, brièvement : la première approche que tu tenterais, puis la prochaine
+étape concrète qui la met à l'épreuve. Sois spécifique et court."""
+
+#: Intitulé sous lequel la proposition de la sonde rejoint le message
+#: d'intervention (§H10.4) : sa provenance — un appel sans historique — est
+#: l'information qui permet à l'acteur de la lire comme une alternative non
+#: ancrée, pas comme une suite de son propre raisonnement.
+INTITULE_SONDE: Final = (
+    "Proposition indépendante, formulée sans connaître ton historique ni tes notes :"
+)
 
 
 def empreinte_frame(observation: str) -> str:
@@ -166,6 +183,20 @@ class Intervention:
     motif: str
     directive: str
     action_declencheuse: int
+    #: Proposition de la sonde fraîche (§H10.4), `None` quand la sonde est
+    #: désactivée, a dégradé, ou a rendu une proposition vide.
+    proposition: str | None = None
+
+    @property
+    def message(self) -> str:
+        """Le message `[SUPERVISEUR]` complet, tel que l'acteur le reçoit (§H10.3).
+
+        UN seul message, quel que soit le mode de remise : le diagnostic, puis la
+        proposition de la sonde quand elle existe, sous son intitulé de provenance.
+        """
+        if self.proposition is None:
+            return f"{BALISE} {self.directive}"
+        return f"{BALISE} {self.directive}\n\n{INTITULE_SONDE}\n{self.proposition}"
 
 
 class Superviseur:
@@ -232,17 +263,56 @@ class Superviseur:
         resultat = self.client.chat(transcript.pour_api())
         return resultat.content.strip()
 
+    def sonder_frais(self, enonce: str, observation: str) -> str | None:
+        """Appel FRAIS (§H10.4) : l'énoncé de tâche brut et la dernière observation.
+
+        Ni notes, ni trajectoire, ni motif, ni diagnostic : toute fuite d'historique
+        réintroduirait l'ancrage que l'appel a pour objet d'éviter. Rend `None` quand
+        la sonde est désactivée, que l'appel a dégradé ou que la proposition est
+        vide — l'intervention se fait alors sans elle, jamais une panne. Seule
+        `AuthError` se propage : elle est fatale partout (§H4.4).
+        """
+        if not self.config.sup_sonde_fraiche:
+            return None
+        transcript = (
+            Transcript.ouvrir(SYSTEME_SONDE)
+            .utilisateur(f"Énoncé de la tâche :\n{enonce}")
+            .utilisateur(f"Dernière observation :\n{observation}")
+        )
+        try:
+            resultat = self.client.chat(transcript.pour_api())
+        except AuthError:
+            raise
+        except LLMError as erreur:
+            _journal.info(
+                "sonde fraîche dégradée",
+                extra={"erreur": type(erreur).__name__},
+            )
+            return None
+        proposition = resultat.content.strip()
+        return proposition or None
+
     def intervenir(
-        self, transcript: Transcript, motif: str, notes: str, observation: str
+        self,
+        transcript: Transcript,
+        motif: str,
+        notes: str,
+        observation: str,
+        enonce: str = "",
     ) -> tuple[Transcript, Intervention]:
         """Injecte la redirection dans l'historique de l'acteur, en append (§H5.1).
 
         Le message est balisé : l'acteur doit pouvoir distinguer une redirection d'une
-        observation de l'environnement.
+        observation de l'environnement. Quand la sonde fraîche (§H10.4) rend une
+        proposition, elle rejoint le MÊME message, sous son intitulé de provenance.
         """
         directive = self.diagnostiquer(motif, notes, observation)
+        proposition = self.sonder_frais(enonce, observation)
         intervention = Intervention(
-            motif=motif, directive=directive, action_declencheuse=self.trajectoire.actions
+            motif=motif,
+            directive=directive,
+            action_declencheuse=self.trajectoire.actions,
+            proposition=proposition,
         )
         self.interventions.append(intervention)
         self._action_derniere_intervention = self.trajectoire.actions
@@ -253,9 +323,10 @@ class Superviseur:
                 "action": self.trajectoire.actions,
                 "interventions": len(self.interventions),
                 "directive_caracteres": len(directive),
+                "proposition_caracteres": len(proposition or ""),
             },
         )
-        return transcript.utilisateur(f"{BALISE} {directive}"), intervention
+        return transcript.utilisateur(intervention.message), intervention
 
     def resume(self) -> dict[str, Any]:
         """Résumé journalisable : des compteurs et des motifs, aucun contenu."""
@@ -265,6 +336,9 @@ class Superviseur:
             "bug_fixing_consecutifs": self.trajectoire.bug_fixing_consecutifs,
             "interventions": len(self.interventions),
             "motifs": [intervention.motif for intervention in self.interventions],
+            "sondes_fraiches": sum(
+                1 for intervention in self.interventions if intervention.proposition
+            ),
             "prompts_version": VERSION,
         }
 

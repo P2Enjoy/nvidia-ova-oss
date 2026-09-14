@@ -8,6 +8,7 @@
 @spec docs/BACKLOG.md U30 — `AVO_GARDES`, `AVO_GARDE_RETRIES` (§H16.0)
 @spec docs/BACKLOG.md U32 — `AVO_LLM_MAX_CONCURRENT`, `AVO_LLM_SLOTS_DIR` (§H4.9)
 @spec docs/BACKLOG.md U34 — `AVO_COUPURE_RESUME` (§H17.4)
+@spec docs/BACKLOG.md U35 — `AVO_SUP_SONDE_FRAICHE` (§H10.4)
 @spec docs/BACKLOG.md U33 — modèle de travail `qwen3.8:27b` et échantillonnage
       optionnel `AVO_TOP_P`/`AVO_TOP_K`/`AVO_MIN_P`/`AVO_REPEAT_PENALTY`/
       `AVO_PRESENCE_PENALTY`, sentinelle `aucun` (§H3.1)
@@ -268,6 +269,7 @@ class Config:
     actions_max_jeu: int
     sup_stall_actions: int
     sup_cooldown: int
+    sup_sonde_fraiche: bool
     runs_dir: Path
     arc_api_key: str | None
     arc_base_url: str
@@ -326,6 +328,7 @@ class Config:
             "actions_max_jeu": self.actions_max_jeu,
             "sup_stall_actions": self.sup_stall_actions,
             "sup_cooldown": self.sup_cooldown,
+            "sup_sonde_fraiche": self.sup_sonde_fraiche,
             "runs_dir": str(self.runs_dir),
             "arc_base_url": self.arc_base_url,
             "contexte_mode": self.contexte_mode.value,
@@ -414,6 +417,7 @@ def charger(
         actions_max_jeu=source.entier("AVO_ACTIONS_MAX_JEU", 5000),
         sup_stall_actions=source.entier("AVO_SUP_STALL_ACTIONS", 20),
         sup_cooldown=source.entier("AVO_SUP_COOLDOWN", 12),
+        sup_sonde_fraiche=source.booleen("AVO_SUP_SONDE_FRAICHE", True),
         runs_dir=runs_dir,
         arc_api_key=arc,
         # En mode rejeu, la base ARC pointe la pile locale : le mode ne requiert

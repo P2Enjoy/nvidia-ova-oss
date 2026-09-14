@@ -1,8 +1,11 @@
 """Preuves du superviseur : détecteurs positifs ET négatifs, cooldown, séparation.
 
 @verifies docs/BACKLOG.md U15 — Superviseur
+@verifies docs/BACKLOG.md U35 — Sonde fraîche jointe à l'intervention
 @verifies docs/SPEC_HARNAIS.md §H10.1 (il n'agit jamais), §H10.2 (déclencheurs
           mesurables), §H10.3 (intervention, cooldown, journalisation), §H5.1 (append-only)
+@verifies docs/SPEC_HARNAIS.md §H10.4 (sonde fraîche : contexte réduit sans fuite,
+          jonction au message, interrupteur, dégradation propre, comptabilité)
 """
 
 from __future__ import annotations
@@ -12,11 +15,12 @@ from pathlib import Path
 
 from avo.config import Config, Mode, charger
 from avo.context.transcript import Transcript
-from avo.llm.client import ChatResult, LLMClient
+from avo.llm.client import AuthError, ChatResult, LLMClient, ServerError
 from avo.supervisor import (
     BALISE,
     BUG_FIXING_CONSECUTIFS_MAX,
     FENETRE_CYCLE,
+    INTITULE_SONDE,
     REPETITIONS_CYCLE,
     Superviseur,
     Trajectoire,
@@ -193,14 +197,16 @@ class TestCooldownEtIntervention(unittest.TestCase):
         """§H10.3 : contexte propre — hériter du contexte, c'est hériter de l'ornière."""
         transcript = Transcript.ouvrir("sys").utilisateur("SECRET DE L ACTEUR")
         self.superviseur.intervenir(transcript, "motif", "notes", "grille")
-        envoye = str(self.client.appels[0])
-        self.assertNotIn("SECRET DE L ACTEUR", envoye)
-        self.assertIn("Motif du déclenchement", envoye)
+        for appel in self.client.appels:
+            self.assertNotIn("SECRET DE L ACTEUR", str(appel))
+        self.assertIn("Motif du déclenchement", str(self.client.appels[0]))
 
     def test_le_superviseur_ne_dispose_d_aucun_outil(self) -> None:
         """§H10.1 : il ne joue jamais d'action ; il n'a pas d'outil du tout."""
         self.superviseur.intervenir(Transcript.ouvrir("sys"), "m", "n", "o")
-        self.assertEqual(len(self.client.appels), 1)
+        # Deux appels : le diagnostic (§H10.3) puis la sonde fraîche (§H10.4) —
+        # et aucun ne porte d'outil.
+        self.assertEqual(len(self.client.appels), 2)
         self.assertFalse(hasattr(self.superviseur, "registre"))
 
     def test_le_resume_porte_les_motifs_sans_le_contenu(self) -> None:
@@ -210,6 +216,106 @@ class TestCooldownEtIntervention(unittest.TestCase):
         self.assertEqual(resume["interventions"], 1)
         self.assertEqual(resume["motifs"], ["stagnation"])
         self.assertNotIn(self.client.directive, str(resume))
+
+
+class _ClientSonde(LLMClient):
+    """Client scripté par appel : contenus successifs, ou exception à lever."""
+
+    def __init__(self, reponses: list[object]) -> None:
+        self.reponses = list(reponses)
+        self.appels: list[list[dict[str, object]]] = []
+
+    def chat(self, messages, tools=None, **surcharges):  # type: ignore[no-untyped-def]
+        self.appels.append(list(messages))
+        prochain = self.reponses.pop(0)
+        if isinstance(prochain, Exception):
+            raise prochain
+        return ChatResult(content=str(prochain))
+
+
+class TestSondeFraiche(unittest.TestCase):
+    """§H10.4 : appel frais sans fuite, jonction, interrupteur, dégradation."""
+
+    NOTES = "GUIDE : mes acquis secrets"
+    ENONCE = "ÉNONCÉ BRUT DE LA TÂCHE"
+
+    def _superviseur(self, client: LLMClient, **env: str) -> Superviseur:
+        superviseur = Superviseur(
+            _config(AVO_SUP_STALL_ACTIONS="5", AVO_SUP_COOLDOWN="10", **env), client
+        )
+        for n in range(5):
+            superviseur.trajectoire.enregistrer("avance", f"frame{n}")
+        return superviseur
+
+    def test_l_appel_frais_ne_recoit_que_l_enonce_et_l_observation(self) -> None:
+        """La fuite d'historique réintroduirait l'ancrage que la sonde évite."""
+        client = _ClientSonde(["diagnostic", "proposition neuve"])
+        superviseur = self._superviseur(client)
+        superviseur.intervenir(
+            Transcript.ouvrir("sys"), "stagnation : 5 actions", self.NOTES, "grille", self.ENONCE
+        )
+        sonde = str(client.appels[1])
+        self.assertIn(self.ENONCE, sonde)
+        self.assertIn("grille", sonde)
+        self.assertNotIn(self.NOTES, sonde)
+        self.assertNotIn("stagnation", sonde)
+        self.assertNotIn("diagnostic", sonde)
+        self.assertNotIn("frame", sonde)
+
+    def test_la_proposition_rejoint_le_message_sous_son_intitule(self) -> None:
+        client = _ClientSonde(["diagnostic", "proposition neuve"])
+        superviseur = self._superviseur(client)
+        transcript, intervention = superviseur.intervenir(
+            Transcript.ouvrir("sys"), "motif", self.NOTES, "grille", self.ENONCE
+        )
+        dernier = transcript.pour_api()[-1]["content"]
+        self.assertTrue(dernier.startswith(BALISE))
+        self.assertIn("diagnostic", dernier)
+        self.assertIn(INTITULE_SONDE, dernier)
+        self.assertIn("proposition neuve", dernier)
+        self.assertLess(dernier.index("diagnostic"), dernier.index("proposition neuve"))
+        self.assertEqual(intervention.proposition, "proposition neuve")
+        self.assertEqual(superviseur.resume()["sondes_fraiches"], 1)
+
+    def test_l_interrupteur_coupe_la_sonde_et_restaure_la_forme_d_avant(self) -> None:
+        """§H10.4 : à `false`, aucun appel de sonde, message d'avant H10.4."""
+        client = _ClientSonde(["diagnostic"])
+        superviseur = self._superviseur(client, AVO_SUP_SONDE_FRAICHE="false")
+        transcript, intervention = superviseur.intervenir(
+            Transcript.ouvrir("sys"), "motif", self.NOTES, "grille", self.ENONCE
+        )
+        self.assertEqual(len(client.appels), 1)
+        self.assertIsNone(intervention.proposition)
+        self.assertEqual(transcript.pour_api()[-1]["content"], f"{BALISE} diagnostic")
+        self.assertEqual(superviseur.resume()["sondes_fraiches"], 0)
+
+    def test_une_erreur_de_la_sonde_degrade_sans_faire_echouer_l_intervention(self) -> None:
+        """§H10.4 : jamais une panne — l'intervention se fait sans la proposition."""
+        client = _ClientSonde(["diagnostic", ServerError("HTTP 500", status=500)])
+        superviseur = self._superviseur(client)
+        transcript, intervention = superviseur.intervenir(
+            Transcript.ouvrir("sys"), "motif", self.NOTES, "grille", self.ENONCE
+        )
+        self.assertIsNone(intervention.proposition)
+        self.assertEqual(transcript.pour_api()[-1]["content"], f"{BALISE} diagnostic")
+
+    def test_auth_error_de_la_sonde_se_propage(self) -> None:
+        """§H4.4 : l'authentification refusée est fatale partout."""
+        client = _ClientSonde(["diagnostic", AuthError("clé refusée")])
+        superviseur = self._superviseur(client)
+        with self.assertRaises(AuthError):
+            superviseur.intervenir(
+                Transcript.ouvrir("sys"), "motif", self.NOTES, "grille", self.ENONCE
+            )
+
+    def test_une_proposition_vide_n_est_pas_jointe(self) -> None:
+        client = _ClientSonde(["diagnostic", "   "])
+        superviseur = self._superviseur(client)
+        transcript, intervention = superviseur.intervenir(
+            Transcript.ouvrir("sys"), "motif", self.NOTES, "grille", self.ENONCE
+        )
+        self.assertIsNone(intervention.proposition)
+        self.assertNotIn(INTITULE_SONDE, transcript.pour_api()[-1]["content"])
 
 
 class TestEmpreinte(unittest.TestCase):

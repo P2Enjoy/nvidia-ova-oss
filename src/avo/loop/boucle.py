@@ -17,6 +17,9 @@
 @spec docs/BACKLOG.md U34 — résumé de coupure des réponses tronquées (§H17.1
       déclenchement, §H17.2 appel séparé borné, §H17.3 injection en append,
       §H17.4 interrupteur, §H17.5 comptabilité)
+@spec docs/BACKLOG.md U35 — remise du message `[SUPERVISEUR]` par mode et sonde
+      fraîche jointe à l'intervention (§H10.3 remise, §H10.4 sonde et
+      comptabilité `sonde_fraiche`)
 
 La boucle ne connaît aucun jeu. Elle parle à un `Environnement` par un contrat
 minimal, ce qui permet de l'éprouver sur un environnement factice en mémoire avant
@@ -294,6 +297,11 @@ class BoucleAgent:
         #: Garde de persistance (§H16.4) : compteur d'écritures de GUIDE relevé à
         #: l'armement, `None` quand la garde est désarmée.
         self._persistance_snapshot: int | None = None
+        #: Mode `state` (§H10.3) : message `[SUPERVISEUR]` en attente de remise au
+        #: pas suivant. Le prompt d'un pas étant recomposé à neuf, un append dans
+        #: le transcript n'y serait jamais lu — la remise est UNE fois, puis c'est
+        #: le modèle qui décide de ce qui en survit dans Σ ou ses notes.
+        self._message_superviseur: str | None = None
         #: Mode `state` (§H16.3) : verdicts manquants consécutifs pour la même
         #: prédiction, avant l'issue prudente.
         self._echecs_verdict = 0
@@ -493,9 +501,20 @@ class BoucleAgent:
             motif,
             self.notes.pour_segment_frais(),
             observation,
+            enonce=self.contexte.systeme,
         )
+        # §H10.3 : en mode `state`, le prompt du pas est recomposé à neuf — le
+        # message vient d'entrer au transcript archivé (la trace reste complète),
+        # mais sa remise à l'acteur passe par le pas suivant, une seule fois.
+        if self.etat is not None:
+            self._message_superviseur = intervention.message
         self.bilan.interventions += 1
-        self._metrique("superviseur", motif=motif, action=intervention.action_declencheuse)
+        self._metrique(
+            "superviseur",
+            motif=motif,
+            action=intervention.action_declencheuse,
+            sonde_fraiche=intervention.proposition is not None,
+        )
         # Une intervention arme la garde de persistance (§H16.4) : le diagnostic
         # reçu mérite d'être retenu avant de poursuivre.
         self._armer_persistance()
@@ -755,7 +774,10 @@ class BoucleAgent:
         self.workspace.ecrire_pas(ligne)
 
     def _messages_etat(
-        self, erreur_precedente: str | None, rappel_annulation: str | None = None
+        self,
+        erreur_precedente: str | None,
+        rappel_annulation: str | None = None,
+        message_superviseur: str | None = None,
     ) -> list[dict[str, str]]:
         """Compose le prompt d'un pas : (P, Σₜ, Oₜ) + notes, O(1) par tour (§H15.1).
 
@@ -784,6 +806,11 @@ class BoucleAgent:
         # avant elle et reste donc en dessous.
         if self.config.gardes and not self.etat.champs.get("hypotheses"):
             contenu = f"{prompts.AMORCE_DOCUMENTAIRE}\n\n{contenu}"
+        # §H10.3 : le message du superviseur se remet au-dessus du contenu
+        # recomposé, sous l'erreur nommée d'un pas refusé qui garde sa primauté
+        # (§H16.0.6) — il se pose donc avant elle.
+        if message_superviseur is not None:
+            contenu = f"{message_superviseur}\n\n{contenu}"
         if erreur_precedente is not None:
             contenu = (
                 f"Ta réponse précédente était invalide : {erreur_precedente}\n"
@@ -1016,10 +1043,14 @@ class BoucleAgent:
         self._erreur_action_precedente = None
         rappel_annulation = self._rappel_patch_annule
         self._rappel_patch_annule = None
+        # §H10.3 : remise une-fois du message du superviseur — présent sur toutes
+        # les tentatives de CE pas, jamais ré-émis aux pas suivants.
+        message_superviseur = self._message_superviseur
+        self._message_superviseur = None
         try:
             while True:
                 resultat = self._appeler_etat(
-                    self._messages_etat(erreur_precedente, rappel_annulation)
+                    self._messages_etat(erreur_precedente, rappel_annulation, message_superviseur)
                 )
                 try:
                     nouvel_etat, action_texte = appliquer_pas(self.etat, resultat.content)
