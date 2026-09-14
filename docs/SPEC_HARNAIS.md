@@ -153,6 +153,7 @@ TLS.
 | `AVO_ACTIONS_MAX_JEU` | borne d'actions d'environnement par jeu (H8.3) | `5000` |
 | `AVO_SUP_STALL_ACTIONS` | actions sans progrès avant intervention du superviseur (H10.2) | `20` |
 | `AVO_SUP_COOLDOWN` | actions minimales entre deux interventions (H10.3) | `12` |
+| `AVO_SUP_SONDE_FRAICHE` | proposition en contexte frais jointe à l'intervention (H10.4) | `true` |
 | `AVO_RUNS_DIR` | racine des artefacts | `runs/` |
 | `AVO_CONTEXT_MODE` | mode de contexte, `transcript` ou `state` (§H15.7) | `state` |
 | `AVO_LLM_MAX_CONCURRENT` | plafond de requêtes LLM simultanées par endpoint (§H4.9) ; `0` désactive | `3` |
@@ -570,6 +571,66 @@ Générique : la règle porte la relation cooldown/budget, jamais un environneme
 particulier. Chaque déclenchement et son motif sont journalisés dans
 `metrics.jsonl`.
 
+La remise du message `[SUPERVISEUR]` à l'acteur dépend du mode de contexte —
+même articulation que le résumé de coupure (§H17.3), et pour le même motif : en
+mode `state`, le prompt du pas est recomposé à neuf, un append dans le
+transcript n'y est jamais lu :
+
+- **mode `transcript`** : le message est ajouté au transcript principal en
+  append (§H5.1) et le tour suivant le lit comme n'importe quel message ;
+- **mode `state`** : le message est remis UNE fois, en tête du message
+  utilisateur du pas suivant, au-dessus du contenu recomposé (l'erreur nommée
+  d'un pas refusé garde sa primauté, §H16.0.6) ; il n'est pas ré-émis aux pas
+  ultérieurs — c'est le modèle qui décide de ce qui en survit dans Σ ou dans
+  ses notes, jamais le harnais (même politique que le rappel de patch annulé,
+  §H15.8). Le transcript archivé le porte aussi : la trace d'exécution reste
+  complète (§H11.3).
+
+Motif, mesuré (session du 2026-09-14) : l'injection dans le seul transcript
+rendait l'intervention INVISIBLE en mode `state` — le diagnostic coûtait un
+appel modèle et n'atteignait jamais l'acteur, le prompt d'un pas étant composé
+de (P, Σ, notes, Oₜ) seuls. Les lectures d'« exploitation » des redirections
+faites sur les runs supervisés antérieurs à cette remise (journal, suites
+50–52) s'interprètent en conséquence : l'acteur n'avait pas lu les directives.
+
+**H10.4 — Sonde fraîche : proposition en contexte propre jointe à
+l'intervention** (U35). Origine mesurée : suite 52 — la redirection est intégrée
+aux hypothèses SANS diversification des actions ; l'acteur qui reçoit un
+diagnostic construit sur SA trajectoire reste ancré dans son ornière, et le
+diagnostic lui-même (H10.3) raisonne sur un résumé de cette trajectoire.
+Référence : GVS5H §4.4 (les workers en contexte frais contrent l'ancrage).
+
+À chaque intervention (H10.3), le superviseur obtient AUSSI, d'un appel LLM
+séparé et FRAIS, une proposition indépendante :
+
+- le contexte de l'appel est réduit à DEUX éléments : l'énoncé de tâche brut —
+  le message système de l'acteur, tel que le contexte du run le porte — et la
+  dernière observation de l'environnement. Ni notes, ni résumé de trajectoire,
+  ni motif de déclenchement, ni diagnostic : toute fuite d'historique
+  réintroduirait l'ancrage que l'appel a pour objet d'éviter. L'absence de
+  fuite est vérifiée par test sur le corps de l'appel ;
+- le prompt système de la sonde est générique (demander une première approche
+  et une prochaine étape concrète, sans rien supposer d'un travail antérieur),
+  versionné avec les prompts du superviseur, et entre au balayage « zéro
+  indice de jeu » (§A5) ;
+- la proposition est JOINTE au message `[SUPERVISEUR]` (H10.3), après le
+  diagnostic, sous un intitulé qui dit sa provenance — formulée sans connaître
+  l'historique ni les notes. Le message reste UN message, remis selon le mode
+  (ci-dessus) ; l'acteur reste libre de ce qu'il en fait, le harnais
+  n'interprète rien ;
+- dégradation : sur toute erreur du client hors `AuthError`, ou sur
+  proposition vide, l'intervention se fait SANS la proposition, exactement
+  comme avant H10.4 — jamais une panne ; `AuthError` se propage (§H4.4) ;
+- interrupteur : `AVO_SUP_SONDE_FRAICHE` (booléen, défaut `true`). À `false`,
+  aucun appel de sonde n'est émis et l'intervention garde exactement la forme
+  d'avant H10.4 — même patron que §H16.0.3 et §H17.4 : le mécanisme se mesure
+  en A/B (U38), il ne s'impose pas sans mesure ;
+- comptabilité : l'événement `superviseur` de `metrics.jsonl` (§H11.2) porte
+  `sonde_fraiche` (booléen — vrai quand une proposition a réellement été
+  jointe) ; le résumé journalisable du superviseur compte les sondes abouties
+  (`sondes_fraiches`) ; l'intervention journalise la taille de la proposition
+  comme celle de la directive.
+
 ## H11. Observabilité
 
 **H11.1 — Logs.** `logging` stdlib, format JSON une-ligne, niveaux, identifiant de
@@ -751,7 +812,10 @@ modèle, seul le runtime le fait évoluer (schéma v2 hypothétique, hors périm
   Σ : un `RESET` de niveau réinitialise Σ (H15.6) mais pas les notes.
 - **H10 (superviseur).** Les détecteurs de stagnation (H10.2) lisent aussi les
   tentatives de patch refusées (H15.4) comme un signal d'enlisement, au même titre
-  que les actions répétées ou le volume de Bug-Fixing anormal.
+  que les actions répétées ou le volume de Bug-Fixing anormal. La remise du
+  message `[SUPERVISEUR]` en mode `state` est définie en H10.3 : une fois, en
+  tête du pas suivant, jamais ré-émise — Σ et les notes sont les seuls véhicules
+  de ce qui doit en survivre.
 - **H12 (raisonnement).** `Rₜ` jeté après projection (H15.1) est la même politique
   que H12.1 pour le raisonnement natif désactivé (`think: false`) : dans les deux
   cas, un texte de raisonnement existe le temps du tour et n'est jamais réinjecté.

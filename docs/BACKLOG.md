@@ -1539,9 +1539,13 @@ H17 committée avant le code) :
   verte : lint + format, mypy strict (140 fichiers), 836 unitaires,
   157 intégration, 10 E2E, build.
 
-## U35 — Proposition en contexte frais jointe à l'intervention du superviseur `[ ]`
+## U35 — Proposition en contexte frais jointe à l'intervention du superviseur `[~]`
 
-`@spec` H10.4 (à écrire d'abord : extension de H10). Origine mesurée : suite 52
+`@spec` H10.4 (écrite et committée le 2026-09-14, avec la remise du message
+`[SUPERVISEUR]` par mode dans H10.3 — préalable mesuré en ouverture d'unité :
+en mode `state`, l'injection dans le seul transcript rendait l'intervention
+invisible pour l'acteur ; le défaut bloquait U35 et se corrige dans la même
+session). Origine mesurée : suite 52
 (redirection intégrée aux hypothèses SANS diversification des actions — l'ornière
 ancre les workers qui héritent du contexte) et GVS5H §4.4 (fresh-perspective
 workers contre l'ancrage).
