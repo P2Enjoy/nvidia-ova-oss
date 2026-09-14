@@ -1539,25 +1539,34 @@ H17 committée avant le code) :
   verte : lint + format, mypy strict (140 fichiers), 836 unitaires,
   157 intégration, 10 E2E, build.
 
-## U35 — Proposition en contexte frais jointe à l'intervention du superviseur `[~]`
+## U35 — Proposition en contexte frais jointe à l'intervention du superviseur `[x]`
 
-`@spec` H10.4 (écrite et committée le 2026-09-14, avec la remise du message
-`[SUPERVISEUR]` par mode dans H10.3 — préalable mesuré en ouverture d'unité :
-en mode `state`, l'injection dans le seul transcript rendait l'intervention
-invisible pour l'acteur ; le défaut bloquait U35 et se corrige dans la même
-session). Origine mesurée : suite 52
-(redirection intégrée aux hypothèses SANS diversification des actions — l'ornière
-ancre les workers qui héritent du contexte) et GVS5H §4.4 (fresh-perspective
-workers contre l'ancrage).
+`@spec` H10.4, et remise du message `[SUPERVISEUR]` par mode dans H10.3 (les
+deux écrites et committées le 2026-09-14 AVANT le code). Origine mesurée :
+suite 52 (redirection intégrée aux hypothèses SANS diversification des actions)
+et GVS5H §4.4 (fresh-perspective workers contre l'ancrage).
 
-- À l'intervention (H10.3), le superviseur obtient AUSSI, d'un appel FRAIS sans
-  notes ni historique (énoncé de tâche brut + dernière observation), une
-  proposition indépendante, jointe au message `[SUPERVISEUR]` comme alternative
-  non ancrée. Configurable (`AVO_SUP_SONDE_FRAICHE`, défaut `true`) ;
-  journalisée.
-- DoD : spec H10.4 committée avant le code ; unitaires (appel frais sans fuite
-  de contexte, jonction au message, kill-switch) ; rejeu sur cassettes
-  générées ; campagne complète verte.
+**Livrée et intégralement vérifiée le 2026-09-14 (session planifiée) :**
+
+- Préalable mesuré en ouverture d'unité, corrigé dans la même session : en
+  mode `state` (défaut), le message `[SUPERVISEUR]` n'était injecté que dans
+  le transcript archivé, jamais lu par l'acteur dont le prompt est recomposé à
+  neuf — l'intervention était invisible. H10.3 définit la remise par mode :
+  append au transcript en `transcript`, remise UNE fois en tête du pas suivant
+  en `state`, jamais ré-émise ; le transcript archivé porte toujours le
+  message. Les lectures d'« exploitation » des runs supervisés antérieurs
+  (suites 50–52) s'interprètent en conséquence.
+- Sonde fraîche (H10.4) : à l'intervention, appel LLM séparé et FRAIS (énoncé
+  de tâche brut + dernière observation, sans notes ni trajectoire ni
+  diagnostic), proposition jointe au message `[SUPERVISEUR]` sous intitulé de
+  provenance. `AVO_SUP_SONDE_FRAICHE` (défaut `true`) ; dégradation propre
+  hors `AuthError` ; `sonde_fraiche` à l'événement `superviseur`,
+  `sondes_fraiches` au résumé ; prompts superviseur v1.1, balayage §A5.
+- Preuves : 11 unitaires dédiés (fuite, jonction, interrupteur, dégradation,
+  remise une-fois en mode `state`, métriques) ; intégration sur le vrai
+  rejoueur HTTP (diagnostic + sonde appariés, proposition jointe au message
+  rejoué). Campagne complète verte : lint + format, mypy strict,
+  847 unitaires, 157 intégration, 10 E2E, build.
 
 ## U36 — Socle de mesure sous `qwen3.8:27b` : cassettes vivantes et lignes de base `[x]` **[LIVE]**
 

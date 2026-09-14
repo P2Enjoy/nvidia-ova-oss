@@ -193,8 +193,7 @@ class TestRemiseSuperviseurEnModeState(unittest.TestCase):
         self.assertEqual(boucle.bilan.interventions, 1)
         self.assertFalse(
             any(
-                "Aucun travail antérieur" in corps["messages"][0]["content"]
-                for corps in corps_emis
+                "Aucun travail antérieur" in corps["messages"][0]["content"] for corps in corps_emis
             ),
             "aucun appel de sonde ne part quand l'interrupteur est à false",
         )

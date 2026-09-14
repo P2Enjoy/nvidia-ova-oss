@@ -4707,3 +4707,45 @@ verts (llm-replay et arc-replay `healthy`).
 jointe à l'intervention du superviseur : spec H10.4 à écrire et committer
 AVANT le code ; puis U37 (spec H18), puis U38 (A/B réel, porte de reprise de
 U31). U31 suspendue jusqu'à U38 (inchangé).
+
+## 2026-09-14 (session planifiée) — U35 CLOSE : sonde fraîche à l'intervention et remise du message superviseur par mode (H10.3/H10.4)
+
+**Préalable mesuré en ouverture d'unité (sonde scriptée sur la boucle réelle).**
+En mode `state` — le mode par défaut de toutes les campagnes depuis le
+2026-09-01 — le message `[SUPERVISEUR]` n'était injecté que dans
+`contexte.transcript`, jamais lu par l'acteur dont le prompt est recomposé à
+neuf (P, Σ, notes, Oₜ) à chaque pas : l'intervention coûtait un appel modèle
+et restait INVISIBLE. Le défaut bloquait U35 (la proposition fraîche se joint
+à ce message) et s'est corrigé dans la même session, spécification d'abord.
+Conséquence consignée dans la spec et le CHANGELOG : les lectures
+d'« exploitation » des redirections sur les runs supervisés antérieurs
+(suites 50–52) s'interprètent comme des coïncidences d'observation — l'acteur
+n'avait pas lu les directives.
+
+**Spécifié puis codé (dans cet ordre, commits `16354ed` puis `530cad5`,
+`3b86865`, `3de6e92`).** H10.3 étendu : remise par mode — append au transcript
+en mode `transcript` ; en mode `state`, remise UNE fois en tête du pas
+suivant (primauté de l'erreur nommée conservée, §H16.0.6), jamais ré-émise,
+le transcript archivé portant toujours le message. H10.4 écrit : sonde
+fraîche — à chaque intervention, appel LLM séparé et FRAIS (énoncé de tâche
+brut + dernière observation, ni notes, ni trajectoire, ni diagnostic),
+proposition jointe au message `[SUPERVISEUR]` sous intitulé de provenance ;
+interrupteur `AVO_SUP_SONDE_FRAICHE` (défaut `true`) ; dégradation propre
+hors `AuthError` ; proposition vide non jointe ; `sonde_fraiche` à
+l'événement `superviseur`, `sondes_fraiches` au résumé. Prompts superviseur
+v1.1, constantes au balayage §A5 (déjà couvert : `avo.supervisor` y figure).
+
+**Preuves.** 11 unitaires dédiés (6 sonde fraîche dans `test_superviseur.py` :
+fuite, jonction, interrupteur, dégradation 500, AuthError propagée, vide ;
+5 remise en mode state dans `test_remise_superviseur_etat.py` : une-fois,
+sonde sans Σ ni notes, transcript archivé, métriques, interrupteur ; tests
+existants adaptés au double appel diagnostic + sonde). Intégration étendue : diagnostic + sonde
+appariés par le vrai rejoueur HTTP, proposition jointe vérifiée sur le
+message rejoué. Campagne complète verte à la clôture : lint + format
+(142 fichiers), mypy strict (141 fichiers), 847 unitaires, 157 intégration,
+10 E2E sur pile montée et seedée ; `make build` OK. U35 passe `[x]`.
+
+**Où reprendre (boucle planifiée).** U37 — intégration du patron ledger dans
+la boucle et l'état existants : spec H18 à écrire et committer AVANT le code ;
+puis U38 (A/B réel du harnais enrichi, porte de reprise de U31). U31 suspendue
+jusqu'à U38 (inchangé).
