@@ -117,6 +117,16 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
   sur erreur de l'appel de résumé, comptabilité `coupure`/`resume_coupure` dans
   `metrics.jsonl` et `resumes_coupure` au bilan et au rapport. Origine : GVS5H
   §3.1 (cut-off summarizer) et §4.2.
+- Intervention du superviseur (H10.3, U35) : remise du message `[SUPERVISEUR]`
+  selon le mode de contexte — append au transcript en mode `transcript`, remise
+  UNE fois en tête du pas suivant en mode `state` (le prompt y est recomposé à
+  neuf ; un append au seul transcript n'y serait jamais lu — défaut mesuré et
+  corrigé le 2026-09-14). Sonde fraîche (H10.4, U35) : à l'intervention, un
+  appel séparé SANS historique — énoncé de tâche brut + dernière observation —
+  produit une proposition indépendante, jointe au même message comme
+  alternative non ancrée. Débrayable (`AVO_SUP_SONDE_FRAICHE`), dégradation
+  propre, `sonde_fraiche` dans `metrics.jsonl` et `sondes_fraiches` au résumé
+  du superviseur. Origine : GVS5H §4.4 (fresh-perspective) et suite 52.
 - Lignée = git jetable par run, jamais le dépôt projet (H9.3).
 - Instanciation ARC du couple (xᵢ, f) : connaissance validée / (niveaux, −actions)
   — décision documentée H9.2, les sources ne publiant pas ce détail.

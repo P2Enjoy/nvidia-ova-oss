@@ -2,6 +2,31 @@
 
 ## [Non publié]
 
+### 2026-09-14 — U35 : sonde fraîche à l'intervention et remise du message superviseur par mode (H10.3/H10.4)
+
+- Préalable mesuré et corrigé : en mode `state` (mode par défaut), le message
+  `[SUPERVISEUR]` n'était injecté que dans le transcript archivé — jamais lu
+  par l'acteur, dont le prompt est recomposé à neuf à chaque pas. H10.3 définit
+  désormais la remise par mode : append au transcript en mode `transcript`,
+  remise UNE fois en tête du pas suivant en mode `state` (le modèle décide de
+  ce qui en survit dans Σ ou ses notes) ; le transcript archivé porte toujours
+  le message. Les lectures d'« exploitation » des runs supervisés antérieurs
+  (journal, suites 50–52) s'interprètent en conséquence.
+- Sonde fraîche (H10.4, U35) : à chaque intervention, un appel LLM séparé et
+  FRAIS — énoncé de tâche brut + dernière observation, ni notes, ni
+  trajectoire, ni diagnostic — produit une proposition indépendante, jointe au
+  message `[SUPERVISEUR]` sous un intitulé de provenance, comme alternative
+  non ancrée. Origine : GVS5H §4.4 (fresh-perspective) et suite 52.
+- `AVO_SUP_SONDE_FRAICHE` (défaut `true`) débraye la sonde ; toute erreur de
+  l'appel dégrade proprement (intervention sans proposition), seule
+  `AuthError` se propage ; proposition vide non jointe. Prompts superviseur
+  v1.1, constantes au balayage « zéro indice de jeu » (§A5).
+- Comptabilité : `sonde_fraiche` sur l'événement `superviseur` de
+  `metrics.jsonl`, `sondes_fraiches` au résumé journalisable du superviseur.
+- Preuves : 17 unitaires dédiés (sonde sans fuite de contexte, jonction,
+  interrupteur, dégradation, remise une-fois en mode `state`, métriques) ;
+  intégration étendue sur le rejoueur HTTP réel (diagnostic + sonde appariés).
+
 ### 2026-09-13 — U34 : résumé de coupure des réponses tronquées (H17)
 
 - Spécification H17 (`docs/SPEC_HARNAIS.md`) : quand un appel de tour rend
