@@ -20,6 +20,9 @@
 @spec docs/BACKLOG.md U35 — remise du message `[SUPERVISEUR]` par mode et sonde
       fraîche jointe à l'intervention (§H10.3 remise, §H10.4 sonde et
       comptabilité `sonde_fraiche`)
+@spec docs/BACKLOG.md U37 — patron ledger : schéma dérivé `+plan` (§H18.1), pas
+      d'idéation d'ouverture (§H18.2), curation du ledger à l'intervention
+      (§H18.3), interrupteurs (§H18.4) et comptabilité (§H18.5)
 
 La boucle ne connaît aucun jeu. Elle parle à un `Environnement` par un contrat
 minimal, ce qui permet de l'éprouver sur un environnement factice en mémoire avant
@@ -39,11 +42,16 @@ from typing import Any, Final, Protocol
 from avo.config import Config, ModeContexte
 from avo.context.contexte import INVITATION_CONTINUATION, Contexte
 from avo.context.etat import (
+    CHAMP_HYPOTHESES,
+    CHAMP_PLAN,
     CompteurRetries,
     EtatInvalide,
     PatchMalforme,
     RetriesEpuises,
+    avec_plan,
     decoder_pas,
+    remplacer_taches,
+    taches_purgees,
 )
 from avo.context.etat import Etat as EtatStructure
 from avo.context.etat import appliquer as appliquer_pas
@@ -221,6 +229,9 @@ class Bilan:
     redemandes_gardes: int = 0
     #: Résumés de coupure réellement injectés (§H17.5).
     resumes_coupure: int = 0
+    #: Patron ledger (§H18.5) : pas d'idéation joués et curations appliquées.
+    ideations: int = 0
+    curations: int = 0
 
     def resume(self) -> dict[str, Any]:
         return {
@@ -240,6 +251,8 @@ class Bilan:
             "taille_prompt_totale": self.taille_prompt_totale,
             "redemandes_gardes": self.redemandes_gardes,
             "resumes_coupure": self.resumes_coupure,
+            "ideations": self.ideations,
+            "curations": self.curations,
             "prompts_version": prompts.VERSION,
         }
 
@@ -280,10 +293,20 @@ class BoucleAgent:
         self.bilan = Bilan()
         #: Σ du mode `state` (§H15.8) : `None` en mode `transcript`, où il est mort.
         self.etat: EtatStructure | None = None
+        #: Schéma effectif du run (§H18.1) : le schéma monté, dérivé `+plan` quand
+        #: le ledger est actif — à interrupteur inactif, le schéma déclaré tel
+        #: quel, protocole octet pour octet.
+        self._schema_effectif = self.contexte.schema_etat
         if config.contexte_mode is ModeContexte.ETAT:
-            schema = self.contexte.schema_etat
+            if config.plan_ledger:
+                self._schema_effectif = avec_plan(self._schema_effectif)
+            schema = self._schema_effectif
             recharge = workspace.lire_etat(schema) if workspace is not None else None
             self.etat = recharge if recharge is not None else EtatStructure.initial(schema)
+        #: Idéation d'ouverture (§H18.2) : une fois par exécution de boucle, au
+        #: premier tour, quand `hypotheses` est vide — un Σ rechargé non vide
+        #: n'ouvre pas d'idéation.
+        self._ideation_faite = not config.ideation_ouverture
         #: Erreur de résolution d'action du tour précédent, à faire lire au modèle
         #: au tour suivant faute d'historique où l'inscrire (§H15.8).
         self._erreur_action_precedente: str | None = None
@@ -508,16 +531,88 @@ class BoucleAgent:
         # mais sa remise à l'acteur passe par le pas suivant, une seule fois.
         if self.etat is not None:
             self._message_superviseur = intervention.message
+        # §H18.3 : la curation du ledger — le geste de manager — exige Σ, le
+        # ledger actif et son interrupteur ; hors de ces conditions,
+        # l'intervention garde exactement sa forme antérieure.
+        if self.etat is not None and self.config.sup_curation and self.config.plan_ledger:
+            self._curer_plan(intervention, observation)
         self.bilan.interventions += 1
         self._metrique(
             "superviseur",
             motif=motif,
             action=intervention.action_declencheuse,
             sonde_fraiche=intervention.proposition is not None,
+            curation=intervention.curation,
         )
         # Une intervention arme la garde de persistance (§H16.4) : le diagnostic
         # reçu mérite d'être retenu avant de poursuivre.
         self._armer_persistance()
+
+    def _curer_plan(self, intervention: Any, observation: str) -> None:
+        """Applique la curation du ledger à l'intervention (§H18.3).
+
+        Le superviseur produit la liste entière curée ; le runtime la VALIDE
+        (genre, statuts, borne — §H15.3) et REMPLACE le seul champ `plan` de Σ.
+        Toute sortie invalide DÉGRADE — l'intervention se fait sans curation,
+        jamais une panne (même patron que la sonde fraîche, §H10.4).
+        """
+        assert self.etat is not None and self.superviseur is not None
+        taches_avant = len(self.etat.champs.get(CHAMP_PLAN, ()))
+        plan_json = json.dumps(
+            [dict(tache) for tache in self.etat.en_dict().get(CHAMP_PLAN, [])],
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        hypotheses = [str(h) for h in self.etat.champs.get(CHAMP_HYPOTHESES, ())]
+        liste, erreur, resultat = self.superviseur.curer(
+            plan_json, hypotheses, intervention.directive, observation
+        )
+        if resultat is not None:
+            self.bilan.tokens_prompt += resultat.prompt_eval_count
+            self.bilan.tokens_generes += resultat.eval_count
+            self._metrique(
+                "llm",
+                phase="curation",
+                tokens_prompt=resultat.prompt_eval_count,
+                tokens_generes=resultat.eval_count,
+                duree_ms=resultat.total_duration_ms,
+                tronquee=resultat.tronquee,
+            )
+        if liste is None:
+            self._metrique(
+                "curation",
+                appliquee=False,
+                erreur=erreur,
+                taches_avant=taches_avant,
+                taches_apres=taches_avant,
+            )
+            return
+        try:
+            nouvel_etat, purgees = remplacer_taches(self.etat, liste)
+        except EtatInvalide as invalide:
+            self._metrique(
+                "curation",
+                appliquee=False,
+                erreur=f"EtatInvalide: {invalide}",
+                taches_avant=taches_avant,
+                taches_apres=taches_avant,
+            )
+            return
+        self.etat = nouvel_etat
+        if self.workspace is not None:
+            self.workspace.ecrire_etat(self.etat)
+        intervention.curation = True
+        self.bilan.curations += 1
+        # §H18.5 : la purge de borne du chemin de curation se nomme ici — la
+        # curation n'écrit pas de ligne de pas (§H15.10), la métrique la porte.
+        purge_extra: dict[str, Any] = {"taches_purgees": list(purgees)} if purgees else {}
+        self._metrique(
+            "curation",
+            appliquee=True,
+            taches_avant=taches_avant,
+            taches_apres=len(self.etat.champs.get(CHAMP_PLAN, ())),
+            **purge_extra,
+        )
 
     def _proposer_a_la_lignee(self) -> None:
         """Une complétion de niveau propose une version (§H9.2, §H8.4).
@@ -667,6 +762,13 @@ class BoucleAgent:
         if self.config.gardes and self._documentaire_manque():
             notes_bloc = self.notes.pour_segment_frais()
             invite = f"{prompts.GARDE_DOCUMENTAIRE}\n\n{notes_bloc}\n\n{invite}"
+            # §H18.2 : sous AVO_IDEATION_OUVERTURE, l'invite d'idéation précède
+            # la demande documentaire du premier Planning — une fois par
+            # exécution de boucle ; l'artefact et son verrou restent ceux de
+            # §H16.1, aucune structure nouvelle.
+            if not self._ideation_faite:
+                self._ideation_faite = True
+                invite = f"{prompts.IDEATION_TRANSCRIPT}\n\n{invite}"
         if self.config.gardes and self._persistance_manque():
             invite = f"{prompts.GARDE_PERSISTANCE}\n\n{invite}"
         if self._borne_proche():
@@ -778,15 +880,17 @@ class BoucleAgent:
         erreur_precedente: str | None,
         rappel_annulation: str | None = None,
         message_superviseur: str | None = None,
+        ideation: bool = False,
     ) -> list[dict[str, str]]:
         """Compose le prompt d'un pas : (P, Σₜ, Oₜ) + notes, O(1) par tour (§H15.1).
 
         Sous gardes (§H16.2, §H16.3), le protocole exige la ligne `PREDICTION:` et,
         quand une prédiction antérieure attend sa qualification, la ligne
-        `VERDICT:` — le bloc JSON à deux clés de §H15.1 reste inchangé.
+        `VERDICT:` — le bloc JSON à deux clés de §H15.1 reste inchangé. Sur le pas
+        d'idéation (§H18.2), l'invite dédiée remplace l'amorce documentaire.
         """
         assert self.etat is not None
-        protocole = prompts.protocole_etat(self.contexte.schema_etat)
+        protocole = prompts.protocole_etat(self._schema_effectif)
         if self.config.gardes:
             protocole = f"{protocole}\n\n{prompts.PROTOCOLE_ETAT_GARDES}"
             if self._prediction_courante:
@@ -798,13 +902,17 @@ class BoucleAgent:
             f"{self.notes.pour_segment_frais()}\n\n"
             f"{self._avec_observation(protocole)}"
         )
+        # §H18.2 : le pas d'idéation ouvre sur son invite dédiée, qui subsume
+        # l'amorce documentaire (elle demande davantage : plusieurs approches).
+        if ideation:
+            contenu = f"{prompts.ideation_etat(self.config.plan_ledger)}\n\n{contenu}"
         # §H16.0.7 : tant que le champ de connaissances est vide — la condition
         # exacte de la garde documentaire (§H16.1) —, le message du pas s'ouvre
         # sur le rappel de l'exigence : la phrase finale du protocole, dans le
         # message système, perd contre une observation volumineuse. L'erreur
         # nommée d'un pas refusé garde la primauté (§H16.0.6) : l'amorce se pose
         # avant elle et reste donc en dessous.
-        if self.config.gardes and not self.etat.champs.get("hypotheses"):
+        elif self.config.gardes and not self.etat.champs.get(CHAMP_HYPOTHESES):
             contenu = f"{prompts.AMORCE_DOCUMENTAIRE}\n\n{contenu}"
         # §H10.3 : le message du superviseur se remet au-dessus du contenu
         # recomposé, sous l'erreur nommée d'un pas refusé qui garde sa primauté
@@ -1034,9 +1142,84 @@ class BoucleAgent:
         self._echecs_verdict = 0
         return None, verdict, prediction
 
+    def _jouer_pas_ideation(self, numero: int) -> Tour:
+        """Le pas d'idéation d'ouverture (§H18.2) : patch appliqué, action non jouée.
+
+        Aucune action jouée n'accompagne le patch, dont il écrirait l'effet
+        attendu : le motif du pas blanc atomique (§H16.1) ne s'applique pas, le
+        patch S'ACQUIERT. Les gardes d'action (prédiction, verdict) sont sans
+        objet — rien n'est joué. Un pas d'idéation qui laisse `hypotheses` vide
+        tombe au pas suivant sur la garde documentaire existante, inchangée.
+        """
+        assert self.etat is not None
+        tour = Tour(numero=numero, phase_finale=Phase.PLANNING)
+        compteur = CompteurRetries()
+        erreur_precedente: str | None = None
+        try:
+            while True:
+                resultat = self._appeler_etat(self._messages_etat(erreur_precedente, ideation=True))
+                try:
+                    nouvel_etat, action_texte = appliquer_pas(self.etat, resultat.content)
+                    patch = dict(decoder_pas(resultat.content).patch)
+                    purge = taches_purgees(self.etat, patch, nouvel_etat)
+                    extra: dict[str, Any] = {"taches_purgees": list(purge)} if purge else {}
+                    self._archiver_pas(
+                        numero,
+                        compteur.consommees,
+                        resultat.content,
+                        patch=patch,
+                        action=action_texte,
+                        ideation=True,
+                        **extra,
+                    )
+                    break
+                except (PatchMalforme, EtatInvalide) as erreur:
+                    self._archiver_pas(
+                        numero, compteur.consommees, resultat.content, erreur=str(erreur)
+                    )
+                    if compteur.epuise:
+                        raise RetriesEpuises(
+                            f"tour {numero} : budget de tentatives de patch épuisé "
+                            f"({compteur.plafond}) sans état valide : {erreur}"
+                        ) from erreur
+                    compteur = compteur.echec()
+                    erreur_precedente = str(erreur)
+                    # §H17.1 : même absorption de coupure que le pas ordinaire.
+                    if resultat.tronquee:
+                        resume = self._resumer_coupure(resultat, mode="state")
+                        if resume is not None:
+                            erreur_precedente = f"{erreur}\n\n{prompts.resume_coupure_bloc(resume)}"
+                    tour.retries_patch += 1
+                    self.bilan.retries_patch += 1
+                    self._metrique("retry_patch", tentative=compteur.consommees, erreur=str(erreur))
+        except ContextOverflow as erreur:
+            self.bilan.depassements += 1
+            self._metrique("depassement", phase="state", plafond=erreur.max_context_tokens)
+            raise
+
+        # §H18.2 : le patch s'acquiert, l'action rendue n'est PAS jouée — gratuite
+        # au score, archivée ci-dessus (`ideation: true`).
+        self.etat = nouvel_etat
+        if self.workspace is not None:
+            self.workspace.ecrire_etat(self.etat)
+        self.bilan.ideations += 1
+        self._metrique(
+            "ideation",
+            hypotheses=len(self.etat.champs.get(CHAMP_HYPOTHESES, ())),
+            taches=len(self.etat.champs.get(CHAMP_PLAN, ())),
+        )
+        return tour
+
     def _jouer_tour_etat(self, numero: int) -> Tour:
         """Un pas du mode `state` : un seul appel LLM, Σ mis à jour, action jouée (§H15.8)."""
         assert self.etat is not None
+        # §H18.2 : idéation d'ouverture — une fois par exécution de boucle, quand
+        # `hypotheses` est vide (la condition de la garde documentaire, que
+        # l'idéation subsume) ; un Σ rechargé non vide n'en ouvre pas.
+        if not self._ideation_faite:
+            self._ideation_faite = True
+            if not self.etat.champs.get(CHAMP_HYPOTHESES):
+                return self._jouer_pas_ideation(numero)
         tour = Tour(numero=numero, phase_finale=Phase.IMPLEMENTATION)
         compteur = CompteurRetries()
         erreur_precedente = self._erreur_action_precedente
@@ -1064,6 +1247,11 @@ class BoucleAgent:
                         and self.etat.champs.get("hypotheses")
                         else {}
                     )
+                    # §H18.1 : la purge de borne du ledger est nommée à l'archive,
+                    # jamais silencieuse.
+                    purge = taches_purgees(self.etat, patch, nouvel_etat)
+                    if purge:
+                        conservation["taches_purgees"] = list(purge)
                     self._archiver_pas(
                         numero,
                         compteur.consommees,

@@ -43,6 +43,10 @@ def _config(**env: str) -> Config:
             "OLLAMA_API_KEY": "sk-cle-resume-coupure",
             "AVO_CONTEXT_MODE": "state",
             "AVO_GARDES": "false",
+            # U37 : mécanismes H18 hors du périmètre de ces tests — épinglés
+            # inactifs pour garder les séquences d'appels scriptées exactes.
+            "AVO_IDEATION_OUVERTURE": "false",
+            "AVO_PLAN_LEDGER": "false",
             **env,
         },
         racine=Path("/inexistant"),

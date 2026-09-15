@@ -7,6 +7,8 @@
 @spec docs/BACKLOG.md U30 — invites des gardes de méthode (§H16.1–§H16.4)
 @spec docs/BACKLOG.md U31 — `protocole_etat` engendré depuis le schéma de Σ (§H15.9)
 @spec docs/BACKLOG.md U34 — consignes du résumé de coupure (§H17.2, §H17.3)
+@spec docs/BACKLOG.md U37 — discipline de curation du ledger dans le protocole
+      engendré (§H18.1) et invites d'idéation d'ouverture (§H18.2)
 
 **Contrainte fondatrice, vérifiée par test** : aucun de ces textes ne décrit les
 règles, les objets ni le but d'un jeu. L'agent reçoit les actions disponibles et rien
@@ -21,11 +23,20 @@ from __future__ import annotations
 
 from typing import Final
 
-from avo.context.etat import ARC_V1, CHAMP_HYPOTHESES, DICTIONNAIRE, FORMES, SchemaEtat
+from avo.context.etat import (
+    ARC_V1,
+    CHAMP_HYPOTHESES,
+    CHAMP_PLAN,
+    DICTIONNAIRE,
+    FORMES,
+    LISTE_TACHES,
+    PLAN_TACHES_MAX,
+    SchemaEtat,
+)
 
 #: Version des prompts. Change dès qu'un texte change : le rapport d'une campagne
 #: doit pouvoir dire sous quelle formulation ses résultats ont été obtenus.
-VERSION: Final = "1.11"
+VERSION: Final = "1.12"
 
 #: Contrat de tâche, posé une fois en tête de segment (§A5.1, calqué sur VISTA).
 SYSTEME: Final = """Tu joues à un jeu inconnu, tour par tour, sur une grille de
@@ -99,6 +110,18 @@ def protocole_etat(schema: SchemaEtat = ARC_V1) -> str:
             "entrée présente est remplacée, une entrée à null est retirée, une entrée "
             "absente est laissée — ne réémets jamais l'objet entier."
         )
+    # §H18.1 : la discipline de curation du ledger s'annonce d'emblée (§H16.0.7) —
+    # fusion par id, statuts, borne — dès que le schéma porte un champ de tâches.
+    if any(champ.genre == LISTE_TACHES for champ in schema.champs):
+        texte += (
+            " Pour un champ « liste de tâches », le patch fusionne par « id » : une tâche "
+            "de même id est remplacée, une nouvelle s'ajoute, une absente reste. Ne retire "
+            "jamais une tâche : passe-la à « fait » quand elle est faite, à « ecartee » "
+            "quand elle est périmée (statuts admis : a_faire, en_cours, fait, ecartee). "
+            "Cure ton plan : fusionne les doublons, n'ajoute que le réellement nouveau — "
+            f"au plus {PLAN_TACHES_MAX} tâches, au-delà les faites et écartées les plus "
+            "anciennes sont retirées d'elles-mêmes."
+        )
     texte += (
         f" Le champ « {CHAMP_HYPOTHESES} » ne se vide jamais : remplace une hypothèse "
         "périmée par sa révision."
@@ -138,6 +161,37 @@ AMORCE_DOCUMENTAIRE: Final = (
     "n'est jouée tant qu'il l'est. Ta réponse à CE pas écrit au moins une hypothèse "
     "dans son state_patch, en plus de ce qui change."
 )
+
+#: Idéation d'ouverture (§H18.2) : le tronc commun des deux modes — l'étape 2 du
+#: patron GVS5H, énumérer des approches distinctes AVANT la première action.
+IDEATION: Final = (
+    "[IDEATION] Avant d'agir, énumère plusieurs approches RÉELLEMENT distinctes "
+    "pour aborder la tâche — leurs différences comptent plus que leur nombre — "
+    "chacune avec la première étape concrète qui la mettrait à l'épreuve."
+)
+
+
+def ideation_etat(ledger: bool) -> str:
+    """Invite du pas d'idéation en mode `state` (§H18.2).
+
+    Elle ANNONCE que l'action de ce pas ne sera pas jouée (principe §H16.0.7 : la
+    structure annonce d'emblée ce qu'elle imposera) ; le contrat de réponse
+    (§H15.1) reste inchangé, l'action rendue est simplement ignorée.
+    """
+    plan = f", et amorce « {CHAMP_PLAN} » avec les tâches qui en découlent" if ledger else ""
+    return (
+        f"{IDEATION} Écris ces approches dans « {CHAMP_HYPOTHESES} » de ton "
+        f"state_patch{plan}. L'action rendue par ce pas ne sera PAS jouée : ce pas "
+        "est gratuit, consacre-le aux approches."
+    )
+
+
+#: Invite d'idéation du mode `transcript` (§H18.2) : même tronc, l'artefact est
+#: WORKING.md — le verrou reste celui de la garde documentaire (§H16.1).
+IDEATION_TRANSCRIPT: Final = (
+    f"{IDEATION} Écris ces approches dans WORKING.md avant ta première action."
+)
+
 
 #: Garde documentaire (§H16.1) : l'artefact exigé avant de déverrouiller l'action.
 GARDE_DOCUMENTAIRE: Final = """[GARDE] Avant toute action, écris dans WORKING.md

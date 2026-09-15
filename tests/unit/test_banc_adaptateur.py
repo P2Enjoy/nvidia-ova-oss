@@ -49,7 +49,15 @@ HORIZON = 5
 def _config(env: dict[str, str] | None = None) -> Config:
     return charger(
         Mode.REJEU,
-        env={"OLLAMA_CONTEXT_LENGTH": "229376", "AVO_CONTEXT_MODE": "state", **(env or {})},
+        env={
+            "OLLAMA_CONTEXT_LENGTH": "229376",
+            "AVO_CONTEXT_MODE": "state",
+            # U37 : mécanismes H18 hors du périmètre de ces tests — épinglés
+            # inactifs pour garder les séquences d'appels scriptées exactes.
+            "AVO_IDEATION_OUVERTURE": "false",
+            "AVO_PLAN_LEDGER": "false",
+            **(env or {}),
+        },
         racine=Path("/inexistant"),
     )
 

@@ -2,9 +2,11 @@
 
 @spec docs/BACKLOG.md U15 — Superviseur
 @spec docs/BACKLOG.md U35 — Sonde fraîche jointe à l'intervention (§H10.4)
+@spec docs/BACKLOG.md U37 — Curation du ledger à l'intervention (§H18.3)
 @spec docs/SPEC_HARNAIS.md §H10.1 (rôle, séparation stricte des pouvoirs),
       §H10.2 (déclencheurs mesurables), §H10.3 (intervention, cooldown, journalisation),
       §H10.4 (sonde fraîche : appel séparé sans historique, dégradation propre),
+      §H18.3 (curation : appel séparé de manager, liste entière curée, dégradation),
       §H5.1 (injection append-only dans le transcript principal)
 
 Mécanisme du papier AVO §3.3 : sur une recherche longue, deux échecs guettent —
@@ -24,7 +26,9 @@ que le modèle raconte de lui-même serait précisément aveugle quand il tourne
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
+import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Final
@@ -36,7 +40,7 @@ from avo.llm.client import AuthError, LLMClient, LLMError
 _journal = logging.getLogger("avo.superviseur")
 
 #: Version des prompts du superviseur, comme pour ceux de la boucle (§H8.1).
-VERSION: Final = "1.1"
+VERSION: Final = "1.2"
 
 #: Fenêtre d'observation des cycles improductifs, et nombre de répétitions qui la
 #: rend suspecte (§H10.2).
@@ -64,6 +68,21 @@ n'en supposes aucun.
 
 Propose, brièvement : la première approche que tu tenterais, puis la prochaine
 étape concrète qui la met à l'épreuve. Sois spécifique et court."""
+
+SYSTEME_CURATION: Final = """Tu es le manager d'un agent au travail sur une tâche.
+Tu ne joues aucune action : tu cures sa liste de tâches.
+
+On te donne sa liste courante, ses hypothèses, un diagnostic de sa situation et la
+dernière observation. Rends la liste ENTIÈRE curée : fusionne les doublons, passe à
+« fait » ce qui est fait, à « ecartee » ce qui est périmé, n'ajoute que ce qui est
+réellement nouveau, et mets « en_cours » la seule prochaine tâche à mener.
+
+Réponds par un unique bloc ```json : une liste d'objets
+{"id": "...", "description": "...", "statut": "a_faire|en_cours|fait|ecartee"}."""
+
+#: Bloc JSON de la curation (§H18.3) : une LISTE — le remplacement entier est ce
+#: qui permet de fusionner les doublons, contrairement au patch d'acteur.
+_BLOC_LISTE: Final = re.compile(r"```json\s*(\[.*?\])\s*```", re.DOTALL)
 
 #: Intitulé sous lequel la proposition de la sonde rejoint le message
 #: d'intervention (§H10.4) : sa provenance — un appel sans historique — est
@@ -186,6 +205,10 @@ class Intervention:
     #: Proposition de la sonde fraîche (§H10.4), `None` quand la sonde est
     #: désactivée, a dégradé, ou a rendu une proposition vide.
     proposition: str | None = None
+    #: Curation du ledger appliquée (§H18.3) — posée par la BOUCLE après
+    #: validation et remplacement : le superviseur produit la liste, le runtime
+    #: la valide et l'applique (§H15.3, la validation appartient au runtime).
+    curation: bool = False
 
     @property
     def message(self) -> str:
@@ -292,6 +315,48 @@ class Superviseur:
         proposition = resultat.content.strip()
         return proposition or None
 
+    def curer(
+        self,
+        plan_json: str,
+        hypotheses: Sequence[str],
+        diagnostic: str,
+        observation: str,
+    ) -> tuple[list[Any] | None, str | None, Any | None]:
+        """Appel de curation du ledger (§H18.3) : le geste de manager, et lui seul.
+
+        Rend `(liste, None, resultat)` — la liste ENTIÈRE curée, telle que
+        décodée, et le `ChatResult` de l'appel pour la comptabilité (§H18.5) — ou
+        `(None, erreur, resultat | None)` en dégradation : erreur du client hors
+        `AuthError`, bloc absent, JSON illisible ou qui n'est pas une liste. La
+        VALIDATION du contenu (statuts, borne) appartient au runtime (§H15.3) :
+        c'est la boucle qui l'applique via `remplacer_taches`, jamais ce module.
+        `AuthError` se propage : elle est fatale partout (§H4.4).
+        """
+        transcript = (
+            Transcript.ouvrir(SYSTEME_CURATION)
+            .utilisateur(f"Liste de tâches courante :\n{plan_json}")
+            .utilisateur("Hypothèses de l'agent :\n" + ("\n".join(hypotheses) or "(aucune)"))
+            .utilisateur(f"Diagnostic :\n{diagnostic}")
+            .utilisateur(f"Dernière observation :\n{observation}")
+        )
+        try:
+            resultat = self.client.chat(transcript.pour_api())
+        except AuthError:
+            raise
+        except LLMError as erreur:
+            _journal.info("curation dégradée", extra={"erreur": type(erreur).__name__})
+            return None, type(erreur).__name__, None
+        correspondance = _BLOC_LISTE.search(resultat.content or "")
+        if correspondance is None:
+            return None, "bloc_absent", resultat
+        try:
+            liste = json.loads(correspondance.group(1))
+        except json.JSONDecodeError:
+            return None, "json_illisible", resultat
+        if not isinstance(liste, list):
+            return None, "liste_attendue", resultat
+        return liste, None, resultat
+
     def intervenir(
         self,
         transcript: Transcript,
@@ -339,6 +404,7 @@ class Superviseur:
             "sondes_fraiches": sum(
                 1 for intervention in self.interventions if intervention.proposition
             ),
+            "curations": sum(1 for intervention in self.interventions if intervention.curation),
             "prompts_version": VERSION,
         }
 

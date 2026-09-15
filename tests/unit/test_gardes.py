@@ -49,6 +49,10 @@ def _config(**env: str) -> Config:
             "OLLAMA_HOST": "http://capture.invalide",
             "OLLAMA_API_KEY": CLE,
             "AVO_CONTEXT_MODE": "transcript",
+            # U37 : mécanismes H18 hors du périmètre de ces tests — épinglés
+            # inactifs pour garder les séquences d'appels scriptées exactes.
+            "AVO_IDEATION_OUVERTURE": "false",
+            "AVO_PLAN_LEDGER": "false",
             **env,
         },
         racine=Path("/inexistant"),

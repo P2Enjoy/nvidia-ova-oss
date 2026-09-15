@@ -7,6 +7,7 @@
 @spec docs/SPEC_HARNAIS.md §H6.1 (workspace du run), §H8.3 (bornes d'actions),
       §H8.4 (branchements de la boucle), §H9.3 (lignée jetable), §H13.2 (reprise)
 @spec docs/BACKLOG.md U34 — `resumes_coupure` sur `ResultatJeu` (§H17.5)
+@spec docs/BACKLOG.md U37 — `ideations` et `curations` sur `ResultatJeu` (§H18.5)
 @spec docs/BACKLOG.md U27 — `retries_patch` sur `ResultatJeu` (§H15.4, §H15.8),
       nécessaire au rapport comparatif A/B des deux modes de contexte
 @spec docs/BACKLOG.md U30 — câblage de la garde de prédiction sur l'interface
@@ -125,6 +126,10 @@ class ResultatJeu:
     retries_patch: int = 0
     #: Résumés de coupure injectés (§H17.5). Zéro pour les runs antérieurs à H17.
     resumes_coupure: int = 0
+    #: Patron ledger (§H18.5) : pas d'idéation joués et curations appliquées.
+    #: Zéro pour les runs antérieurs à H18.
+    ideations: int = 0
+    curations: int = 0
 
     @property
     def tokens(self) -> int:
@@ -161,6 +166,8 @@ class ResultatJeu:
             "versions_committees": self.versions_committees,
             "retries_patch": self.retries_patch,
             "resumes_coupure": self.resumes_coupure,
+            "ideations": self.ideations,
+            "curations": self.curations,
         }
 
     @classmethod
@@ -193,6 +200,8 @@ class ResultatJeu:
             versions_committees=int(donnees["versions_committees"]),
             retries_patch=int(donnees.get("retries_patch", 0)),
             resumes_coupure=int(donnees.get("resumes_coupure", 0)),
+            ideations=int(donnees.get("ideations", 0)),
+            curations=int(donnees.get("curations", 0)),
         )
 
 
@@ -496,6 +505,8 @@ def jouer_un_jeu(
         versions_committees=bilan.versions_committees,
         retries_patch=bilan.retries_patch,
         resumes_coupure=bilan.resumes_coupure,
+        ideations=bilan.ideations,
+        curations=bilan.curations,
     )
     _journal.info("jeu terminé", extra={"jeu": game_id, "rhae": resultat.rhae.valeur})
     workspace.metrique("jeu", **resultat.en_json())

@@ -1,14 +1,17 @@
 """État d'exécution structuré (SKILL.state) : Σ typé, patch validé par le runtime.
 
 @spec docs/BACKLOG.md U26 — Spécification H15 et runtime d'état structuré ;
-      U31 — schéma de Σ déclaré par le domaine (H15.9)
+      U31 — schéma de Σ déclaré par le domaine (H15.9) ;
+      U37 — patron ledger : genre `liste_taches`, champ `plan`, dérivation de
+      schéma et remplacement curé (§H18.1, §H18.3)
 @spec docs/SPEC_HARNAIS.md §H15.1 (contrat de pas, bloc JSON à deux clés),
       §H15.2 (opérateur ⊕, suppression par null), §H15.3 (schéma possédé par le
       runtime), §H15.4 (rollback-retry borné), §H15.5 (sérialisation aller-retour),
       §H15.6 (schéma ARC v1, défaut du noyau), §H15.9 (schéma déclaré par le
       domaine : genres génériques du noyau, champ commun `hypotheses`, fusion clé
       par clé du genre dictionnaire), §H16.1 (`hypotheses` ne se vide pas en
-      cours de run)
+      cours de run), §H18.1 (genre `liste_taches` : fusion par `id`, statuts,
+      borne et purge des terminales ; dérivation `+plan`)
 
 Module **pur** : aucune entrée-sortie, aucun réseau, aucun appel LLM. Il reçoit un
 état et un texte de modèle, et rend soit un nouvel état et une action, soit une
@@ -40,11 +43,26 @@ ENTIER_POSITIF: Final = "entier_positif"
 CHAINE: Final = "chaine"
 LISTE_CHAINES: Final = "liste_chaines"
 LISTE_OBJETS: Final = "liste_objets"
+LISTE_TACHES: Final = "liste_taches"
 DICTIONNAIRE: Final = "dictionnaire"
 
 #: Champ commun exigé de tout schéma (§H15.9) : la garde documentaire du mode
 #: `state` (§H16.1) y lit l'artefact « ce que je sais ».
 CHAMP_HYPOTHESES: Final = "hypotheses"
+
+#: Champ du ledger (§H18.1), ajouté par DÉRIVATION (`avec_plan`) — jamais déclaré
+#: par un domaine : le plan curé vaut pour toute tâche, pas pour un schéma.
+CHAMP_PLAN: Final = "plan"
+
+#: Statuts admis d'une tâche du ledger (§H18.1) : la discipline de curation GVS5H
+#: imposée par la structure — une tâche ne se retire pas, elle se clôt ou s'écarte.
+STATUTS_TACHE: Final = ("a_faire", "en_cours", "fait", "ecartee")
+STATUTS_TERMINAUX: Final = frozenset({"fait", "ecartee"})
+
+#: Borne du ledger (§H18.1) : le papier amorce 3–6 tâches et borne les fichiers du
+#: workspace (scaffold v2, §3). Au-delà, les terminales les plus anciennes sont
+#: purgées ; des ouvertes seules au-delà de la borne refusent le patch.
+PLAN_TACHES_MAX: Final = 12
 
 _BLOC_JSON: Final = re.compile(r"```json\s*(\{.*?\})\s*```", re.DOTALL)
 
@@ -111,6 +129,31 @@ def _valider_liste_objets(nom: str, valeur: Any) -> None:
             )
 
 
+def _valider_liste_taches(nom: str, valeur: Any) -> None:
+    """Tâches du ledger (§H18.1) : `id`, `description`, `statut` — clés au-delà libres."""
+    if not isinstance(valeur, (list, tuple)):
+        raise EtatInvalide(f"{nom} : liste de tâches attendue, reçue {valeur!r}")
+    vus: set[str] = set()
+    for index, tache in enumerate(valeur):
+        if not isinstance(tache, Mapping) or not {"id", "description", "statut"} <= set(tache):
+            raise EtatInvalide(
+                f"{nom}[{index}] : dict avec au moins « id », « description » et "
+                f"« statut » attendu, reçu {tache!r}"
+            )
+        if not isinstance(tache["id"], str) or not tache["id"]:
+            raise EtatInvalide(f"{nom}[{index}].id : chaîne non vide attendue")
+        if not isinstance(tache["description"], str):
+            raise EtatInvalide(f"{nom}[{index}].description : chaîne attendue")
+        if tache["statut"] not in STATUTS_TACHE:
+            raise EtatInvalide(
+                f"{nom}[{index}].statut : l'un de {list(STATUTS_TACHE)} attendu, "
+                f"reçu {tache['statut']!r}"
+            )
+        if tache["id"] in vus:
+            raise EtatInvalide(f"{nom} : tâche « {tache['id']} » présente deux fois")
+        vus.add(tache["id"])
+
+
 def _valider_dictionnaire(nom: str, valeur: Any) -> None:
     """Objet clé → valeur JSON (§H15.9) : clés chaînes, valeurs sérialisables."""
     if not isinstance(valeur, Mapping):
@@ -132,6 +175,7 @@ _VALIDATEURS: Final = {
     CHAINE: _valider_chaine,
     LISTE_CHAINES: _valider_liste_chaines,
     LISTE_OBJETS: _valider_liste_objets,
+    LISTE_TACHES: _valider_liste_taches,
     DICTIONNAIRE: _valider_dictionnaire,
 }
 
@@ -143,6 +187,7 @@ _DEFAUTS_GENRE: Final[Mapping[str, Any]] = MappingProxyType(
         CHAINE: "",
         LISTE_CHAINES: (),
         LISTE_OBJETS: (),
+        LISTE_TACHES: (),
         DICTIONNAIRE: MappingProxyType({}),
     }
 )
@@ -155,6 +200,7 @@ FORMES: Final[Mapping[str, str]] = MappingProxyType(
         CHAINE: "chaîne de caractères",
         LISTE_CHAINES: "liste de chaînes",
         LISTE_OBJETS: "liste d'objets avec au moins « id » et « description »",
+        LISTE_TACHES: "liste de tâches {id, description, statut}, fusionnée par id",
         DICTIONNAIRE: "objet clé → valeur, fusionné clé par clé",
     }
 )
@@ -246,6 +292,34 @@ def _degeler(valeur: Any) -> Any:
     return valeur
 
 
+def _borner_taches(nom: str, taches: list[Any]) -> tuple[list[Any], tuple[str, ...]]:
+    """Applique la borne du ledger (§H18.1) : purge des terminales, refus sinon.
+
+    Au-delà de `PLAN_TACHES_MAX`, les tâches TERMINALES (`fait`, `ecartee`) les
+    plus anciennes sont purgées jusqu'à la borne — la purge est rendue à
+    l'appelant pour être NOMMÉE (archive du pas, §H15.10 ; métrique de curation,
+    §H18.5), jamais silencieuse. Si les tâches OUVERTES dépassent à elles seules
+    la borne, le patch est refusé : la seule issue est de curer réellement.
+    """
+    if len(taches) <= PLAN_TACHES_MAX:
+        return taches, ()
+    ouvertes = sum(1 for tache in taches if tache["statut"] not in STATUTS_TERMINAUX)
+    if ouvertes > PLAN_TACHES_MAX:
+        raise EtatInvalide(
+            f"{nom} : {ouvertes} tâches ouvertes pour une borne de {PLAN_TACHES_MAX} — "
+            "fusionne les doublons ou écarte le périmé (statuts « fait »/« ecartee »)"
+        )
+    purgees: list[str] = []
+    bornees: list[Any] = list(taches)
+    for tache in taches:
+        if len(bornees) <= PLAN_TACHES_MAX:
+            break
+        if tache["statut"] in STATUTS_TERMINAUX:
+            bornees.remove(tache)
+            purgees.append(tache["id"])
+    return bornees, tuple(purgees)
+
+
 @dataclass(frozen=True, slots=True)
 class Etat:
     """Σ : état d'exécution structuré, toujours conforme à son schéma (§H15.6, §H15.9)."""
@@ -299,6 +373,21 @@ class Etat:
                     else:
                         fusion[sous_cle] = _figer(sous_valeur)
                 nouveaux[cle] = MappingProxyType(fusion)
+            elif champ.genre == LISTE_TACHES:
+                # §H18.1 : fusion par `id` — une tâche du patch remplace celle de
+                # même id ou s'ajoute, une tâche absente reste (même motif que le
+                # genre dictionnaire : ne jamais exiger la réémission entière).
+                # Le modèle ne retire jamais une tâche : il la clôt ou l'écarte.
+                taches = [dict(_degeler(tache)) for tache in nouveaux[cle]]
+                index_par_id = {tache["id"]: rang for rang, tache in enumerate(taches)}
+                for tache in valeur:
+                    rang = index_par_id.get(tache["id"])
+                    if rang is None:
+                        taches.append(dict(tache))
+                    else:
+                        taches[rang] = dict(tache)
+                bornees, _purgees = _borner_taches(cle, taches)
+                nouveaux[cle] = _figer(bornees)
             else:
                 nouveaux[cle] = _figer(valeur)
         return Etat(champs=MappingProxyType(nouveaux), schema=self.schema)
@@ -402,3 +491,70 @@ class CompteurRetries:
                 f"{self.plafond} tentative(s) de patch épuisée(s) sans état valide (§H15.4)"
             )
         return CompteurRetries(plafond=self.plafond, consommees=self.consommees + 1)
+
+
+#: Rôle du champ `plan`, cité par le protocole engendré (§H15.9, §H18.1). Fixé par
+#: le noyau : le ledger vaut pour tout domaine, aucun schéma ne le déclare.
+ROLE_PLAN: Final = "ton plan de travail, curé"
+
+
+def avec_plan(schema: SchemaEtat) -> SchemaEtat:
+    """Dérive le schéma effectif du ledger (§H18.1) : les champs déclarés + `plan`.
+
+    Le schéma dérivé se nomme `<nom>+plan`. Un schéma qui déclare déjà un champ
+    `plan` est refusé — jamais silencieusement écrasé. À interrupteur inactif,
+    l'appelant garde le schéma déclaré : protocole et cassettes inchangés.
+    """
+    if schema.champ(CHAMP_PLAN) is not None:
+        raise SchemaInvalide(
+            f"schéma {schema.nom} : le champ « {CHAMP_PLAN} » est réservé à la "
+            "dérivation du ledger (§H18.1) — un domaine ne le déclare jamais"
+        )
+    return SchemaEtat(
+        f"{schema.nom}+{CHAMP_PLAN}",
+        schema.champs + (ChampEtat(CHAMP_PLAN, LISTE_TACHES, ROLE_PLAN),),
+    )
+
+
+def remplacer_taches(etat: Etat, taches: Any) -> tuple[Etat, tuple[str, ...]]:
+    """Remplace le ledger ENTIER par une liste curée (§H18.3) — le geste de manager.
+
+    C'est le remplacement qui permet de fusionner les doublons, ce que la fusion
+    par `id` du patch d'acteur ne peut pas faire. La liste est validée comme
+    n'importe quelle valeur `liste_taches` (genre, statuts, borne — purge des
+    terminales rendue à l'appelant pour être nommée) ; aucun autre champ n'est
+    touché. Lève `EtatInvalide` nommée sur toute liste invalide, sans modifier
+    `etat`.
+    """
+    champ = etat.schema.champ(CHAMP_PLAN)
+    if champ is None or champ.genre != LISTE_TACHES:
+        raise EtatInvalide(
+            f"« {CHAMP_PLAN} » : le schéma {etat.schema.nom} ne porte pas le ledger "
+            "(§H18.1) — la curation exige un schéma dérivé par avec_plan"
+        )
+    _valider_liste_taches(CHAMP_PLAN, taches)
+    bornees, purgees = _borner_taches(CHAMP_PLAN, [dict(tache) for tache in taches])
+    nouveaux = dict(etat.champs)
+    nouveaux[CHAMP_PLAN] = _figer(bornees)
+    return Etat(champs=MappingProxyType(nouveaux), schema=etat.schema), purgees
+
+
+def taches_purgees(avant: Etat, patch: Mapping[str, Any], apres: Etat) -> tuple[str, ...]:
+    """Les `id` purgés par la borne lors d'une fusion (§H18.1), pour l'archive du pas.
+
+    Purgés = présents avant ou apportés par le patch, absents après. Calcul pur,
+    sans canal de sortie caché dans `fusionner` : l'appelant compare les états
+    qu'il détient déjà.
+    """
+    champ = avant.schema.champ(CHAMP_PLAN)
+    if champ is None or champ.genre != LISTE_TACHES or CHAMP_PLAN not in patch:
+        return ()
+    valeur_patch = patch[CHAMP_PLAN]
+    if not isinstance(valeur_patch, (list, tuple)):
+        # `null` réinitialise le champ (§H15.2) : un choix explicite du modèle,
+        # pas une purge de borne — rien à nommer ici.
+        return ()
+    ids_patch = {tache["id"] for tache in valeur_patch}
+    ids_avant = {tache["id"] for tache in avant.champs[CHAMP_PLAN]}
+    ids_apres = {tache["id"] for tache in apres.champs[CHAMP_PLAN]}
+    return tuple(sorted((ids_avant | ids_patch) - ids_apres))

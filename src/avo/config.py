@@ -9,6 +9,8 @@
 @spec docs/BACKLOG.md U32 — `AVO_LLM_MAX_CONCURRENT`, `AVO_LLM_SLOTS_DIR` (§H4.9)
 @spec docs/BACKLOG.md U34 — `AVO_COUPURE_RESUME` (§H17.4)
 @spec docs/BACKLOG.md U35 — `AVO_SUP_SONDE_FRAICHE` (§H10.4)
+@spec docs/BACKLOG.md U37 — `AVO_PLAN_LEDGER`, `AVO_IDEATION_OUVERTURE`,
+      `AVO_SUP_CURATION` (§H18.4)
 @spec docs/BACKLOG.md U33 — modèle de travail `qwen3.8:27b` et échantillonnage
       optionnel `AVO_TOP_P`/`AVO_TOP_K`/`AVO_MIN_P`/`AVO_REPEAT_PENALTY`/
       `AVO_PRESENCE_PENALTY`, sentinelle `aucun` (§H3.1)
@@ -279,6 +281,9 @@ class Config:
     llm_max_concurrent: int
     llm_slots_dir: Path
     coupure_resume: bool
+    plan_ledger: bool
+    ideation_ouverture: bool
+    sup_curation: bool
 
     @property
     def budget_prompt(self) -> int:
@@ -337,6 +342,9 @@ class Config:
             "llm_max_concurrent": self.llm_max_concurrent,
             "llm_slots_dir": str(self.llm_slots_dir),
             "coupure_resume": self.coupure_resume,
+            "plan_ledger": self.plan_ledger,
+            "ideation_ouverture": self.ideation_ouverture,
+            "sup_curation": self.sup_curation,
             "ollama_api_key": "<masquée>",
             "arc_api_key": "<masquée>" if self.arc_api_key else None,
         }
@@ -435,6 +443,11 @@ def charger(
         llm_max_concurrent=source.entier_nul_ou_positif("AVO_LLM_MAX_CONCURRENT", 3),
         llm_slots_dir=Path(source.texte("AVO_LLM_SLOTS_DIR", str(runs_dir / ".llm-slots"))),
         coupure_resume=source.booleen("AVO_COUPURE_RESUME", True),
+        # Patron ledger (§H18.4) : trois mécanismes, trois interrupteurs — à
+        # `false`, le comportement redevient exactement celui d'avant H18.
+        plan_ledger=source.booleen("AVO_PLAN_LEDGER", True),
+        ideation_ouverture=source.booleen("AVO_IDEATION_OUVERTURE", True),
+        sup_curation=source.booleen("AVO_SUP_CURATION", True),
     )
 
     if config.think and config.num_predict < NUM_PREDICT_MIN_AVEC_THINK:
