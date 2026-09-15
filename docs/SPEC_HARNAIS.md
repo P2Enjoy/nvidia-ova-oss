@@ -1441,20 +1441,33 @@ et entre au balayage « zéro indice de jeu » (§A5.1).
 Le `tasks.json` du papier (`[{id, desc, status, result}]`) se transpose en un
 genre générique du noyau (§H15.9) :
 
-- **Genre `liste_taches`** : liste d'objets portant au moins `id` (chaîne non
-  vide), `description` (chaîne) et `statut` — l'un de `a_faire`, `en_cours`,
-  `fait`, `ecartee` (constante du module) ; les clés au-delà sont libres et non
-  validées, comme pour `liste_objets` — le `result` du papier y loge. Défaut :
-  liste vide. Un rejet nomme l'entrée et le défaut précis (§H15.3) ; deux
-  tâches de même `id` dans une même valeur sont refusées de même.
-- **Fusion par `id`** (même motif que le genre `dictionnaire`, §H15.9 : ne
-  jamais exiger la réémission entière — le mode d'erreur dominant du papier
-  SKILL.state) : chaque tâche du patch remplace la tâche existante de même `id`
-  ou s'ajoute ; une tâche absente du patch reste. Le modèle ne retire jamais
-  une tâche : il la CLÔT (`fait`) ou l'ÉCARTE (`ecartee`) — la discipline de
-  curation du papier, imposée par la structure (§H16.0.1). Le champ entier à
-  `null` revient à son défaut (§H15.2, inchangé : la sémantique de `null` reste
-  uniforme, seul `hypotheses` a une conservation propre, mesurée, §H16.1).
+- **Genre `liste_taches`** : liste d'objets portant `id` (chaîne non vide) ;
+  `description` (chaîne) et `statut` — l'un de `a_faire`, `en_cours`, `fait`,
+  `ecartee` (constante du module) — sont REQUIS pour une tâche NOUVELLE et
+  OPTIONNELS dans le patch d'une tâche existante (fusion champ à champ,
+  ci-dessous) ; les clés au-delà sont libres et non validées, comme pour
+  `liste_objets` — le `result` du papier y loge. Une valeur COMPLÈTE (chaque
+  tâche avec ses trois clés) reste la forme du champ dans Σ, de sa
+  sérialisation (§H15.5) et du remplacement curé (H18.3). Défaut : liste vide.
+  Un rejet nomme l'entrée et le défaut précis (§H15.3) ; deux tâches de même
+  `id` dans une même valeur sont refusées de même.
+- **Fusion par `id`, champ à champ** (même motif que le genre `dictionnaire`,
+  §H15.9 : ne jamais exiger la réémission entière — le mode d'erreur dominant
+  du papier SKILL.state) : une tâche du patch dont l'`id` existe FUSIONNE ses
+  clés dans la tâche existante — clé fournie remplacée, clé absente conservée
+  — si bien que clore ou écarter s'écrit `{id, statut}` seul, sans réémettre
+  la description ; une tâche d'`id` nouveau s'ajoute (complète, voir
+  ci-dessus) ; une tâche absente du patch reste. Motif mesuré du raffinement
+  (run `u38-depot-s2`, 2026-09-15) : la validation qui exigeait la tâche
+  complète même pour un `id` existant a tué un épisode en `RetriesEpuises`
+  sur un patch de clôture sémantiquement correct (`{'id': 'd3_merge',
+  'statut': 'ecartee'}`) — l'exigence de réémission recréait exactement le
+  mode d'erreur que la fusion par `id` existe pour éviter. Le modèle ne
+  retire jamais une tâche : il la CLÔT (`fait`) ou l'ÉCARTE (`ecartee`) — la
+  discipline de curation du papier, imposée par la structure (§H16.0.1). Le
+  champ entier à `null` revient à son défaut (§H15.2, inchangé : la
+  sémantique de `null` reste uniforme, seul `hypotheses` a une conservation
+  propre, mesurée, §H16.1).
 - **Borne et purge** : `PLAN_TACHES_MAX = 12` (constante du module ; le papier
   amorce 3–6 tâches et borne les fichiers du workspace — scaffold v2, §3).
   Quand une fusion dépasse la borne, le runtime PURGE d'abord les tâches
