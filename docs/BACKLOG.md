@@ -1597,9 +1597,9 @@ journal suite 5 et session planifiée du même jour) :
 - Campagne complète verte à la clôture : lint + format, mypy strict
   (138 fichiers), 825 unitaires, 155 intégration, 10 E2E, build.
 
-## U37 — Intégration du patron ledger DANS la boucle et l'état existants `[ ]`
+## U37 — Intégration du patron ledger DANS la boucle et l'état existants `[~]`
 
-`@spec` H18 (à écrire d'abord : chapitre nouveau), H15 (état Σ), H10
+`@spec` H18 (écrit et committé le 2026-09-15, AVANT le code), H15 (état Σ), H10
 (superviseur). Origine : GVS5H §3.1 — le résultat central du papier pour la
 classe de taille de notre modèle de travail. **Règle du responsable
 (2026-09-12, CLAUDE_PROJECT « Intégration plutôt que modes ») : PAS de mode de

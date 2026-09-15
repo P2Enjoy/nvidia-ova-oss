@@ -534,7 +534,10 @@ la boucle.
 
 **H10.1 — Rôle** (papier AVO §3.3) : détecter stagnation et cycles improductifs,
 puis intervention conditionnelle qui redirige l'agent principal. Le superviseur ne
-joue jamais d'action (séparation à la Tycho : seul l'acteur agit).
+joue jamais d'action (séparation à la Tycho : seul l'acteur agit) ; ses seuls
+pouvoirs d'écriture sont le message d'intervention (H10.3) et, à l'intervention,
+la curation du ledger de Σ restreinte au champ `plan` (le geste de manager,
+§H18.3) — jamais un autre champ, jamais une action.
 
 **H10.2 — Déclencheurs (code, mesurables, configurables).**
 `AVO_SUP_STALL_ACTIONS` (défaut 20) actions sans complétion de niveau **et** sans
@@ -1024,7 +1027,9 @@ champs.
   textuel du papier, tel `working_dir` du schéma CTF de la source §3.1,
   transposé `docs/SPEC_BANCS.md` §S12.3), `liste_chaines`, `liste_objets`
   (objets à `id` et `description`
-  au moins) ou `dictionnaire` (clé → valeur JSON) —, son défaut, et un rôle en
+  au moins), `liste_taches` (tâches à `id`, `description` et `statut`, fusion
+  par `id` et borne — contrat complet en §H18.1) ou `dictionnaire` (clé →
+  valeur JSON) —, son défaut, et un rôle en
   une phrase que le protocole cite. Les genres sont ceux du noyau : un domaine ne
   définit jamais un validateur.
 - **Champ commun obligatoire.** Tout schéma porte `hypotheses` (`liste_chaines`) :
@@ -1407,3 +1412,177 @@ canal, dégradation sur erreur du client, métriques écrites. Intégration : ca
 GÉNÉRÉE portant une réponse à `done_reason: "length"` sans bloc exploitable,
 rejouée par le vrai rejoueur HTTP — le run absorbe la coupure, le résumé figure
 dans le corps de l'appel suivant, `metrics.jsonl` porte l'événement.
+
+## H18. Patron ledger dans la boucle et l'état — plan curé, idéation d'ouverture, curation par le superviseur
+
+Chapitre couvrant U37. Source : GVS5H §3.1 (la boucle manager–worker et son
+espace de travail partagé `plan.md`/`tasks.json`/`notes.md` — le résultat central
+du papier pour la classe de taille du modèle de travail), §4.2 (les notes
+organisées et curées remplacent la fenêtre de contexte qui déborde), §4.4
+(limites mesurées : un plan faux ancre tout l'aval — c'est la sonde fraîche
+H10.4 qui y répond, les deux mécanismes se composent). Règle du responsable
+(2026-09-12, CLAUDE_PROJECT « Intégration plutôt que modes ») : un enseignement
+AMÉLIORE le harnais existant — aucun mode de fonctionnement supplémentaire.
+
+**H18.0 — Lecture du papier et périmètre.** Le worker GVS5H — un appel frais et
+borné recevant (énoncé, état partagé, tâche) — est déjà notre mode `state` :
+chaque pas reçoit (P, Σₜ, Oₜ) et rien d'autre (§H15.1). Ce qui manque est la
+moitié MANAGER du patron : un plan et des tâches PARTAGÉS et CURÉS (étape 3 du
+papier — fusionner les doublons, clore le fait, n'ajouter que le réellement
+nouveau), une idéation d'ouverture sans action (étape 2), et un rôle qui cure.
+Trois mécanismes, intégrés aux structures existantes — Σ (H15), les gardes
+(H16), le superviseur (H10) —, chacun débrayable séparément (H18.4) ; le
+départage se fait par la mesure (A/B en rejeu, U37 ; A/B réel, U38), jamais sur
+le papier. Surfaces : le ledger et la curation exigent Σ, donc le mode `state` ;
+l'idéation existe dans les deux modes (H18.2). Tout texte ajouté est générique
+et entre au balayage « zéro indice de jeu » (§A5.1).
+
+**H18.1 — Le ledger : champ `plan` de Σ, genre `liste_taches` du noyau.**
+Le `tasks.json` du papier (`[{id, desc, status, result}]`) se transpose en un
+genre générique du noyau (§H15.9) :
+
+- **Genre `liste_taches`** : liste d'objets portant au moins `id` (chaîne non
+  vide), `description` (chaîne) et `statut` — l'un de `a_faire`, `en_cours`,
+  `fait`, `ecartee` (constante du module) ; les clés au-delà sont libres et non
+  validées, comme pour `liste_objets` — le `result` du papier y loge. Défaut :
+  liste vide. Un rejet nomme l'entrée et le défaut précis (§H15.3) ; deux
+  tâches de même `id` dans une même valeur sont refusées de même.
+- **Fusion par `id`** (même motif que le genre `dictionnaire`, §H15.9 : ne
+  jamais exiger la réémission entière — le mode d'erreur dominant du papier
+  SKILL.state) : chaque tâche du patch remplace la tâche existante de même `id`
+  ou s'ajoute ; une tâche absente du patch reste. Le modèle ne retire jamais
+  une tâche : il la CLÔT (`fait`) ou l'ÉCARTE (`ecartee`) — la discipline de
+  curation du papier, imposée par la structure (§H16.0.1). Le champ entier à
+  `null` revient à son défaut (§H15.2, inchangé : la sémantique de `null` reste
+  uniforme, seul `hypotheses` a une conservation propre, mesurée, §H16.1).
+- **Borne et purge** : `PLAN_TACHES_MAX = 12` (constante du module ; le papier
+  amorce 3–6 tâches et borne les fichiers du workspace — scaffold v2, §3).
+  Quand une fusion dépasse la borne, le runtime PURGE d'abord les tâches
+  TERMINALES (`fait`, `ecartee`) les plus anciennes, jusqu'à la borne — purge
+  nommée dans l'archive du pas (§H15.10, `taches_purgees` : les `id` purgés),
+  jamais silencieuse ; si les tâches OUVERTES dépassent à elles seules la
+  borne, le patch est refusé (`EtatInvalide` nommant la borne) : la seule issue
+  est de curer réellement — fusionner les doublons, écarter le périmé.
+
+**Dérivation du schéma, pas déclaration nouvelle.** Le ledger vaut pour TOUT
+domaine : il n'appartient à aucun schéma déclaré. Quand `AVO_PLAN_LEDGER` est
+actif (H18.4) et le mode `state`, la boucle dérive à sa construction le schéma
+effectif : les champs déclarés, plus le champ `plan` (genre `liste_taches`,
+rôle générique fixé par le noyau : le plan de travail curé). Le schéma dérivé
+se nomme `<nom>+plan` ; un schéma déclaré qui porte déjà un champ `plan` est
+refusé à la dérivation (`SchemaInvalide` nommé) plutôt que silencieusement
+écrasé. À interrupteur inactif, le schéma effectif est le schéma déclaré :
+protocole octet pour octet, cassettes et preuves antérieures inchangées. Le
+protocole du pas est ENGENDRÉ du schéma effectif (§H15.9) : quand le schéma
+porte un champ de genre `liste_taches`, le protocole énonce la fusion par
+`id`, les quatre statuts et la discipline de curation — constantes de
+`prompts.py`, versionnées, aucun terme d'environnement (§A5.1). Σ persisté
+(§H15.5) porte le champ et se relit sous le schéma dérivé ; la reprise d'un
+run exige la même configuration de ledger que son écriture — un `etat.json`
+qui porte `plan` relu sans le ledger tombe sur l'erreur nommée existante
+(« clé inconnue du schéma »), jamais une perte silencieuse.
+
+**H18.2 — Idéation d'ouverture : un pas sans action.** Étape 2 du papier : le
+premier worker n'écrit pas de solution — il nomme la difficulté et énumère des
+approches candidates. Mesure locale qui désigne le besoin : suite 52 — la
+redirection intégrée aux hypothèses SANS diversification des actions ;
+l'ancrage se combat AVANT la première action, pas seulement à l'intervention
+(H10.4). C'est l'extension de la garde documentaire (§H16.1) : au lieu de
+seulement RETENIR l'action tant que l'artefact manque, la structure OUVRE par
+un pas dédié à le produire.
+
+- **Mode `state`.** Quand `AVO_IDEATION_OUVERTURE` est actif et que
+  `hypotheses` de Σ est vide au premier tour de la boucle — la condition exacte
+  de la garde documentaire, que l'idéation subsume —, le premier pas est un pas
+  d'IDÉATION : son message porte, à la place de l'amorce documentaire
+  (§H16.0.7), une invite dédiée (constante) — énumérer plusieurs approches
+  RÉELLEMENT DISTINCTES dans `hypotheses` et, quand le ledger est actif, les
+  tâches d'amorce dans `plan`. Le contrat de réponse (§H15.1) est inchangé,
+  mais l'invite ANNONCE que l'action de ce pas ne sera pas jouée (principe
+  §H16.0.7 : la structure annonce d'emblée ce qu'elle imposera). Le patch du
+  pas S'APPLIQUE — aucune action jouée ne l'accompagne dont il écrirait l'effet
+  attendu : le motif du pas blanc atomique (§H16.1) ne s'applique pas — ;
+  l'action rendue n'est PAS jouée, quelle qu'elle soit : gratuite au score,
+  archivée (§H15.10, `ideation: true`). L'idéation est UNE fois par exécution
+  de boucle : un pas d'idéation qui laisse `hypotheses` vide tombe au pas
+  suivant sur la garde documentaire existante (§H16.1), inchangée ; un Σ
+  rechargé (§H15.5) dont `hypotheses` est déjà non vide n'ouvre pas d'idéation.
+- **Mode `transcript`.** Le premier Planning du run porte déjà la demande
+  documentaire (§H16.1) ; sous `AVO_IDEATION_OUVERTURE`, l'invite d'idéation
+  (même constante) la précède : énumérer dans `WORKING.md` plusieurs approches
+  réellement distinctes avant la première action. Aucune structure nouvelle :
+  l'artefact et son verrou restent ceux de §H16.1.
+
+**H18.3 — Curation par le superviseur : le geste de manager.** Étape 3 du
+papier : le manager FOND plan et idées en UNE liste curée — fusionner les
+doublons, marquer le fait, n'ajouter que le réellement nouveau, nommer la
+prochaine tâche. Le rôle qui observe la trajectoire et intervient existe déjà :
+le superviseur (H10). Il gagne ce geste, et lui seul — la révision de §H10.1
+est écrite là-bas : il ne joue toujours JAMAIS d'action ; son pouvoir
+d'écriture s'étend au SEUL champ `plan` de Σ. L'issue « proposer la curation à
+l'acteur dans le message » est écartée avec son motif : mesuré (suite 52), une
+redirection remise à l'acteur s'intègre aux hypothèses sans changer les actions
+— et le résultat central du papier repose sur un manager qui POSSÈDE la liste,
+pas qui la suggère.
+
+- **Déclenchement** : à chaque intervention (H10.3), quand `AVO_SUP_CURATION`
+  est actif, que le ledger l'est aussi (H18.1) et que le mode est `state`.
+  Hors de ces conditions, l'intervention garde exactement sa forme antérieure.
+- **L'appel de curation** : un appel LLM SÉPARÉ de plus (« Exactitude avant
+  tout », CLAUDE_PROJECT : un appel supplémentaire se prend dès qu'il peut
+  améliorer le résultat), en contexte propre : consigne système générique de
+  manager (versionnée avec les prompts du superviseur, balayage §A5), puis le
+  ledger courant sérialisé, les `hypotheses` courantes, le diagnostic qui vient
+  d'être produit (H10.3) et la dernière observation. Il rend un unique bloc
+  ```json : la liste ENTIÈRE curée — c'est le remplacement qui permet de
+  fusionner les doublons, ce que la fusion par `id` du patch d'acteur ne peut
+  pas faire ; la répartition du papier est exactement celle-là : les workers
+  ajoutent et mettent à jour, le manager cure la liste unique.
+- **Validation et application** : la liste rendue est validée comme n'importe
+  quelle valeur `liste_taches` (genre, statuts, borne — la purge des terminales
+  de H18.1 s'applique) et REMPLACE `plan` dans Σ, qui est persisté (§H15.5).
+  Elle ne touche AUCUN autre champ. Une curation qui rend autre chose qu'une
+  liste de tâches valide DÉGRADE : l'intervention se fait sans curation, jamais
+  une panne (même patron que la sonde fraîche, §H10.4) ; `AuthError` se propage
+  (§H4.4).
+- **Remise à l'acteur** : aucune voie nouvelle — le pas suivant lit Σ, donc le
+  ledger curé, dans son prompt recomposé (§H15.1) ; le message `[SUPERVISEUR]`
+  (H10.3) reste le diagnostic et la proposition de la sonde. L'acteur reste
+  libre de la suite ; la trace est complète (H18.5).
+
+**H18.4 — Interrupteurs.** Trois, indépendants, booléens à défaut `true` (même
+patron que §H16.0.4 et §H17.4 : le mécanisme se mesure en A/B — U38 —, il ne
+s'impose pas sans mesure ; à `false`, le comportement redevient exactement
+celui d'avant H18) :
+
+- `AVO_PLAN_LEDGER` — le champ `plan` de Σ (H18.1) ;
+- `AVO_IDEATION_OUVERTURE` — le pas d'idéation (H18.2) ;
+- `AVO_SUP_CURATION` — la curation à l'intervention (H18.3 ; sans effet quand
+  `AVO_PLAN_LEDGER` est inactif ou hors mode `state`).
+
+**H18.5 — Comptabilité.** `metrics.jsonl` (§H11.2) :
+
+- l'idéation écrit un événement `ideation` : `hypotheses` et `taches` (comptes
+  après application du patch) ; l'appel lui-même reste la métrique `llm` du
+  pas, inchangée ;
+- la curation écrit un événement `curation` : `taches_avant`, `taches_apres`,
+  `appliquee` (booléen — faux en dégradation, avec `erreur` nommant le type) ;
+  l'appel s'écrit en métrique `llm`, phase `curation` ; l'événement
+  `superviseur` (§H11.2) porte `curation` (booléen) au même titre que
+  `sonde_fraiche`, et le résumé journalisable du superviseur compte les
+  curations appliquées (`curations`) ;
+- la purge de borne s'archive au pas (§H15.10, `taches_purgees`) ;
+- le bilan de run porte `ideations` et `curations` (les appliquées) ; le
+  rapport de campagne (§A7.3) les affiche, à zéro pour les runs antérieurs.
+
+**H18.6 — Preuves exigées (U37).** Unitaires : genre `liste_taches` (validation
+nommée, fusion par `id`, statuts, borne, purge des terminales, refus au-delà de
+la borne ouverte), dérivation du schéma (`+plan`, collision refusée,
+interrupteur inactif = schéma et protocole identiques octet pour octet),
+protocole engendré (discipline de curation citée), pas d'idéation (patch
+appliqué, action non jouée, une fois par boucle, interrupteur, Σ rechargé non
+vide), curation (remplacement validé, restriction au champ, dégradation hors
+`AuthError`, `AuthError` propagée, interrupteurs), métriques et bilan. A/B en
+rejeu sur cassettes GÉNÉRÉES (patron U27) : harnais enrichi (mécanismes H18
+actifs) contre harnais nu, même mode `state` — le comportement observé du
+harnais, jamais un jeu officiel particulier. Campagne complète verte.
