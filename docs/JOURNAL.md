@@ -4845,3 +4845,9 @@ h25 bruit 0 : s1 **1,00**, s2 **0,96**, s3 **0,92** — moyenne 0,96, contre
 0,867/1,00 pour le bras nu (U36, deux réplications) : dans la bande, sans
 l'effondrement du s1 du dépôt. Aucun incident, aucune purge de borne, fusion
 champ à champ sans accroc. Suite : série τ s1–10 h20.
+
+**U38, point d'étape 3 — série banc c τ (bras enrichi, v1.13) close.**
+detail h20 s1–10, utilisateur llm : **10/10 réussis, 0 violation**, tous clos
+par l'agent en 5–7 actions — identique au bras nu (U36 : 10/10 sur deux
+réplications). Aucun incident. Suite et fin du périmètre : série CTF s1–10
+h30, exécuteur conteneur.
