@@ -20,8 +20,6 @@ import unittest
 
 from avo.context.etat import (
     ARC_V1,
-    PatchMalforme,
-    decoder_pas,
     CHAMP_PLAN,
     LISTE_CHAINES,
     LISTE_TACHES,
@@ -29,9 +27,11 @@ from avo.context.etat import (
     ChampEtat,
     Etat,
     EtatInvalide,
+    PatchMalforme,
     SchemaEtat,
     SchemaInvalide,
     avec_plan,
+    decoder_pas,
     remplacer_taches,
     taches_purgees,
 )

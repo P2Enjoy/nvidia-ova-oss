@@ -184,7 +184,7 @@ def ideation_etat(ledger: bool) -> str:
     return (
         f"{IDEATION} Écris ces approches dans « {CHAMP_HYPOTHESES} » de ton "
         f"state_patch{plan}. Aucune action ne sera jouée à ce pas : ce pas est "
-        "gratuit, consacre-le aux approches — laisse « action » vide (\"\") ou "
+        'gratuit, consacre-le aux approches — laisse « action » vide ("") ou '
         "mets « aucune »."
     )
 
