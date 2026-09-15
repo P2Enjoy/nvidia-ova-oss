@@ -4868,3 +4868,38 @@ et l'invite dit la forme ; et l'id numérique (`"id": 1`, dérive sous
 redemandes) est normalisé en chaîne. Prompts v1.14. À noter : s1, non
 mesurable côté nu (transport), est MESURABLE côté enrichi (échec sémantique
 propre, 30 actions).
+
+## 2026-09-15 (session planifiée, suite) — U38 CLOSE : A/B réel du harnais enrichi, décision, suspension de U31 levée
+
+**Mesuré** (périmètre au journal avant lancement, quatre séries U29 jouées en
+réel, bras nu = lignes de base U36) : dépôt 0,853 (0,56/1,00/1,00), entrepôt
+0,96 (1,00/0,96/0,92), CTF 6/9 mesurables ISO seed à seed avec le nu (échecs
+`encodage` s1/s4/s8 des deux côtés, s2 non mesurable — transport ×2), τ 10/10
+identique. Rapport complet : `docs/rapports/ab-u38-bancs.md` ; HISTORIQUE mis
+à jour.
+
+**Modifié** (défauts généraux du harnais, découverts par la campagne et
+corrigés dans la session — spec révisée AVANT le code à chaque fois) :
+fusion du ledger champ à champ par `id` (`{id, statut}` clôt une tâche —
+u38-depot-s2, rejeu 1,00 ; commits `f27d9a6`, `6d8373c`) ; action vide tolérée
+au pas d'idéation, invite disant la forme, id numérique normalisé
+(u38-ctf-s6, rejeu capturé en 3 actions ; commits `b01111c`, `7b25436`,
+`b71c7a1`). Prompts v1.14, cassette enrichie régénérée à chaque révision,
+rapport `ab_ledger_state.md` rejouable à l'octet près maintenu.
+
+**Vérifié** : campagne complète verte à la clôture — lint + format
+(146 fichiers), mypy strict (145), 900 unitaires, 157 intégration, 12 E2E,
+build. **Échecs** : 3 morts de transport (`IncompleteRead` mi-flux du pont,
+s2 ×2 et s8 ×1 — registre 2026-09-12, l'accumulation plaide pour une reprise
+de flux §H4 si U31 la confirme) ; ancrage de plan sur dépôt s1 (régression
+GVS5H §4.4 observée, un seed sur 26 épisodes).
+
+**Décision persistée** : U34/U35/U37 restent actifs par défaut (rapport,
+backlog U31, HISTORIQUE) ; à surveiller en U31 : l'ancrage de plan — réponse
+générique côté discipline de curation, jamais une règle d'environnement.
+U38 passe `[x]` ; la suspension de U31 est LEVÉE (backlog, MASTER_PLAN §2/§7).
+
+**Où reprendre (boucle planifiée).** U31, unité de chaque session : jouer les
+bancs U29 sous le harnais enrichi, observer (en premier : l'ancrage de plan et
+les morts de transport), améliorer le général ; campagne ARC au périmètre U25
+quand son déclencheur est atteint.
