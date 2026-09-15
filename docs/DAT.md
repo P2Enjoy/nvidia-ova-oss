@@ -106,8 +106,9 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
   politique conforme. En mode `state`, un refus de garde est un pas blanc
   ATOMIQUE — le patch du pas refusé est annulé avec l'action (Σ ne ment jamais
   sur une action non jouée), et le champ commun `hypotheses` ne se vide pas en
-  cours de run (vidage = `EtatInvalide`, retry immédiat) — H16.1, mesures au
-  journal (suite 21).
+  cours de run — le vidage est SANS EFFET sur le champ, le reste du patch
+  s'applique, l'archive du pas porte `hypotheses_conservees` — H16.1, mesures
+  au journal (suites 20, 21, 23).
 - Résumé de coupure (H17, U34) : une réponse tronquée par la limite de sortie
   SANS action exploitable (bloc de pas illisible en mode `state`, Implementation
   sans appel d'action en mode `transcript`) est résumée par un appel court
@@ -127,6 +128,19 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
   alternative non ancrée. Débrayable (`AVO_SUP_SONDE_FRAICHE`), dégradation
   propre, `sonde_fraiche` dans `metrics.jsonl` et `sondes_fraiches` au résumé
   du superviseur. Origine : GVS5H §4.4 (fresh-perspective) et suite 52.
+- Patron ledger (H18, U37) : la moitié MANAGER de GVS5H intégrée aux
+  structures existantes, sans mode nouveau. Champ `plan` de Σ (genre
+  `liste_taches` du noyau : tâches `{id, description, statut}`, fusion par
+  `id`, borne à 12 avec purge nommée des terminales, schéma DÉRIVÉ `+plan` —
+  jamais déclaré par un domaine) ; pas d'idéation d'ouverture (premier pas
+  sans action jouée, approches distinctes dans `hypotheses`, tâches d'amorce
+  dans `plan`) ; curation à l'intervention (appel séparé de manager, la liste
+  ENTIÈRE curée remplace le seul champ `plan`, validée par le runtime,
+  dégradation propre). Trois interrupteurs indépendants (`AVO_PLAN_LEDGER`,
+  `AVO_IDEATION_OUVERTURE`, `AVO_SUP_CURATION`, défauts `true`) ;
+  comptabilité `ideation`/`curation` dans `metrics.jsonl`, `ideations` et
+  `curations` au bilan et au rapport. Origine : GVS5H §3.1 (manager–worker),
+  A/B rejeu `docs/rapports/ab_ledger_state.md`, départage réel en U38.
 - Lignée = git jetable par run, jamais le dépôt projet (H9.3).
 - Instanciation ARC du couple (xᵢ, f) : connaissance validée / (niveaux, −actions)
   — décision documentée H9.2, les sources ne publiant pas ce détail.

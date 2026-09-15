@@ -2,6 +2,37 @@
 
 ## [Non publié]
 
+### 2026-09-15 — U37 : patron ledger dans la boucle et l'état existants (H18)
+
+- La moitié MANAGER du patron GVS5H intégrée aux structures existantes — aucun
+  mode nouveau (règle « Intégration plutôt que modes ») : le mode `state` était
+  déjà le worker (P, Σ, Oₜ) ; U37 apporte le plan partagé et curé, l'idéation
+  d'ouverture et le rôle qui cure.
+- Ledger (H18.1) : genre `liste_taches` du noyau (`{id, description, statut}`,
+  statuts a_faire/en_cours/fait/ecartee, clés libres au-delà), fusion par `id`
+  (jamais de réémission entière), borne `PLAN_TACHES_MAX=12` avec purge nommée
+  des terminales et refus des ouvertes en excès ; champ `plan` ajouté par
+  DÉRIVATION de schéma (`<nom>+plan`) quand `AVO_PLAN_LEDGER` est actif — à
+  interrupteur inactif, schéma et protocole octet pour octet inchangés.
+- Idéation d'ouverture (H18.2) : quand `hypotheses` est vide au premier tour,
+  le premier pas du mode `state` est un pas d'idéation — plusieurs approches
+  réellement distinctes dans `hypotheses`, tâches d'amorce dans `plan`, patch
+  acquis, action NON jouée (gratuite au score) ; en mode `transcript`, l'invite
+  précède la demande documentaire du premier Planning. `AVO_IDEATION_OUVERTURE`.
+- Curation par le superviseur (H18.3) : à l'intervention, un appel séparé de
+  manager rend la liste ENTIÈRE curée (fusion des doublons possible, ce que le
+  patch d'acteur ne permet pas), validée par le runtime et remplaçant le SEUL
+  champ `plan` de Σ ; dégradation propre hors `AuthError`. `AVO_SUP_CURATION`.
+- Comptabilité (H18.5) : événements `ideation` et `curation`, `curation` sur
+  l'événement `superviseur`, `ideations`/`curations` au bilan, au `ResultatJeu`
+  et au rapport de campagne ; purge de borne archivée (`taches_purgees`).
+- Preuves : 44 unitaires dédiés ; A/B en rejeu harnais enrichi contre harnais
+  nu (cassette générée `e2e_ledger_victoire.jsonl`, cible
+  `make rapport-ab-ledger`, rapport `docs/rapports/ab_ledger_state.md`
+  rejouable à l'octet près, E2E dédié) ; prompts v1.12, superviseur v1.2,
+  balayage « zéro indice de jeu » inchangé. Le départage réel (mécanismes
+  laissés actifs par défaut ou non) appartient à U38.
+
 ### 2026-09-14 — U35 : sonde fraîche à l'intervention et remise du message superviseur par mode (H10.3/H10.4)
 
 - Préalable mesuré et corrigé : en mode `state` (mode par défaut), le message

@@ -61,6 +61,7 @@ Contrat : `docs/SPEC_HARNAIS.md` §H2.3. Chaque cible lance un **conteneur jetab
 | `make run-arc` | campagne ARC (replay par défaut ; live sous garde d'accord explicite) |
 | `make resume RUN_ID=<id>` | reprend un run sans rejouer les jeux déjà terminés |
 | `make rapport-ab` | A/B des deux modes de contexte sur rejeu (U27) — écrit `docs/rapports/ab_mode_contexte.md` |
+| `make rapport-ab-ledger` | A/B du patron ledger sur rejeu (U37) : harnais enrichi contre harnais nu, même mode `state` — écrit `docs/rapports/ab_ledger_state.md` |
 
 **Lancer une campagne** (la pile doit être debout) :
 
@@ -153,6 +154,9 @@ Le harnais consommera l'endpoint d'inférence via ces variables, fournies hors d
 | `AVO_LLM_MAX_CONCURRENT` | Plafond de requêtes LLM simultanées par endpoint (H4.9) : l'excédent patiente au lieu d'échouer ; `0` désactive | entier ≥ 0 | non (défaut `3`, limite du port public) | `3` |
 | `AVO_LLM_SLOTS_DIR` | Répertoire des jetons de concurrence (H4.9) ; pointer un chemin réellement partagé pour coordonner plusieurs processus ou sessions | chemin | non (défaut `<AVO_RUNS_DIR>/.llm-slots`) | `runs/.llm-slots` |
 | `AVO_COUPURE_RESUME` | Résumé de coupure (H17) : une réponse tronquée par la limite de sortie sans action exploitable est résumée par un appel court séparé, et le résumé entre au contexte du tour suivant | booléen | non (défaut `true`) | `true` |
+| `AVO_PLAN_LEDGER` | Ledger (H18.1) : en mode `state`, Σ gagne le champ `plan` — tâches `{id, description, statut}` fusionnées par `id`, bornées et curées (schéma dérivé `+plan`) | booléen | non (défaut `true`) | `true` |
+| `AVO_IDEATION_OUVERTURE` | Idéation d'ouverture (H18.2) : avant la première action, un pas dédié énumère plusieurs approches distinctes — patch acquis, action non jouée (mode `state`) ; invite préposée au premier Planning (mode `transcript`) | booléen | non (défaut `true`) | `true` |
+| `AVO_SUP_CURATION` | Curation (H18.3) : à l'intervention, le superviseur cure le ledger par un appel séparé de manager — remplacement validé du seul champ `plan` | booléen | non (défaut `true`) | `true` |
 
 Trois variables d'**outillage** sont lues dans l'environnement du shell par `make` et les scripts — pas dans `.env` (`make` ne le lit pas) : `AVO_NO_DOCKER` (mode dégradé sans Docker, stdlib seule), `AVO_PORT_LLM_REPLAY` (défaut `11435`) et `AVO_PORT_ARC_REPLAY` (défaut `8765`), ports publiés de la pile locale.
 
