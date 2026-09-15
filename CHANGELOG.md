@@ -2,6 +2,21 @@
 
 ## [Non publié]
 
+### 2026-09-15 — U38 : A/B réel du harnais enrichi, décision et robustesse du ledger
+
+- Campagne A/B réelle sous `qwen3.8:27b` : bras enrichi (U34+U35+U37 actifs)
+  contre lignes de base U36 (bras nu), quatre séries U29 aux paramètres
+  constants. Résultats : τ 10/10 identique, CTF ISO seed à seed (6/9
+  mesurables, mêmes échecs `encodage`), entrepôt 0,96 dans la bande, dépôt
+  0,853 — écart porté par un seul seed (ancrage de plan, régression GVS5H
+  §4.4 documentée). Rapport : `docs/rapports/ab-u38-bancs.md` ; décision :
+  U34/U35/U37 restent actifs par défaut ; la suspension de U31 est levée.
+- Robustesse du ledger, corrigée sur mesures de la campagne (spec d'abord) :
+  fusion champ à champ par `id` — clore une tâche s'écrit `{id, statut}` seul
+  (u38-depot-s2, rejeu 1,00) ; le pas d'idéation tolère l'action vide et son
+  invite dit la forme ; un `id` numérique est normalisé en chaîne
+  (u38-ctf-s6, rejeu capturé). Prompts v1.13 puis v1.14.
+
 ### 2026-09-15 — U37 : patron ledger dans la boucle et l'état existants (H18)
 
 - La moitié MANAGER du patron GVS5H intégrée aux structures existantes — aucun

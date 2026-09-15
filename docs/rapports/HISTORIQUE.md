@@ -23,6 +23,7 @@ réplications.
 | v1.10 | `qwen3.6:35b` | 0,947 (0,96/0,96/0,92) | journal, suite 46 add. 2 |
 | v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | **0,987** (0,96/1,00/1,00) | session planifiée du 2026-09-12 |
 | v1.10 + éch. §H3.1 (réplication) | `qwen3.8:27b` | **0,987** (1,00/0,96/1,00) | journal, 2026-09-12 session interactive suite 5 |
+| v1.14 ENRICHI (U34+U35+U37) | `qwen3.8:27b` | **0,853** (0,56/1,00/1,00 ; s1 = ancrage de plan) | `ab-u38-bancs.md` |
 
 ## Banc a — SkillExecBench, environnement entrepôt
 
@@ -33,6 +34,7 @@ réplications.
 | v1.10 | `qwen3.6:35b` | 0,707 (0,96/0,44/0,72) | journal, suite 46 add. 3 |
 | v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | **0,867** (0,64/0,96/1,00) | session planifiée du 2026-09-12 |
 | v1.10 + éch. §H3.1 (réplication) | `qwen3.8:27b` | **1,00** (1,00/1,00/1,00) | journal, 2026-09-12 session interactive suite 5 |
+| v1.14 ENRICHI (U34+U35+U37) | `qwen3.8:27b` | **0,96** (1,00/0,96/0,92) | `ab-u38-bancs.md` |
 
 Bande de variance inter-réplications de cet environnement, `qwen3.6:35b` :
 [0,653 ; 0,77] ; `qwen3.8:27b` : [0,867 ; 1,00] sur deux réplications — les
@@ -47,6 +49,7 @@ bandes ne se recouvrent pas, le gain de modèle dépasse la variance.
 | v1.10 | `qwen3.6:35b` | 8/10 (échecs s1, s8 — famille `encodage`) | journal, suite 46 add. 4 |
 | v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | **7/9** (échecs s4, s8 — `encodage`, budget ; s1 NON MESURABLE, transport — registre 2026-09-12) | journal, 2026-09-12 session interactive suite 5 |
 | v1.10 + éch. §H3.1 (réplication) | `qwen3.8:27b` | **7/10** (échecs s1, s4, s8 — `encodage`, budget ; s1 mort transport au premier passage, rejeu unique complet) | session planifiée du 2026-09-12 |
+| v1.14 ENRICHI (U34+U35+U37) | `qwen3.8:27b` | **6/9** (échecs s1, s4, s8 — `encodage`, budget ; s2 NON MESURABLE, transport ×2 ; ISO seed à seed avec le nu) | `ab-u38-bancs.md` |
 
 Variance inter-séries mesurée (`qwen3.6:35b`) : 6/10 à 8/10. Les deux séries
 `qwen3.8:27b` du 2026-09-12 concordent : tous les échecs mesurables sont de la
@@ -61,6 +64,7 @@ famille `encodage`, budget épuisé.
 | v1.10 | `qwen3.6:35b` | 9/10 (échec s10) | journal, suite 46 add. 5 |
 | v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | **10/10** (0 violation) | journal, 2026-09-12 session interactive suite 5 |
 | v1.10 + éch. §H3.1 (réplication) | `qwen3.8:27b` | **10/10** (0 violation, tous clos par l'agent en 4–6 tours) | session planifiée du 2026-09-12 |
+| v1.14 ENRICHI (U34+U35+U37) | `qwen3.8:27b` | **10/10** (0 violation, 5–7 actions) | `ab-u38-bancs.md` |
 
 Variance inter-séries mesurée (`qwen3.6:35b`) : 8/10 à 9/10 ; `qwen3.8:27b` :
 10/10 sur deux séries indépendantes.

@@ -1100,17 +1100,18 @@ génériques U29 (jouer, observer, améliorer), puis, quand le déclencheur cons
 dans U25 est atteint (scores comparables aux modèles de taille similaire, ou
 plateau), la campagne ARC se joue. L'interdiction de benchmaxing
 (`CLAUDE_PROJECT.md`) s'applique sans exception ; le budget d'inférence est
-illimité tant que le modèle est `qwen3.6:35b` et que l'inférence passe par le
+illimité tant que le modèle est `qwen3.8:27b` et que l'inférence passe par le
 gateway LLM du responsable.
 
-## U31 — Boucle permanente de concours : jouer, observer, améliorer `[~]` **[LIVE]** (permanente, SUSPENDUE)
+## U31 — Boucle permanente de concours : jouer, observer, améliorer `[~]` **[LIVE]** (permanente)
 
-**SUSPENDUE (instruction du responsable, 2026-09-12)** : les implémentations du
-lot J (U33 → U38, enseignements GVS5H et bascule `qwen3.8:27b`) PRIMENT sur les
-itérations de U31. Les sessions planifiées prennent les unités du lot J dans
-l'ordre de leur numéro ; U31 reprend APRÈS U38, sous le modèle de travail
-`qwen3.8:27b`, le socle de mesure re-établi (U36) et les mécanismes du harnais
-enrichi que l'A/B réel aura désignés (U38).
+**ACTIVE** : la suspension du 2026-09-12 (priorité au lot J) est LEVÉE par la
+clôture de U38 (2026-09-15). U31 est l'unité de chaque session planifiée, sous
+le modèle de travail `qwen3.8:27b`, le socle de mesure U36 et le harnais
+enrichi — mécanismes U34/U35/U37 actifs par défaut (décision U38,
+`docs/rapports/ab-u38-bancs.md` ; point à surveiller : l'ancrage de plan
+mesuré sur le dépôt s1, la réponse générique est du côté de la discipline de
+curation).
 
 `@spec` A7 (campagne), H (harnais général) ; mission et bornes :
 `CLAUDE_PROJECT.md` (« Mission permanente », « Budget d'inférence »). Unité
@@ -1479,8 +1480,9 @@ mypy strict 120 fichiers, build), `make smoke-live` vert sous le limiteur réel.
 
 Origine : lecture des sources `knowledge/arxiv-2608.26480-…` et
 `knowledge/github-slee-persis-gvs5h.md` (ajoutées le 2026-09-12), croisée avec
-les mesures accumulées des runs supervisés (journal suites 50–52). Le lot PRIME
-sur les itérations U31, qui reprennent après U37. Chaque unité suit CLAUDE.md
+les mesures accumulées des runs supervisés (journal suites 50–52). Le lot a
+PRIMÉ sur les itérations U31 jusqu'à sa clôture (U38, 2026-09-15) ; U31 a
+repris depuis. Chaque unité suit CLAUDE.md
 §5 : spécification écrite et committée AVANT le code, balayage « zéro indice de
 jeu » (§A5) avant tout commit de code ou de prompt — les mécanismes retenus sont
 tous génériques.
@@ -1636,21 +1638,26 @@ committée avant le code) :**
   v1.2, balayage §A5 inchangé. Le départage réel des mécanismes (actifs par
   défaut à la reprise U31 ou non) appartient à U38.
 
-## U38 — A/B réel du harnais enrichi sous `qwen3.8:27b`, porte de reprise de U31 `[ ]` **[LIVE]**
+## U38 — A/B réel du harnais enrichi sous `qwen3.8:27b`, porte de reprise de U31 `[x]` **[LIVE]**
 
 `@spec` H15.7, H17, H10.4, H18, patron U28 (A/B réel à budget constant).
 Origine : GVS5H mesure +23,4 points pour la classe 27B sur tâches de code — à
 VÉRIFIER sur notre endpoint et nos bancs, jamais transposé (CLAUDE_PROJECT,
 interdiction de benchmaxing ; les gains sont conditionnels au modèle).
 
-- Sur les bancs U29, comparer à budget constant le harnais ENRICHI (U34, U35,
-  U37 activés) au harnais nu, dans le même mode `state`, sous `qwen3.8:27b` ;
-  significativité par appariement problème à problème (patron GVS5H §2.1)
-  dans la mesure des budgets ; désigner et CONSIGNER les mécanismes qui
-  restent allumés par défaut à la reprise U31. Le coût en tokens ou en durée
-  n'entre PAS dans la décision (CLAUDE_PROJECT « Exactitude avant tout ») :
-  seule l'exactitude tranche, et les budgets du périmètre se choisissent
-  larges.
-- DoD : runs réconciliés, rapport sous `docs/rapports/`, décision persistée
-  (spec/README/journal), campagne complète verte. La clôture de U38 LÈVE la
-  suspension de U31.
+**Livrée et intégralement vérifiée le 2026-09-15 (session planifiée,
+périmètre au journal AVANT lancement) :** les quatre séries U29 jouées en
+réel, bras enrichi (U34/U35/U37 actifs) aux paramètres exacts des lignes de
+base U36 (bras nu) : dépôt 0,853 (0,56/1,00/1,00), entrepôt 0,96
+(1,00/0,96/0,92 — dans la bande [0,867 ; 1,00]), CTF 6/9 mesurables — ISO
+seed à seed avec le nu (9/9 concordants, échecs `encodage` s1/s4/s8 des deux
+côtés ; s2 non mesurable, transport) —, τ 10/10 (0 violation, identique).
+**Décision persistée** (rapport `docs/rapports/ab-u38-bancs.md`, journal,
+backlog U31) : U34/U35/U37 restent actifs par défaut ; limite nommée :
+ancrage de plan du dépôt s1 (régression GVS5H §4.4 observée, un seed sur
+26 épisodes), à surveiller en U31. **Deux défauts GÉNÉRAUX du harnais
+découverts par la campagne et corrigés dans la session** (spec d'abord,
+rejeux probants) : fusion du ledger champ à champ par `id` (u38-depot-s2 —
+rejeu 1,00) ; action vide tolérée au pas d'idéation + id numérique normalisé
+(u38-ctf-s6 — rejeu capturé en 3 actions). Prompts v1.14. La clôture LÈVE la
+suspension de U31.
