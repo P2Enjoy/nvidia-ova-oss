@@ -94,6 +94,25 @@ class TestFusionParId(unittest.TestCase):
         self.assertEqual([t["id"] for t in taches], ["t1", "t2"], "l'ordre est conservé")
         self.assertEqual(taches[0]["statut"], "fait")
 
+    def test_clore_une_tache_existante_s_ecrit_id_statut_seuls(self) -> None:
+        """§H18.1 révisé (mesure u38-depot-s2) : la fusion est champ à champ —
+        la clé absente est conservée, jamais réémise."""
+        etat = self.etat.fusionner({CHAMP_PLAN: [{"id": "t1", "statut": "ecartee"}]})
+        (t1, t2) = etat.champs[CHAMP_PLAN]
+        self.assertEqual(t1["statut"], "ecartee")
+        self.assertEqual(t1["description"], "tâche t1", "la description est conservée")
+        self.assertEqual(t2["statut"], "en_cours", "les autres tâches sont intactes")
+
+    def test_une_tache_nouvelle_incomplete_est_refusee_en_la_nommant(self) -> None:
+        with self.assertRaises(EtatInvalide) as capture:
+            self.etat.fusionner({CHAMP_PLAN: [{"id": "t9", "statut": "a_faire"}]})
+        self.assertIn("t9", str(capture.exception))
+        self.assertIn("description", str(capture.exception))
+
+    def test_un_statut_invalide_sur_une_tache_existante_reste_refuse(self) -> None:
+        with self.assertRaises(EtatInvalide):
+            self.etat.fusionner({CHAMP_PLAN: [{"id": "t1", "statut": "bidon"}]})
+
     def test_une_tache_nouvelle_s_ajoute_et_les_absentes_restent(self) -> None:
         etat = self.etat.fusionner({CHAMP_PLAN: [_tache("t3")]})
         self.assertEqual([t["id"] for t in etat.champs[CHAMP_PLAN]], ["t1", "t2", "t3"])

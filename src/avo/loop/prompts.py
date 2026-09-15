@@ -36,7 +36,7 @@ from avo.context.etat import (
 
 #: Version des prompts. Change dès qu'un texte change : le rapport d'une campagne
 #: doit pouvoir dire sous quelle formulation ses résultats ont été obtenus.
-VERSION: Final = "1.12"
+VERSION: Final = "1.13"
 
 #: Contrat de tâche, posé une fois en tête de segment (§A5.1, calqué sur VISTA).
 SYSTEME: Final = """Tu joues à un jeu inconnu, tour par tour, sur une grille de
@@ -114,13 +114,15 @@ def protocole_etat(schema: SchemaEtat = ARC_V1) -> str:
     # fusion par id, statuts, borne — dès que le schéma porte un champ de tâches.
     if any(champ.genre == LISTE_TACHES for champ in schema.champs):
         texte += (
-            " Pour un champ « liste de tâches », le patch fusionne par « id » : une tâche "
-            "de même id est remplacée, une nouvelle s'ajoute, une absente reste. Ne retire "
-            "jamais une tâche : passe-la à « fait » quand elle est faite, à « ecartee » "
-            "quand elle est périmée (statuts admis : a_faire, en_cours, fait, ecartee). "
-            "Cure ton plan : fusionne les doublons, n'ajoute que le réellement nouveau — "
-            f"au plus {PLAN_TACHES_MAX} tâches, au-delà les faites et écartées les plus "
-            "anciennes sont retirées d'elles-mêmes."
+            " Pour un champ « liste de tâches », le patch fusionne par « id », champ à "
+            "champ : une tâche de même id reçoit les clés fournies et garde les autres — "
+            '« {"id": ..., "statut": ...} » suffit à changer un statut — ; une tâche '
+            "nouvelle s'ajoute, avec « id », « description » et « statut » ; une absente "
+            "reste. Ne retire jamais une tâche : passe-la à « fait » quand elle est "
+            "faite, à « ecartee » quand elle est périmée (statuts admis : a_faire, "
+            "en_cours, fait, ecartee). Cure ton plan : fusionne les doublons, n'ajoute "
+            f"que le réellement nouveau — au plus {PLAN_TACHES_MAX} tâches, au-delà les "
+            "faites et écartées les plus anciennes sont retirées d'elles-mêmes."
         )
     texte += (
         f" Le champ « {CHAMP_HYPOTHESES} » ne se vide jamais : remplace une hypothèse "

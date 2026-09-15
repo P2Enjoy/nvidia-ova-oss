@@ -129,26 +129,45 @@ def _valider_liste_objets(nom: str, valeur: Any) -> None:
             )
 
 
+def _valider_entree_tache(nom: str, index: int, tache: Any, complete: bool) -> None:
+    """Une entrée de tâche du ledger (§H18.1) : `id` toujours ; le reste selon le cas.
+
+    `complete` vrai = la tâche doit porter `description` et `statut` (tâche
+    NOUVELLE, ou valeur entière du champ — Σ, sérialisation, remplacement curé) ;
+    faux = patch d'une tâche EXISTANTE, fusion champ à champ : les clés fournies
+    seules sont validées, les absentes sont conservées — clore s'écrit
+    `{id, statut}` seul (mesure `u38-depot-s2`).
+    """
+    if not isinstance(tache, Mapping) or "id" not in tache:
+        raise EtatInvalide(f"{nom}[{index}] : dict avec au moins « id » attendu, reçu {tache!r}")
+    if not isinstance(tache["id"], str) or not tache["id"]:
+        raise EtatInvalide(f"{nom}[{index}].id : chaîne non vide attendue")
+    if complete and not {"description", "statut"} <= set(tache):
+        raise EtatInvalide(
+            f"{nom}[{index}] : tâche nouvelle « {tache['id']} » — « description » et "
+            f"« statut » requis, reçu {tache!r}"
+        )
+    if "description" in tache and not isinstance(tache["description"], str):
+        raise EtatInvalide(f"{nom}[{index}].description : chaîne attendue")
+    if "statut" in tache and tache["statut"] not in STATUTS_TACHE:
+        raise EtatInvalide(
+            f"{nom}[{index}].statut : l'un de {list(STATUTS_TACHE)} attendu, "
+            f"reçu {tache['statut']!r}"
+        )
+
+
 def _valider_liste_taches(nom: str, valeur: Any) -> None:
-    """Tâches du ledger (§H18.1) : `id`, `description`, `statut` — clés au-delà libres."""
+    """Tâches du ledger (§H18.1), forme COMPLÈTE : `id`, `description`, `statut`.
+
+    C'est la forme du champ dans Σ, de sa sérialisation et du remplacement curé
+    (H18.3). La fusion d'un patch (§H18.1) valide ses entrées elle-même, champ à
+    champ selon que l'`id` existe — voir `Etat.fusionner`.
+    """
     if not isinstance(valeur, (list, tuple)):
         raise EtatInvalide(f"{nom} : liste de tâches attendue, reçue {valeur!r}")
     vus: set[str] = set()
     for index, tache in enumerate(valeur):
-        if not isinstance(tache, Mapping) or not {"id", "description", "statut"} <= set(tache):
-            raise EtatInvalide(
-                f"{nom}[{index}] : dict avec au moins « id », « description » et "
-                f"« statut » attendu, reçu {tache!r}"
-            )
-        if not isinstance(tache["id"], str) or not tache["id"]:
-            raise EtatInvalide(f"{nom}[{index}].id : chaîne non vide attendue")
-        if not isinstance(tache["description"], str):
-            raise EtatInvalide(f"{nom}[{index}].description : chaîne attendue")
-        if tache["statut"] not in STATUTS_TACHE:
-            raise EtatInvalide(
-                f"{nom}[{index}].statut : l'un de {list(STATUTS_TACHE)} attendu, "
-                f"reçu {tache['statut']!r}"
-            )
+        _valider_entree_tache(nom, index, tache, complete=True)
         if tache["id"] in vus:
             raise EtatInvalide(f"{nom} : tâche « {tache['id']} » présente deux fois")
         vus.add(tache["id"])
@@ -364,6 +383,41 @@ class Etat:
             if valeur is None:
                 nouveaux[cle] = _figer(_DEFAUTS_GENRE[champ.genre])
                 continue
+            if champ.genre == LISTE_TACHES:
+                # §H18.1 : fusion par `id`, CHAMP À CHAMP — une tâche existante
+                # reçoit les clés fournies et garde les absentes (clore s'écrit
+                # `{id, statut}` seul — mesure u38-depot-s2 : exiger la tâche
+                # complète recréait la réémission que la fusion doit éviter) ;
+                # une tâche nouvelle s'ajoute, complète ; une absente reste.
+                # Le modèle ne retire jamais une tâche : il la clôt ou l'écarte.
+                if not isinstance(valeur, (list, tuple)):
+                    raise EtatInvalide(f"{cle} : liste de tâches attendue, reçue {valeur!r}")
+                taches = [dict(_degeler(tache)) for tache in nouveaux[cle]]
+                index_par_id = {tache["id"]: rang for rang, tache in enumerate(taches)}
+                vus: set[str] = set()
+                for index, tache in enumerate(valeur):
+                    if (
+                        not isinstance(tache, Mapping)
+                        or not isinstance(tache.get("id"), str)
+                        or not tache.get("id")
+                    ):
+                        # Sans `id` lisible, l'entrée est invalide quelle que
+                        # soit sa nature : le message complet la nomme.
+                        _valider_entree_tache(cle, index, tache, complete=True)
+                    ident = str(tache["id"])
+                    if ident in vus:
+                        raise EtatInvalide(f"{cle} : tâche « {ident} » présente deux fois")
+                    vus.add(ident)
+                    rang = index_par_id.get(ident)
+                    _valider_entree_tache(cle, index, tache, complete=rang is None)
+                    if rang is None:
+                        taches.append(dict(tache))
+                        index_par_id[ident] = len(taches) - 1
+                    else:
+                        taches[rang] = {**taches[rang], **dict(tache)}
+                bornees, _purgees = _borner_taches(cle, taches)
+                nouveaux[cle] = _figer(bornees)
+                continue
             _VALIDATEURS[champ.genre](cle, valeur)
             if champ.genre == DICTIONNAIRE:
                 fusion = dict(nouveaux[cle])
@@ -373,21 +427,6 @@ class Etat:
                     else:
                         fusion[sous_cle] = _figer(sous_valeur)
                 nouveaux[cle] = MappingProxyType(fusion)
-            elif champ.genre == LISTE_TACHES:
-                # §H18.1 : fusion par `id` — une tâche du patch remplace celle de
-                # même id ou s'ajoute, une tâche absente reste (même motif que le
-                # genre dictionnaire : ne jamais exiger la réémission entière).
-                # Le modèle ne retire jamais une tâche : il la clôt ou l'écarte.
-                taches = [dict(_degeler(tache)) for tache in nouveaux[cle]]
-                index_par_id = {tache["id"]: rang for rang, tache in enumerate(taches)}
-                for tache in valeur:
-                    rang = index_par_id.get(tache["id"])
-                    if rang is None:
-                        taches.append(dict(tache))
-                    else:
-                        taches[rang] = dict(tache)
-                bornees, _purgees = _borner_taches(cle, taches)
-                nouveaux[cle] = _figer(bornees)
             else:
                 nouveaux[cle] = _figer(valeur)
         return Etat(champs=MappingProxyType(nouveaux), schema=self.schema)
