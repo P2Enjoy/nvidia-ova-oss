@@ -1597,7 +1597,7 @@ journal suite 5 et session planifiée du même jour) :
 - Campagne complète verte à la clôture : lint + format, mypy strict
   (138 fichiers), 825 unitaires, 155 intégration, 10 E2E, build.
 
-## U37 — Intégration du patron ledger DANS la boucle et l'état existants `[~]`
+## U37 — Intégration du patron ledger DANS la boucle et l'état existants `[x]`
 
 `@spec` H18 (écrit et committé le 2026-09-15, AVANT le code), H15 (état Σ), H10
 (superviseur). Origine : GVS5H §3.1 — le résultat central du papier pour la
@@ -1605,23 +1605,36 @@ classe de taille de notre modèle de travail. **Règle du responsable
 (2026-09-12, CLAUDE_PROJECT « Intégration plutôt que modes ») : PAS de mode de
 fonctionnement supplémentaire.** Le worker GVS5H — appel frais borné recevant
 (énoncé, état partagé, tâche) — est déjà notre mode `state` (P, Σ, Oₜ) : ce
-qui manque est la moitié MANAGER, et elle s'intègre aux structures existantes.
+qui manquait était la moitié MANAGER, intégrée aux structures existantes.
 
-- **Plan et tâches dans Σ** : l'état structuré gagne un champ plan/tâches
-  BORNÉ et CURÉ (fusionner les doublons, clore, écarter le périmé — la
-  discipline du prompt de curation GVS5H), patché comme le reste de Σ, garde
-  H16 à l'appui.
-- **Idéation d'ouverture** : avant la première action d'un épisode, un pas
-  d'idéation SANS action énumère plusieurs approches réellement distinctes
-  dans Σ (extension de la garde existante « hypothèses non vides », H16).
-- **Curation par le superviseur** : à l'intervention (H10.3), le superviseur
-  peut aussi curer le plan/tâches de Σ — il redirige déjà ; il gagne le geste
-  de manager. (La sonde fraîche est U35 ; les deux se composent.)
-- Chaque mécanisme a son interrupteur de configuration ; prompts génériques,
-  balayage « zéro indice de jeu » (§A5).
-- DoD : spec H18 committée avant le code ; unitaires ; A/B en rejeu sur
-  cassettes générées — harnais enrichi contre harnais nu, même mode `state`
-  (patron U27) ; campagne complète verte.
+**Livrée et intégralement vérifiée le 2026-09-15 (session planifiée, spec H18
+committée avant le code) :**
+
+- Ledger (H18.1) : genre `liste_taches` du noyau (`{id, description, statut}`,
+  fusion par `id`, borne 12, purge nommée des terminales, refus des ouvertes
+  en excès), champ `plan` ajouté par DÉRIVATION `<nom>+plan` sous
+  `AVO_PLAN_LEDGER` — interrupteur inactif = schéma et protocole octet pour
+  octet inchangés ; discipline de curation énoncée par le protocole engendré.
+- Idéation d'ouverture (H18.2) : premier pas sans action jouée quand
+  `hypotheses` est vide (patch acquis, gratuite au score, une fois par
+  boucle) ; invite préposée au premier Planning en mode `transcript`.
+  `AVO_IDEATION_OUVERTURE`.
+- Curation par le superviseur (H18.3) : appel séparé de manager à
+  l'intervention, liste ENTIÈRE curée validée par le runtime, remplacement du
+  SEUL champ `plan`, dégradation propre hors `AuthError`, H10.1 révisé en
+  conséquence. `AVO_SUP_CURATION`.
+- Comptabilité (H18.5) : `ideation`/`curation` dans `metrics.jsonl`,
+  `curation` sur l'événement `superviseur`, `ideations`/`curations` au bilan,
+  au `ResultatJeu` et au rapport de campagne.
+- Preuves : 44 unitaires dédiés (`test_ledger.py`, `test_ideation_curation.py`),
+  A/B en rejeu enrichi contre nu par la CLI réelle (cassette générée
+  `e2e_ledger_victoire.jsonl`, 77 échanges ; `make rapport-ab-ledger` ;
+  `docs/rapports/ab_ledger_state.md` rejouable à l'octet près, E2E
+  `test_ab_ledger.py` : idéation jouée et gratuite au score). Campagne
+  complète verte : lint + format (146 fichiers), mypy strict (145 fichiers),
+  891 unitaires, 157 intégration, 12 E2E, build. Prompts v1.12, superviseur
+  v1.2, balayage §A5 inchangé. Le départage réel des mécanismes (actifs par
+  défaut à la reprise U31 ou non) appartient à U38.
 
 ## U38 — A/B réel du harnais enrichi sous `qwen3.8:27b`, porte de reprise de U31 `[ ]` **[LIVE]**
 

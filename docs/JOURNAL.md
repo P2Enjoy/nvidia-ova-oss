@@ -4749,3 +4749,47 @@ message rejoué. Campagne complète verte à la clôture : lint + format
 la boucle et l'état existants : spec H18 à écrire et committer AVANT le code ;
 puis U38 (A/B réel du harnais enrichi, porte de reprise de U31). U31 suspendue
 jusqu'à U38 (inchangé).
+
+## 2026-09-15 (session planifiée) — U37 CLOSE : patron ledger dans la boucle et Σ (H18)
+
+**Spécifié puis codé (dans cet ordre, commits `a368c8b` puis `58dc7e4`,
+`012537b`, `a716858`, `f64b48f`).** H18 écrit et committé avant le code :
+le mode `state` était déjà le worker GVS5H ; U37 apporte la moitié manager,
+intégrée sans mode nouveau. Trois mécanismes, trois interrupteurs (défaut
+`true`) : champ `plan` de Σ (genre `liste_taches` — fusion par `id`, borne 12,
+purge nommée des terminales, refus des ouvertes en excès ; schéma DÉRIVÉ
+`<nom>+plan`, inactif = octets inchangés), pas d'idéation d'ouverture (patch
+acquis, action non jouée, une fois par boucle ; invite préposée au premier
+Planning en `transcript`), curation à l'intervention (appel séparé de manager,
+remplacement validé du seul champ `plan`, dégradation propre ; H10.1 et H15.9
+révisés sur place). Prompts v1.12, superviseur v1.2.
+
+**Preuves.** 44 unitaires dédiés ; existant adapté par épinglage des
+interrupteurs dans les fixtures des tests de mécanismes étrangers (idiome du
+dépôt). A/B en rejeu par la CLI réelle : cassette générée du harnais enrichi
+(77 échanges = 1 idéation + 76 actions), `make rapport-ab-ledger`,
+`docs/rapports/ab_ledger_state.md` rejouable à l'octet près (E2E dédié) —
+même score, un tour d'appel de plus, idéation gratuite au score. Campagne
+complète verte : lint + format (146 fichiers), mypy strict (145),
+891 unitaires, 157 intégration, 12 E2E sur pile montée et seedée ;
+`make build` OK. U37 passe `[x]`.
+
+**Points tranchés et écarts.** (1) La curation ÉCRIT Σ (champ `plan` seul)
+plutôt que d'être proposée à l'acteur — motif au spec H18.3 (suite 52 : une
+proposition remise s'intègre sans changer les actions ; le résultat GVS5H
+repose sur un manager qui possède la liste). (2) `make seed-e2e` a réaligné
+toutes les cassettes générées sur le gabarit de réponse ré-enregistré en U36
+(`qwen3.8:27b`) — corps de requête inchangés (SHA identiques), dérive
+d'artefact préexistante résorbée, committée. (3) Registre : la cible
+`make rapport-ab` (U27) est cassée (`ModuleNotFoundError`, PYTHONPATH de
+`RUN_PILE`) — étrangère à l'unité, consignée avec la correction évidente ;
+la preuve E2E U27, elle, passe. (4) DAT : mention périmée du vidage
+d'`hypotheses` (« EtatInvalide, retry immédiat ») corrigée au comportement
+réel (conservation, `hypotheses_conservees`), découverte pendant la mise à
+jour de la même section.
+
+**Où reprendre (boucle planifiée).** U38 — A/B réel du harnais enrichi
+(U34 + U35 + U37 actifs) contre harnais nu sous `qwen3.8:27b`, bancs U29,
+budget constant, appariement problème à problème ; sa clôture désigne les
+mécanismes actifs par défaut et LÈVE la suspension de U31. Unité [LIVE] :
+elle exige le `.env` de la routine provisionnée.
