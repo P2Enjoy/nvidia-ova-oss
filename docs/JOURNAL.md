@@ -4823,3 +4823,19 @@ Dépouillement : rapport `docs/rapports/ab-u38-bancs.md`, scores au journal,
 décision des mécanismes actifs par défaut persistée (spec/README/journal) — la
 clôture de U38 lève la suspension de U31. Coût et latence hors décision
 (« Exactitude avant tout ») : seule l'exactitude tranche.
+
+**U38, point d'étape 1 — série banc a dépôt (bras enrichi) close.** Scores
+h25 bruit 0 : s1 **0,56** (14 correctes, 11 invalides, v1.12), s2 **1,00**
+(25/25, v1.13, REJEU après incident harnais), s3 **1,00** (25/25, v1.12) —
+moyenne 0,853 contre 0,987/0,987 pour le bras nu (U36). Deux mesures fortes :
+(1) s2 initial TUÉ en `RetriesEpuises` sur un patch de clôture correct
+(`{'id','statut'}`) — défaut GÉNÉRAL de H18.1 corrigé dans la session même
+(spécification révisée sur place puis code : fusion du ledger champ à champ
+par `id`, protocole v1.13, commits `f27d9a6`/`6d8373c`), rejeu s2 parfait
+sous la correction ; (2) s1 = ancrage sur le plan auto-généré (le ledger
+enfle à 12 tâches « commit branch_X », curation superviseur SANS réduction
+11→12, 11 actions jouées PAR ANTICIPATION de l'événement et refusées),
+quand s3 (curation agressive 12→2) fait un sans-faute — l'écart nu/enrichi
+du dépôt tient pour l'instant au seul s1, la régression GVS5H §4.4 observée
+en vrai. Idéations : plans initiaux corrects sur les deux seeds. Suite :
+série entrepôt s1–3 sous v1.13.
