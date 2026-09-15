@@ -36,7 +36,7 @@ from avo.context.etat import (
 
 #: Version des prompts. Change dès qu'un texte change : le rapport d'une campagne
 #: doit pouvoir dire sous quelle formulation ses résultats ont été obtenus.
-VERSION: Final = "1.13"
+VERSION: Final = "1.14"
 
 #: Contrat de tâche, posé une fois en tête de segment (§A5.1, calqué sur VISTA).
 SYSTEME: Final = """Tu joues à un jeu inconnu, tour par tour, sur une grille de
@@ -183,8 +183,9 @@ def ideation_etat(ledger: bool) -> str:
     plan = f", et amorce « {CHAMP_PLAN} » avec les tâches qui en découlent" if ledger else ""
     return (
         f"{IDEATION} Écris ces approches dans « {CHAMP_HYPOTHESES} » de ton "
-        f"state_patch{plan}. L'action rendue par ce pas ne sera PAS jouée : ce pas "
-        "est gratuit, consacre-le aux approches."
+        f"state_patch{plan}. Aucune action ne sera jouée à ce pas : ce pas est "
+        "gratuit, consacre-le aux approches — laisse « action » vide (\"\") ou "
+        "mets « aucune »."
     )
 
 

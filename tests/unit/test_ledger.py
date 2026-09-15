@@ -20,6 +20,8 @@ import unittest
 
 from avo.context.etat import (
     ARC_V1,
+    PatchMalforme,
+    decoder_pas,
     CHAMP_PLAN,
     LISTE_CHAINES,
     LISTE_TACHES,
@@ -112,6 +114,24 @@ class TestFusionParId(unittest.TestCase):
     def test_un_statut_invalide_sur_une_tache_existante_reste_refuse(self) -> None:
         with self.assertRaises(EtatInvalide):
             self.etat.fusionner({CHAMP_PLAN: [{"id": "t1", "statut": "bidon"}]})
+
+    def test_un_id_numerique_est_normalise_en_chaine(self) -> None:
+        """§H18.1 (mesure u38-ctf-s6) : bruit de format, jamais une mort de run."""
+        etat = self.etat.fusionner(
+            {CHAMP_PLAN: [{"id": 3, "description": "tâche 3", "statut": "a_faire"}]}
+        )
+        ids = [t["id"] for t in etat.champs[CHAMP_PLAN]]
+        self.assertIn("3", ids)
+        # Et la fusion champ à champ retrouve la tâche sous sa chaîne.
+        clos = etat.fusionner({CHAMP_PLAN: [{"id": 3, "statut": "fait"}]})
+        (t3,) = [t for t in clos.champs[CHAMP_PLAN] if t["id"] == "3"]
+        self.assertEqual(t3["statut"], "fait")
+
+    def test_un_id_booleen_reste_refuse(self) -> None:
+        with self.assertRaises(EtatInvalide):
+            self.etat.fusionner(
+                {CHAMP_PLAN: [{"id": True, "description": "d", "statut": "a_faire"}]}
+            )
 
     def test_une_tache_nouvelle_s_ajoute_et_les_absentes_restent(self) -> None:
         etat = self.etat.fusionner({CHAMP_PLAN: [_tache("t3")]})
@@ -248,7 +268,7 @@ class TestInvitesIdeation(unittest.TestCase):
 
     def test_l_invite_du_mode_state_annonce_l_action_non_jouee(self) -> None:
         texte = prompts.ideation_etat(ledger=True)
-        self.assertIn("PAS jouée", texte)
+        self.assertIn("Aucune action ne sera jouée", texte)
         self.assertIn("hypotheses", texte)
         self.assertIn(CHAMP_PLAN, texte)
 
@@ -258,6 +278,29 @@ class TestInvitesIdeation(unittest.TestCase):
     def test_l_invite_du_mode_transcript_vise_working(self) -> None:
         self.assertIn("WORKING.md", prompts.IDEATION_TRANSCRIPT)
         self.assertIn(prompts.IDEATION, prompts.IDEATION_TRANSCRIPT)
+
+    def test_l_invite_du_mode_state_dit_la_forme_de_l_action(self) -> None:
+        """§H16.0.7 (mesure u38-ctf-s6) : l'invite dit quoi mettre dans « action »."""
+        self.assertIn("aucune", prompts.ideation_etat(ledger=True))
+
+
+class TestActionOptionnelleIdeation(unittest.TestCase):
+    """§H18.2 : le pas d'idéation — et lui seul — tolère une action vide."""
+
+    def test_le_contrat_strict_refuse_toujours_l_action_vide(self) -> None:
+        bloc = '```json\n{"state_patch": {}, "action": ""}\n```'
+        with self.assertRaises(PatchMalforme):
+            decoder_pas(bloc)
+
+    def test_le_pas_d_ideation_accepte_l_action_vide(self) -> None:
+        bloc = '```json\n{"state_patch": {}, "action": ""}\n```'
+        pas = decoder_pas(bloc, action_optionnelle=True)
+        self.assertEqual(pas.action, "")
+
+    def test_une_action_non_chaine_reste_refusee_meme_optionnelle(self) -> None:
+        bloc = '```json\n{"state_patch": {}, "action": null}\n```'
+        with self.assertRaises(PatchMalforme):
+            decoder_pas(bloc, action_optionnelle=True)
 
 
 if __name__ == "__main__":

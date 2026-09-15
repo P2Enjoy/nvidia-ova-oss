@@ -236,7 +236,7 @@ class TestCoupureSurRejeu(unittest.TestCase):
 
     def test_prompts_version_du_bilan(self) -> None:
         """Le bilan nomme la version des prompts sous laquelle la coupure est mesurée."""
-        self.assertEqual(prompts.VERSION, "1.13")
+        self.assertEqual(prompts.VERSION, "1.14")
 
 
 if __name__ == "__main__":

@@ -1159,8 +1159,13 @@ class BoucleAgent:
             while True:
                 resultat = self._appeler_etat(self._messages_etat(erreur_precedente, ideation=True))
                 try:
-                    nouvel_etat, action_texte = appliquer_pas(self.etat, resultat.content)
-                    patch = dict(decoder_pas(resultat.content).patch)
+                    # §H18.2 : sur le pas d'idéation — et sur lui seul — l'action
+                    # peut être vide : la structure qui déclare ne pas la jouer
+                    # ne peut pas l'exiger (mesuré, u38-ctf-s6).
+                    nouvel_etat, action_texte = appliquer_pas(
+                        self.etat, resultat.content, action_optionnelle=True
+                    )
+                    patch = dict(decoder_pas(resultat.content, action_optionnelle=True).patch)
                     purge = taches_purgees(self.etat, patch, nouvel_etat)
                     extra: dict[str, Any] = {"taches_purgees": list(purge)} if purge else {}
                     self._archiver_pas(

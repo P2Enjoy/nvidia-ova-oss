@@ -129,6 +129,24 @@ def _valider_liste_objets(nom: str, valeur: Any) -> None:
             )
 
 
+def _normaliser_tache(tache: Any) -> Any:
+    """Normalise un bruit de format d'une entrée de tâche (§H18.1) : id numérique.
+
+    Mesuré (`u38-ctf-s6`) : sous redemandes, le modèle dérive vers `"id": 1` —
+    sans ambiguïté, la chaîne équivalente est prise ; même esprit que les
+    normalisations syntaxiques de §H15.8. `bool` reste exclu (sous-classe
+    d'`int` en Python, jamais un id).
+    """
+    if (
+        isinstance(tache, Mapping)
+        and "id" in tache
+        and isinstance(tache["id"], int)
+        and not isinstance(tache["id"], bool)
+    ):
+        return {**dict(tache), "id": str(tache["id"])}
+    return tache
+
+
 def _valider_entree_tache(nom: str, index: int, tache: Any, complete: bool) -> None:
     """Une entrée de tâche du ledger (§H18.1) : `id` toujours ; le reste selon le cas.
 
@@ -166,7 +184,8 @@ def _valider_liste_taches(nom: str, valeur: Any) -> None:
     if not isinstance(valeur, (list, tuple)):
         raise EtatInvalide(f"{nom} : liste de tâches attendue, reçue {valeur!r}")
     vus: set[str] = set()
-    for index, tache in enumerate(valeur):
+    for index, brute in enumerate(valeur):
+        tache = _normaliser_tache(brute)
         _valider_entree_tache(nom, index, tache, complete=True)
         if tache["id"] in vus:
             raise EtatInvalide(f"{nom} : tâche « {tache['id']} » présente deux fois")
@@ -395,7 +414,8 @@ class Etat:
                 taches = [dict(_degeler(tache)) for tache in nouveaux[cle]]
                 index_par_id = {tache["id"]: rang for rang, tache in enumerate(taches)}
                 vus: set[str] = set()
-                for index, tache in enumerate(valeur):
+                for index, brute in enumerate(valeur):
+                    tache = _normaliser_tache(brute)
                     if (
                         not isinstance(tache, Mapping)
                         or not isinstance(tache.get("id"), str)
@@ -465,12 +485,15 @@ class Pas:
     action: str
 
 
-def decoder_pas(texte: str) -> Pas:
+def decoder_pas(texte: str, action_optionnelle: bool = False) -> Pas:
     """Extrait `(state_patch, action)` du bloc JSON attendu (annexe A.4 SKILL.state).
 
     Le raisonnement qui précède le bloc n'est jamais retourné : il est déjà jeté à ce
     stade (§H15.1). Toute déviation du contrat — bloc absent, JSON illisible, clés
     manquantes ou en trop, types incorrects — lève `PatchMalforme` en la nommant.
+    `action_optionnelle` (§H18.2, pas d'idéation SEUL) tolère une action vide :
+    la structure qui déclare ne pas jouer l'action ne peut pas l'exiger
+    (mesuré, u38-ctf-s6 : trois tentatives mortes sur `"action": ""`).
     """
     correspondance = _BLOC_JSON.search(texte)
     if correspondance is None:
@@ -491,12 +514,12 @@ def decoder_pas(texte: str) -> Pas:
     patch, action = bloc["state_patch"], bloc["action"]
     if not isinstance(patch, Mapping):
         raise PatchMalforme(f"« state_patch » : objet attendu, reçu {patch!r}")
-    if not isinstance(action, str) or not action:
+    if not isinstance(action, str) or (not action and not action_optionnelle):
         raise PatchMalforme(f"« action » : chaîne non vide attendue, reçue {action!r}")
     return Pas(patch=patch, action=action)
 
 
-def appliquer(etat: Etat, texte: str) -> tuple[Etat, str]:
+def appliquer(etat: Etat, texte: str, action_optionnelle: bool = False) -> tuple[Etat, str]:
     """Décode puis fusionne un pas : rend `(Σₜ₊₁, action)`.
 
     Lève `PatchMalforme` ou `EtatInvalide` sur tout écart au contrat, sans jamais
@@ -504,7 +527,7 @@ def appliquer(etat: Etat, texte: str) -> tuple[Etat, str]:
     (U27) de rejouer l'appel LLM sur échec, budgété par `CompteurRetries` — ce module
     reste sans effet de bord et ne connaît rien du client d'inférence.
     """
-    pas = decoder_pas(texte)
+    pas = decoder_pas(texte, action_optionnelle=action_optionnelle)
     return etat.fusionner(pas.patch), pas.action
 
 
@@ -572,7 +595,9 @@ def remplacer_taches(etat: Etat, taches: Any) -> tuple[Etat, tuple[str, ...]]:
             "(§H18.1) — la curation exige un schéma dérivé par avec_plan"
         )
     _valider_liste_taches(CHAMP_PLAN, taches)
-    bornees, purgees = _borner_taches(CHAMP_PLAN, [dict(tache) for tache in taches])
+    bornees, purgees = _borner_taches(
+        CHAMP_PLAN, [dict(_normaliser_tache(tache)) for tache in taches]
+    )
     nouveaux = dict(etat.champs)
     nouveaux[CHAMP_PLAN] = _figer(bornees)
     return Etat(champs=MappingProxyType(nouveaux), schema=etat.schema), purgees
