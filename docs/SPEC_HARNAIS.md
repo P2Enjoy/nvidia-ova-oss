@@ -1441,7 +1441,10 @@ et entre au balayage « zéro indice de jeu » (§A5.1).
 Le `tasks.json` du papier (`[{id, desc, status, result}]`) se transpose en un
 genre générique du noyau (§H15.9) :
 
-- **Genre `liste_taches`** : liste d'objets portant `id` (chaîne non vide) ;
+- **Genre `liste_taches`** : liste d'objets portant `id` (chaîne non vide ; un
+  `id` NUMÉRIQUE est normalisé en sa chaîne — bruit de format mesuré,
+  `u38-ctf-s6` : sous redemandes, le modèle dérive vers `"id": 1`, sans
+  ambiguïté — même esprit que les normalisations syntaxiques de §H15.8) ;
   `description` (chaîne) et `statut` — l'un de `a_faire`, `en_cours`, `fait`,
   `ecartee` (constante du module) — sont REQUIS pour une tâche NOUVELLE et
   OPTIONNELS dans le patch d'une tâche existante (fusion champ à champ,
@@ -1510,10 +1513,17 @@ un pas dédié à le produire.
   d'IDÉATION : son message porte, à la place de l'amorce documentaire
   (§H16.0.7), une invite dédiée (constante) — énumérer plusieurs approches
   RÉELLEMENT DISTINCTES dans `hypotheses` et, quand le ledger est actif, les
-  tâches d'amorce dans `plan`. Le contrat de réponse (§H15.1) est inchangé,
-  mais l'invite ANNONCE que l'action de ce pas ne sera pas jouée (principe
-  §H16.0.7 : la structure annonce d'emblée ce qu'elle imposera). Le patch du
-  pas S'APPLIQUE — aucune action jouée ne l'accompagne dont il écrirait l'effet
+  tâches d'amorce dans `plan`. Le contrat de réponse (§H15.1) est inchangé à
+  UNE tolérance près, mesurée : sur ce pas — et sur lui seul — le champ
+  `action` PEUT être vide. Motif (run `u38-ctf-s6`, 2026-09-15) : l'invite
+  annonçait « l'action ne sera pas jouée » sans dire quoi mettre dans le
+  champ ; le modèle a émis `"action": ""` — la réponse LOGIQUE à l'annonce —
+  trois tentatives durant, chacune refusée par le contrat strict, et le run
+  est mort en `RetriesEpuises` au tour 1 sur un plan parfait dès la première
+  tentative. La structure qui déclare ne pas jouer l'action ne peut pas
+  exiger une action : la tolérance appartient au pas d'idéation, l'invite
+  (constante) dit désormais aussi la forme (« action » vide ou « aucune » —
+  principe §H16.0.7). Le patch du pas S'APPLIQUE — aucune action jouée ne l'accompagne dont il écrirait l'effet
   attendu : le motif du pas blanc atomique (§H16.1) ne s'applique pas — ;
   l'action rendue n'est PAS jouée, quelle qu'elle soit : gratuite au score,
   archivée (§H15.10, `ideation: true`). L'idéation est UNE fois par exécution
