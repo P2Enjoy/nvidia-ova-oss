@@ -4793,3 +4793,33 @@ jour de la même section.
 budget constant, appariement problème à problème ; sa clôture désigne les
 mécanismes actifs par défaut et LÈVE la suspension de U31. Unité [LIVE] :
 elle exige le `.env` de la routine provisionnée.
+
+## 2026-09-15 (session planifiée, suite) — U38 : périmètre de l'A/B réel du harnais enrichi, écrit AVANT lancement
+
+**Unité.** U38 — A/B réel du harnais ENRICHI (U34 résumé de coupure, U35 sonde
+fraîche, U37 patron ledger — tous à leurs défauts `true`) contre le harnais NU,
+sous `qwen3.8:27b`, même mode `state`, gardes actives, budget constant.
+
+**Bras nu = lignes de base U36** (`docs/rapports/HISTORIQUE.md`, deux
+réplications du 2026-09-12) : mesurées sous les mêmes paramètres, AVANT la
+livraison de U34/U35/U37 — c'est exactement le harnais sans les mécanismes.
+Aucune re-mesure du bras nu : la comparaison est à paramètres constants, seuls
+les mécanismes changent (l'objet de la mesure).
+
+**Bras enrichi (cette session), STRICTEMENT aux paramètres U36 :**
+
+1. banc a dépôt : `banc skillexec --env depot --seed 1..3 --horizon 25 --mode live` (bruit 0) ;
+2. banc a entrepôt : `banc skillexec --env entrepot --seed 1..3 --horizon 25 --mode live` (bruit 0) ;
+3. banc c : `banc tau --env detail --seed 1..10 --horizon 20 --mode live` ;
+4. banc b : `banc ctf --env aleatoire --seed 1..10 --horizon 30 --mode live` (exécuteur `conteneur`).
+
+Ordre τ avant CTF : le banc b est le plus long et le plus fragile au transport
+(registre 2026-09-12) — s'il faut couper, la coupe est nommée et U38 reste `[~]`.
+Séquentiel, UNE exécution live à la fois, depuis l'HÔTE (le banc b appelle le
+CLI docker). Un épisode mort sur incident d'endpoint est rejoué une fois.
+Appariement seed à seed avec les relevés U36 dans la mesure des budgets ;
+significativité qualitative sur ces effectifs (3+3+10+10), jamais surinterprétée.
+Dépouillement : rapport `docs/rapports/ab-u38-bancs.md`, scores au journal,
+décision des mécanismes actifs par défaut persistée (spec/README/journal) — la
+clôture de U38 lève la suspension de U31. Coût et latence hors décision
+(« Exactitude avant tout ») : seule l'exactitude tranche.
