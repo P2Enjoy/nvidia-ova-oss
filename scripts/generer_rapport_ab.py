@@ -21,10 +21,11 @@ import sys
 import tempfile
 from pathlib import Path
 
+from tests.e2e.scenarios import ENV_EPINGLE
+
 from avo.arc.campagne import EtatCampagne
 from avo.arc.rapport_ab import MesureMode, rapport
 from avo.memory.workspace import Workspace
-from tests.e2e.scenarios import ENV_EPINGLE
 
 #: Jeu et plafonds identiques à ceux des cassettes E2E scénarisées (§A8.5).
 JEU = "cible-synthetique"

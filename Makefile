@@ -255,6 +255,7 @@ seed-e2e:
 	$(RUN) python -m tests.e2e.generer_cassettes
 	$(RUN) python -m tests.e2e.generer_cassette_etat
 	$(RUN) python -m tests.e2e.generer_cassette_banc
+	$(RUN) python -m tests.e2e.generer_cassette_ledger
 	@echo "cassettes E2E écrites — relancez la pile pour qu'elle les serve : make down && make up"
 
 # Fumée manuelle contre le VRAI endpoint (§H4.8). Exige .env, jamais dans check.
@@ -303,3 +304,9 @@ resume:
 rapport-ab:
 	@$(MAKE) --no-print-directory docker-check
 	$(RUN_PILE) python scripts/generer_rapport_ab.py
+
+# A/B du patron ledger (U37, §H18.6) : harnais enrichi contre harnais nu, même
+# mode state, sur les cassettes générées. Exige la pile debout (make up).
+rapport-ab-ledger:
+	@$(MAKE) --no-print-directory docker-check
+	$(RUN_PILE) env PYTHONPATH=/app:/app/src:/app/mocks python -m scripts.generer_rapport_ab_ledger

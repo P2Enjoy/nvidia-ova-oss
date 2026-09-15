@@ -56,6 +56,12 @@ ENV_EPINGLE: dict[str, str] = {
     "AVO_SUP_STALL_ACTIONS": "60",
     "AVO_SUP_COOLDOWN": "30",
     "AVO_CONTEXT_MODE": "transcript",
+    # §H18.4 : mécanismes du patron ledger épinglés INACTIFS — les cassettes
+    # générées encodent le harnais nu ; le harnais enrichi a sa propre cassette
+    # (generer_cassette_ledger) et son A/B (scripts/generer_rapport_ab_ledger).
+    "AVO_PLAN_LEDGER": "false",
+    "AVO_IDEATION_OUVERTURE": "false",
+    "AVO_SUP_CURATION": "false",
 }
 
 #: Plafonds communs aux deux scénarios : au-dessus des 80 actions du plus long.

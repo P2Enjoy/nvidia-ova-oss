@@ -131,6 +131,10 @@ class TestCoupureSurRejeu(unittest.TestCase):
                 "OLLAMA_HOST": hote,
                 "OLLAMA_API_KEY": CLE,
                 "AVO_CONTEXT_MODE": "state",
+                # U37 : mécanismes H18 hors du périmètre de ces preuves —
+                # épinglés inactifs pour garder les séquences rejouées exactes.
+                "AVO_IDEATION_OUVERTURE": "false",
+                "AVO_PLAN_LEDGER": "false",
                 "AVO_GARDES": "false",
             },
             racine=Path("/inexistant"),
@@ -171,6 +175,10 @@ class TestCoupureSurRejeu(unittest.TestCase):
                 "OLLAMA_HOST": "http://capture.invalide",
                 "OLLAMA_API_KEY": CLE,
                 "AVO_CONTEXT_MODE": "state",
+                # U37 : mécanismes H18 hors du périmètre de ces preuves —
+                # épinglés inactifs pour garder les séquences rejouées exactes.
+                "AVO_IDEATION_OUVERTURE": "false",
+                "AVO_PLAN_LEDGER": "false",
                 "AVO_GARDES": "false",
             },
             racine=Path("/inexistant"),
@@ -228,7 +236,7 @@ class TestCoupureSurRejeu(unittest.TestCase):
 
     def test_prompts_version_du_bilan(self) -> None:
         """Le bilan nomme la version des prompts sous laquelle la coupure est mesurée."""
-        self.assertEqual(prompts.VERSION, "1.11")
+        self.assertEqual(prompts.VERSION, "1.12")
 
 
 if __name__ == "__main__":

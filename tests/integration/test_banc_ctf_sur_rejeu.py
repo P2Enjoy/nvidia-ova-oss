@@ -74,6 +74,10 @@ class TestBancCtfSurRejeu(unittest.TestCase):
                 "OLLAMA_HOST": base,
                 "OLLAMA_API_KEY": CLE,
                 "AVO_CONTEXT_MODE": "state",
+                # U37 : mécanismes H18 hors du périmètre de ces preuves —
+                # épinglés inactifs pour garder les séquences rejouées exactes.
+                "AVO_IDEATION_OUVERTURE": "false",
+                "AVO_PLAN_LEDGER": "false",
                 "AVO_GARDES": "true",
             },
             racine=Path("/inexistant"),

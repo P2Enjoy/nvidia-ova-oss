@@ -5,6 +5,22 @@ registre devient vide, le fichier lui-même est supprimé du dépôt (CLAUDE.md 
 
 ## Ouverts
 
+### 2026-09-15 — `make rapport-ab` : cible cassée depuis l'import de `ENV_EPINGLE` dans le script
+
+- **Constat.** `scripts/generer_rapport_ab.py` importe `tests.e2e.scenarios`
+  (épinglage ajouté après l'incident du 2026-09-01), mais la cible `rapport-ab`
+  le lance en `python scripts/…` sous `RUN_PILE` dont le `PYTHONPATH` ne porte
+  que `/app/src` : `ModuleNotFoundError: No module named 'tests'` (et, corrigé
+  cela, `arc_replay` manquerait — `mocks/` absent du chemin).
+- **Mesure.** Constatée le 2026-09-15 en câblant la cible jumelle
+  `rapport-ab-ledger` (U37), qui a rencontré les deux erreurs successivement.
+  La preuve E2E `test_ab_mode_contexte.py` passe, elle, par pytest (chemins du
+  rootdir) : le RAPPORT reste rejouable, seule la CIBLE make est morte.
+- **Issue retenue.** Étranger à l'unité en cours (U37) : comportement laissé
+  inchangé. La correction évidente est celle appliquée à `rapport-ab-ledger` —
+  `env PYTHONPATH=/app:/app/src:/app/mocks python -m scripts.generer_rapport_ab`
+  — à porter dans une session dont c'est l'unité, avec sa preuve.
+
 ### 2026-09-12 — Transport : `IncompleteRead` répété du pont 443 sur les longues générations, épisode CTF seed 1 non mesurable
 
 - **Constat.** Sur le défi `encodage` du seed 1 (banc b), l'appel `/api/chat`
