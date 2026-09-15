@@ -4839,3 +4839,9 @@ quand s3 (curation agressive 12→2) fait un sans-faute — l'écart nu/enrichi
 du dépôt tient pour l'instant au seul s1, la régression GVS5H §4.4 observée
 en vrai. Idéations : plans initiaux corrects sur les deux seeds. Suite :
 série entrepôt s1–3 sous v1.13.
+
+**U38, point d'étape 2 — série banc a entrepôt (bras enrichi, v1.13) close.**
+h25 bruit 0 : s1 **1,00**, s2 **0,96**, s3 **0,92** — moyenne 0,96, contre
+0,867/1,00 pour le bras nu (U36, deux réplications) : dans la bande, sans
+l'effondrement du s1 du dépôt. Aucun incident, aucune purge de borne, fusion
+champ à champ sans accroc. Suite : série τ s1–10 h20.
