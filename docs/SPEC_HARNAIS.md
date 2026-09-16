@@ -158,6 +158,8 @@ TLS.
 | `AVO_CONTEXT_MODE` | mode de contexte, `transcript` ou `state` (§H15.7) | `state` |
 | `AVO_LLM_MAX_CONCURRENT` | plafond de requêtes LLM simultanées par endpoint (§H4.9) ; `0` désactive | `3` |
 | `AVO_LLM_SLOTS_DIR` | répertoire des jetons de concurrence (§H4.9) | `<AVO_RUNS_DIR>/.llm-slots` |
+| `AVO_FLUX_RECUPERATION` | récupération du flux coupé à l'épuisement des retries (§H4.10) | `true` |
+| `AVO_FLUX_RECUP_MIN_CARACTERES` | caractères minimaux du partiel récupérable (§H4.10) | `200` |
 | `AVO_GARDES` | gardes de méthode dans les phases (§H16) | `true` |
 | `AVO_GARDE_RETRIES` | redemandes d'une même garde par tour (§H16.0) | `2` |
 | `ARC_API_KEY` | API ARC Prize (SPEC_ARCAGI3) | requis pour le live uniquement |
@@ -355,6 +357,48 @@ le laisser échouer.
   local (§H4.7) n'a pas de ressource partagée à protéger et les tests restent
   hors réseau et sans attente. `AVO_LLM_MAX_CONCURRENT=0` désactive
   explicitement (répertoire non créé).
+
+**H4.10 — Récupération du flux coupé.** Origine mesurée : le pont 443 coupe des
+réponses streamées EN PLEIN FLUX sur les générations longues
+(`http.client.IncompleteRead` — registre 2026-09-12, deux exécutions
+indépendantes, 94 634 puis 12 300 octets déjà reçus ; campagne U38, s2 mort
+deux fois et s8 une fois en transport). L'échelle §H4.5 rejoue alors la même
+génération longue et bute au même mur : l'épisode meurt en incident et le
+relevé devient NON MESURABLE — la perte n'est pas une réponse, c'est la mesure
+entière.
+
+- **Collecte du partiel.** Une coupure mi-flux laisse un corps partiel
+  exploitable : les fragments NDJSON déjà reçus. `TransportError` porte ce
+  corps partiel quand il existe — `IncompleteRead.partial` au niveau transport,
+  corps 2xx sans fragment final au niveau assemblage (§H4.3). Chaque tentative
+  de l'échelle §H4.5 met à jour le MEILLEUR partiel observé (le plus long en
+  caractères de `content` plus `reasoning` assemblés).
+- **Récupération à l'épuisement, jamais avant.** Tant que l'échelle §H4.5 a des
+  tentatives, chaque coupure se retente à l'identique : une coupure transitoire
+  rend la réponse COMPLÈTE, toujours préférable (« Exactitude avant tout »). À
+  l'épuisement de l'échelle seulement, si le meilleur partiel porte au moins
+  `AVO_FLUX_RECUP_MIN_CARACTERES` caractères (`content` plus `reasoning`), le
+  client rend ce partiel assemblé en `ChatResult` marqué `coupure_transport` —
+  `done_reason` absent et compteurs à zéro, le fragment final qui les porte
+  n'étant jamais arrivé ; sous le seuil, ou hors coupure mi-flux, l'erreur se
+  propage comme avant H4.10.
+- **Composition avec §H17.** `ChatResult.tronquee` est vrai pour une réponse
+  récupérée : le résumé de coupure absorbe la tentative partielle sans action
+  exploitable exactement comme une troncature `length` — aucun chemin nouveau
+  dans la boucle. Une réponse récupérée dont le bloc décode porte son action et
+  s'exploite normalement (§H17.1).
+- **Seuil, motif.** Sous le seuil, il n'y a rien à résumer, et récupérer
+  masquerait une panne réelle : un endpoint mort rendrait des tours vides en
+  série au lieu d'un incident nommé (CLAUDE.md §18, ne pas masquer une erreur).
+  Le seuil est générique — un nombre de caractères, aucun lien avec un jeu ni
+  un domaine (§A5).
+- **Interrupteur.** `AVO_FLUX_RECUPERATION` (booléen, défaut `true`). À
+  `false`, comportement d'avant H4.10 — même patron que §H16.0.3 et §H17.4 :
+  le mécanisme se mesure en A/B, il ne s'impose pas sans mesure.
+- **Journalisation et métrique.** Chaque récupération est journalisée (INFO :
+  caractères récupérés, nombre de coupures traversées) sans aucun contenu
+  (§H4.6) ; `ChatResult.resume()` porte `coupure_transport`, et la métrique
+  `llm` du tour l'écrit aux côtés de `tronquee` (§H11.2).
 
 ## H5. Contexte : transcript append-only, budget, continuation
 
@@ -1340,7 +1384,8 @@ chaque appel perdu quatre fois plus coûteux qu'avant ; un pas tronqué dont la
 tentative est jetée se paie plein tarif.
 
 **H17.1 — Déclenchement.** Le mécanisme se déclenche quand un appel de tour rend
-`done_reason: "length"` (`ChatResult.tronquee`) **SANS action exploitable** :
+`done_reason: "length"` ou une réponse récupérée d'une coupure de transport
+(§H4.10) — les deux cas de `ChatResult.tronquee` — **SANS action exploitable** :
 
 - **mode `state`** : la réponse tronquée échoue au décodage du pas
   (`PatchMalforme` ou `EtatInvalide`, §H15.4) — la coupure a mangé le bloc JSON.
