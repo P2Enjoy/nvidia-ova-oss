@@ -1142,6 +1142,22 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-16 (session planifiée)** — améliorer, désigné par
+l'accumulation de mesures (registre 2026-09-12 : deux morts `IncompleteRead`
+mi-flux du pont ; campagne U38 : s2 mort deux fois, s8 une fois — cinq au
+total, épisodes NON MESURABLES ; le journal U38 désignait « une reprise de
+flux §H4 si U31 la confirme ») : récupération du flux coupé au niveau
+transport (§H4.10, spec committée avant le code) — `TransportError` porte le
+corps partiel, le MEILLEUR partiel des tentatives est rendu comme réponse
+tronquée (`coupure_transport`) à l'épuisement de l'échelle H4.5, le résumé de
+coupure H17 compose sans chemin nouveau ; seuil
+`AVO_FLUX_RECUP_MIN_CARACTERES` (défaut 200) et interrupteur
+`AVO_FLUX_RECUPERATION` (défaut `true`), métrique `llm` enrichie. Preuves :
+11 unitaires dédiés (client) + 3 (config), campagne complète verte. Jouer :
+rien — pas d'exécution live cette session ; la validation live du mécanisme
+(un épisode traversant une coupure sans mourir) revient à la prochaine série
+de banc, qui retire alors l'entrée du registre 2026-09-12.
+
 **Itération du 2026-09-11 (suite 52, session planifiée)** — jouer et
 observer : série supervisée sous cooldown 12 (run `u31-sup3-tu93`,
 `tu93-0768757b`, plafonds identiques à `u31-sup1-tu93`, scorecard

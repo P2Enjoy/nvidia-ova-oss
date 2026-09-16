@@ -4903,3 +4903,47 @@ U38 passe `[x]` ; la suspension de U31 est LEVÉE (backlog, MASTER_PLAN §2/§7)
 bancs U29 sous le harnais enrichi, observer (en premier : l'ancrage de plan et
 les morts de transport), améliorer le général ; campagne ARC au périmètre U25
 quand son déclencheur est atteint.
+
+## 2026-09-16 (session planifiée) — U31 : récupération du flux coupé au niveau transport (§H4.10)
+
+**Mesuré.** Rien de neuf à jouer : l'amélioration de cette itération était déjà
+désignée par l'accumulation consignée — registre 2026-09-12 (deux morts
+`IncompleteRead` mi-flux du pont, générations longues) plus campagne U38 (s2
+mort deux fois, s8 une fois) : cinq morts de transport, des épisodes entiers
+NON MESURABLES, et la clôture U38 qui plaidait « reprise de flux §H4 si U31 la
+confirme ». U31 la confirme.
+
+**Modifié** (spec committée AVANT le code, `4c40a66`). §H4.10 : une coupure
+mi-flux laisse ses fragments déjà reçus — `TransportError` les porte
+(`IncompleteRead.partial` au transport, corps sans fragment final à
+l'assemblage) ; l'échelle H4.5 se déroule inchangée (une coupure transitoire
+rend la réponse complète, « Exactitude avant tout ») ; à son épuisement
+SEULEMENT, le meilleur partiel (content+reasoning le plus long) est rendu en
+`ChatResult` marqué `coupure_transport`, `tronquee` vraie par construction :
+le résumé de coupure H17 absorbe la tentative partielle sans aucun chemin
+nouveau dans la boucle. Sous le seuil `AVO_FLUX_RECUP_MIN_CARACTERES`
+(défaut 200) ou interrupteur `AVO_FLUX_RECUPERATION=false` : comportement
+d'avant, une panne réelle reste un incident nommé. Métrique `llm` :
+`coupure_transport` aux côtés de `tronquee` (code `7f8c023`).
+
+**Point tranché** (autonomie de décision) : seuil à 200 caractères — en
+dessous il n'y a rien à résumer et récupérer masquerait un endpoint mort en
+tours vides sériels ; récupération à l'ÉPUISEMENT des retries et jamais
+avant — la réponse complète d'une coupure transitoire vaut toujours mieux
+qu'un partiel. Générique : un compte de caractères, aucun lien à un jeu (§A5).
+
+**Vérifié.** 11 unitaires dédiés client + 3 config ; suite complète sur
+l'hôte : 914 unitaires, 157 intégration ; campagne complète `make check`
+(conteneur) : voir bilan ci-dessous. Registre : entrée 2026-09-12 mise à jour
+(correction livrée, retrait à la confirmation live). CHANGELOG, README,
+`.env.example`, backlog U31 à jour.
+
+**Où reprendre (boucle planifiée).** U31, jouer : une série de banc b CTF
+(`banc ctf --env aleatoire --seed 1..10 --horizon 30 --mode live`, exécuteur
+`conteneur`) sous v1.14+H4.10 — elle valide en live la récupération de flux
+(un épisode traversant une coupure sans mourir retire l'entrée du registre
+2026-09-12) et surveille l'ancrage de plan (dépôt) en second. Puis statuer
+sur le déclencheur U25 avec les mesures accumulées (entrepôt 0,96 ≥ la
+fourchette publiée [0,76 ; 0,84], τ 10/10 au plafond deux fois, CTF sur
+plateau `encodage`) : si la session le constate, elle le consigne et ouvre la
+campagne ARC au périmètre U25.

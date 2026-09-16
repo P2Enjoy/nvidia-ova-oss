@@ -533,7 +533,7 @@ class TestRecuperationDuFluxCoupe(unittest.TestCase):
                             "content": "but",
                             "reasoning": "réfléchis",
                             "tool_calls": [{"function": {"name": "agir", "arguments": {}}}],
-                        }
+                        },
                     }
                 ),
             ]
@@ -564,9 +564,7 @@ class TestRecuperationDuFluxCoupe(unittest.TestCase):
 
     def test_incomplete_read_porte_le_partiel(self) -> None:
         partiel = _corps_coupe("déjà reçu")
-        with mock.patch(
-            "urllib.request.urlopen", side_effect=http.client.IncompleteRead(partiel)
-        ):
+        with mock.patch("urllib.request.urlopen", side_effect=http.client.IncompleteRead(partiel)):
             with self.assertRaises(TransportError) as capture:
                 transport_urllib("https://exemple.invalide/api/chat", b"{}", {}, timeout=1.0)
         self.assertEqual(capture.exception.corps_partiel, partiel)

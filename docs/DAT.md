@@ -118,6 +118,16 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
   sur erreur de l'appel de résumé, comptabilité `coupure`/`resume_coupure` dans
   `metrics.jsonl` et `resumes_coupure` au bilan et au rapport. Origine : GVS5H
   §3.1 (cut-off summarizer) et §4.2.
+- Récupération du flux coupé (H4.10, U31) : une coupure mi-flux du pont sur
+  génération longue (`IncompleteRead`) laisse ses fragments déjà reçus —
+  `TransportError` les porte ; à l'épuisement des retries H4.5 seulement, le
+  meilleur partiel des tentatives est rendu comme réponse tronquée
+  (`ChatResult.coupure_transport`) et le résumé de coupure H17 compose,
+  l'épisode survit au lieu de mourir en incident. Seuil
+  `AVO_FLUX_RECUP_MIN_CARACTERES` (défaut 200 — en dessous, rien à résumer et
+  une panne réelle reste un incident nommé), débrayable
+  (`AVO_FLUX_RECUPERATION`), `coupure_transport` dans la métrique `llm`.
+  Origine : registre 2026-09-12 et campagne U38 (cinq morts de transport).
 - Intervention du superviseur (H10.3, U35) : remise du message `[SUPERVISEUR]`
   selon le mode de contexte — append au transcript en mode `transcript`, remise
   UNE fois en tête du pas suivant en mode `state` (le prompt y est recomposé à

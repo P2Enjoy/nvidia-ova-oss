@@ -37,11 +37,14 @@ registre devient vide, le fichier lui-même est supprimé du dépôt (CLAUDE.md 
   l'export GVS5H (§4.5, `IncompleteRead`).
 - **Issue retenue.** Ligne de base du banc b consignée sur les 9 épisodes
   aboutis (7/9), seed 1 marqué NON MESURABLE sur cette infrastructure — pas un
-  échec du modèle. Correction étrangère à l'unité en cours (U36, socle de
-  mesure) : le comportement du client reste inchangé ; la reprise sur coupure
-  de flux relève du chantier « résumé de coupure » (U34, spec H17) qui peut
-  l'instruire, ou d'une reprise de flux au niveau transport (§H4) si les
-  mesures s'accumulent.
+  échec du modèle. Les mesures se sont accumulées (campagne U38 : s2 mort deux
+  fois, s8 une fois — cinq morts au total) : la récupération du flux coupé au
+  niveau transport est SPÉCIFIÉE (§H4.10) et LIVRÉE le 2026-09-16 (session
+  planifiée, unité U31) — à l'épuisement des retries, le meilleur partiel reçu
+  est rendu comme réponse tronquée et le résumé de coupure H17 compose ;
+  preuves unitaires vertes. Reste à CONFIRMER EN LIVE : la prochaine série de
+  banc jouée sous ce code doit montrer un épisode traversant une coupure
+  mi-flux sans mourir ; cette confirmation retire l'entrée.
 - **Nuance mesurée (session planifiée du même jour, série b indépendante).**
   Sur la réplication, le seed 1 est mort une fois sur un incident d'endpoint
   (`ServerError` HTTP 500, 21 actions) et son rejeu unique a ABOUTI sans mort

@@ -2,6 +2,24 @@
 
 ## [Non publié]
 
+### 2026-09-16 — U31 : récupération du flux coupé au niveau transport (H4.10)
+
+- Défaut corrigé, désigné par l'accumulation de mesures (registre 2026-09-12,
+  campagne U38 : cinq morts `IncompleteRead` mi-flux du pont sur générations
+  longues, épisodes NON MESURABLES) : à l'épuisement de l'échelle de retries
+  (H4.5) sur des coupures mi-flux, le client rend désormais le MEILLEUR
+  partiel reçu comme réponse tronquée (`ChatResult.coupure_transport`) au lieu
+  de tuer l'épisode ; le résumé de coupure H17 compose sans chemin nouveau
+  dans la boucle. `TransportError` porte le corps partiel (`IncompleteRead
+  .partial` au transport, corps sans fragment final à l'assemblage).
+- Sous le seuil `AVO_FLUX_RECUP_MIN_CARACTERES` (défaut 200) ou avec
+  `AVO_FLUX_RECUPERATION=false`, comportement d'avant H4.10 : une panne réelle
+  reste un incident nommé, jamais masqué. La métrique `llm` porte
+  `coupure_transport` aux côtés de `tronquee`.
+- Preuves : spécification H4.10 committée avant le code ; 914 unitaires et
+  157 intégration verts ; validation live attendue de la prochaine série de
+  banc (l'entrée du registre 2026-09-12 se retire à cette confirmation).
+
 ### 2026-09-15 — U38 : A/B réel du harnais enrichi, décision et robustesse du ledger
 
 - Campagne A/B réelle sous `qwen3.8:27b` : bras enrichi (U34+U35+U37 actifs)
