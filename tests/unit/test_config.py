@@ -4,7 +4,8 @@
 @verifies docs/SPEC_HARNAIS.md §H3.1 (env puis .env), §H3.2 (budget utile),
           §H3.3 (validation nommée), §H3.4 (modes), §H4.6 (aucun secret journalisé)
 @verifies docs/BACKLOG.md U27 — `AVO_CONTEXT_MODE` (§H15.7)
-@verifies docs/BACKLOG.md U31 — défaut du seuil de stagnation atteignable (§H10.2)
+@verifies docs/BACKLOG.md U31 — défaut du seuil de stagnation atteignable (§H10.2),
+          interrupteur et seuil de la récupération du flux coupé (§H4.10)
 @verifies docs/BACKLOG.md U33 — modèle de travail et échantillonnage optionnel,
           sentinelle `aucun`, bornes (§H3.1)
 """
@@ -354,6 +355,29 @@ class TestModeContexteVariable(unittest.TestCase):
     def test_le_resume_porte_le_mode(self) -> None:
         config = charger(Mode.REJEU, env={"AVO_CONTEXT_MODE": "state"}, racine=Path("/inexistant"))
         self.assertEqual(config.resume()["contexte_mode"], "state")
+
+
+class TestRecuperationDuFluxCoupe(unittest.TestCase):
+    """§H4.10 : interrupteur et seuil de la récupération du flux coupé."""
+
+    def test_defauts(self) -> None:
+        config = charger(Mode.REJEU, env={}, racine=Path("/inexistant"))
+        self.assertTrue(config.flux_recuperation)
+        self.assertEqual(config.flux_recup_min_caracteres, 200)
+
+    def test_variables_lues(self) -> None:
+        config = charger(
+            Mode.REJEU,
+            env={"AVO_FLUX_RECUPERATION": "false", "AVO_FLUX_RECUP_MIN_CARACTERES": "50"},
+            racine=Path("/inexistant"),
+        )
+        self.assertFalse(config.flux_recuperation)
+        self.assertEqual(config.flux_recup_min_caracteres, 50)
+
+    def test_le_resume_porte_les_deux_champs(self) -> None:
+        resume = charger(Mode.REJEU, env={}, racine=Path("/inexistant")).resume()
+        self.assertIs(resume["flux_recuperation"], True)
+        self.assertEqual(resume["flux_recup_min_caracteres"], 200)
 
 
 class TestAucunSecretJournalise(unittest.TestCase):

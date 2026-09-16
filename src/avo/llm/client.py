@@ -8,6 +8,9 @@
       jeton avant chaque tentative, `429` → `RateLimited` retentée)
 @spec docs/BACKLOG.md U33 — paramètres d'échantillonnage optionnels dans le corps,
       ordre canonique (§H3.1, §H4.2)
+@spec docs/BACKLOG.md U31 — récupération du flux coupé à l'épuisement des retries
+      (§H4.10 : partiel porté par `TransportError`, assemblage tolérant,
+      `ChatResult.coupure_transport`)
 
 Le client ne connaît ni la boucle agent ni les outils : il traduit un échange de
 messages en un appel HTTP et rend un résultat typé. Le transport est injectable, ce
@@ -84,7 +87,16 @@ class RateLimited(ServerError):
 
 
 class TransportError(LLMError):
-    """Réseau injoignable ou délai dépassé. Retentée (§H4.5)."""
+    """Réseau injoignable ou délai dépassé. Retentée (§H4.5).
+
+    Une coupure mi-flux laisse des fragments déjà reçus : `corps_partiel` les
+    porte quand ils existent (§H4.10), pour la récupération à l'épuisement de
+    l'échelle de retries. `None` quand la panne n'a rien laissé d'exploitable.
+    """
+
+    def __init__(self, message: str, corps_partiel: bytes | None = None) -> None:
+        super().__init__(message)
+        self.corps_partiel = corps_partiel
 
 
 class ProtocolError(LLMError):
@@ -125,6 +137,9 @@ class ChatResult:
     prompt_eval_duration_ms: int = 0
     eval_duration_ms: int = 0
     modele: str = ""
+    #: Réponse assemblée d'un flux coupé (§H4.10) : compteurs à zéro (le
+    #: fragment final n'est jamais arrivé), `tronquee` vraie par construction.
+    coupure_transport: bool = False
 
     @property
     def demande_outil(self) -> bool:
@@ -139,11 +154,13 @@ class ChatResult:
 
     @property
     def tronquee(self) -> bool:
-        """La génération s'est-elle arrêtée sur la limite de sortie ?
+        """La génération s'est-elle arrêtée avant sa fin ?
 
-        Symptôme mesuré du raisonnement qui dévore `num_predict` (§H12.1).
+        Deux cas (§H17.1) : la limite de sortie — symptôme mesuré du
+        raisonnement qui dévore `num_predict` (§H12.1) — et le flux coupé
+        récupéré à l'épuisement des retries (§H4.10).
         """
-        return self.done_reason == "length"
+        return self.done_reason == "length" or self.coupure_transport
 
     def resume(self) -> dict[str, Any]:
         """Résumé journalisable : compteurs et durées, aucun contenu (§H4.6)."""
@@ -156,6 +173,7 @@ class ChatResult:
             "tool_calls": len(self.tool_calls),
             "content_chars": len(self.content),
             "reasoning_chars": len(self.reasoning),
+            "coupure_transport": self.coupure_transport,
         }
 
 
@@ -213,6 +231,14 @@ def transport_urllib(
         raise TransportError(f"endpoint injoignable : {erreur.reason}") from erreur
     except TimeoutError as erreur:
         raise TransportError(f"délai dépassé après {timeout} s") from erreur
+    except http.client.IncompleteRead as erreur:
+        # Mesuré (registre 2026-09-12, campagne U38) : le pont coupe des
+        # réponses streamées EN PLEIN FLUX sur les générations longues.
+        # L'exception porte les octets déjà reçus : ils voyagent avec l'erreur
+        # pour la récupération à l'épuisement des retries (§H4.10).
+        raise TransportError(
+            f"connexion interrompue : {erreur!r}", corps_partiel=erreur.partial or None
+        ) from erreur
     except (http.client.HTTPException, OSError) as erreur:
         # Mesuré (2026-09-01, relevé live du banc) : un pont qui coupe APRÈS
         # l'envoi de la requête mais AVANT les premiers en-têtes lève
@@ -336,7 +362,8 @@ def analyser_corps_chat(reponse: ReponseHTTP) -> ChatResult:
                     f"réponse HTTP {reponse.status} non JSON : {erreur}"
                 ) from erreur
             raise TransportError(
-                "flux interrompu : fragment JSON incomplet en fin de corps"
+                "flux interrompu : fragment JSON incomplet en fin de corps",
+                corps_partiel=reponse.body,
             ) from erreur
         if not isinstance(charge, dict):
             raise ProtocolError(f"réponse HTTP {reponse.status} : objet JSON attendu")
@@ -348,7 +375,10 @@ def analyser_corps_chat(reponse: ReponseHTTP) -> ChatResult:
     if len(fragments) == 1:
         return analyser_reponse(fragments[0])
     if not fragments[-1].get("done"):
-        raise TransportError("flux interrompu avant le fragment final (done absent)")
+        raise TransportError(
+            "flux interrompu avant le fragment final (done absent)",
+            corps_partiel=reponse.body,
+        )
     return analyser_reponse(fusionner_fragments(fragments))
 
 
@@ -380,6 +410,39 @@ def fusionner_fragments(fragments: Sequence[Mapping[str, Any]]) -> dict[str, Any
         "tool_calls": appels,
     }
     return fusion
+
+
+def recuperer_flux_partiel(corps: bytes) -> ChatResult | None:
+    """Assemble les fragments exploitables d'un flux coupé (§H4.10).
+
+    Lecture TOLÉRANTE, à l'inverse de `analyser_corps_chat` : une ligne
+    indécodable (le fragment coupé en fin de corps) est ignorée, aucun fragment
+    final n'est exigé. Rend `None` quand rien d'exploitable n'a été reçu — ni
+    contenu, ni raisonnement. Le résultat est marqué `coupure_transport` :
+    compteurs à zéro, `done_reason` absent, `tronquee` vraie par construction.
+    """
+    fragments: list[dict[str, Any]] = []
+    for ligne in corps.splitlines():
+        if not ligne.strip():
+            continue
+        try:
+            charge = json.loads(ligne)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(charge, dict) and not charge.get("error"):
+            fragments.append(charge)
+    if not fragments:
+        return None
+    assemble = analyser_reponse(fusionner_fragments(fragments))
+    if not assemble.content and not assemble.reasoning:
+        return None
+    return ChatResult(
+        content=assemble.content,
+        reasoning=assemble.reasoning,
+        tool_calls=assemble.tool_calls,
+        modele=assemble.modele,
+        coupure_transport=True,
+    )
 
 
 def analyser_reponse(charge: Mapping[str, Any]) -> ChatResult:
@@ -545,24 +608,61 @@ class LLMClient:
         ).encode()
         entetes = self._entetes()
 
+        # Récupération du flux coupé (§H4.10) : chaque coupure mi-flux laisse un
+        # corps partiel ; on retient le MEILLEUR (le plus long en caractères)
+        # à travers les tentatives, sans jamais court-circuiter l'échelle §H4.5.
+        meilleur_partiel: list[ChatResult] = []
+        coupures = 0
+
+        def retenir_partiel(erreur: TransportError) -> None:
+            nonlocal coupures
+            if not erreur.corps_partiel:
+                return
+            coupures += 1
+            recupere = recuperer_flux_partiel(erreur.corps_partiel)
+            if recupere is None:
+                return
+            taille = len(recupere.content) + len(recupere.reasoning)
+            if not meilleur_partiel:
+                meilleur_partiel.append(recupere)
+            elif taille > len(meilleur_partiel[0].content) + len(meilleur_partiel[0].reasoning):
+                meilleur_partiel[0] = recupere
+
         def tenter() -> ChatResult:
             debut = time.monotonic()
-            with self._jeton():
-                reponse = self._transport(self.url_chat, corps, entetes, self.config.timeout_s)
-            resultat = self._classer(reponse)
+            try:
+                with self._jeton():
+                    reponse = self._transport(self.url_chat, corps, entetes, self.config.timeout_s)
+                resultat = self._classer(reponse)
+            except TransportError as erreur:
+                retenir_partiel(erreur)
+                raise
             _journal.info(
                 "inférence aboutie",
                 extra={"duree_s": round(time.monotonic() - debut, 3), **resultat.resume()},
             )
             return resultat
 
-        return avec_retries(
-            tenter,
-            (ServerError, TransportError),
-            dormir=self._dormir,
-            alea=self._alea,
-            journal=_journal,
-        )
+        try:
+            return avec_retries(
+                tenter,
+                (ServerError, TransportError),
+                dormir=self._dormir,
+                alea=self._alea,
+                journal=_journal,
+            )
+        except TransportError:
+            if not self.config.flux_recuperation or not meilleur_partiel:
+                raise
+            recupere = meilleur_partiel[0]
+            taille = len(recupere.content) + len(recupere.reasoning)
+            if taille < self.config.flux_recup_min_caracteres:
+                raise
+            _journal.info(
+                "flux récupéré après épuisement des retries",
+                extra={"caracteres": taille, "coupures": coupures, **recupere.resume()},
+            )
+            return recupere
 
 
 def _entier_ou_none(valeur: Any) -> int | None:

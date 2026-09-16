@@ -6,6 +6,9 @@
           §H4.6 (aucun secret journalisé)
 @verifies docs/BACKLOG.md U33 — échantillonnage optionnel dans le corps, ordre
           canonique et sentinelle `aucun` (§H3.1, §H4.2)
+@verifies docs/BACKLOG.md U31 — récupération du flux coupé à l'épuisement des
+          retries (§H4.10 : partiel porté par `TransportError`, assemblage
+          tolérant, seuil, interrupteur, journalisation sans contenu)
 
 Le transport, l'attente et l'aléa sont injectés : la politique de retry est éprouvée
 sans réseau et sans attente réelle.
@@ -33,6 +36,7 @@ from avo.llm.client import (
     analyser_corps_chat,
     analyser_reponse,
     construire_corps,
+    recuperer_flux_partiel,
     transport_urllib,
 )
 from avo.transport import ATTENTES_RETRY, JITTER
@@ -497,6 +501,144 @@ class TestJournalisationDesRetries(unittest.TestCase):
             client.chat(_MESSAGES)
         tentatives = [ligne for ligne in journaux.output if "nouvelle tentative" in ligne]
         self.assertEqual(len(tentatives), len(ATTENTES_RETRY))
+
+
+def _corps_coupe(*contenus: str) -> bytes:
+    """Corps NDJSON d'un flux coupé : fragments sans fragment final `done`."""
+    lignes = [json.dumps({"message": {"content": texte}, "done": False}) for texte in contenus]
+    return "\n".join(lignes).encode()
+
+
+class TestRecuperationDuFluxCoupe(unittest.TestCase):
+    """§H4.10 : à l'épuisement des retries sur coupures mi-flux, le meilleur
+    partiel reçu est rendu comme réponse tronquée au lieu de tuer l'épisode.
+
+    Origine mesurée : registre 2026-09-12 (`IncompleteRead` du pont sur les
+    générations longues) et campagne U38 (s2 mort deux fois, s8 une fois).
+    """
+
+    def _client(self, transport: _TransportScripte, **env: str) -> LLMClient:
+        return LLMClient(_config(**env), transport=transport, dormir=lambda _s: None)
+
+    # ----------------------------------------------------------- assemblage
+
+    def test_le_partiel_assemble_contenu_raisonnement_et_appels(self) -> None:
+        corps = "\n".join(
+            [
+                json.dumps({"model": "m", "message": {"content": "dé", "reasoning": "je "}}),
+                json.dumps(
+                    {
+                        "model": "m",
+                        "message": {
+                            "content": "but",
+                            "reasoning": "réfléchis",
+                            "tool_calls": [{"function": {"name": "agir", "arguments": {}}}],
+                        }
+                    }
+                ),
+            ]
+        ).encode()
+        recupere = recuperer_flux_partiel(corps)
+        assert recupere is not None
+        self.assertEqual(recupere.content, "début")
+        self.assertEqual(recupere.reasoning, "je réfléchis")
+        self.assertEqual(recupere.tool_calls[0].nom, "agir")
+        self.assertEqual(recupere.modele, "m")
+        self.assertTrue(recupere.coupure_transport)
+        self.assertTrue(recupere.tronquee)
+        self.assertIsNone(recupere.done_reason)
+        self.assertEqual(recupere.eval_count, 0)
+
+    def test_la_ligne_finale_incomplete_est_ignoree(self) -> None:
+        corps = _corps_coupe("début") + b'\n{"message": {"con'
+        recupere = recuperer_flux_partiel(corps)
+        assert recupere is not None
+        self.assertEqual(recupere.content, "début")
+
+    def test_rien_d_exploitable_rend_none(self) -> None:
+        self.assertIsNone(recuperer_flux_partiel(b""))
+        self.assertIsNone(recuperer_flux_partiel(b'{"message": {"con'))
+        self.assertIsNone(recuperer_flux_partiel(_corps_coupe("")))
+
+    # ------------------------------------------------- partiel porté par l'erreur
+
+    def test_incomplete_read_porte_le_partiel(self) -> None:
+        partiel = _corps_coupe("déjà reçu")
+        with mock.patch(
+            "urllib.request.urlopen", side_effect=http.client.IncompleteRead(partiel)
+        ):
+            with self.assertRaises(TransportError) as capture:
+                transport_urllib("https://exemple.invalide/api/chat", b"{}", {}, timeout=1.0)
+        self.assertEqual(capture.exception.corps_partiel, partiel)
+
+    def test_flux_sans_fragment_final_porte_le_partiel(self) -> None:
+        corps = _corps_coupe("dé", "but")
+        with self.assertRaises(TransportError) as capture:
+            analyser_corps_chat(ReponseHTTP(200, corps))
+        self.assertEqual(capture.exception.corps_partiel, corps)
+
+    # ------------------------------------------------------------ récupération
+
+    def test_l_epuisement_des_retries_rend_le_meilleur_partiel(self) -> None:
+        # Deux fragments par corps : un fragment unique sans `done` est la forme
+        # « objet unique » légitime (§H4.3), pas une coupure.
+        long_partiel = _corps_coupe("la génération longue déjà reçue", "et sa suite")
+        court_partiel = _corps_coupe("presque", "rien")
+        transport = _TransportScripte(
+            ReponseHTTP(200, long_partiel),
+            ReponseHTTP(200, court_partiel),
+        )
+        client = self._client(transport, AVO_FLUX_RECUP_MIN_CARACTERES="10")
+        resultat = client.chat(_MESSAGES)
+        self.assertEqual(resultat.content, "la génération longue déjà reçueet sa suite")
+        self.assertTrue(resultat.coupure_transport)
+        self.assertTrue(resultat.tronquee)
+        # L'échelle §H4.5 est bien allée au bout avant de récupérer.
+        self.assertEqual(len(transport.appels), len(ATTENTES_RETRY) + 1)
+
+    def test_une_coupure_transitoire_rend_la_reponse_complete(self) -> None:
+        """« Exactitude avant tout » : tant qu'il reste des tentatives, on retente."""
+        transport = _TransportScripte(
+            ReponseHTTP(200, _corps_coupe("partiel qui serait récupérable", "et long")),
+            _ok({"message": {"content": "réponse complète"}, "done": True}),
+        )
+        client = self._client(transport, AVO_FLUX_RECUP_MIN_CARACTERES="10")
+        resultat = client.chat(_MESSAGES)
+        self.assertEqual(resultat.content, "réponse complète")
+        self.assertFalse(resultat.coupure_transport)
+
+    def test_sous_le_seuil_l_erreur_se_propage(self) -> None:
+        transport = _TransportScripte(ReponseHTTP(200, _corps_coupe("court", "aussi")))
+        client = self._client(transport, AVO_FLUX_RECUP_MIN_CARACTERES="200")
+        with self.assertRaises(TransportError):
+            client.chat(_MESSAGES)
+
+    def test_l_interrupteur_a_false_retablit_l_ancien_comportement(self) -> None:
+        transport = _TransportScripte(
+            ReponseHTTP(200, _corps_coupe("une génération déjà bien avancée", "et longue"))
+        )
+        client = self._client(
+            transport, AVO_FLUX_RECUPERATION="false", AVO_FLUX_RECUP_MIN_CARACTERES="10"
+        )
+        with self.assertRaises(TransportError):
+            client.chat(_MESSAGES)
+
+    def test_une_panne_sans_partiel_se_propage(self) -> None:
+        transport = _TransportScripte(TransportError("endpoint injoignable"))
+        client = self._client(transport, AVO_FLUX_RECUP_MIN_CARACTERES="0")
+        with self.assertRaises(TransportError):
+            client.chat(_MESSAGES)
+
+    def test_la_recuperation_est_journalisee_sans_contenu(self) -> None:
+        partiel = _corps_coupe("contenu confidentiel du partiel", "suite du partiel")
+        transport = _TransportScripte(ReponseHTTP(200, partiel))
+        client = self._client(transport, AVO_FLUX_RECUP_MIN_CARACTERES="10")
+        with self.assertLogs("avo.llm", level="INFO") as journaux:
+            resultat = client.chat(_MESSAGES)
+        self.assertTrue(resultat.coupure_transport)
+        recuperations = [ligne for ligne in journaux.output if "flux récupéré" in ligne]
+        self.assertEqual(len(recuperations), 1)
+        self.assertNotIn("contenu confidentiel", "".join(journaux.output))
 
 
 if __name__ == "__main__":  # pragma: no cover

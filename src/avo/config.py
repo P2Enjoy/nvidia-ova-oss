@@ -8,6 +8,8 @@
 @spec docs/BACKLOG.md U30 — `AVO_GARDES`, `AVO_GARDE_RETRIES` (§H16.0)
 @spec docs/BACKLOG.md U32 — `AVO_LLM_MAX_CONCURRENT`, `AVO_LLM_SLOTS_DIR` (§H4.9)
 @spec docs/BACKLOG.md U34 — `AVO_COUPURE_RESUME` (§H17.4)
+@spec docs/BACKLOG.md U31 — `AVO_FLUX_RECUPERATION`,
+      `AVO_FLUX_RECUP_MIN_CARACTERES` (§H4.10)
 @spec docs/BACKLOG.md U35 — `AVO_SUP_SONDE_FRAICHE` (§H10.4)
 @spec docs/BACKLOG.md U37 — `AVO_PLAN_LEDGER`, `AVO_IDEATION_OUVERTURE`,
       `AVO_SUP_CURATION` (§H18.4)
@@ -281,6 +283,8 @@ class Config:
     llm_max_concurrent: int
     llm_slots_dir: Path
     coupure_resume: bool
+    flux_recuperation: bool
+    flux_recup_min_caracteres: int
     plan_ledger: bool
     ideation_ouverture: bool
     sup_curation: bool
@@ -342,6 +346,8 @@ class Config:
             "llm_max_concurrent": self.llm_max_concurrent,
             "llm_slots_dir": str(self.llm_slots_dir),
             "coupure_resume": self.coupure_resume,
+            "flux_recuperation": self.flux_recuperation,
+            "flux_recup_min_caracteres": self.flux_recup_min_caracteres,
             "plan_ledger": self.plan_ledger,
             "ideation_ouverture": self.ideation_ouverture,
             "sup_curation": self.sup_curation,
@@ -443,6 +449,12 @@ def charger(
         llm_max_concurrent=source.entier_nul_ou_positif("AVO_LLM_MAX_CONCURRENT", 3),
         llm_slots_dir=Path(source.texte("AVO_LLM_SLOTS_DIR", str(runs_dir / ".llm-slots"))),
         coupure_resume=source.booleen("AVO_COUPURE_RESUME", True),
+        # Récupération du flux coupé (§H4.10) : même patron d'interrupteur que
+        # le résumé de coupure — à `false`, comportement d'avant H4.10.
+        flux_recuperation=source.booleen("AVO_FLUX_RECUPERATION", True),
+        flux_recup_min_caracteres=source.entier_nul_ou_positif(
+            "AVO_FLUX_RECUP_MIN_CARACTERES", 200
+        ),
         # Patron ledger (§H18.4) : trois mécanismes, trois interrupteurs — à
         # `false`, le comportement redevient exactement celui d'avant H18.
         plan_ledger=source.booleen("AVO_PLAN_LEDGER", True),

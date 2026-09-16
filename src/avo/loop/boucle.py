@@ -10,7 +10,8 @@
 @spec docs/SPEC_ARCAGI3.md §A5.1 (direct-interaction : aucune règle de jeu fournie)
 @spec docs/BACKLOG.md U27 — mode `state` de la boucle (§H15.7, §H15.8)
 @spec docs/BACKLOG.md U31 — archive des pas du mode `state` (§H15.10), schéma de Σ du
-      contexte monté (§H15.9), refus de garde = pas blanc atomique (§H16.1)
+      contexte monté (§H15.9), refus de garde = pas blanc atomique (§H16.1),
+      `coupure_transport` dans la métrique `llm` (§H4.10, §H11.2)
 @spec docs/BACKLOG.md U30 — gardes de méthode dans les phases (§H16.1 garde
       documentaire, §H16.2 garde de prédiction, §H16.3 garde d'évaluation,
       §H16.4 garde de persistance, §H16.5 observabilité)
@@ -380,6 +381,7 @@ class BoucleAgent:
             tokens_generes=resultat.eval_count,
             duree_ms=resultat.total_duration_ms,
             tronquee=resultat.tronquee,
+            coupure_transport=resultat.coupure_transport,
             segment=self.contexte.segment,
         )
         return resultat
@@ -435,6 +437,7 @@ class BoucleAgent:
             tokens_generes=reponse.eval_count,
             duree_ms=reponse.total_duration_ms,
             tronquee=reponse.tronquee,
+            coupure_transport=reponse.coupure_transport,
         )
         resume = (reponse.content or "").strip()
         if not resume:
@@ -577,6 +580,7 @@ class BoucleAgent:
                 tokens_generes=resultat.eval_count,
                 duree_ms=resultat.total_duration_ms,
                 tronquee=resultat.tronquee,
+                coupure_transport=resultat.coupure_transport,
             )
         if liste is None:
             self._metrique(
@@ -951,6 +955,7 @@ class BoucleAgent:
             tokens_generes=resultat.eval_count,
             duree_ms=resultat.total_duration_ms,
             tronquee=resultat.tronquee,
+            coupure_transport=resultat.coupure_transport,
             taille_prompt=taille,
         )
         return resultat
