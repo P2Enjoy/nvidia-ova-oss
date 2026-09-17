@@ -5000,3 +5000,27 @@ du responsable (2026-08-30). Ordre du jour du listing `/api/games` (relevé
 dc22, cn04, su15, s5i5, vc33, r11l, g50t, ft09, tn36, sc25, sk48, sb26, ar25,
 m0r0, tu93, lf52. L'ensemble des rapports `u25-t2-*` committés fait foi pour
 la reprise, jeu par jeu, au fil des sessions.
+
+**Tranche 2 OUVERTE — premier jeu joué (même session).** `ls20-9607627b`
+(premier de l'ordre du jour), run `u25-t2-ls20` : **0/7 niveaux, 12 actions,
+RHAE 0,00**, arrêt au plafond de temps (1 200 s), 13 tours, 14 appels,
+138 423 tokens de prompt, 7 882 générés ; scorecard `3620bf48…` FERMÉ,
+réconciliation exacte (12 actions des deux côtés) ; rapport
+`docs/rapports/u25-t2-ls20.md`. Observation d'infrastructure, mesurée et
+systématique : **14/14 appels ont perdu leur PREMIÈRE tentative en
+`ServerError`** et réussi à la relance — la signature de la limite de
+plate-forme du pont 443 (40 s avant les premiers en-têtes, JOURNAL
+2026-08-30) sous le prefill ~10 k tokens du mode `state`, le cache de préfixe
+ne réchauffant l'appel qu'à la seconde tentative. Coût : ~35 s perdus par
+tour, soit 12 actions jouées dans le budget là où la tranche 1 (même jeu,
+même plafond) en jouait 47. Aucune action du harnais n'est désignée à n = 1 :
+l'échelle H4.5 absorbe le mode d'échec sans perte ; le relevé s'accumule sur
+les prochains jeux de la tranche avant toute décision (U31, « pas
+d'amélioration inventée »).
+
+**Où reprendre (boucle planifiée).** U31, cible campagne ARC tranche 2 :
+jouer les jeux suivants de l'ordre du jour consigné ci-dessus (prochain :
+`tr87-cd924810`), une invocation par jeu, `run-id u25-t2-<code>`, mêmes
+plafonds, rapport committé après chaque jeu ; surveiller si la perte
+systématique de première tentative se répète (décision à l'accumulation).
+Les jeux déjà joués de la tranche : `ls20`.

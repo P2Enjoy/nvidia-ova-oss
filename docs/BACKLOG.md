@@ -1155,7 +1155,13 @@ absent (plateau `encodage` = comportement modèle, §A5). **Décision : le
 déclencheur U25 est CONSTATÉ** (mesures et motifs au journal du 2026-09-17) —
 la cible d'évaluation devient la campagne ARC au périmètre U25, **tranche 2**,
 une invocation par jeu, `run-id u25-t2-<game_id>`, ordre du listing du jour
-consigné au journal.
+consigné au journal. **Tranche 2 ouverte dans la même session** — premier jeu
+`ls20-9607627b` joué : 0/7 niveaux, 12 actions, RHAE 0,00, arrêt au plafond
+de temps, scorecard `3620bf48…` fermé et réconcilié, rapport
+`docs/rapports/u25-t2-ls20.md` ; observation consignée : 14/14 premières
+tentatives d'appel perdues en `ServerError` (limite 40 s du pont sous prefill
+~10 k tokens), toutes récupérées par H4.5 — relevé à accumuler. Reste de la
+tranche : 24 jeux, prochain `tr87-cd924810`.
 
 **Itération du 2026-09-16 (session planifiée)** — améliorer, désigné par
 l'accumulation de mesures (registre 2026-09-12 : deux morts `IncompleteRead`
