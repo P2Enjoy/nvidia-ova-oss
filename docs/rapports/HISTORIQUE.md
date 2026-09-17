@@ -50,10 +50,13 @@ bandes ne se recouvrent pas, le gain de modèle dépasse la variance.
 | v1.10 + éch. §H3.1 (U33) | `qwen3.8:27b` | **7/9** (échecs s4, s8 — `encodage`, budget ; s1 NON MESURABLE, transport — registre 2026-09-12) | journal, 2026-09-12 session interactive suite 5 |
 | v1.10 + éch. §H3.1 (réplication) | `qwen3.8:27b` | **7/10** (échecs s1, s4, s8 — `encodage`, budget ; s1 mort transport au premier passage, rejeu unique complet) | session planifiée du 2026-09-12 |
 | v1.14 ENRICHI (U34+U35+U37) | `qwen3.8:27b` | **6/9** (échecs s1, s4, s8 — `encodage`, budget ; s2 NON MESURABLE, transport ×2 ; ISO seed à seed avec le nu) | `ab-u38-bancs.md` |
+| v1.14 ENRICHI + §H4.10 | `qwen3.8:27b` | **7/10** (échecs s1, s4, s8 — `encodage`, budget ; **10/10 MESURABLES**, 3 récupérations §H4.10, zéro mort de transport sous 48 relances) | journal, 2026-09-17 |
 
 Variance inter-séries mesurée (`qwen3.6:35b`) : 6/10 à 8/10. Les deux séries
 `qwen3.8:27b` du 2026-09-12 concordent : tous les échecs mesurables sont de la
-famille `encodage`, budget épuisé.
+famille `encodage`, budget épuisé — signature inchangée sur la série du
+2026-09-17, la première intégralement mesurable depuis l'apparition du mode
+d'échec transport.
 
 ## Banc c — τ-Bench (patron), environnement détail
 

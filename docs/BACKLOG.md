@@ -1142,6 +1142,21 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-17 (session planifiée)** — jouer et observer : série
+banc b CTF complète sous v1.14+§H4.10 (`banc ctf --env aleatoire --seed 1..10
+--horizon 30 --mode live`, exécuteur `conteneur`) : **pass@1 = 7/10** (échecs
+s1/s4/s8 — `encodage`, budget, signature des lignes de base) et **10/10
+épisodes MESURABLES** sous une instabilité de pont record — 48 relances de
+transport, 3 épuisements d'échelle récupérés par §H4.10 (s4, s7, s9 ; s7 et
+s9 capturés ensuite), zéro mort : la **validation live de §H4.10 est
+ACQUISE**, l'entrée du registre 2026-09-12 est retirée, `HISTORIQUE.md` porte
+la série. Améliorer : rien — aucune mesure fraîche ne désigne un mécanisme
+absent (plateau `encodage` = comportement modèle, §A5). **Décision : le
+déclencheur U25 est CONSTATÉ** (mesures et motifs au journal du 2026-09-17) —
+la cible d'évaluation devient la campagne ARC au périmètre U25, **tranche 2**,
+une invocation par jeu, `run-id u25-t2-<game_id>`, ordre du listing du jour
+consigné au journal.
+
 **Itération du 2026-09-16 (session planifiée)** — améliorer, désigné par
 l'accumulation de mesures (registre 2026-09-12 : deux morts `IncompleteRead`
 mi-flux du pont ; campagne U38 : s2 mort deux fois, s8 une fois — cinq au

@@ -4947,3 +4947,56 @@ sur le déclencheur U25 avec les mesures accumulées (entrepôt 0,96 ≥ la
 fourchette publiée [0,76 ; 0,84], τ 10/10 au plafond deux fois, CTF sur
 plateau `encodage`) : si la session le constate, elle le consigne et ouvre la
 campagne ARC au périmètre U25.
+
+## 2026-09-17 (session planifiée) — U31 : série CTF sous §H4.10 (7/10, zéro mort de transport), validation live ACQUISE, déclencheur U25 CONSTATÉ
+
+**Mesuré.** Série banc b complète sous v1.14+§H4.10 (`banc ctf --env aleatoire
+--seed 1..10 --horizon 30 --mode live`, exécuteur `conteneur`, `qwen3.8:27b`,
+mode `state`, séquentiel, une exécution live à la fois) : **pass@1 = 7/10**,
+et — première fois depuis l'apparition du mode d'échec transport — **10/10
+épisodes MESURABLES**. Échecs : s1, s4, s8, tous famille `encodage` à budget
+épuisé (30 actions), la signature constante des lignes de base. Capturés :
+s2 `fouille` 3 actions, s3 `encodage` 11, s5 `piste` 3, s6 `piste` 4,
+s7 `archive` 14, s9 `binaire` 5, s10 `piste` 2. Total : 361 100 tokens,
+~2 h 36 de jeu. `HISTORIQUE.md` mis à jour.
+
+**Validation live §H4.10 ACQUISE.** Le pont a été plus instable que sur toute
+série antérieure : 48 relances de transport, escalades ≥ tentative 4 sur s4,
+s7, s8 et s9. TROIS épuisements complets de l'échelle H4.5 (s4, s7, s9),
+chacun récupéré par §H4.10 — « flux récupéré après épuisement des retries »,
+meilleurs partiels de 2 036 / 1 985 / 1 910 caractères après 6 coupures — et
+AUCUN épisode mort : s7 et s9 ont ensuite CAPTURÉ leur drapeau, s4 est allé au
+bout de son budget en échec sémantique propre. En U38, une instabilité moindre
+avait tué s2 deux fois et s8 une fois. L'entrée du registre 2026-09-12 est
+RETIRÉE (la confirmation qu'elle exigeait — un épisode traversant une coupure
+mi-flux sans mourir — est obtenue trois fois).
+
+**Améliorer : rien** — aucune mesure fraîche ne désigne un mécanisme absent :
+les échecs restants sont le plateau `encodage` (comportement modèle ; toute
+aide par famille serait du benchmaxing, §A5). Aucun code modifié, campagne
+complète non due (clause de preuves U31, précédent suite 48).
+
+**Décision : le déclencheur U25 est CONSTATÉ**, sur les deux branches de sa
+définition (responsable, 2026-09-01) :
+
+1. *scores comparables aux références publiées* — banc a entrepôt h25 :
+   0,96 enrichi (U38) et [0,867 ; 1,00] nu (U36/réplication) contre la
+   fourchette publiée [0,76 ; 0,84] (§S5.4) : au-dessus ;
+2. *score qui a cessé de progresser* — banc b CTF : 8/10 (v1.9), 8/10
+   (v1.10), 7/9 et 7/10 (U33), 6/9 (U38), 7/10 (ce jour) — au moins trois
+   itérations d'amélioration successives du harnais (U33 échantillonnage,
+   U34/U35/U37 enrichi, §H4.10) sans gain, échecs constants `encodage` ;
+   banc c τ : 10/10 sur trois séries — au plafond du banc.
+
+La cible d'évaluation de U31 devient la **campagne ARC au périmètre U25,
+tranche 2** : une invocation par jeu (précédent suite 43 — machine éphémère,
+perte bornée au jeu en cours), `run-id u25-t2-<game_id>`, plafonds PAR JEU du
+périmètre : 80 actions/niveau, 300 actions/jeu, 1 200 s/jeu,
+1 500 000 tokens/jeu, 400 tours ; mode `state` (défaut), gardes actives,
+modèle de travail `qwen3.8:27b`, fenêtre `OLLAMA_CONTEXT_LENGTH` de la
+configuration ; `--j-autorise-la-publication` posé au titre de l'autorisation
+du responsable (2026-08-30). Ordre du jour du listing `/api/games` (relevé
+2026-09-17, 25 jeux) : ls20, tr87, re86, cd82, lp85, ka59, bp35, wa30, sp80,
+dc22, cn04, su15, s5i5, vc33, r11l, g50t, ft09, tn36, sc25, sk48, sb26, ar25,
+m0r0, tu93, lf52. L'ensemble des rapports `u25-t2-*` committés fait foi pour
+la reprise, jeu par jeu, au fil des sessions.
