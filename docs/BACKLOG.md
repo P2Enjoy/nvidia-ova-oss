@@ -1142,6 +1142,24 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-18 (session planifiée)** — jouer et observer, tranche 2 :
+deux jeux joués séquentiellement, `tr87-cd924810` (0/6 niveaux, 11 actions,
+RHAE 0,00, plafond 1 200 s, scorecard `c92aa111…` fermé, réconciliation
+exacte, rapport `docs/rapports/u25-t2-tr87.md`) puis `re86-8af5384d` (0/8
+niveaux, 24 actions, RHAE 0,00, plafond 2 400 s, scorecard `00f182ab…`
+fermé, réconciliation exacte, rapport `docs/rapports/u25-t2-re86.md`).
+Observation : la perte systématique de première tentative (`ServerError`,
+limite 40 s du pont) est confirmée **57/57 sur trois jeux** — absorbée par
+H4.5 sans perte. **Point tranché** : le plafond de temps des jeux restants
+de la tranche passe à **2 400 s** (1 200 s tronquait l'observation à ~4 % du
+plafond d'actions ; le doublement mesuré : 24 actions contre 11–12) ; la
+correction de CAUSE (pont en flux à en-têtes précoces, `infra/llm-proxy`)
+est nommée et BLOQUÉE par l'accès de déploiement Netlify (cas 4). Préalable
+d'environnement corrigé dans la même session : port 80 sortant bloqué →
+§H2.4 révisé et Dockerfile (autorités `certs/` à l'étage runtime, sources
+apt https), campagne complète verte (914/157/12, lint, mypy, build deux
+étages). Reste de la tranche : 22 jeux, prochain `cd82-fb555c5d`.
+
 **Itération du 2026-09-17 (session planifiée)** — jouer et observer : série
 banc b CTF complète sous v1.14+§H4.10 (`banc ctf --env aleatoire --seed 1..10
 --horizon 30 --mode live`, exécuteur `conteneur`) : **pass@1 = 7/10** (échecs

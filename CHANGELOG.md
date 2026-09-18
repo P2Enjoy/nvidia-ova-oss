@@ -2,6 +2,19 @@
 
 ## [Non publié]
 
+### 2026-09-18 — U31 : construction des images sous sortie réseau limitée au TLS 443 (H2.4)
+
+- La construction des images échouait au premier `apt-get update` sur les
+  environnements dont la sortie réseau bloque le port 80 (mesuré : `503` en
+  http direct, `405` via le proxy d'agent, `200` en https avec l'autorité du
+  proxy). §H2.4 révisé et Dockerfile aligné : les autorités de `certs/`
+  entrent au magasin système dès l'étage `runtime`, avant le premier appel
+  réseau, et les sources apt passent en `https://` — valide sur tout réseau,
+  sans effet quand `certs/` est vide ; l'image d'exécution garde les
+  autorités pour ses appels TLS derrière un proxy interceptant.
+- Preuves : construction verte des deux étages, campagne complète verte
+  (lint, format, mypy strict, 914 unitaires, 157 intégration, 12 E2E).
+
 ### 2026-09-16 — U31 : récupération du flux coupé au niveau transport (H4.10)
 
 - Défaut corrigé, désigné par l'accumulation de mesures (registre 2026-09-12,

@@ -5076,3 +5076,34 @@ Ollama (`{"error": …}` en ligne de flux). Elle exige un DÉPLOIEMENT Netlify
 sur le compte du responsable ; cette session n'a pas ce jeton. Livrable sans
 la réponse : le périmètre 2 400 s ci-dessus, et le harnais absorbe déjà le
 mode d'échec sans perte (H4.5, 29/29 récupérées).
+
+**Suite de la session — re86 joué sous le plafond élargi, campagne complète
+verte.** `re86-8af5384d` (3e de l'ordre du jour), run `u25-t2-re86`,
+plafond de temps 2 400 s (les autres inchangés) : **0/8 niveaux, 24 actions,
+RHAE 0,00**, arrêt au plafond de temps, 25 tours, 26 appels, 257 219 tokens
+de prompt, 14 004 générés, 1 intervention du superviseur ; scorecard
+`00f182ab…` FERMÉ, réconciliation exacte (24 = 24) ; rapport
+`docs/rapports/u25-t2-re86.md` (`6067548`). Le doublement du plafond a
+DOUBLÉ l'observation (24 actions contre 11 à tr87 et 12 à ls20 sous
+1 200 s) : la décision est validée en mesure. Perte de première tentative :
+**28/28**, accumulation **57/57 sur trois jeux** — systématique, cause et
+correction bloquée consignées plus haut. Niveau 1 de re86 : baseline 26,
+24 actions dépensées sans complétion, actions diversifiées (ACTION1–5),
+aucune coupure mi-flux, aucun 413.
+
+**Vérifié (fin de session).** Campagne complète `make check` VERTE dans le
+conteneur : lint + format (146 fichiers), mypy strict (145 fichiers),
+**914 unitaires, 157 intégration, 12 E2E** sur pile montée et seedée ;
+`docker build` des deux étages (dev et production) vert sous le Dockerfile
+révisé. Aucune anomalie imputable au changement ; aucune correction due.
+
+**Où reprendre (boucle planifiée).** U31, cible campagne ARC tranche 2 :
+jouer les jeux suivants de l'ordre du jour (prochain : `cd82-fb555c5d`),
+une invocation par jeu, `run-id u25-t2-<code>`, plafonds : 80 actions/niveau,
+300 actions/jeu, **2 400 s/jeu** (décision de ce jour), 1 500 000 tokens/jeu,
+400 tours ; rapport committé après chaque jeu. Environnement : si `apt`
+échoue au build, copier l'autorité du proxy dans `certs/` et construire
+`--network host` (mécanisme §H2.4 révisé) ; la perte de première tentative
+(57/57) est absorbée par H4.5 — la correction de cause exige un déploiement
+Netlify du pont (bloquée, cas 4). Jeux joués de la tranche : `ls20`, `tr87`,
+`re86`.
