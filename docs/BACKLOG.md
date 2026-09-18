@@ -1158,7 +1158,7 @@ est nommée et BLOQUÉE par l'accès de déploiement Netlify (cas 4). Préalable
 d'environnement corrigé dans la même session : port 80 sortant bloqué →
 §H2.4 révisé et Dockerfile (autorités `certs/` à l'étage runtime, sources
 apt https), campagne complète verte (914/157/12, lint, mypy, build deux
-étages). Reste de la tranche : 22 jeux, prochain `cd82-fb555c5d`.
+étages). Reste de la tranche : 21 jeux, prochain `lp85` (cd82 joué dans la même session : 0/6, 20 actions, plafond 2 400 s, scorecard `b7c7b887…` fermé, rapport `docs/rapports/u25-t2-cd82.md`).
 
 **Itération du 2026-09-17 (session planifiée)** — jouer et observer : série
 banc b CTF complète sous v1.14+§H4.10 (`banc ctf --env aleatoire --seed 1..10

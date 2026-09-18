@@ -5107,3 +5107,14 @@ une invocation par jeu, `run-id u25-t2-<code>`, plafonds : 80 actions/niveau,
 (57/57) est absorbée par H4.5 — la correction de cause exige un déploiement
 Netlify du pont (bloquée, cas 4). Jeux joués de la tranche : `ls20`, `tr87`,
 `re86`.
+
+**Suite de la session — cd82 joué (même itération, poursuite après garde).**
+`cd82-fb555c5d` (4e de l'ordre du jour), run `u25-t2-cd82`, plafond 2 400 s :
+**0/6 niveaux, 20 actions, RHAE 0,00**, arrêt au plafond de temps, 30 appels,
+294 126 tokens de prompt, 12 999 générés ; scorecard `b7c7b887…` FERMÉ,
+réconciliation exacte (20 = 20) ; rapport `docs/rapports/u25-t2-cd82.md`.
+Niveau 1 : baseline 55, 20 actions dépensées sans complétion. Perte de
+première tentative toujours systématique (32 relances t1 pour 30 appels,
+une escalade à t3) — le relevé 57/57 devient ~87/87 sur quatre jeux, même
+cause, même absorption H4.5. Jeux joués de la tranche : `ls20`, `tr87`,
+`re86`, `cd82` ; prochain : `lp85`.
