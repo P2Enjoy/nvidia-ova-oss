@@ -5024,3 +5024,55 @@ jouer les jeux suivants de l'ordre du jour consigné ci-dessus (prochain :
 plafonds, rapport committé après chaque jeu ; surveiller si la perte
 systématique de première tentative se répète (décision à l'accumulation).
 Les jeux déjà joués de la tranche : `ls20`.
+
+## 2026-09-18 (session planifiée) — U31 : tranche 2 — tr87 joué ; perte de première tentative confirmée (29/29) ; plafond de temps de la tranche porté à 2 400 s
+
+**Environnement, mesuré et corrigé (préalable bloquant).** Le port 80 sortant
+est désormais bloqué sur la machine de session (apt `503` en http direct,
+`405` via le proxy d'agent, `200` en https avec l'autorité du proxy) : la
+construction de l'image échouait au premier `apt-get update`. Correction
+générique committée AVANT le code (`40d76d0` spec, `6e5e22c` Dockerfile) :
+§H2.4 révisé — les autorités de `certs/` entrent au magasin système dès
+l'étage `runtime`, avant le premier appel réseau, et les sources apt passent
+en `https://` (valide sur tout réseau, sans effet quand `certs/` est vide).
+Construction verte (`--network host`, autorité CCR dans `certs/`), pile
+montée et saine, seed contrôlé.
+
+**Jouer (U31, cible campagne ARC tranche 2).** `tr87-cd924810` (2e de l'ordre
+du jour), run `u25-t2-tr87` : **0/6 niveaux, 11 actions, RHAE 0,00**, arrêt
+au plafond de temps (1 200 s), 13 tours, 15 appels, 150 853 tokens de prompt,
+7 257 générés ; scorecard `c92aa111…` FERMÉ, réconciliation exacte (11 = 11) ;
+rapport `docs/rapports/u25-t2-tr87.md` (`94b5528`). Modèle `qwen3.8:27b`
+(décision responsable 2026-09-12, défaut du dépôt — la mention `qwen3.6:35b`
+du prompt planifié est un texte antérieur au changement de modèle ; point
+tranché : le défaut du dépôt fait foi).
+
+**Observer — le relevé s'est accumulé, la décision tombe.** **15/15 appels ont
+perdu leur première tentative en `ServerError`** et réussi à la relance —
+avec ls20 (14/14), le mode d'échec est systématique : **29/29 sur deux jeux**.
+Cause connue (JOURNAL 2026-08-30) : limite de 40 s du pont 443 avant premiers
+en-têtes, sous prefill ~10 k tokens du mode `state`, cache de préfixe froid à
+la première tentative. Coût mesuré : ~36 s perdues par tour, ~94 s/tour au
+total → 11–12 actions par jeu dans 1 200 s, soit ~4 % du plafond d'actions
+(300) : le plafond de temps tronque l'observation, ce qui est un défaut de
+périmètre (« Exactitude avant tout », responsable 2026-09-12).
+
+**Point tranché (autonomie de décision) : le plafond de temps des jeux
+RESTANTS de la tranche 2 passe de 1 200 s à 2 400 s** (autres plafonds
+inchangés : 80 actions/niveau, 300 actions/jeu, 1 500 000 tokens/jeu,
+400 tours). Motifs : (1) doubler l'observation par jeu là où 1 200 s la
+tronquait à ~4 % du plafond d'actions ; (2) 2 400 s reste borné par la
+fenêtre de perte acceptée d'une machine éphémère (« perte bornée au jeu en
+cours », précédent des séries de 2 h 36) ; (3) les plafonds demeurent des
+gardes d'arrêt propre, et leurs valeurs se choisissent LARGES (règle du
+responsable). Les jeux déjà joués (ls20, tr87) ne se rejouent pas — une
+invocation par jeu.
+
+**Amélioration désignée mais BLOQUÉE (nommée, cas 4 d'arbitrage — accès
+externe).** La correction de la CAUSE est côté pont (`infra/llm-proxy`) :
+répondre en flux avec en-têtes précoces (ou toute variante qui échappe à la
+limite « 40 s avant premiers en-têtes »), en conservant le contrat d'erreur
+Ollama (`{"error": …}` en ligne de flux). Elle exige un DÉPLOIEMENT Netlify
+sur le compte du responsable ; cette session n'a pas ce jeton. Livrable sans
+la réponse : le périmètre 2 400 s ci-dessus, et le harnais absorbe déjà le
+mode d'échec sans perte (H4.5, 29/29 récupérées).
