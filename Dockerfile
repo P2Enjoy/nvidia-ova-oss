@@ -20,6 +20,18 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# Autorités de certification supplémentaires (§H2.4) : tout `*.crt` déposé dans
+# certs/ (vide par défaut, cf. certs/README.md) entre au magasin système AVANT le
+# premier appel réseau de la construction, et les sources apt passent en https —
+# nécessaire quand la sortie réseau est limitée au TLS 443 intercepté (port 80
+# bloqué), sans effet sinon (le magasin reste le jeu d'autorités standard, et
+# https vaut sur tout réseau). L'image d'exécution garde ces autorités : ses
+# appels TLS d'exécution en ont besoin derrière un proxy interceptant.
+COPY certs/ /usr/local/share/ca-certificates/extra/
+RUN update-ca-certificates \
+ && sed -i 's|http://deb.debian.org|https://deb.debian.org|g; s|http://security.debian.org|https://security.debian.org|g' \
+      /etc/apt/sources.list.d/*.sources
+
 # `git` est la SEULE dépendance système du harnais : la lignée de solutions est un
 # dépôt git jetable créé par chaque run (§H9.3). Ce n'est pas une dépendance Python,
 # le principe « zéro dépendance d'exécution » (§H2.1) reste tenu.
@@ -45,12 +57,8 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends make \
  && rm -rf /var/lib/apt/lists/*
 
-# Autorités de certification supplémentaires (§H2.4) : tout `*.crt` déposé dans
-# certs/ (vide par défaut, cf. certs/README.md) entre au magasin système, et pip
-# lit ce magasin — nécessaire derrière un proxy TLS interceptant, sans effet
-# sinon (le magasin système reste le jeu d'autorités standard).
-COPY certs/ /usr/local/share/ca-certificates/extra/
-RUN update-ca-certificates
+# pip lit le magasin système hérité de l'étage runtime (§H2.4) — les autorités
+# de certs/ y sont déjà installées avant tout appel réseau.
 ENV PIP_CERT=/etc/ssl/certs/ca-certificates.crt
 
 # Outillage de preuve, épinglé par plancher de version (cf. pyproject [dev]).
