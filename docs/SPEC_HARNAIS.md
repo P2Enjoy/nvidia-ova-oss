@@ -116,16 +116,22 @@ aucune installation sur la machine hôte.
 **Prérequis hôte, et eux seuls** : `git`, `docker` (démon joignable par l'utilisateur),
 `make`. Python n'est requis sur l'hôte que pour le mode dégradé `AVO_NO_DOCKER=1`.
 
-**Environnements à proxy TLS interceptant.** La construction de l'image de
-développement installe l'outillage depuis PyPI en TLS ; derrière un proxy qui
-intercepte le TLS avec sa propre autorité, cette étape échoue en
-`CERTIFICATE_VERIFY_FAILED`. Mécanisme générique : tout certificat `*.crt` déposé
-dans `certs/` (dossier du contexte de build, vide et versionné avec son seul
-`README.md` ; les `*.crt` sont ignorés par git) est installé dans le magasin de
-l'image de développement avant l'installation de l'outillage, et `pip` lit le
-magasin système (`PIP_CERT`). L'image de production n'en reçoit aucun : elle ne
-fait aucun appel TLS à la construction. Jamais de désactivation de vérification
-TLS.
+**Environnements à proxy TLS interceptant ou à sortie limitée au TLS 443.** La
+construction des images fait des appels réseau — apt pour les paquets système,
+pip pour l'outillage de développement — et certains environnements n'autorisent
+que le TLS vers le port 443, intercepté par un proxy à autorité propre : le
+port 80 y est bloqué et tout TLS y échoue en `CERTIFICATE_VERIFY_FAILED` sans
+l'autorité du proxy. Mécanisme générique, commun aux deux étages : tout
+certificat `*.crt` déposé dans `certs/` (dossier du contexte de build, vide et
+versionné avec son seul `README.md` ; les `*.crt` sont ignorés par git) est
+installé dans le magasin système de l'image AVANT le premier appel réseau de la
+construction, et les sources apt sont réécrites en `https://` (valide sur tout
+réseau, indispensable quand le port 80 est bloqué). `pip` lit le magasin
+système (`PIP_CERT`). Le magasin de l'image d'exécution reçoit les mêmes
+autorités : un harnais déployé derrière un proxy interceptant en a besoin pour
+ses appels TLS d'exécution ; sur un réseau ouvert, `certs/` est vide et le
+magasin reste le jeu d'autorités standard. Jamais de désactivation de
+vérification TLS.
 
 ## H3. Configuration
 
