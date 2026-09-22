@@ -5160,3 +5160,18 @@ marqueur EN COURS au backlog — protocole anti-collision), une invocation par
 jeu, `run-id u25-t2-<code>`, plafonds : 80 actions/niveau, 300 actions/jeu,
 2 400 s/jeu, 1 500 000 tokens/jeu, 400 tours ; rapport committé après chaque
 jeu. Jeux joués de la tranche : `ls20`, `tr87`, `re86`, `cd82`, `lp85`.
+
+**Suite de la session — ka59 joué (même itération, poursuite après push).**
+`ka59-38d34dbb` (6e de l'ordre du jour), run `u25-t2-ka59`, plafond 2 400 s :
+**0/7 niveaux, 16 actions, RHAE 0,00**, arrêt au plafond de temps, 25 tours,
+29 appels, 289 741 tokens de prompt, 13 824 générés ; scorecard `be3b83be…`
+FERMÉ, réconciliation exacte (16 = 16) ; rapport
+`docs/rapports/u25-t2-ka59.md`. Niveau 1 : baseline 28, 16 actions dépensées
+sans complétion. Perte de première tentative toujours systématique (29/29,
+zéro escalade) — relevé **~142/142 sur six jeux**. Contrairement à lp85, les
+actions sont diversifiées (ACTION1–4 et ACTION6, observation inchangée
+4/16 seulement), 4 retries de patch tous récupérés ; superviseur encore
+jamais intervenu (16 actions < seuil 20) — deuxième occurrence du relevé
+« seuil en actions inatteignable sous le débit du pont », à recouper.
+Jeux joués de la tranche : `ls20`, `tr87`, `re86`, `cd82`, `lp85`, `ka59` ;
+prochain : `bp35-0a0ad940`.

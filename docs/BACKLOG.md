@@ -1151,9 +1151,13 @@ première tentative ~113/113 sur cinq jeux (absorbée H4.5, cause bloquée
 cas 4) ; relevé nouveau à accumuler — 19/19 actions à observation inchangée
 sans intervention du superviseur, son seuil (20 actions) restant inatteignable
 sous le débit imposé par la latence du pont. Améliorer : rien (aucune mesure
-fraîche ne désigne un mécanisme absent ; relevés à recouper). Reste de la
-tranche : 20 jeux ; `ka59-38d34dbb` EN COURS (session du 2026-09-22,
-marqueur anti-collision — retiré au rapport).
+fraîche ne désigne un mécanisme absent ; relevés à recouper). `ka59-38d34dbb`
+joué dans la même session (0/7, 16 actions, RHAE 0,00, plafond de temps,
+scorecard `be3b83be…` fermé, réconciliation exacte, rapport
+`docs/rapports/u25-t2-ka59.md` ; actions diversifiées, superviseur toujours
+jamais atteint — deuxième occurrence du relevé). Reste de la tranche :
+19 jeux ; `bp35-0a0ad940` EN COURS (session du 2026-09-22, marqueur
+anti-collision — retiré au rapport).
 
 **Itération du 2026-09-18 (session planifiée)** — jouer et observer, tranche 2 :
 deux jeux joués séquentiellement, `tr87-cd924810` (0/6 niveaux, 11 actions,
