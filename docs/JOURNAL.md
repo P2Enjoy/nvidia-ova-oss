@@ -5189,3 +5189,34 @@ patch récupérés ; superviseur jamais intervenu (16 actions < seuil 20) —
 troisième occurrence du relevé « seuil en actions inatteignable sous le
 débit du pont ». Jeux joués de la tranche : `ls20`, `tr87`, `re86`, `cd82`,
 `lp85`, `ka59`, `bp35` ; prochain : `wa30-ee6fef47`.
+
+**Suite et fin de session — wa30 joué (4e jeu de la session).**
+`wa30-ee6fef47` (8e de l'ordre du jour), run `u25-t2-wa30`, plafond 2 400 s :
+**0/9 niveaux, 21 actions, RHAE 0,00**, arrêt au plafond de temps, 29 appels
+acteur, 283 870 tokens de prompt, 12 947 générés ; scorecard `465d266c…`
+FERMÉ, réconciliation exacte (21 = 21) ; rapport
+`docs/rapports/u25-t2-wa30.md`. Niveau 1 : baseline 71, 21 actions dépensées
+sans complétion. Relevés : perte de première tentative 31/31 (~202/203 sur
+huit jeux, même cause, même absorption) ; actions diversifiées (ACTION1–5),
+zéro action invalide, 6 retries de patch récupérés, 1 curation ; **1
+intervention du superviseur, tombée dès le dépassement du seuil de
+20 actions** — le relevé des trois jeux précédents (seuil inatteignable sous
+~16–19 actions/jeu) est corroboré en creux : le superviseur fonctionne, son
+seuil n'est simplement pas atteint quand le débit du pont borne le jeu sous
+20 actions. Aucune décision : le mécanisme est sain, c'est le plafond de
+temps qui borne, déjà consigné.
+
+**Bilan de la session (4 jeux, aucun code modifié).** Campagne complète
+`make check` non due : aucun code modifié — sessions d'exécution et de
+suivi uniquement (clause de preuves U31, précédent suites 44 et 48) ; écart
+nommé au titre du budget §4.3. Jeux joués de la tranche 2 : `ls20`, `tr87`,
+`re86`, `cd82`, `lp85`, `ka59`, `bp35`, `wa30` (8/25).
+
+**Où reprendre (boucle planifiée).** U31, cible campagne ARC tranche 2 :
+jouer les jeux suivants de l'ordre du jour (prochain : `sp80-589a99af`, sauf
+marqueur EN COURS au backlog — protocole anti-collision), une invocation par
+jeu, `run-id u25-t2-<code>`, plafonds : 80 actions/niveau, 300 actions/jeu,
+2 400 s/jeu, 1 500 000 tokens/jeu, 400 tours ; rapport committé après chaque
+jeu. Relevés ouverts à recouper : perte de première tentative (~202/203,
+correction de cause bloquée — déploiement Netlify du pont, cas 4) ;
+superviseur borné par le débit (sain, corroboré à wa30).
