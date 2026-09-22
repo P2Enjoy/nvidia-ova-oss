@@ -5175,3 +5175,17 @@ jamais intervenu (16 actions < seuil 20) — deuxième occurrence du relevé
 « seuil en actions inatteignable sous le débit du pont », à recouper.
 Jeux joués de la tranche : `ls20`, `tr87`, `re86`, `cd82`, `lp85`, `ka59` ;
 prochain : `bp35-0a0ad940`.
+
+**Suite de la session — bp35 joué (même itération).** `bp35-0a0ad940` (7e de
+l'ordre du jour), run `u25-t2-bp35`, plafond 2 400 s : **0/9 niveaux,
+16 actions, RHAE 0,00**, arrêt au plafond de temps, 30 appels, 361 012 tokens
+de prompt, 13 503 générés ; scorecard `d2cd1216…` FERMÉ, réconciliation
+exacte (16 = 16) ; rapport `docs/rapports/u25-t2-bp35.md`. Niveau 1 :
+baseline 21, 16 actions dépensées sans complétion. Relevés : perte de
+première tentative 29/30 — PREMIÈRE réussite du premier coup de la tranche
+(relevé ~171/172 sur sept jeux) ; actions diversifiées (ACTION3/4/6/7),
+16/16 prédictions confirmées, 10 tentatives d'action invalide, 3 retries de
+patch récupérés ; superviseur jamais intervenu (16 actions < seuil 20) —
+troisième occurrence du relevé « seuil en actions inatteignable sous le
+débit du pont ». Jeux joués de la tranche : `ls20`, `tr87`, `re86`, `cd82`,
+`lp85`, `ka59`, `bp35` ; prochain : `wa30-ee6fef47`.

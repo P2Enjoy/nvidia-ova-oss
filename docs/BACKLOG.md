@@ -1155,9 +1155,13 @@ fraîche ne désigne un mécanisme absent ; relevés à recouper). `ka59-38d34db
 joué dans la même session (0/7, 16 actions, RHAE 0,00, plafond de temps,
 scorecard `be3b83be…` fermé, réconciliation exacte, rapport
 `docs/rapports/u25-t2-ka59.md` ; actions diversifiées, superviseur toujours
-jamais atteint — deuxième occurrence du relevé). Reste de la tranche :
-19 jeux ; `bp35-0a0ad940` EN COURS (session du 2026-09-22, marqueur
-anti-collision — retiré au rapport).
+jamais atteint — deuxième occurrence du relevé). `bp35-0a0ad940` joué dans la
+même session (0/9, 16 actions, RHAE 0,00, plafond de temps, scorecard
+`d2cd1216…` fermé, réconciliation exacte, rapport
+`docs/rapports/u25-t2-bp35.md` ; 16/16 prédictions confirmées, première
+réussite de première tentative de la tranche — relevé ~171/172). Reste de la
+tranche : 18 jeux ; `wa30-ee6fef47` EN COURS (session du 2026-09-22,
+marqueur anti-collision — retiré au rapport).
 
 **Itération du 2026-09-18 (session planifiée)** — jouer et observer, tranche 2 :
 deux jeux joués séquentiellement, `tr87-cd924810` (0/6 niveaux, 11 actions,
