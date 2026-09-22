@@ -1142,6 +1142,18 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-22 (session planifiée)** — jouer et observer, tranche 2 :
+`lp85-305b61c3` joué (5e de l'ordre du jour), run `u25-t2-lp85`, plafond
+2 400 s : 0/8 niveaux, 19 actions, RHAE 0,00, arrêt au plafond de temps,
+scorecard `af7ef1be…` fermé, réconciliation exacte (19 = 19), rapport
+`docs/rapports/u25-t2-lp85.md`. Observations consignées au journal : perte de
+première tentative ~113/113 sur cinq jeux (absorbée H4.5, cause bloquée
+cas 4) ; relevé nouveau à accumuler — 19/19 actions à observation inchangée
+sans intervention du superviseur, son seuil (20 actions) restant inatteignable
+sous le débit imposé par la latence du pont. Améliorer : rien (aucune mesure
+fraîche ne désigne un mécanisme absent ; relevés à recouper). Reste de la
+tranche : 20 jeux, prochain `ka59-38d34dbb`.
+
 **Itération du 2026-09-18 (session planifiée)** — jouer et observer, tranche 2 :
 deux jeux joués séquentiellement, `tr87-cd924810` (0/6 niveaux, 11 actions,
 RHAE 0,00, plafond 1 200 s, scorecard `c92aa111…` fermé, réconciliation

@@ -5118,3 +5118,45 @@ première tentative toujours systématique (32 relances t1 pour 30 appels,
 une escalade à t3) — le relevé 57/57 devient ~87/87 sur quatre jeux, même
 cause, même absorption H4.5. Jeux joués de la tranche : `ls20`, `tr87`,
 `re86`, `cd82` ; prochain : `lp85`.
+
+## 2026-09-22 (session planifiée) — U31 : tranche 2 — lp85 joué (0/8, 19 actions) ; perte de première tentative ~113/113 ; superviseur jamais atteint sous plafond de temps (relevé)
+
+**Environnement.** Recette du 2026-09-18 rejouée sans surprise : autorité CCR
+dans `certs/`, image construite `--network host`, pile montée et saine, seed
+contrôlé, endpoint et API ARC vérifiés en lecture seule avant lancement
+(`lp85-305b61c3` listé, baselines [17, 38, 31, 16, 41, 60, 26, 159], somme
+388, identiques à la tranche 1).
+
+**Jouer (U31, cible campagne ARC tranche 2).** `lp85-305b61c3` (5e de l'ordre
+du jour), run `u25-t2-lp85`, plafond 2 400 s : **0/8 niveaux, 19 actions,
+RHAE 0,00**, arrêt au plafond de temps, 26 tours, 26 appels, 260 831 tokens
+de prompt, 16 060 générés, 1 486,9 s d'inférence cumulée ; scorecard
+`af7ef1be…` FERMÉ, réconciliation exacte (19 = 19, `divergences: []`) ;
+rapport `docs/rapports/u25-t2-lp85.md`. Niveau 1 : baseline 17, 19 actions
+dépensées sans complétion.
+
+**Observer.** (1) Perte de première tentative toujours systématique :
+26 relances t1 (`ServerError`), zéro escalade — le relevé ~87/87 devient
+**~113/113 sur cinq jeux**, même cause (limite 40 s du pont), même
+absorption H4.5 sans perte ; la correction de cause reste bloquée
+(déploiement Netlify, cas 4). (2) Relevé nouveau, à accumuler : les
+19 actions jouées sont toutes `ACTION6` et toutes à `observation_inchangee`
+(19/19), avec 6 tentatives d'action invalide — et le superviseur n'est
+JAMAIS intervenu : son seuil de stagnation (20 actions) n'a pas été atteint
+avant l'épuisement du temps. Sous un débit de ~19–24 actions par jeu
+(latence du pont), un seuil exprimé en actions peut rester inatteignable
+dans le budget de temps ; à cd82 l'intervention était tombée à l'action 20,
+dernière du run. Aucune décision à n = 1 : relevé consigné, à recouper sur
+les prochains jeux avant toute révision de §H10.
+
+**Améliorer : rien** — aucune mesure fraîche ne désigne un mécanisme absent ;
+les deux observations ci-dessus sont des relevés à accumuler. Aucun code
+modifié : campagne complète non due (clause de preuves U31, précédent
+suite 48).
+
+**Où reprendre (boucle planifiée).** U31, cible campagne ARC tranche 2 :
+jouer les jeux suivants de l'ordre du jour (prochain : `ka59-38d34dbb`, sauf
+marqueur EN COURS au backlog — protocole anti-collision), une invocation par
+jeu, `run-id u25-t2-<code>`, plafonds : 80 actions/niveau, 300 actions/jeu,
+2 400 s/jeu, 1 500 000 tokens/jeu, 400 tours ; rapport committé après chaque
+jeu. Jeux joués de la tranche : `ls20`, `tr87`, `re86`, `cd82`, `lp85`.
