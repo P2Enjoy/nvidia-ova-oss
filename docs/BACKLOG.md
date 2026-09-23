@@ -1162,9 +1162,13 @@ intervention du superviseur au seuil de 20 actions — deuxième occurrence
 (0/6, 19 actions, RHAE 0,00, plafond de temps, scorecard `e4ea5f0c…`
 fermé, réconciliation exacte, rapport `docs/rapports/u25-t2-cn04.md` ;
 actions diversifiées, 19/19 prédictions confirmées, superviseur sous
-seuil — cinquième occurrence). Reste de la tranche : 14 jeux ;
-`su15-1944f8ab` EN COURS (session du 2026-09-23, marqueur anti-collision —
-retiré au rapport).
+seuil — cinquième occurrence). `su15-1944f8ab` joué dans la même session
+(0/9, 14 actions, RHAE 0,00, plafond de temps, scorecard `3d2bf854…`
+fermé, réconciliation exacte, rapport `docs/rapports/u25-t2-su15.md` ;
+actions ACTION6/7 — jeu `click` —, 14/14 prédictions confirmées, 10
+tentatives d'action invalide, 4 retries de patch récupérés, superviseur
+sous seuil — sixième occurrence). Reste de la tranche : 13 jeux, prochain
+`s5i5-18d95033`.
 
 **Itération du 2026-09-22 (session planifiée)** — jouer et observer, tranche 2 :
 `lp85-305b61c3` joué (5e de l'ordre du jour), run `u25-t2-lp85`, plafond

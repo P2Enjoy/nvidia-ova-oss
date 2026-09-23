@@ -5292,3 +5292,39 @@ même cause, même absorption H4.5) ; actions diversifiées ACTION1–6
 intervenu (19 actions < seuil 20) — **cinquième occurrence** du relevé
 « seuil en actions inatteignable sous le débit du pont ». Aucune décision
 nouvelle. Jeux joués de la tranche : 11/25 ; prochain : `su15-1944f8ab`.
+
+**Suite et fin de session — su15 joué (4e jeu de la session).**
+`su15-1944f8ab` (12e de l'ordre du jour), run `u25-t2-su15`, plafond
+2 400 s : **0/9 niveaux, 14 actions, RHAE 0,00**, arrêt au plafond de
+temps, 25 tours, 29 appels, 283 027 tokens de prompt, 14 231 générés,
+1 382,9 s d'inférence cumulée ; scorecard `3d2bf854…` FERMÉ,
+réconciliation exacte (14 = 14, `divergences: []`) ; rapport
+`docs/rapports/u25-t2-su15.md`. Niveau 1 : baseline 22, 14 actions
+dépensées sans complétion. Relevés : perte de première tentative 27/27
+(zéro escalade, cumul **~310/311 sur douze jeux**, même cause, même
+absorption H4.5) ; actions ACTION6/7 uniquement (7/7 — jeu `click`),
+14/14 prédictions confirmées, 10 tentatives d'action invalide (record de
+la tranche, arguments refusés en les nommant), 4 retries de patch tous
+récupérés, 4 observations inchangées ; superviseur jamais intervenu
+(14 actions < seuil 20) — **sixième occurrence** du relevé « seuil en
+actions inatteignable sous le débit du pont ».
+
+**Bilan de la session (4 jeux, aucun code modifié).** Campagne complète
+`make check` non due : aucun code modifié — session d'exécution et de
+suivi uniquement (clause de preuves U31, précédent suites 44 et 48) ;
+écart nommé au titre du budget §4.3. Améliorer : rien — aucune mesure
+fraîche ne désigne un mécanisme absent, les relevés accumulent des
+occurrences d'observations déjà consignées (perte de première tentative,
+cause bloquée cas 4 ; superviseur borné par le débit, mécanisme sain).
+Jeux joués de la tranche 2 : `ls20`, `tr87`, `re86`, `cd82`, `lp85`,
+`ka59`, `bp35`, `wa30`, `sp80`, `dc22`, `cn04`, `su15` (12/25).
+
+**Où reprendre (boucle planifiée).** U31, cible campagne ARC tranche 2 :
+jouer les jeux suivants de l'ordre du jour (prochain : `s5i5-18d95033`,
+sauf marqueur EN COURS au backlog — protocole anti-collision), une
+invocation par jeu, `run-id u25-t2-<code>`, plafonds : 80 actions/niveau,
+300 actions/jeu, 2 400 s/jeu, 1 500 000 tokens/jeu, 400 tours ; rapport
+committé après chaque jeu. Relevés ouverts à recouper : perte de première
+tentative (~310/311, correction de cause bloquée — déploiement Netlify du
+pont, cas 4) ; superviseur borné par le débit (sain, corroboré wa30 et
+dc22).
