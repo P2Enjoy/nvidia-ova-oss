@@ -1153,8 +1153,14 @@ sur neuf jeux, cause bloquée cas 4) ; actions diversifiées ACTION1–6,
 patch récupérés ; superviseur jamais atteint (16 actions < seuil 20) —
 quatrième occurrence du relevé « seuil en actions inatteignable sous le
 débit du pont ». Améliorer : rien (aucune mesure fraîche ne désigne un
-mécanisme absent). Reste de la tranche : 16 jeux ; `dc22-fdcac232` EN COURS
-(session du 2026-09-23, marqueur anti-collision — retiré au rapport).
+mécanisme absent). `dc22-fdcac232` joué dans la même session (0/6,
+20 actions, RHAE 0,00, plafond de temps, scorecard `4c6cf6be…` fermé,
+réconciliation exacte, rapport `docs/rapports/u25-t2-dc22.md` ; 1
+intervention du superviseur au seuil de 20 actions — deuxième occurrence
+« mécanisme sain, borné par le débit » ; 7 retries de patch récupérés,
+8 observations inchangées). Reste de la tranche : 15 jeux ;
+`cn04-2fe56bfb` EN COURS (session du 2026-09-23, marqueur anti-collision —
+retiré au rapport).
 
 **Itération du 2026-09-22 (session planifiée)** — jouer et observer, tranche 2 :
 `lp85-305b61c3` joué (5e de l'ordre du jour), run `u25-t2-lp85`, plafond

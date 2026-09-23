@@ -5259,3 +5259,21 @@ jeu, `run-id u25-t2-<code>`, plafonds : 80 actions/niveau, 300 actions/jeu,
 2 400 s/jeu, 1 500 000 tokens/jeu, 400 tours ; rapport committé après chaque
 jeu. Jeux joués de la tranche : `ls20`, `tr87`, `re86`, `cd82`, `lp85`,
 `ka59`, `bp35`, `wa30`, `sp80` (9/25).
+
+**Suite de la session — dc22 joué (même itération).** `dc22-fdcac232` (10e de
+l'ordre du jour), run `u25-t2-dc22`, plafond 2 400 s : **0/6 niveaux,
+20 actions, RHAE 0,00**, arrêt au plafond de temps, 22 tours, 30 appels,
+287 364 tokens de prompt, 13 674 générés, 1 228,6 s d'inférence cumulée ;
+scorecard `4c6cf6be…` FERMÉ, réconciliation exacte (20 = 20,
+`divergences: []`) ; rapport `docs/rapports/u25-t2-dc22.md`. Niveau 1 :
+baseline 59, 20 actions dépensées sans complétion. Relevés : perte de
+première tentative 32/32 (zéro escalade, cumul **~259/260 sur dix jeux**,
+même cause, même absorption H4.5) ; actions diversifiées ACTION1–6
+(3/1/2/1/13), 20/20 prédictions confirmées, 8 observations inchangées,
+1 tentative d'action invalide, 7 retries de patch tous récupérés,
+1 idéation, 1 curation ; **1 intervention du superviseur au seuil des
+20 actions** — deuxième occurrence corroborant wa30 : le mécanisme est
+sain, le débit du pont borne les jeux plus courts sous le seuil. Aucune
+décision nouvelle. Jeux joués de la tranche : `ls20`, `tr87`, `re86`,
+`cd82`, `lp85`, `ka59`, `bp35`, `wa30`, `sp80`, `dc22` (10/25) ; prochain :
+`cn04-2fe56bfb`.
