@@ -1158,8 +1158,12 @@ mécanisme absent). `dc22-fdcac232` joué dans la même session (0/6,
 réconciliation exacte, rapport `docs/rapports/u25-t2-dc22.md` ; 1
 intervention du superviseur au seuil de 20 actions — deuxième occurrence
 « mécanisme sain, borné par le débit » ; 7 retries de patch récupérés,
-8 observations inchangées). Reste de la tranche : 15 jeux ;
-`cn04-2fe56bfb` EN COURS (session du 2026-09-23, marqueur anti-collision —
+8 observations inchangées). `cn04-2fe56bfb` joué dans la même session
+(0/6, 19 actions, RHAE 0,00, plafond de temps, scorecard `e4ea5f0c…`
+fermé, réconciliation exacte, rapport `docs/rapports/u25-t2-cn04.md` ;
+actions diversifiées, 19/19 prédictions confirmées, superviseur sous
+seuil — cinquième occurrence). Reste de la tranche : 14 jeux ;
+`su15-1944f8ab` EN COURS (session du 2026-09-23, marqueur anti-collision —
 retiré au rapport).
 
 **Itération du 2026-09-22 (session planifiée)** — jouer et observer, tranche 2 :

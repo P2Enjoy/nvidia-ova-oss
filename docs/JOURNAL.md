@@ -5277,3 +5277,18 @@ sain, le débit du pont borne les jeux plus courts sous le seuil. Aucune
 décision nouvelle. Jeux joués de la tranche : `ls20`, `tr87`, `re86`,
 `cd82`, `lp85`, `ka59`, `bp35`, `wa30`, `sp80`, `dc22` (10/25) ; prochain :
 `cn04-2fe56bfb`.
+
+**Suite de la session — cn04 joué (même itération).** `cn04-2fe56bfb` (11e de
+l'ordre du jour), run `u25-t2-cn04`, plafond 2 400 s : **0/6 niveaux,
+19 actions, RHAE 0,00**, arrêt au plafond de temps, 24 tours, 24 appels,
+328 022 tokens de prompt, 12 650 générés, 1 555,7 s d'inférence cumulée ;
+scorecard `e4ea5f0c…` FERMÉ, réconciliation exacte (19 = 19,
+`divergences: []`) ; rapport `docs/rapports/u25-t2-cn04.md`. Niveau 1 :
+baseline 29, 19 actions dépensées sans complétion. Relevés : perte de
+première tentative 24/24 (zéro escalade, cumul **~283/284 sur onze jeux**,
+même cause, même absorption H4.5) ; actions diversifiées ACTION1–6
+(7/3/5/1/2/1), 19/19 prédictions confirmées, 4 observations inchangées,
+4 tentatives d'action invalide, 0 retry de patch ; superviseur jamais
+intervenu (19 actions < seuil 20) — **cinquième occurrence** du relevé
+« seuil en actions inatteignable sous le débit du pont ». Aucune décision
+nouvelle. Jeux joués de la tranche : 11/25 ; prochain : `su15-1944f8ab`.
