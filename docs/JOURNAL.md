@@ -5220,3 +5220,42 @@ jeu, `run-id u25-t2-<code>`, plafonds : 80 actions/niveau, 300 actions/jeu,
 jeu. Relevés ouverts à recouper : perte de première tentative (~202/203,
 correction de cause bloquée — déploiement Netlify du pont, cas 4) ;
 superviseur borné par le débit (sain, corroboré à wa30).
+
+## 2026-09-23 (session planifiée) — U31 : tranche 2 — sp80 joué (0/6, 16 actions) ; perte de première tentative 25/25 (~227/228) ; superviseur encore sous le seuil (4e occurrence)
+
+**Environnement.** Recette du 2026-09-18 rejouée : autorité CCR dans `certs/`,
+image construite `--network host`, pile montée et saine (429 docker.io absorbé
+au retry du `make up`), seed contrôlé, endpoint (`/api/version` 200) et API ARC
+vérifiés en lecture seule avant lancement (`sp80-589a99af` listé, baselines
+[39, 58, 25, 148, 96, 152], somme 518).
+
+**Jouer (U31, cible campagne ARC tranche 2).** `sp80-589a99af` (9e de l'ordre
+du jour), run `u25-t2-sp80`, plafond 2 400 s : **0/6 niveaux, 16 actions,
+RHAE 0,00**, arrêt au plafond de temps, 21 tours, 25 appels, 338 944 tokens
+de prompt, 12 279 générés, 1 484,6 s d'inférence cumulée ; scorecard
+`901fdf9a…` FERMÉ, réconciliation exacte (16 = 16, `divergences: []`) ;
+rapport `docs/rapports/u25-t2-sp80.md`. Niveau 1 : baseline 39, 16 actions
+dépensées sans complétion.
+
+**Observer.** (1) Perte de première tentative toujours systématique : 25/25
+(24 relances t1, 1 escalade t2), cumul **~227/228 sur neuf jeux**, même cause
+(limite 40 s du pont), même absorption H4.5 sans perte ; la correction de
+cause reste bloquée (déploiement Netlify, cas 4). (2) Actions diversifiées
+ACTION1–6 (2/3/4/2/1/4), 16/16 prédictions confirmées, 4 tentatives d'action
+invalide (arguments manquants, refusées en les nommant), 4 retries de patch
+tous récupérés, 1 idéation d'ouverture. (3) Superviseur jamais intervenu
+(16 actions < seuil 20) — **quatrième occurrence** du relevé « seuil en
+actions inatteignable sous le débit du pont » ; le mécanisme est sain
+(corroboré à wa30), c'est le plafond de temps qui borne, déjà consigné.
+
+**Améliorer : rien** — aucune mesure fraîche ne désigne un mécanisme absent ;
+les relevés ci-dessus accumulent des occurrences d'observations déjà
+consignées. Aucun code modifié.
+
+**Où reprendre (boucle planifiée).** U31, cible campagne ARC tranche 2 :
+jouer les jeux suivants de l'ordre du jour (prochain : `dc22-fdcac232`, sauf
+marqueur EN COURS au backlog — protocole anti-collision), une invocation par
+jeu, `run-id u25-t2-<code>`, plafonds : 80 actions/niveau, 300 actions/jeu,
+2 400 s/jeu, 1 500 000 tokens/jeu, 400 tours ; rapport committé après chaque
+jeu. Jeux joués de la tranche : `ls20`, `tr87`, `re86`, `cd82`, `lp85`,
+`ka59`, `bp35`, `wa30`, `sp80` (9/25).

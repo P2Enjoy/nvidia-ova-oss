@@ -1142,6 +1142,20 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
+`sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond
+2 400 s : 0/6 niveaux, 16 actions, RHAE 0,00, arrêt au plafond de temps,
+scorecard `901fdf9a…` fermé, réconciliation exacte (16 = 16,
+`divergences: []`), rapport `docs/rapports/u25-t2-sp80.md`. Observations
+consignées au journal : perte de première tentative 25/25 (cumul ~227/228
+sur neuf jeux, cause bloquée cas 4) ; actions diversifiées ACTION1–6,
+16/16 prédictions confirmées, 4 tentatives d'action invalide, 4 retries de
+patch récupérés ; superviseur jamais atteint (16 actions < seuil 20) —
+quatrième occurrence du relevé « seuil en actions inatteignable sous le
+débit du pont ». Améliorer : rien (aucune mesure fraîche ne désigne un
+mécanisme absent). Reste de la tranche : 16 jeux ; `dc22-fdcac232` EN COURS
+(session du 2026-09-23, marqueur anti-collision — retiré au rapport).
+
 **Itération du 2026-09-22 (session planifiée)** — jouer et observer, tranche 2 :
 `lp85-305b61c3` joué (5e de l'ordre du jour), run `u25-t2-lp85`, plafond
 2 400 s : 0/8 niveaux, 19 actions, RHAE 0,00, arrêt au plafond de temps,
@@ -1164,9 +1178,8 @@ réussite de première tentative de la tranche — relevé ~171/172).
 plafond de temps, scorecard `465d266c…` fermé, réconciliation exacte,
 rapport `docs/rapports/u25-t2-wa30.md` ; 1 intervention du superviseur dès
 le seuil de 20 actions dépassé — le mécanisme est sain, c'est le débit du
-pont qui borne les jeux plus courts). Reste de la tranche : 17 jeux ;
-`sp80-589a99af` EN COURS (session du 2026-09-23, marqueur anti-collision —
-retiré au rapport).
+pont qui borne les jeux plus courts). Reste de la tranche : 17 jeux,
+prochain `sp80-589a99af` (joué le 2026-09-23, itération suivante).
 
 **Itération du 2026-09-18 (session planifiée)** — jouer et observer, tranche 2 :
 deux jeux joués séquentiellement, `tr87-cd924810` (0/6 niveaux, 11 actions,
