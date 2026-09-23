@@ -1164,8 +1164,9 @@ réussite de première tentative de la tranche — relevé ~171/172).
 plafond de temps, scorecard `465d266c…` fermé, réconciliation exacte,
 rapport `docs/rapports/u25-t2-wa30.md` ; 1 intervention du superviseur dès
 le seuil de 20 actions dépassé — le mécanisme est sain, c'est le débit du
-pont qui borne les jeux plus courts). Reste de la tranche : 17 jeux,
-prochain `sp80-589a99af`.
+pont qui borne les jeux plus courts). Reste de la tranche : 17 jeux ;
+`sp80-589a99af` EN COURS (session du 2026-09-23, marqueur anti-collision —
+retiré au rapport).
 
 **Itération du 2026-09-18 (session planifiée)** — jouer et observer, tranche 2 :
 deux jeux joués séquentiellement, `tr87-cd924810` (0/6 niveaux, 11 actions,
