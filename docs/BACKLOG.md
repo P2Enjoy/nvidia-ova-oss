@@ -1167,9 +1167,23 @@ seuil — cinquième occurrence). `su15-1944f8ab` joué dans la même session
 fermé, réconciliation exacte, rapport `docs/rapports/u25-t2-su15.md` ;
 actions ACTION6/7 — jeu `click` —, 14/14 prédictions confirmées, 10
 tentatives d'action invalide, 4 retries de patch récupérés, superviseur
-sous seuil — sixième occurrence). Reste de la tranche : 13 jeux ;
-`s5i5-18d95033` EN COURS (session du 2026-09-24, marqueur anti-collision —
-retiré au rapport).
+sous seuil — sixième occurrence). Reste de la tranche : 13 jeux, prochain
+`s5i5-18d95033`.
+
+**Itération du 2026-09-24 (session planifiée)** — jouer et observer, tranche 2 :
+`s5i5-18d95033` joué (13e de l'ordre du jour), run `u25-t2-s5i5`, plafond
+2 400 s : 0/8 niveaux, 16 actions, RHAE 0,00, arrêt au plafond de temps,
+scorecard `5e749de9…` fermé, réconciliation exacte (16 = 16,
+`divergences: []`), rapport `docs/rapports/u25-t2-s5i5.md`. Observations
+consignées au journal : perte de première tentative 27/27 (cumul ~337/338
+sur treize jeux, cause bloquée cas 4) ; actions ACTION6 uniquement (jeu
+`click`), 16/16 prédictions confirmées, 9 tentatives d'action invalide,
+1 retry de patch récupéré, 1 idéation d'ouverture, 4 évaluations caduques ;
+superviseur jamais atteint (16 actions < seuil 20) — septième occurrence du
+relevé « seuil en actions inatteignable sous le débit du pont ». Améliorer :
+rien (aucune mesure fraîche ne désigne un mécanisme absent). Reste de la
+tranche : 12 jeux, prochain `vc33-5430563c` (ordre du jour consigné au
+journal du 2026-09-17).
 
 **Itération du 2026-09-22 (session planifiée)** — jouer et observer, tranche 2 :
 `lp85-305b61c3` joué (5e de l'ordre du jour), run `u25-t2-lp85`, plafond
