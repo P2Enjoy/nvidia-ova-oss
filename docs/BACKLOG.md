@@ -1167,8 +1167,9 @@ seuil — cinquième occurrence). `su15-1944f8ab` joué dans la même session
 fermé, réconciliation exacte, rapport `docs/rapports/u25-t2-su15.md` ;
 actions ACTION6/7 — jeu `click` —, 14/14 prédictions confirmées, 10
 tentatives d'action invalide, 4 retries de patch récupérés, superviseur
-sous seuil — sixième occurrence). Reste de la tranche : 13 jeux, prochain
-`s5i5-18d95033`.
+sous seuil — sixième occurrence). Reste de la tranche : 13 jeux ;
+`s5i5-18d95033` EN COURS (session du 2026-09-24, marqueur anti-collision —
+retiré au rapport).
 
 **Itération du 2026-09-22 (session planifiée)** — jouer et observer, tranche 2 :
 `lp85-305b61c3` joué (5e de l'ordre du jour), run `u25-t2-lp85`, plafond
