@@ -5373,3 +5373,20 @@ committé après chaque jeu. Jeux joués de la tranche : `ls20`, `tr87`,
 `su15`, `s5i5` (13/25). Relevés ouverts à recouper : perte de première
 tentative (~337/338, correction de cause bloquée — déploiement Netlify du
 pont, cas 4) ; superviseur borné par le débit (sain, corroboré wa30 et dc22).
+
+**Suite de la session — vc33 joué (2e jeu de la session).** `vc33-5430563c`
+(14e de l'ordre du jour), run `u25-t2-vc33`, plafond 2 400 s : **0/7 niveaux,
+17 actions, RHAE 0,00**, arrêt au plafond de temps, 30 tours, 31 appels,
+303 174 tokens de prompt, 13 600 générés, 1 289,6 s d'inférence cumulée ;
+scorecard `ad6c0c28…` FERMÉ, réconciliation exacte (17 = 17,
+`divergences: []`) ; rapport `docs/rapports/u25-t2-vc33.md`. Niveau 1 :
+baseline 7, 17 actions dépensées sans complétion. Relevés : perte de
+première tentative 30/30 (zéro escalade, cumul **~367/368 sur quatorze
+jeux**, même cause, même absorption H4.5) ; actions ACTION6 uniquement
+(17/17 — jeu `click`, comme su15 et s5i5), 17/17 prédictions confirmées,
+11 tentatives d'action invalide (refusées en les nommant), 1 retry de patch
+récupéré, 1 idéation d'ouverture, 21 évaluations caduques + 1 redemandée ;
+superviseur jamais intervenu (17 actions < seuil 20) — **huitième
+occurrence** du relevé « seuil en actions inatteignable sous le débit du
+pont ». Aucune décision nouvelle. Jeux joués de la tranche : 14/25 ;
+prochain : `r11l-495a7899`.

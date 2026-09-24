@@ -1182,8 +1182,15 @@ sur treize jeux, cause bloquée cas 4) ; actions ACTION6 uniquement (jeu
 superviseur jamais atteint (16 actions < seuil 20) — septième occurrence du
 relevé « seuil en actions inatteignable sous le débit du pont ». Améliorer :
 rien (aucune mesure fraîche ne désigne un mécanisme absent). Reste de la
-tranche : 12 jeux ; `vc33-5430563c` EN COURS (session du 2026-09-24,
-marqueur anti-collision — retiré au rapport).
+tranche : 12 jeux, prochain `vc33-5430563c`. `vc33-5430563c` joué dans la
+même session (0/7, 17 actions, RHAE 0,00, plafond de temps, scorecard
+`ad6c0c28…` fermé, réconciliation exacte 17 = 17, rapport
+`docs/rapports/u25-t2-vc33.md` ; actions ACTION6 uniquement — jeu `click` —,
+17/17 prédictions confirmées, 11 tentatives d'action invalide, 1 retry de
+patch récupéré, 21 évaluations caduques + 1 redemandée ; perte de première
+tentative 30/30, cumul ~367/368 sur quatorze jeux ; superviseur sous seuil —
+huitième occurrence). Reste de la tranche : 11 jeux, prochain
+`r11l-495a7899` (ordre du jour du 2026-09-17).
 
 **Itération du 2026-09-22 (session planifiée)** — jouer et observer, tranche 2 :
 `lp85-305b61c3` joué (5e de l'ordre du jour), run `u25-t2-lp85`, plafond
