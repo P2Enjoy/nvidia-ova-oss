@@ -1197,8 +1197,16 @@ uniquement — jeu `click` —, 19/19 prédictions confirmées, 5 tentatives
 d'action invalide, 1 retry de patch récupéré, 20 évaluations caduques ;
 perte de première tentative 26/26 avec 1 escalade t2, cumul ~393/394 sur
 quinze jeux ; superviseur sous seuil — neuvième occurrence). Reste de la
-tranche : 10 jeux ; `g50t-5849a774` EN COURS (session du 2026-09-24,
-marqueur anti-collision — retiré au rapport).
+tranche : 10 jeux, prochain `g50t-5849a774`. `g50t-5849a774` joué dans la
+même session (0/7, 20 actions, RHAE 0,00, plafond de temps, scorecard
+`45ab3d90…` fermé, réconciliation exacte 20 = 20, rapport
+`docs/rapports/u25-t2-g50t.md` ; actions diversifiées ACTION1–5, 20/20
+prédictions confirmées, 3 retries de patch récupérés, 1 curation,
+3 observations inchangées ; perte de première tentative 27/27, cumul
+~420/421 sur seize jeux ; 1 intervention du superviseur au seuil des
+20 actions — troisième occurrence « mécanisme sain, borné par le débit »).
+Reste de la tranche : 9 jeux, prochain `ft09-0d8bbf25` (ordre du jour du
+2026-09-17).
 
 **Itération du 2026-09-22 (session planifiée)** — jouer et observer, tranche 2 :
 `lp85-305b61c3` joué (5e de l'ordre du jour), run `u25-t2-lp85`, plafond

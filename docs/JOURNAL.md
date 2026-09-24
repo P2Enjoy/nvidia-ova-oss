@@ -5406,3 +5406,41 @@ caduques ; superviseur jamais intervenu (19 actions < seuil 20) —
 **neuvième occurrence** du relevé « seuil en actions inatteignable sous le
 débit du pont ». Aucune décision nouvelle. Jeux joués de la tranche :
 15/25 ; prochain : `g50t-5849a774`.
+
+**Suite et fin de session — g50t joué (4e jeu de la session).**
+`g50t-5849a774` (16e de l'ordre du jour), run `u25-t2-g50t`, plafond
+2 400 s : **0/7 niveaux, 20 actions, RHAE 0,00**, arrêt au plafond de
+temps, 21 tours, 25 appels, 244 216 tokens de prompt, 14 777 générés,
+1 315,3 s d'inférence cumulée ; scorecard `45ab3d90…` FERMÉ,
+réconciliation exacte (20 = 20, `divergences: []`) ; rapport
+`docs/rapports/u25-t2-g50t.md`. Niveau 1 : baseline 78, 20 actions
+dépensées sans complétion. Relevés : perte de première tentative 27/27
+(zéro escalade, cumul **~420/421 sur seize jeux**, même cause, même
+absorption H4.5) ; actions diversifiées ACTION1–5 (5/5/2/3/5), 20/20
+prédictions confirmées, 0 tentative d'action invalide, 3 retries de patch
+tous récupérés, 1 idéation, 1 curation, 3 observations inchangées,
+4 évaluations caduques ; **1 intervention du superviseur au seuil des
+20 actions** — troisième occurrence corroborant wa30 et dc22 : le
+mécanisme est sain, le débit du pont borne les jeux plus courts sous le
+seuil.
+
+**Bilan de la session (4 jeux, aucun code modifié).** Campagne complète
+`make check` non due : aucun code modifié — session d'exécution et de
+suivi uniquement (clause de preuves U31, précédent des sessions des
+2026-09-22/23) ; écart nommé au titre du budget §4.3. Améliorer : rien —
+aucune mesure fraîche ne désigne un mécanisme absent, les relevés
+accumulent des occurrences d'observations déjà consignées (perte de
+première tentative, cause bloquée cas 4 ; superviseur borné par le débit,
+mécanisme sain). Jeux joués de la tranche 2 : `ls20`, `tr87`, `re86`,
+`cd82`, `lp85`, `ka59`, `bp35`, `wa30`, `sp80`, `dc22`, `cn04`, `su15`,
+`s5i5`, `vc33`, `r11l`, `g50t` (16/25).
+
+**Où reprendre (boucle planifiée).** U31, cible campagne ARC tranche 2 :
+jouer les jeux suivants de l'ordre du jour (prochain : `ft09-0d8bbf25`,
+sauf marqueur EN COURS au backlog — protocole anti-collision), une
+invocation par jeu, `run-id u25-t2-<code>`, plafonds : 80 actions/niveau,
+300 actions/jeu, 2 400 s/jeu, 1 500 000 tokens/jeu, 400 tours ; rapport
+committé après chaque jeu. Relevés ouverts à recouper : perte de première
+tentative (~420/421, correction de cause bloquée — déploiement Netlify du
+pont, cas 4) ; superviseur borné par le débit (sain, corroboré wa30, dc22
+et g50t).
