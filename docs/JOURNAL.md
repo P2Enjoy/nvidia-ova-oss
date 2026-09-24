@@ -5390,3 +5390,19 @@ superviseur jamais intervenu (17 actions < seuil 20) — **huitième
 occurrence** du relevé « seuil en actions inatteignable sous le débit du
 pont ». Aucune décision nouvelle. Jeux joués de la tranche : 14/25 ;
 prochain : `r11l-495a7899`.
+
+**Suite de la session — r11l joué (3e jeu de la session).** `r11l-495a7899`
+(15e de l'ordre du jour), run `u25-t2-r11l`, plafond 2 400 s : **0/6 niveaux,
+19 actions, RHAE 0,00**, arrêt au plafond de temps, 25 tours, 26 appels,
+253 674 tokens de prompt, 16 940 générés, 1 413,2 s d'inférence cumulée ;
+scorecard `9aa72453…` FERMÉ, réconciliation exacte (19 = 19,
+`divergences: []`) ; rapport `docs/rapports/u25-t2-r11l.md`. Niveau 1 :
+baseline 22, 19 actions dépensées sans complétion. Relevés : perte de
+première tentative 26/26 (1 escalade t2, cumul **~393/394 sur quinze
+jeux**, même cause, même absorption H4.5) ; actions ACTION6 uniquement
+(19/19 — jeu `click`), 19/19 prédictions confirmées, 5 tentatives d'action
+invalide, 1 retry de patch récupéré, 1 idéation d'ouverture, 20 évaluations
+caduques ; superviseur jamais intervenu (19 actions < seuil 20) —
+**neuvième occurrence** du relevé « seuil en actions inatteignable sous le
+débit du pont ». Aucune décision nouvelle. Jeux joués de la tranche :
+15/25 ; prochain : `g50t-5849a774`.

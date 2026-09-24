@@ -1189,9 +1189,15 @@ même session (0/7, 17 actions, RHAE 0,00, plafond de temps, scorecard
 17/17 prédictions confirmées, 11 tentatives d'action invalide, 1 retry de
 patch récupéré, 21 évaluations caduques + 1 redemandée ; perte de première
 tentative 30/30, cumul ~367/368 sur quatorze jeux ; superviseur sous seuil —
-huitième occurrence). Reste de la tranche : 11 jeux ;
-`r11l-495a7899` EN COURS (session du 2026-09-24, marqueur anti-collision —
-retiré au rapport).
+huitième occurrence). Reste de la tranche : 11 jeux, prochain
+`r11l-495a7899`. `r11l-495a7899` joué dans la même session (0/6, 19 actions,
+RHAE 0,00, plafond de temps, scorecard `9aa72453…` fermé, réconciliation
+exacte 19 = 19, rapport `docs/rapports/u25-t2-r11l.md` ; actions ACTION6
+uniquement — jeu `click` —, 19/19 prédictions confirmées, 5 tentatives
+d'action invalide, 1 retry de patch récupéré, 20 évaluations caduques ;
+perte de première tentative 26/26 avec 1 escalade t2, cumul ~393/394 sur
+quinze jeux ; superviseur sous seuil — neuvième occurrence). Reste de la
+tranche : 10 jeux, prochain `g50t-5849a774` (ordre du jour du 2026-09-17).
 
 **Itération du 2026-09-22 (session planifiée)** — jouer et observer, tranche 2 :
 `lp85-305b61c3` joué (5e de l'ordre du jour), run `u25-t2-lp85`, plafond
