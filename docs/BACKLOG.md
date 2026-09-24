@@ -1182,8 +1182,8 @@ sur treize jeux, cause bloquée cas 4) ; actions ACTION6 uniquement (jeu
 superviseur jamais atteint (16 actions < seuil 20) — septième occurrence du
 relevé « seuil en actions inatteignable sous le débit du pont ». Améliorer :
 rien (aucune mesure fraîche ne désigne un mécanisme absent). Reste de la
-tranche : 12 jeux, prochain `vc33-5430563c` (ordre du jour consigné au
-journal du 2026-09-17).
+tranche : 12 jeux ; `vc33-5430563c` EN COURS (session du 2026-09-24,
+marqueur anti-collision — retiré au rapport).
 
 **Itération du 2026-09-22 (session planifiée)** — jouer et observer, tranche 2 :
 `lp85-305b61c3` joué (5e de l'ordre du jour), run `u25-t2-lp85`, plafond
