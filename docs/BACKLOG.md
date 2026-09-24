@@ -1189,8 +1189,9 @@ même session (0/7, 17 actions, RHAE 0,00, plafond de temps, scorecard
 17/17 prédictions confirmées, 11 tentatives d'action invalide, 1 retry de
 patch récupéré, 21 évaluations caduques + 1 redemandée ; perte de première
 tentative 30/30, cumul ~367/368 sur quatorze jeux ; superviseur sous seuil —
-huitième occurrence). Reste de la tranche : 11 jeux, prochain
-`r11l-495a7899` (ordre du jour du 2026-09-17).
+huitième occurrence). Reste de la tranche : 11 jeux ;
+`r11l-495a7899` EN COURS (session du 2026-09-24, marqueur anti-collision —
+retiré au rapport).
 
 **Itération du 2026-09-22 (session planifiée)** — jouer et observer, tranche 2 :
 `lp85-305b61c3` joué (5e de l'ordre du jour), run `u25-t2-lp85`, plafond
