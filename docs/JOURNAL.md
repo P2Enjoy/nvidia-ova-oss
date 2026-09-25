@@ -5444,3 +5444,51 @@ committé après chaque jeu. Relevés ouverts à recouper : perte de première
 tentative (~420/421, correction de cause bloquée — déploiement Netlify du
 pont, cas 4) ; superviseur borné par le débit (sain, corroboré wa30, dc22
 et g50t).
+
+## 2026-09-25 (session planifiée) — U31 : tranche 2 — ft09 joué (0/6, 20 actions, RHAE 0,00) ; perte de première tentative 30/30 (~450/451) ; superviseur au seuil (4e occurrence corroborante)
+
+**Environnement.** Recette du 2026-09-18 rejouée : autorité CCR dans `certs/`,
+image construite `--network host`, pile montée et saine, seed contrôlé,
+endpoint (`/api/version` 200) et API ARC vérifiés en lecture seule avant
+lancement (`ft09-0d8bbf25` listé, baselines [43, 12, 23, 28, 65, 37],
+somme 208).
+
+**Jouer (U31, cible campagne ARC tranche 2).** `ft09-0d8bbf25` (17e de
+l'ordre du jour), run `u25-t2-ft09`, plafond 2 400 s : **0/6 niveaux,
+20 actions, RHAE 0,00**, arrêt au plafond de temps, 26 tours, 28 appels,
+281 491 tokens de prompt, 13 780 générés, 1 367,6 s d'inférence cumulée ;
+scorecard `f8fda6cb…` FERMÉ, réconciliation exacte (20 = 20,
+`divergences: []`) ; rapport `docs/rapports/u25-t2-ft09.md`. Niveau 1 :
+baseline 43, 20 actions dépensées sans complétion.
+
+**Observer.** (1) Perte de première tentative toujours systématique : 30/30
+(toutes récupérées à la relance t1, zéro escalade), cumul **~450/451 sur
+dix-sept jeux**, même cause (limite 40 s du pont), même absorption H4.5 ;
+la correction de cause reste bloquée (déploiement Netlify, cas 4).
+(2) Actions ACTION6 uniquement (20/20 — jeu `click`, comme su15, s5i5,
+vc33 et r11l), toutes prédictions confirmées, 4 tentatives d'action
+invalide (refusées en les nommant), 1 retry de patch récupéré, 1 idéation
+d'ouverture (5 hypothèses, 5 tâches), 16 observations inchangées,
+10 évaluations caduques + 1 redemandée. (3) **1 intervention du
+superviseur au seuil des 20 actions** (stagnation, sonde fraîche jointe,
+curation appliquée : 12 tâches maintenues, 1 purgée) — **quatrième
+occurrence** corroborant wa30, dc22 et g50t : le mécanisme est sain, le
+débit du pont borne les jeux plus courts sous le seuil.
+
+**Améliorer : rien** — aucune mesure fraîche ne désigne un mécanisme absent ;
+les relevés accumulent des occurrences d'observations déjà consignées.
+Aucun code modifié ; campagne complète `make check` non due (session
+d'exécution et de suivi uniquement, précédent des sessions des
+2026-09-22/23/24) ; écart nommé au titre du budget §4.3.
+
+**Où reprendre (boucle planifiée).** U31, cible campagne ARC tranche 2 :
+jouer les jeux suivants de l'ordre du jour (prochain : `tn36-ef4dde99`,
+sauf marqueur EN COURS au backlog — protocole anti-collision), une
+invocation par jeu, `run-id u25-t2-<code>`, plafonds : 80 actions/niveau,
+300 actions/jeu, 2 400 s/jeu, 1 500 000 tokens/jeu, 400 tours ; rapport
+committé après chaque jeu. Jeux joués de la tranche : `ls20`, `tr87`,
+`re86`, `cd82`, `lp85`, `ka59`, `bp35`, `wa30`, `sp80`, `dc22`, `cn04`,
+`su15`, `s5i5`, `vc33`, `r11l`, `g50t`, `ft09` (17/25). Relevés ouverts à
+recouper : perte de première tentative (~450/451, correction de cause
+bloquée — déploiement Netlify du pont, cas 4) ; superviseur borné par le
+débit (sain, corroboré wa30, dc22, g50t et ft09).

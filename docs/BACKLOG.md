@@ -1142,6 +1142,22 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-25 (session planifiée)** — jouer et observer, tranche 2 :
+`ft09-0d8bbf25` joué (17e de l'ordre du jour), run `u25-t2-ft09`, plafond
+2 400 s : 0/6 niveaux, 20 actions, RHAE 0,00, arrêt au plafond de temps,
+scorecard `f8fda6cb…` fermé, réconciliation exacte (20 = 20,
+`divergences: []`), rapport `docs/rapports/u25-t2-ft09.md`. Observations
+consignées au journal : perte de première tentative 30/30 (toutes récupérées
+à la relance t1, zéro escalade — cumul ~450/451 sur dix-sept jeux, cause
+bloquée cas 4) ; actions ACTION6 uniquement (20/20 — jeu `click`), toutes
+prédictions confirmées, 4 tentatives d'action invalide (refusées en les
+nommant), 1 retry de patch récupéré, 1 idéation d'ouverture, 16 observations
+inchangées, 10 évaluations caduques + 1 redemandée ; 1 intervention du
+superviseur au seuil des 20 actions (sonde fraîche et curation appliquée) —
+quatrième occurrence « mécanisme sain, borné par le débit ». Améliorer :
+rien (aucune mesure fraîche ne désigne un mécanisme absent). Reste de la
+tranche : 8 jeux, prochain `tn36-ef4dde99` (ordre du jour du 2026-09-17).
+
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond
 2 400 s : 0/6 niveaux, 16 actions, RHAE 0,00, arrêt au plafond de temps,
@@ -1205,8 +1221,8 @@ prédictions confirmées, 3 retries de patch récupérés, 1 curation,
 3 observations inchangées ; perte de première tentative 27/27, cumul
 ~420/421 sur seize jeux ; 1 intervention du superviseur au seuil des
 20 actions — troisième occurrence « mécanisme sain, borné par le débit »).
-Reste de la tranche : 9 jeux ; `ft09-0d8bbf25` EN COURS (session du
-2026-09-25, marqueur anti-collision — retiré au rapport).
+Reste de la tranche : 9 jeux, prochain `ft09-0d8bbf25` (joué le
+2026-09-25, itération suivante).
 
 **Itération du 2026-09-22 (session planifiée)** — jouer et observer, tranche 2 :
 `lp85-305b61c3` joué (5e de l'ordre du jour), run `u25-t2-lp85`, plafond
