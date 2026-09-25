@@ -1165,7 +1165,8 @@ d'action invalide, 1 retry de patch récupéré, 23 évaluations caduques
 31/31 avec 1 escalade t2, cumul ~481/482 sur dix-huit jeux ;
 1 intervention du superviseur au seuil des 20 actions — cinquième
 occurrence « mécanisme sain, borné par le débit »). Reste de la
-tranche : 7 jeux, prochain `sc25-635fd71a` (ordre du jour du 2026-09-17).
+tranche : 7 jeux ; `sc25-635fd71a` EN COURS (session du 2026-09-25,
+marqueur anti-collision — retiré au rapport).
 
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond
