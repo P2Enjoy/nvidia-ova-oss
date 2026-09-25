@@ -5492,3 +5492,22 @@ committé après chaque jeu. Jeux joués de la tranche : `ls20`, `tr87`,
 recouper : perte de première tentative (~450/451, correction de cause
 bloquée — déploiement Netlify du pont, cas 4) ; superviseur borné par le
 débit (sain, corroboré wa30, dc22, g50t et ft09).
+
+**Suite de la session — tn36 joué (2e jeu de la session).** `tn36-ef4dde99`
+(18e de l'ordre du jour), run `u25-t2-tn36`, plafond 2 400 s : **0/7 niveaux,
+22 actions, RHAE 0,00**, arrêt au plafond de temps, 27 tours, 29 appels,
+283 090 tokens de prompt, 11 930 générés, 1 133,8 s d'inférence cumulée ;
+scorecard `5198dcc6…` FERMÉ, réconciliation exacte (22 = 22,
+`divergences: []`) ; rapport `docs/rapports/u25-t2-tn36.md`. Niveau 1 :
+baseline 32 (baselines [32, 72, 26, 40, 30, 55, 62], somme 317), 22 actions
+dépensées sans complétion. Relevés : perte de première tentative 31/31
+(1 escalade t2 sur `TransportError`, cumul **~481/482 sur dix-huit jeux**,
+même cause, même absorption H4.5) ; actions ACTION6 uniquement (22/22 —
+jeu `click`), aucune prédiction infirmée, 3 tentatives d'action invalide
+(refusées en les nommant), 1 retry de patch récupéré, 1 idéation
+d'ouverture (4 hypothèses), 23 évaluations caduques + 1 redemandée,
+0 observation inchangée ; **1 intervention du superviseur au seuil des
+20 actions** (sonde fraîche, curation appliquée : 5 tâches avant, 6 après)
+— **cinquième occurrence** du relevé « mécanisme sain, borné par le
+débit ». Aucune décision nouvelle. Jeux joués de la tranche : 18/25 ;
+prochain : `sc25-635fd71a`.

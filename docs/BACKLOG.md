@@ -1155,9 +1155,17 @@ nommant), 1 retry de patch récupéré, 1 idéation d'ouverture, 16 observations
 inchangées, 10 évaluations caduques + 1 redemandée ; 1 intervention du
 superviseur au seuil des 20 actions (sonde fraîche et curation appliquée) —
 quatrième occurrence « mécanisme sain, borné par le débit ». Améliorer :
-rien (aucune mesure fraîche ne désigne un mécanisme absent). Reste de la
-tranche : 8 jeux ; `tn36-ef4dde99` EN COURS (session du 2026-09-25,
-marqueur anti-collision — retiré au rapport).
+rien (aucune mesure fraîche ne désigne un mécanisme absent).
+`tn36-ef4dde99` joué dans la même session (0/7, 22 actions, RHAE 0,00,
+plafond de temps, scorecard `5198dcc6…` fermé, réconciliation exacte
+22 = 22, rapport `docs/rapports/u25-t2-tn36.md` ; actions ACTION6
+uniquement — jeu `click` —, aucune prédiction infirmée, 3 tentatives
+d'action invalide, 1 retry de patch récupéré, 23 évaluations caduques
++ 1 redemandée, 0 observation inchangée ; perte de première tentative
+31/31 avec 1 escalade t2, cumul ~481/482 sur dix-huit jeux ;
+1 intervention du superviseur au seuil des 20 actions — cinquième
+occurrence « mécanisme sain, borné par le débit »). Reste de la
+tranche : 7 jeux, prochain `sc25-635fd71a` (ordre du jour du 2026-09-17).
 
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond
