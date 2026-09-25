@@ -5511,3 +5511,21 @@ d'ouverture (4 hypothèses), 23 évaluations caduques + 1 redemandée,
 — **cinquième occurrence** du relevé « mécanisme sain, borné par le
 débit ». Aucune décision nouvelle. Jeux joués de la tranche : 18/25 ;
 prochain : `sc25-635fd71a`.
+
+**Suite de la session — sc25 joué (3e jeu de la session).** `sc25-635fd71a`
+(19e de l'ordre du jour), run `u25-t2-sc25`, plafond 2 400 s : **0/6 niveaux,
+20 actions, RHAE 0,00**, arrêt au plafond de temps, 27 tours, 30 appels,
+299 326 tokens de prompt, 10 803 générés, 1 134,0 s d'inférence cumulée ;
+scorecard `847cf6ee…` FERMÉ, réconciliation exacte (20 = 20,
+`divergences: []`) ; rapport `docs/rapports/u25-t2-sc25.md`. Niveau 1 :
+baseline 36 (baselines [36, 6, 32, 83, 143, 50], somme 350), 20 actions
+dépensées sans complétion. Relevés : perte de première tentative 32/32
+(zéro escalade, cumul **~513/514 sur dix-neuf jeux**, même cause, même
+absorption H4.5) ; actions diversifiées ACTION1–4/6 (7/2/1/5/5), aucune
+prédiction infirmée, 6 tentatives d'action invalide (refusées en les
+nommant), 2 retries de patch récupérés, 1 idéation d'ouverture
+(5 hypothèses), 18 évaluations caduques, 5 observations inchangées ;
+**1 intervention du superviseur au seuil des 20 actions** (sonde fraîche,
+curation appliquée : 12 tâches maintenues) — **sixième occurrence** du
+relevé « mécanisme sain, borné par le débit ». Aucune décision nouvelle.
+Jeux joués de la tranche : 19/25 ; prochain : `sk48-d8078629`.
