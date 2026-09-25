@@ -1156,7 +1156,8 @@ inchangées, 10 évaluations caduques + 1 redemandée ; 1 intervention du
 superviseur au seuil des 20 actions (sonde fraîche et curation appliquée) —
 quatrième occurrence « mécanisme sain, borné par le débit ». Améliorer :
 rien (aucune mesure fraîche ne désigne un mécanisme absent). Reste de la
-tranche : 8 jeux, prochain `tn36-ef4dde99` (ordre du jour du 2026-09-17).
+tranche : 8 jeux ; `tn36-ef4dde99` EN COURS (session du 2026-09-25,
+marqueur anti-collision — retiré au rapport).
 
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond
