@@ -1173,9 +1173,17 @@ actions diversifiées ACTION1–4/6, aucune prédiction infirmée,
 18 évaluations caduques, 5 observations inchangées ; perte de première
 tentative 32/32, cumul ~513/514 sur dix-neuf jeux ; 1 intervention du
 superviseur au seuil des 20 actions — sixième occurrence « mécanisme
-sain, borné par le débit »). Reste de la tranche : 6 jeux ;
-`sk48-d8078629` EN COURS (session du 2026-09-25, marqueur
-anti-collision — retiré au rapport).
+sain, borné par le débit »). Reste de la tranche : 6 jeux.
+`sk48-d8078629` joué dans la même session (0/8, 25 actions, RHAE 0,00,
+plafond de temps, scorecard `c0c9927e…` fermé, réconciliation exacte
+25 = 25, rapport `docs/rapports/u25-t2-sk48.md` ; actions diversifiées
+ACTION1–4, aucune prédiction infirmée, 0 tentative d'action invalide,
+1 retry de patch récupéré, 20 évaluations caduques + 2 redemandées,
+8 observations inchangées ; perte de première tentative 32/32, cumul
+~545/546 sur vingt jeux ; 1 intervention du superviseur au seuil des
+20 actions — septième occurrence « mécanisme sain, borné par le
+débit »). Reste de la tranche : 5 jeux, prochain `sb26-7fbdac44`
+(ordre du jour du 2026-09-17).
 
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond

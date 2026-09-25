@@ -5529,3 +5529,43 @@ nommant), 2 retries de patch récupérés, 1 idéation d'ouverture
 curation appliquée : 12 tâches maintenues) — **sixième occurrence** du
 relevé « mécanisme sain, borné par le débit ». Aucune décision nouvelle.
 Jeux joués de la tranche : 19/25 ; prochain : `sk48-d8078629`.
+
+**Suite et fin de session — sk48 joué (4e jeu de la session).**
+`sk48-d8078629` (20e de l'ordre du jour), run `u25-t2-sk48`, plafond
+2 400 s : **0/8 niveaux, 25 actions, RHAE 0,00**, arrêt au plafond de
+temps, 28 tours, 30 appels, 291 219 tokens de prompt, 13 120 générés,
+1 184,2 s d'inférence cumulée ; scorecard `c0c9927e…` FERMÉ,
+réconciliation exacte (25 = 25, `divergences: []`) ; rapport
+`docs/rapports/u25-t2-sk48.md`. Niveau 1 : baseline 61 (baselines
+[61, 177, 101, 103, 230, 181, 125, 92], somme 1 070), 25 actions
+dépensées sans complétion. Relevés : perte de première tentative 32/32
+(zéro escalade, cumul **~545/546 sur vingt jeux**, même cause, même
+absorption H4.5) ; actions diversifiées ACTION1–4 (5/9/10/1), aucune
+prédiction infirmée, 0 tentative d'action invalide, 1 retry de patch
+récupéré, 1 idéation d'ouverture (4 hypothèses), 20 évaluations caduques
++ 2 redemandées, 8 observations inchangées ; **1 intervention du
+superviseur au seuil des 20 actions** (sonde fraîche, curation appliquée :
+5 tâches maintenues) — **septième occurrence** du relevé « mécanisme
+sain, borné par le débit ».
+
+**Bilan de la session (4 jeux, aucun code modifié).** Campagne complète
+`make check` non due : aucun code modifié — session d'exécution et de
+suivi uniquement (clause de preuves U31, précédent des sessions des
+2026-09-22/23/24) ; écart nommé au titre du budget §4.3. Améliorer :
+rien — aucune mesure fraîche ne désigne un mécanisme absent, les relevés
+accumulent des occurrences d'observations déjà consignées (perte de
+première tentative, cause bloquée cas 4 ; superviseur borné par le débit,
+mécanisme sain, sept occurrences). Jeux joués de la tranche 2 : `ls20`,
+`tr87`, `re86`, `cd82`, `lp85`, `ka59`, `bp35`, `wa30`, `sp80`, `dc22`,
+`cn04`, `su15`, `s5i5`, `vc33`, `r11l`, `g50t`, `ft09`, `tn36`, `sc25`,
+`sk48` (20/25).
+
+**Où reprendre (boucle planifiée).** U31, cible campagne ARC tranche 2 :
+jouer les jeux suivants de l'ordre du jour (prochain : `sb26-7fbdac44`,
+sauf marqueur EN COURS au backlog — protocole anti-collision), une
+invocation par jeu, `run-id u25-t2-<code>`, plafonds : 80 actions/niveau,
+300 actions/jeu, 2 400 s/jeu, 1 500 000 tokens/jeu, 400 tours ; rapport
+committé après chaque jeu. Relevés ouverts à recouper : perte de première
+tentative (~545/546, correction de cause bloquée — déploiement Netlify du
+pont, cas 4) ; superviseur borné par le débit (sain, corroboré wa30,
+dc22, g50t, ft09, tn36, sc25 et sk48).
