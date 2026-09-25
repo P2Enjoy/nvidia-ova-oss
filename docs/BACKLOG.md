@@ -1205,8 +1205,8 @@ prédictions confirmées, 3 retries de patch récupérés, 1 curation,
 3 observations inchangées ; perte de première tentative 27/27, cumul
 ~420/421 sur seize jeux ; 1 intervention du superviseur au seuil des
 20 actions — troisième occurrence « mécanisme sain, borné par le débit »).
-Reste de la tranche : 9 jeux, prochain `ft09-0d8bbf25` (ordre du jour du
-2026-09-17).
+Reste de la tranche : 9 jeux ; `ft09-0d8bbf25` EN COURS (session du
+2026-09-25, marqueur anti-collision — retiré au rapport).
 
 **Itération du 2026-09-22 (session planifiée)** — jouer et observer, tranche 2 :
 `lp85-305b61c3` joué (5e de l'ordre du jour), run `u25-t2-lp85`, plafond
