@@ -1173,8 +1173,9 @@ actions diversifiées ACTION1–4/6, aucune prédiction infirmée,
 18 évaluations caduques, 5 observations inchangées ; perte de première
 tentative 32/32, cumul ~513/514 sur dix-neuf jeux ; 1 intervention du
 superviseur au seuil des 20 actions — sixième occurrence « mécanisme
-sain, borné par le débit »). Reste de la tranche : 6 jeux, prochain
-`sk48-d8078629` (ordre du jour du 2026-09-17).
+sain, borné par le débit »). Reste de la tranche : 6 jeux ;
+`sk48-d8078629` EN COURS (session du 2026-09-25, marqueur
+anti-collision — retiré au rapport).
 
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond
