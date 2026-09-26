@@ -1228,8 +1228,9 @@ récupérés, 1 idéation d'ouverture (5 hypothèses, 4 tâches),
 tentative 28/28 (zéro escalade), cumul ~655/656 sur vingt-quatre jeux ;
 1 intervention du superviseur au seuil des 20 actions (sonde fraîche,
 curation appliquée) — neuvième occurrence « mécanisme sain, borné par
-le débit »). Reste de la tranche : 1 jeu, prochain `lf52-271a04aa`
-(ordre du jour du 2026-09-17, dernier de la tranche).
+le débit »). Reste de la tranche : 1 jeu ; `lf52-271a04aa` EN COURS
+(session du 2026-09-26, marqueur anti-collision — retiré au rapport,
+dernier de la tranche).
 
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond
