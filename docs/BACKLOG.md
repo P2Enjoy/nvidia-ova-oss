@@ -1208,8 +1208,9 @@ patch récupéré, 1 idéation d'ouverture (4 hypothèses, 5 tâches),
 perte de première tentative 29/29 (zéro escalade), cumul ~600/601 sur
 vingt-deux jeux ; 1 intervention du superviseur au seuil des 20 actions
 (sonde fraîche, curation appliquée) — huitième occurrence « mécanisme
-sain, borné par le débit »). Reste de la tranche : 3 jeux, prochain
-`m0r0-492f87ba` (ordre du jour du 2026-09-17).
+sain, borné par le débit »). Reste de la tranche : 3 jeux ;
+`m0r0-492f87ba` EN COURS (session du 2026-09-26, marqueur
+anti-collision — retiré au rapport).
 
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond
