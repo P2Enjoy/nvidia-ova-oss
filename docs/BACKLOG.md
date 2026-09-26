@@ -1218,8 +1218,8 @@ patch récupérés, 1 idéation d'ouverture (5 hypothèses, 4 tâches),
 perte de première tentative 27/27 (zéro escalade), cumul ~627/628 sur
 vingt-trois jeux ; superviseur jamais atteint (12 actions < seuil 20) —
 onzième occurrence « seuil en actions inatteignable sous le débit du
-pont »). Reste de la tranche : 2 jeux, prochain `tu93-0768757b`
-(ordre du jour du 2026-09-17).
+pont »). Reste de la tranche : 2 jeux ; `tu93-0768757b` EN COURS
+(session du 2026-09-26, marqueur anti-collision — retiré au rapport).
 
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond
