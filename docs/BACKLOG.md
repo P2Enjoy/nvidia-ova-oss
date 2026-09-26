@@ -1198,8 +1198,8 @@ patch récupérés, 1 idéation d'ouverture (5 hypothèses, 4 tâches),
 prédiction déclenchée ; superviseur jamais atteint (17 actions < seuil
 20) — dixième occurrence du relevé « seuil en actions inatteignable sous
 le débit du pont ». Améliorer : rien (aucune mesure fraîche ne désigne un
-mécanisme absent). Reste de la tranche : 4 jeux, prochain `ar25-0c556536`
-(ordre du jour du 2026-09-17).
+mécanisme absent). Reste de la tranche : 4 jeux ; `ar25-0c556536` EN COURS
+(session du 2026-09-26, marqueur anti-collision — retiré au rapport).
 
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond
