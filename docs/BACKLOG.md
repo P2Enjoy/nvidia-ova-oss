@@ -1228,9 +1228,23 @@ récupérés, 1 idéation d'ouverture (5 hypothèses, 4 tâches),
 tentative 28/28 (zéro escalade), cumul ~655/656 sur vingt-quatre jeux ;
 1 intervention du superviseur au seuil des 20 actions (sonde fraîche,
 curation appliquée) — neuvième occurrence « mécanisme sain, borné par
-le débit »). Reste de la tranche : 1 jeu ; `lf52-271a04aa` EN COURS
-(session du 2026-09-26, marqueur anti-collision — retiré au rapport,
-dernier de la tranche).
+le débit »). Reste de la tranche : 1 jeu.
+`lf52-271a04aa` joué dans la même session (0/10, 16 actions, RHAE 0,00,
+plafond de temps, scorecard `cac12d1d…` fermé, réconciliation exacte
+16 = 16, rapport `docs/rapports/u25-t2-lf52.md` ; actions diversifiées
+ACTION1–4/6/7 (2/4/2/2/2/4), 2 tentatives d'action invalide, 5 retries
+de patch récupérés, 1 idéation d'ouverture (5 hypothèses, 5 tâches),
+9 évaluations caduques + 1 redemandée, 0 observation inchangée ; perte
+de première tentative 25/25 (zéro escalade), cumul ~680/681 sur
+vingt-cinq jeux ; superviseur jamais atteint (16 actions < seuil 20) —
+douzième occurrence « seuil en actions inatteignable sous le débit du
+pont »). **TRANCHE 2 TERMINÉE : 25/25 jeux joués**, rapports
+`docs/rapports/u25-t2-*.md` committés jeu par jeu. Prochaine session :
+dépouillement de la tranche 2 (les 25 rapports committés et les relevés
+du journal font foi ; les `runs/` fins des 5 jeux de cette session — sb26,
+ar25, m0r0, tu93, lf52 — sont sur machine éphémère et leurs compteurs clés
+sont consignés au journal), comparaison à la tranche 1, amélioration
+GÉNÉRIQUE seulement si les mesures en désignent une.
 
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond

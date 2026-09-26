@@ -5676,3 +5676,50 @@ d'ouverture (5 hypothèses, 4 tâches), 7 évaluations caduques,
 du relevé « mécanisme sain, borné par le débit ». Aucune décision
 nouvelle. Jeux joués de la tranche : 24/25 ; prochain : `lf52-271a04aa`
 (dernier de la tranche).
+
+**Suite et fin de session — lf52 joué (5e jeu de la session), TRANCHE 2
+TERMINÉE.** `lf52-271a04aa` (25e et dernier de l'ordre du jour), run
+`u25-t2-lf52`, plafond 2 400 s : **0/10 niveaux, 16 actions, RHAE 0,00**,
+arrêt au plafond de temps, 20 tours, 25 appels, 312 285 tokens de prompt,
+14 305 générés, 1 471,3 s d'inférence cumulée ; scorecard `cac12d1d…`
+FERMÉ, réconciliation exacte (16 = 16, `divergences: []`) ; rapport
+`docs/rapports/u25-t2-lf52.md`. Niveau 1 : baseline 32 (baselines
+[32, 81, 60, 71, 205, 148, 244, 109, 164, 225], somme 1 339), 16 actions
+dépensées sans complétion. Relevés : perte de première tentative 25/25
+(zéro escalade, cumul **~680/681 sur vingt-cinq jeux**, même cause, même
+absorption H4.5) ; actions diversifiées ACTION1–4/6/7 (2/4/2/2/2/4),
+2 tentatives d'action invalide, 5 retries de patch récupérés, 1 idéation
+d'ouverture (5 hypothèses, 5 tâches), 9 évaluations caduques
++ 1 redemandée, 0 observation inchangée ; superviseur jamais atteint
+(16 actions < seuil 20) — **douzième occurrence** du relevé « seuil en
+actions inatteignable sous le débit du pont ».
+
+**Bilan de la session (5 jeux, aucun code modifié) — TRANCHE 2 TERMINÉE
+(25/25).** Les cinq jeux de la session (sb26, ar25, m0r0, tu93, lf52) :
+0 niveau complété, 87 actions, RHAE 0,00 partout, arrêt au plafond de temps
+partout, 5 scorecards fermés, 5 réconciliations exactes. Données fines de
+cette machine (consignées ici car les `runs/` sont éphémères) : 17 actions
+invalides sur les 5 jeux — 16 « valeurs manquantes ou en trop », 1 « nom
+d'outil hors espace exposé » ; 2 interventions du superviseur au seuil des
+20 actions (ar25, tu93 — sonde fraîche et curation à chaque fois), 3 jeux
+sous le seuil (sb26 17, m0r0 12, lf52 16) ; 135/135 pertes de première
+tentative (2 escalades t2 sur sb26, `TransportError`), toutes absorbées
+H4.5. Campagne complète `make check` non due : aucun code modifié —
+session d'exécution et de suivi uniquement (clause de preuves U31,
+précédent des sessions des 2026-09-22/23/24/25) ; écart nommé au titre du
+budget §4.3. Améliorer : rien — aucune mesure fraîche ne désigne un
+mécanisme absent ; le dépouillement de tranche, lui, relève de la
+prochaine session (précédent de la tranche 1, suite 46 du 2026-09-05).
+
+**Où reprendre (boucle planifiée).** U31 : **dépouiller la tranche 2**,
+close ce jour (25/25 jeux, rapports `docs/rapports/u25-t2-*.md` committés
+jeu par jeu ; relevés par jeu dans le journal et le backlog). Attendu du
+dépouillement : agrégats de la tranche (actions, invalides et leurs
+motifs, retries de patch, gardes, interventions du superviseur, coûts),
+comparaison à la tranche 1 (161 invalides/646 actions — l'amélioration
+§H15.8 des paramètres annoncés a-t-elle porté ?), et amélioration
+GÉNÉRIQUE du harnais seulement si les mesures en désignent une
+(interdiction de benchmaxing, balayage §A5). Relevés ouverts à recouper :
+perte de première tentative (~680/681, correction de cause bloquée —
+déploiement Netlify du pont, cas 4) ; superviseur borné par le débit
+(sain, neuf interventions au seuil, douze occurrences sous le seuil).
