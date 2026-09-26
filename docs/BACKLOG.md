@@ -1208,9 +1208,18 @@ patch récupéré, 1 idéation d'ouverture (4 hypothèses, 5 tâches),
 perte de première tentative 29/29 (zéro escalade), cumul ~600/601 sur
 vingt-deux jeux ; 1 intervention du superviseur au seuil des 20 actions
 (sonde fraîche, curation appliquée) — huitième occurrence « mécanisme
-sain, borné par le débit »). Reste de la tranche : 3 jeux ;
-`m0r0-492f87ba` EN COURS (session du 2026-09-26, marqueur
-anti-collision — retiré au rapport).
+sain, borné par le débit »). Reste de la tranche : 3 jeux.
+`m0r0-492f87ba` joué dans la même session (0/6, 12 actions, RHAE 0,00,
+plafond de temps, scorecard `1a5354a1…` fermé, réconciliation exacte
+12 = 12, rapport `docs/rapports/u25-t2-m0r0.md` ; actions diversifiées
+ACTION1–6 (4/2/2/2/1/1), 9 tentatives d'action invalide, 4 retries de
+patch récupérés, 1 idéation d'ouverture (5 hypothèses, 4 tâches),
+9 évaluations caduques + 2 redemandées, 2 observations inchangées ;
+perte de première tentative 27/27 (zéro escalade), cumul ~627/628 sur
+vingt-trois jeux ; superviseur jamais atteint (12 actions < seuil 20) —
+onzième occurrence « seuil en actions inatteignable sous le débit du
+pont »). Reste de la tranche : 2 jeux, prochain `tu93-0768757b`
+(ordre du jour du 2026-09-17).
 
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond

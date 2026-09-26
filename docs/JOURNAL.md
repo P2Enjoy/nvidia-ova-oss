@@ -5640,3 +5640,21 @@ superviseur au seuil des 20 actions** (sonde fraîche, curation appliquée) —
 **huitième occurrence** du relevé « mécanisme sain, borné par le débit ».
 Aucune décision nouvelle. Jeux joués de la tranche : 22/25 ; prochain :
 `m0r0-492f87ba`.
+
+**Suite de la session — m0r0 joué (3e jeu de la session).** `m0r0-492f87ba`
+(23e de l'ordre du jour), run `u25-t2-m0r0`, plafond 2 400 s : **0/6 niveaux,
+12 actions, RHAE 0,00**, arrêt au plafond de temps, 24 tours, 28 appels,
+344 853 tokens de prompt, 12 278 générés, 1 370,6 s d'inférence cumulée ;
+scorecard `1a5354a1…` FERMÉ, réconciliation exacte (12 = 12,
+`divergences: []`) ; rapport `docs/rapports/u25-t2-m0r0.md`. Niveau 1 :
+baseline 30 (baselines [30, 111, 203, 26, 500, 237], somme 1 107),
+12 actions dépensées sans complétion. Relevés : perte de première tentative
+27/27 (zéro escalade, cumul **~627/628 sur vingt-trois jeux**, même cause,
+même absorption H4.5) ; actions diversifiées ACTION1–6 (4/2/2/2/1/1),
+9 tentatives d'action invalide (refusées en les nommant), 4 retries de
+patch récupérés, 1 idéation d'ouverture (5 hypothèses, 4 tâches),
+9 évaluations caduques + 2 redemandées, 2 observations inchangées ;
+superviseur jamais atteint (12 actions < seuil 20) — **onzième occurrence**
+du relevé « seuil en actions inatteignable sous le débit du pont ».
+Aucune décision nouvelle. Jeux joués de la tranche : 23/25 ; prochain :
+`tu93-0768757b`.
