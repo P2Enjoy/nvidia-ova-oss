@@ -1198,8 +1198,18 @@ patch récupérés, 1 idéation d'ouverture (5 hypothèses, 4 tâches),
 prédiction déclenchée ; superviseur jamais atteint (17 actions < seuil
 20) — dixième occurrence du relevé « seuil en actions inatteignable sous
 le débit du pont ». Améliorer : rien (aucune mesure fraîche ne désigne un
-mécanisme absent). Reste de la tranche : 4 jeux ; `ar25-0c556536` EN COURS
-(session du 2026-09-26, marqueur anti-collision — retiré au rapport).
+mécanisme absent). Reste de la tranche : 4 jeux.
+`ar25-0c556536` joué dans la même session (0/8, 20 actions, RHAE 0,00,
+plafond de temps, scorecard `b4b688a9…` fermé, réconciliation exacte
+20 = 20, rapport `docs/rapports/u25-t2-ar25.md` ; actions diversifiées
+ACTION1–6 (13/3/1/1/1/1), 2 tentatives d'action invalide, 1 retry de
+patch récupéré, 1 idéation d'ouverture (4 hypothèses, 5 tâches),
+20 évaluations caduques + 2 redemandées, 6 observations inchangées ;
+perte de première tentative 29/29 (zéro escalade), cumul ~600/601 sur
+vingt-deux jeux ; 1 intervention du superviseur au seuil des 20 actions
+(sonde fraîche, curation appliquée) — huitième occurrence « mécanisme
+sain, borné par le débit »). Reste de la tranche : 3 jeux, prochain
+`m0r0-492f87ba` (ordre du jour du 2026-09-17).
 
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond

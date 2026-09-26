@@ -5622,3 +5622,21 @@ committé après chaque jeu. Jeux joués de la tranche : `ls20`, `tr87`,
 (~571/572, correction de cause bloquée — déploiement Netlify du pont,
 cas 4) ; superviseur borné par le débit (sain, sept interventions au
 seuil, dix occurrences sous le seuil).
+
+**Suite de la session — ar25 joué (2e jeu de la session).** `ar25-0c556536`
+(22e de l'ordre du jour), run `u25-t2-ar25`, plafond 2 400 s : **0/8 niveaux,
+20 actions, RHAE 0,00**, arrêt au plafond de temps, 25 tours, 27 appels,
+273 652 tokens de prompt, 15 003 générés, 1 269,6 s d'inférence cumulée ;
+scorecard `b4b688a9…` FERMÉ, réconciliation exacte (20 = 20,
+`divergences: []`) ; rapport `docs/rapports/u25-t2-ar25.md`. Niveau 1 :
+baseline 32 (baselines [32, 50, 75, 37, 89, 159, 233, 73], somme 748),
+20 actions dépensées sans complétion. Relevés : perte de première tentative
+29/29 (zéro escalade, cumul **~600/601 sur vingt-deux jeux**, même cause,
+même absorption H4.5) ; actions diversifiées ACTION1–6 (13/3/1/1/1/1),
+2 tentatives d'action invalide (refusées en les nommant), 1 retry de patch
+récupéré, 1 idéation d'ouverture (4 hypothèses, 5 tâches), 20 évaluations
+caduques + 2 redemandées, 6 observations inchangées ; **1 intervention du
+superviseur au seuil des 20 actions** (sonde fraîche, curation appliquée) —
+**huitième occurrence** du relevé « mécanisme sain, borné par le débit ».
+Aucune décision nouvelle. Jeux joués de la tranche : 22/25 ; prochain :
+`m0r0-492f87ba`.
