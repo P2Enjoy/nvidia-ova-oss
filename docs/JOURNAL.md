@@ -5723,3 +5723,16 @@ GÉNÉRIQUE du harnais seulement si les mesures en désignent une
 perte de première tentative (~680/681, correction de cause bloquée —
 déploiement Netlify du pont, cas 4) ; superviseur borné par le débit
 (sain, neuf interventions au seuil, douze occurrences sous le seuil).
+
+**Écart de procédure nommé (session du 2026-09-26).** La lecture intégrale de
+`docs/CloudWorker.md` a été demandée en TOUT PREMIER appel d'outil de la
+session, mais dans le même geste qu'un premier diagnostic Git émis en
+parallèle (`git status`, `git log`, `git branch`) : l'ordre strict « lire
+d'abord, diagnostiquer ensuite » n'a donc pas été respecté à la lettre,
+même si aucune décision ni modification n'a précédé la lecture. Le document
+a été relu intégralement une seconde fois avant la clôture. Aucune
+conséquence mesurée : toutes les règles (annonce d'ouverture, rattachement
+`main`, identité, Docker, TLS, pile + seed, choix d'unité, preuves, garde)
+ont été appliquées. Rappel pour les sessions suivantes : la lecture de
+`docs/CloudWorker.md` se fait SEULE, avant tout autre appel, y compris un
+diagnostic lancé en parallèle.
