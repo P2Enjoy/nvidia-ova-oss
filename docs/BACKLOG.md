@@ -1218,8 +1218,18 @@ patch récupérés, 1 idéation d'ouverture (5 hypothèses, 4 tâches),
 perte de première tentative 27/27 (zéro escalade), cumul ~627/628 sur
 vingt-trois jeux ; superviseur jamais atteint (12 actions < seuil 20) —
 onzième occurrence « seuil en actions inatteignable sous le débit du
-pont »). Reste de la tranche : 2 jeux ; `tu93-0768757b` EN COURS
-(session du 2026-09-26, marqueur anti-collision — retiré au rapport).
+pont »). Reste de la tranche : 2 jeux.
+`tu93-0768757b` joué dans la même session (0/9, 22 actions, RHAE 0,00,
+plafond de temps, scorecard `1ba81b43…` fermé, réconciliation exacte
+22 = 22, rapport `docs/rapports/u25-t2-tu93.md` ; actions diversifiées
+ACTION1–4 (4/8/6/4), 0 tentative d'action invalide, 2 retries de patch
+récupérés, 1 idéation d'ouverture (5 hypothèses, 4 tâches),
+7 évaluations caduques, 0 observation inchangée ; perte de première
+tentative 28/28 (zéro escalade), cumul ~655/656 sur vingt-quatre jeux ;
+1 intervention du superviseur au seuil des 20 actions (sonde fraîche,
+curation appliquée) — neuvième occurrence « mécanisme sain, borné par
+le débit »). Reste de la tranche : 1 jeu, prochain `lf52-271a04aa`
+(ordre du jour du 2026-09-17, dernier de la tranche).
 
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond

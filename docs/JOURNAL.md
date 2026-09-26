@@ -5658,3 +5658,21 @@ superviseur jamais atteint (12 actions < seuil 20) — **onzième occurrence**
 du relevé « seuil en actions inatteignable sous le débit du pont ».
 Aucune décision nouvelle. Jeux joués de la tranche : 23/25 ; prochain :
 `tu93-0768757b`.
+
+**Suite de la session — tu93 joué (4e jeu de la session).** `tu93-0768757b`
+(24e de l'ordre du jour), run `u25-t2-tu93`, plafond 2 400 s : **0/9 niveaux,
+22 actions, RHAE 0,00**, arrêt au plafond de temps, 23 tours, 26 appels,
+254 119 tokens de prompt, 14 094 générés, 1 305,4 s d'inférence cumulée ;
+scorecard `1ba81b43…` FERMÉ, réconciliation exacte (22 = 22,
+`divergences: []`) ; rapport `docs/rapports/u25-t2-tu93.md`. Niveau 1 :
+baseline 19 (baselines [19, 16, 34, 42, 123, 80, 14, 23, 111], somme 462),
+22 actions dépensées sans complétion. Relevés : perte de première tentative
+28/28 (zéro escalade, cumul **~655/656 sur vingt-quatre jeux**, même cause,
+même absorption H4.5) ; actions diversifiées ACTION1–4 (4/8/6/4),
+0 tentative d'action invalide, 2 retries de patch récupérés, 1 idéation
+d'ouverture (5 hypothèses, 4 tâches), 7 évaluations caduques,
+0 observation inchangée ; **1 intervention du superviseur au seuil des
+20 actions** (sonde fraîche, curation appliquée) — **neuvième occurrence**
+du relevé « mécanisme sain, borné par le débit ». Aucune décision
+nouvelle. Jeux joués de la tranche : 24/25 ; prochain : `lf52-271a04aa`
+(dernier de la tranche).
