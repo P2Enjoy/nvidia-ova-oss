@@ -1182,8 +1182,24 @@ ACTION1–4, aucune prédiction infirmée, 0 tentative d'action invalide,
 8 observations inchangées ; perte de première tentative 32/32, cumul
 ~545/546 sur vingt jeux ; 1 intervention du superviseur au seuil des
 20 actions — septième occurrence « mécanisme sain, borné par le
-débit »). Reste de la tranche : 5 jeux ; `sb26-7fbdac44` EN COURS
-(session du 2026-09-26, marqueur anti-collision — retiré au rapport).
+débit »). Reste de la tranche : 5 jeux.
+
+**Itération du 2026-09-26 (session planifiée)** — jouer et observer, tranche 2 :
+`sb26-7fbdac44` joué (21e de l'ordre du jour), run `u25-t2-sb26`, plafond
+2 400 s : 0/8 niveaux, 17 actions, RHAE 0,00, arrêt au plafond de temps,
+scorecard `be28a8e7…` fermé, réconciliation exacte (17 = 17,
+`divergences: []`), rapport `docs/rapports/u25-t2-sb26.md`. Observations
+consignées au journal : perte de première tentative 26/26 (2 escalades t2
+sur `TransportError`, cumul ~571/572 sur vingt-et-un jeux, cause bloquée
+cas 4) ; actions diversifiées ACTION5/6/7 (4/7/6 — jeu `keyboard_click`),
+4 tentatives d'action invalide (refusées en les nommant), 4 retries de
+patch récupérés, 1 idéation d'ouverture (5 hypothèses, 4 tâches),
+3 évaluations caduques, 10 observations inchangées, aucune garde de
+prédiction déclenchée ; superviseur jamais atteint (17 actions < seuil
+20) — dixième occurrence du relevé « seuil en actions inatteignable sous
+le débit du pont ». Améliorer : rien (aucune mesure fraîche ne désigne un
+mécanisme absent). Reste de la tranche : 4 jeux, prochain `ar25-0c556536`
+(ordre du jour du 2026-09-17).
 
 **Itération du 2026-09-23 (session planifiée)** — jouer et observer, tranche 2 :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u25-t2-sp80`, plafond

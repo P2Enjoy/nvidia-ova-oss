@@ -5569,3 +5569,56 @@ committé après chaque jeu. Relevés ouverts à recouper : perte de première
 tentative (~545/546, correction de cause bloquée — déploiement Netlify du
 pont, cas 4) ; superviseur borné par le débit (sain, corroboré wa30,
 dc22, g50t, ft09, tn36, sc25 et sk48).
+
+## 2026-09-26 (session planifiée) — U31 : tranche 2 — sb26 joué (0/8, 17 actions, RHAE 0,00) ; perte de première tentative 26/26 (~571/572) ; superviseur sous le seuil (10e occurrence)
+
+**Environnement.** Machine éphémère rattachée à `main` (aucun commit local à
+sauver), identité posée, `.env` écrit et vérifié ignoré. Docker démarré
+directement (`dockerd` en arrière-plan, recette du journal). Docker Hub a
+rendu `429 Too Many Requests` sur `python:3.13-slim` : résorbé par relance
+avec attente progressive (3e tentative). Reconstruction de l'image derrière
+le proxy TLS : autorité CCR copiée dans `certs/` (procédure `certs/README.md`),
+`make up` et `make seed` verts, `llm-replay` et `arc-replay` `healthy`.
+Endpoint (`/api/version` 200) et API ARC vérifiés en lecture seule avant
+lancement (`sb26-7fbdac44` listé, baselines [18, 28, 18, 19, 31, 23, 58, 18],
+somme 213).
+
+**Jouer (U31, cible campagne ARC tranche 2).** `sb26-7fbdac44` (21e de
+l'ordre du jour), run `u25-t2-sb26`, plafond 2 400 s : **0/8 niveaux,
+17 actions, RHAE 0,00**, arrêt au plafond de temps, 22 tours, 26 appels,
+264 531 tokens de prompt, 14 658 générés, 1 327,4 s d'inférence cumulée ;
+scorecard `be28a8e7…` FERMÉ, réconciliation exacte (17 = 17,
+`divergences: []`) ; rapport `docs/rapports/u25-t2-sb26.md`. Niveau 1 :
+baseline 18, 17 actions dépensées sans complétion.
+
+**Observer.** (1) Perte de première tentative toujours systématique : 26/26
+(toutes récupérées, 2 escalades t2 sur `TransportError`), cumul **~571/572
+sur vingt-et-un jeux**, même cause (limite 40 s du pont), même absorption
+H4.5 ; la correction de cause reste bloquée (déploiement Netlify, cas 4).
+(2) Actions diversifiées ACTION5/6/7 (4/7/6 — jeu `keyboard_click`),
+4 tentatives d'action invalide (refusées en les nommant : `action6` sans
+coordonnées ×3, `action1` hors de l'espace d'outils exposé ×1), 4 retries
+de patch récupérés (clés de bloc JSON non conformes), 1 idéation
+d'ouverture (5 hypothèses, 4 tâches), 3 évaluations caduques,
+10 observations inchangées, aucune garde de prédiction déclenchée,
+0 continuation, 0 refus 413, 0 game over. (3) **Superviseur jamais atteint**
+(17 actions < seuil 20) — **dixième occurrence** du relevé « seuil en
+actions inatteignable sous le débit du pont » (sp80, cn04, su15, s5i5,
+vc33, r11l, puis interventions au seuil sur les jeux plus longs).
+
+**Améliorer : rien** — aucune mesure fraîche ne désigne un mécanisme absent ;
+les relevés accumulent des occurrences d'observations déjà consignées.
+Aucun code modifié.
+
+**Où reprendre (boucle planifiée).** U31, cible campagne ARC tranche 2 :
+jouer les jeux suivants de l'ordre du jour (prochain : `ar25-0c556536`,
+sauf marqueur EN COURS au backlog — protocole anti-collision), une
+invocation par jeu, `run-id u25-t2-<code>`, plafonds : 80 actions/niveau,
+300 actions/jeu, 2 400 s/jeu, 1 500 000 tokens/jeu, 400 tours ; rapport
+committé après chaque jeu. Jeux joués de la tranche : `ls20`, `tr87`,
+`re86`, `cd82`, `lp85`, `ka59`, `bp35`, `wa30`, `sp80`, `dc22`, `cn04`,
+`su15`, `s5i5`, `vc33`, `r11l`, `g50t`, `ft09`, `tn36`, `sc25`, `sk48`,
+`sb26` (21/25). Relevés ouverts à recouper : perte de première tentative
+(~571/572, correction de cause bloquée — déploiement Netlify du pont,
+cas 4) ; superviseur borné par le débit (sain, sept interventions au
+seuil, dix occurrences sous le seuil).
