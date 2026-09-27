@@ -1,8 +1,10 @@
 """Rendu texte des observations : la grille exacte, rien d'autre.
 
 @spec docs/BACKLOG.md U18 — Rendu texte, inspection, mémoire de frames
-@spec docs/SPEC_ARCAGI3.md §A4.1 (rendu canonique et ligne d'état), §A4.2 (coordonnées
-      (row, col) 0-basées), §A4.4 (rendu pur, sorties exactes)
+@spec docs/SPEC_ARCAGI3.md §A4.1 (rendu canonique, ligne d'état APRÈS la grille),
+      §A4.2 (coordonnées (row, col) 0-basées), §A4.4 (rendu pur, sorties exactes)
+@spec docs/BACKLOG.md U31 — ligne d'état après la grille (§H15.11 : le compteur
+      d'actions, volatil, ne doit pas précéder les ~8 200 tokens de grille)
 @spec docs/SPEC_ARCAGI3.md §A5.1 (direct-interaction : aucune interprétation ajoutée)
 
 Configuration AVO, reprise du billet NVIDIA : **texte seul**, chaque observation
@@ -53,7 +55,7 @@ def parser_grille(texte: str) -> Grille:
 def ligne_etat(
     niveau: int, score: int, actions_niveau: int, actions_disponibles: Sequence[str]
 ) -> str:
-    """Ligne d'état précédant la grille (§A4.1)."""
+    """Ligne d'état, rendue APRÈS la grille (§A4.1, §H15.11)."""
     actions = ",".join(actions_disponibles) or "(aucune)"
     return f"niveau={niveau} score={score} actions_niveau={actions_niveau} actions={actions}"
 
@@ -65,6 +67,11 @@ def rendre_observation(
     actions_niveau: int,
     actions_disponibles: Sequence[str],
 ) -> str:
-    """Observation complète : ligne d'état puis grille exacte (§A4.1)."""
-    entete = ligne_etat(niveau, score, actions_niveau, actions_disponibles)
-    return f"{entete}\n{rendre_grille(grille)}"
+    """Observation complète : grille exacte puis ligne d'état (§A4.1).
+
+    La ligne d'état SUIT la grille (§H15.11, mesuré le 2026-09-27) : son compteur
+    `actions_niveau` change à chaque action valide ; placé avant la grille, il
+    invalidait le cache de préfixe de la grille entière à chaque pas.
+    """
+    etat = ligne_etat(niveau, score, actions_niveau, actions_disponibles)
+    return f"{rendre_grille(grille)}\n{etat}"

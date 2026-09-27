@@ -11,7 +11,8 @@
 @spec docs/BACKLOG.md U27 — mode `state` de la boucle (§H15.7, §H15.8)
 @spec docs/BACKLOG.md U31 — archive des pas du mode `state` (§H15.10), schéma de Σ du
       contexte monté (§H15.9), refus de garde = pas blanc atomique (§H16.1),
-      `coupure_transport` dans la métrique `llm` (§H4.10, §H11.2)
+      `coupure_transport` dans la métrique `llm` (§H4.10, §H11.2),
+      ordre du message composé d'un pas — notes, observation, Σ, protocole (§H15.11)
 @spec docs/BACKLOG.md U30 — gardes de méthode dans les phases (§H16.1 garde
       documentaire, §H16.2 garde de prédiction, §H16.3 garde d'évaluation,
       §H16.4 garde de persistance, §H16.5 observabilité)
@@ -888,6 +889,11 @@ class BoucleAgent:
     ) -> list[dict[str, str]]:
         """Compose le prompt d'un pas : (P, Σₜ, Oₜ) + notes, O(1) par tour (§H15.1).
 
+        Ordre du contenu recomposé (§H15.11) : notes, observation et actions
+        disponibles, Σ, protocole — le moins volatil d'abord, pour que le cache
+        de préfixe de l'endpoint serve jusqu'à Σ. Les messages exceptionnels
+        (erreur nommée, rappel, superviseur, amorce, idéation) restent en tête.
+
         Sous gardes (§H16.2, §H16.3), le protocole exige la ligne `PREDICTION:` et,
         quand une prédiction antérieure attend sa qualification, la ligne
         `VERDICT:` — le bloc JSON à deux clés de §H15.1 reste inchangé. Sur le pas
@@ -901,10 +907,16 @@ class BoucleAgent:
                 protocole = (
                     f"{prompts.verdict_a_qualifier(self._prediction_courante)}\n\n{protocole}"
                 )
+        # §H15.11 : du moins volatil au plus volatil — notes, puis observation et
+        # actions disponibles, puis Σ, puis le protocole (adjacent à la réponse,
+        # position mesurée §H16.0.7). Mesuré (2026-09-27) : le cache de préfixe
+        # de l'endpoint ne sert que jusqu'au premier token modifié ; Σ en tête
+        # rendait froid le préremplissage entier (~10 500 tokens, dont ~8 200
+        # de grille) à chaque pas, même à observation inchangée, et le pont 443
+        # coupait chaque première tentative à 40 s.
+        etat_puis_protocole = f"État courant (Σ) :\n{self.etat.vers_json()}\n\n{protocole}"
         contenu = (
-            f"État courant (Σ) :\n{self.etat.vers_json()}\n\n"
-            f"{self.notes.pour_segment_frais()}\n\n"
-            f"{self._avec_observation(protocole)}"
+            f"{self.notes.pour_segment_frais()}\n\n{self._avec_observation(etat_puis_protocole)}"
         )
         # §H18.2 : le pas d'idéation ouvre sur son invite dédiée, qui subsume
         # l'amorce documentaire (elle demande davantage : plusieurs approches).

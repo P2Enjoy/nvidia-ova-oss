@@ -61,7 +61,7 @@ class TestRenduSurFramesReelles(unittest.TestCase):
         self.assertEqual(len(rendu.splitlines()), COTE)
         self.assertEqual(parser_grille(rendu), grille)
 
-    def test_l_observation_porte_l_etat_puis_la_grille_du_serveur(self) -> None:
+    def test_l_observation_porte_la_grille_du_serveur_puis_l_etat(self) -> None:
         debut = self._demarrer()
         observation = rendre_observation(
             debut.frames[-1].grille,
@@ -70,9 +70,10 @@ class TestRenduSurFramesReelles(unittest.TestCase):
             0,
             debut.actions_disponibles,
         )
-        premiere = observation.splitlines()[0]
-        self.assertIn("niveau=1", premiere)
-        self.assertIn("ACTION6", premiere)
+        # §A4.1 révisé (§H15.11) : la ligne d'état suit la grille.
+        derniere = observation.splitlines()[-1]
+        self.assertIn("niveau=1", derniere)
+        self.assertIn("ACTION6", derniere)
         self.assertEqual(len(observation.splitlines()), COTE + 1)
 
     def test_la_memoire_conserve_les_frames_transitoires_du_serveur(self) -> None:

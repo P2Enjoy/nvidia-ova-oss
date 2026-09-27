@@ -96,11 +96,21 @@ class TestLigneEtat(unittest.TestCase):
     def test_l_absence_d_action_est_dite(self) -> None:
         self.assertIn("actions=(aucune)", ligne_etat(1, 0, 0, []))
 
-    def test_l_observation_est_l_etat_puis_la_grille(self) -> None:
+    def test_l_observation_est_la_grille_puis_l_etat(self) -> None:
+        # §A4.1 révisé (§H15.11) : la ligne d'état, volatile, SUIT la grille.
         observation = rendre_observation(_grille(), 1, 0, 0, ["RESET"])
         lignes = observation.splitlines()
-        self.assertTrue(lignes[0].startswith("niveau=1"))
+        self.assertTrue(lignes[-1].startswith("niveau=1"))
         self.assertEqual(len(lignes), COTE + 1)
+        self.assertEqual(parser_grille("\n".join(lignes[:-1])), _grille())
+
+    def test_la_grille_inchangee_garde_un_prefixe_identique(self) -> None:
+        # §H15.11 : entre deux actions valides sur une grille inchangée, seul le
+        # compteur change — le préfixe (la grille) est identique octet à octet.
+        avant = rendre_observation(_grille(), 1, 0, 3, ["RESET"])
+        apres = rendre_observation(_grille(), 1, 0, 4, ["RESET"])
+        self.assertNotEqual(avant, apres)
+        self.assertEqual(avant.rsplit("\n", 1)[0], apres.rsplit("\n", 1)[0])
 
 
 class TestRegions(unittest.TestCase):

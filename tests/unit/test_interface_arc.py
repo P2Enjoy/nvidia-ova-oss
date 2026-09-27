@@ -178,7 +178,8 @@ class TestComptage(unittest.TestCase):
         interface, _ = _interface(_reponse(), _reponse())
         interface.demarrer()
         observation = interface.jouer("ACTION1")
-        self.assertIn("actions_niveau=1", observation.splitlines()[0])
+        # §A4.1 révisé (§H15.11) : la ligne d'état suit la grille.
+        self.assertIn("actions_niveau=1", observation.splitlines()[COTE])
 
     def test_reset_reste_jouable_sans_etre_declare(self) -> None:
         """§A5.2 : le fil ne déclare jamais RESET, le protocole le rend jouable."""
@@ -241,11 +242,12 @@ class TestEtatTerminal(unittest.TestCase):
 
 
 class TestObservation(unittest.TestCase):
-    def test_l_observation_porte_l_etat_puis_la_grille(self) -> None:
+    def test_l_observation_porte_la_grille_puis_l_etat(self) -> None:
+        # §A4.1 révisé (§H15.11) : la ligne d'état, volatile, SUIT la grille.
         interface, _ = _interface(_reponse())
         observation = interface.demarrer()
         lignes = observation.splitlines()
-        self.assertTrue(lignes[0].startswith("niveau=1"))
+        self.assertTrue(lignes[-1].startswith("niveau=1"))
         self.assertEqual(len(lignes), COTE + 1)
 
     def test_les_frames_transitoires_sont_annoncees_sans_etre_rendues(self) -> None:
