@@ -1156,7 +1156,10 @@ Amélioration générique désignée et **spécifiée avant le code** : §H15.11
 ARC après la grille, §A4.1 révisé). Reste de l'itération : code, tests
 unitaires (ordre et invariant de préfixe), cassettes régénérées, `make check`,
 `make build`, validation en réel sur un jeu — état `[~]` tant que ces preuves
-ne sont pas exécutées.
+ne sont pas exécutées. Code, tests et cassettes livrés et poussés ; `make
+check` VERT. Validation en réel : `ls20-9607627b` EN COURS, run
+`u31-h1511-ls20`, plafonds de la tranche 2 (80/300/2 400 s/1,5 M/400)
+(session du 2026-09-27, marqueur anti-collision — retiré au rapport).
 
 **Itération du 2026-09-25 (session planifiée)** — jouer et observer, tranche 2 :
 `ft09-0d8bbf25` joué (17e de l'ordre du jour), run `u25-t2-ft09`, plafond
