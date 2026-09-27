@@ -5799,3 +5799,54 @@ tests unitaires (ordre, invariant de préfixe), régénération des cassettes,
 campagne complète `make check` + `make build`, puis validation en réel sur un
 jeu (une exécution live) en relevant `prompt_eval_duration` et les pertes de
 première tentative.
+
+**Suite de la session — §H15.11 codée, prouvée, cassettes régénérées ; métrique
+`prefill_ms`/`generation_ms` livrée (§H11.2) ; validation en réel sur ls20.**
+Code : `_messages_etat` (notes → observation + actions → Σ → protocole),
+`rendre_observation` (grille puis ligne d'état) ; tests d'ordre et d'invariant
+de préfixe (`tests/unit/test_ordre_message_etat.py`), tests de rendu et
+d'interface adaptés ; 8 cassettes E2E régénérées par `make seed-e2e`
+(régénération vérifiée à l'identique) ; `make check` VERT (lint, mypy,
+920 unitaires, 157 intégration, 12 E2E), `make build` vert (Docker Hub a rendu
+`429` sur la première tentative, résorbé par relance ; la pile a été remontée
+depuis l'image existante, le dépôt étant monté). Complément désigné en cours
+de validation : la métrique `llm` ne portait pas la durée de préremplissage —
+`prompt_eval_count` rend le prompt entier, cache compris — ; `prefill_ms` et
+`generation_ms` ajoutés (§H11.2, test dédié), après le lancement du run
+ci-dessous, qui ne les porte donc pas.
+
+**Validation en réel — `ls20-9607627b`, run `u31-h1511-ls20`, plafonds de la
+tranche 2 (80/300/2 400 s/1,5 M/400).** 0/7 niveaux, **20 actions**, 22 tours,
+27 appels, 266 093 tokens de prompt, 13 377 générés, RHAE 0,00, arrêt au
+plafond de temps ; scorecard `c7e49c8b…` FERMÉ, réconciliation exacte
+(20 = 20, `divergences: []`) ; rapport `docs/rapports/u31-h1511-ls20.md`.
+Actions ACTION1–4 (9/3/4/4), 4 retries de patch récupérés, 15 évaluations
+caduques + 1 redemandée, 1 idéation, 1 intervention du superviseur au seuil
+des 20 actions (curation appliquée), 0 observation inchangée, 0 action
+invalide. **Mesure de l'effet : marginal sur ce jeu.** Première tentative
+encore perdue **30/30** (29 relances t1, 1 t2) ; paroi par appel 84,5 s en
+moyenne (53–213) contre 89 s en tranche 2, durée serveur par appel abouti
+44,8 s contre 48 ; 120 s par action contre 132 (tranche 2) et 100 (ls20 en
+tranche 2 sous 1 200 s). Lecture : sur ls20, chaque action a changé la grille
+(0 observation inchangée) et le froid restant — grille depuis la première
+cellule modifiée, plus Σ et protocole — est resté au-dessus du seuil de
+coupure, qui se déduit des mesures du matin : ~36 s × ~170 tokens/s ≈ 6 000
+tokens froids. La règle §H15.11 est juste (invariant prouvé, gain mesuré à
+queue changée) mais ne suffit pas seule quand la grille change tôt ; son
+effet réel par pas se lira désormais dans `prefill_ms`. L'archive de frames
+ne conservant pas les grilles (index seuls), la part de préfixe conservée
+n'est pas mesurable post-hoc sur ce run. Formulation §25 : **implémenté et
+vérifié** (preuves hors ligne, campagne complète) ; **effet en campagne non
+démontré** sur un jeu (un run, pas d'`observation inchangée`, sans
+`prefill_ms`).
+
+**Où reprendre (boucle planifiée).** U31 : jouer le prochain jeu de l'ordre du
+jour comme validation instrumentée (les runs portent désormais `prefill_ms`) —
+`run-id u31-h1511-<code>`, mêmes plafonds — et lire, par pas, `prefill_ms`
+contre `tokens_prompt` : si le préremplissage froid reste > ~6 000 tokens sur
+la plupart des pas, la coupure du pont ne se lève pas par l'ordre du message
+seul ; les leviers restants sont la correction côté pont (déploiement Netlify,
+cas 4) et, à concevoir SUR MESURE seulement, un rendu d'observation dont le
+préfixe est stable. Relevés ouverts : perte de première tentative (~710/711),
+superviseur borné par le débit (13 interventions au seuil). Le marqueur EN
+COURS de ls20 est retiré au backlog.

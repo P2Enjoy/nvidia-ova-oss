@@ -1155,11 +1155,19 @@ Amélioration générique désignée et **spécifiée avant le code** : §H15.11
 (ordre du message du pas : notes → observation → Σ → protocole ; ligne d'état
 ARC après la grille, §A4.1 révisé). Reste de l'itération : code, tests
 unitaires (ordre et invariant de préfixe), cassettes régénérées, `make check`,
-`make build`, validation en réel sur un jeu — état `[~]` tant que ces preuves
-ne sont pas exécutées. Code, tests et cassettes livrés et poussés ; `make
-check` VERT. Validation en réel : `ls20-9607627b` EN COURS, run
-`u31-h1511-ls20`, plafonds de la tranche 2 (80/300/2 400 s/1,5 M/400)
-(session du 2026-09-27, marqueur anti-collision — retiré au rapport).
+`make build`, validation en réel sur un jeu. Livré : code, tests d'ordre et
+d'invariant de préfixe, cassettes régénérées, `make check` VERT, `make build`
+vert ; métrique `llm` complétée de `prefill_ms`/`generation_ms` (§H11.2,
+seule lecture de l'effet réel). Validation en réel : `ls20-9607627b` joué,
+run `u31-h1511-ls20` (0/7, 20 actions, RHAE 0,00, plafond de temps,
+scorecard `c7e49c8b…` fermé, réconciliation exacte 20 = 20, rapport
+`docs/rapports/u31-h1511-ls20.md`) — **effet marginal sur ce jeu** :
+première tentative encore perdue 30/30, 84,5 s par appel contre 89, 120 s
+par action contre 132 ; 0 observation inchangée (chaque action a changé la
+grille tôt), froid restant au-dessus du seuil de coupure (~6 000 tokens
+déduits des mesures). Implémenté et vérifié hors ligne ; effet en campagne
+non démontré — à lire dans `prefill_ms` sur les jeux suivants (journal du
+jour, « Où reprendre »).
 
 **Itération du 2026-09-25 (session planifiée)** — jouer et observer, tranche 2 :
 `ft09-0d8bbf25` joué (17e de l'ordre du jour), run `u25-t2-ft09`, plafond
