@@ -694,6 +694,16 @@ durées, retries), par action (jeu, niveau, index, latence), par événement
 (continuation, 413, intervention superviseur, commit de lignée). Totaux dans
 `report.md`.
 
+La métrique `llm` porte, outre `duree_ms` (durée totale rendue par le serveur),
+les deux durées que le serveur distingue : `prefill_ms` (`prompt_eval_duration`,
+préremplissage des tokens NON servis par le cache de préfixe) et
+`generation_ms` (`eval_duration`). Motif, mesuré (journal 2026-09-27) : la
+validation en réel de l'ordre du message (§H15.11) ne se lit que là — le
+compte `prompt_eval_count` de la surface native rend le prompt ENTIER, cache
+compris, et ne dit rien de ce qui a été repayé ; seule la durée de
+préremplissage le dit. Compteurs du serveur, à zéro sur une réponse récupérée
+d'un flux coupé (§H4.10) ; aucun contenu.
+
 La boucle émet en outre, après chaque action VALIDE exécutée, la métrique
 `observation_inchangee` quand le CONTENU d'observation de l'environnement est
 STRICTEMENT identique à celui d'avant l'action (comparaison de chaînes, aucun

@@ -12,7 +12,8 @@
 @spec docs/BACKLOG.md U31 — archive des pas du mode `state` (§H15.10), schéma de Σ du
       contexte monté (§H15.9), refus de garde = pas blanc atomique (§H16.1),
       `coupure_transport` dans la métrique `llm` (§H4.10, §H11.2),
-      ordre du message composé d'un pas — notes, observation, Σ, protocole (§H15.11)
+      ordre du message composé d'un pas — notes, observation, Σ, protocole (§H15.11),
+      durées de préremplissage et de génération du serveur dans la métrique `llm` (§H11.2)
 @spec docs/BACKLOG.md U30 — gardes de méthode dans les phases (§H16.1 garde
       documentaire, §H16.2 garde de prédiction, §H16.3 garde d'évaluation,
       §H16.4 garde de persistance, §H16.5 observabilité)
@@ -381,6 +382,8 @@ class BoucleAgent:
             tokens_prompt=resultat.prompt_eval_count,
             tokens_generes=resultat.eval_count,
             duree_ms=resultat.total_duration_ms,
+            prefill_ms=resultat.prompt_eval_duration_ms,
+            generation_ms=resultat.eval_duration_ms,
             tronquee=resultat.tronquee,
             coupure_transport=resultat.coupure_transport,
             segment=self.contexte.segment,
@@ -580,6 +583,8 @@ class BoucleAgent:
                 tokens_prompt=resultat.prompt_eval_count,
                 tokens_generes=resultat.eval_count,
                 duree_ms=resultat.total_duration_ms,
+                prefill_ms=resultat.prompt_eval_duration_ms,
+                generation_ms=resultat.eval_duration_ms,
                 tronquee=resultat.tronquee,
                 coupure_transport=resultat.coupure_transport,
             )
@@ -966,6 +971,8 @@ class BoucleAgent:
             tokens_prompt=resultat.prompt_eval_count,
             tokens_generes=resultat.eval_count,
             duree_ms=resultat.total_duration_ms,
+            prefill_ms=resultat.prompt_eval_duration_ms,
+            generation_ms=resultat.eval_duration_ms,
             tronquee=resultat.tronquee,
             coupure_transport=resultat.coupure_transport,
             taille_prompt=taille,

@@ -19,6 +19,10 @@
 - Preuves : tests unitaires d'ordre et d'invariant de préfixe
   (`tests/unit/test_ordre_message_etat.py`), tests de rendu adaptés, cassettes
   E2E régénérées (`make seed-e2e`, régénération vérifiée à l'identique).
+- La métrique `llm` porte `prefill_ms` et `generation_ms` (durées du serveur,
+  H11.2) : `prompt_eval_count` rend le prompt entier cache compris, seule la
+  durée de préremplissage dit ce qui a été repayé — c'est la lecture de l'effet
+  de H15.11 en campagne.
 
 ### 2026-09-18 — U31 : construction des images sous sortie réseau limitée au TLS 443 (H2.4)
 
