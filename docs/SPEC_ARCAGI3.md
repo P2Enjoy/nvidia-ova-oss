@@ -156,9 +156,13 @@ game over) et branches (RESET, continuation).
 ## A4. Rendu texte et mémoire de frames
 
 **A4.1 — Observation** (billet NVIDIA : texte seul, grille exacte). Rendu canonique
-d'une grille : 64 lignes de 64 valeurs décimales séparées par des espaces, précédées
+d'une grille : 64 lignes de 64 valeurs décimales séparées par des espaces, SUIVIES
 d'une ligne d'état (`niveau, score, actions_du_niveau, actions_disponibles`). Aucune
-image, aucun autre enrichissement dans l'observation courante.
+image, aucun autre enrichissement dans l'observation courante. La ligne d'état suit
+la grille et ne la précède pas (§H15.11, mesuré le 2026-09-27) : son compteur
+`actions_du_niveau` change à chaque action valide et, placé en tête, il rendait
+froid le préremplissage de la grille entière (~8 200 tokens) à chaque pas, même
+quand la grille n'avait pas changé ; placée après, seule la ligne est repayée.
 
 L'interface déclare l'`empreinte_observation()` de §H11.2 : niveau, score,
 actions disponibles, grille exacte et nombre de frames transitoires du dernier

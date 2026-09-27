@@ -902,7 +902,8 @@ le module `avo.context.etat` restant inchangé et pur :
   monté par l'appelant (`Contexte.systeme`, défaut `prompts.SYSTEME`) : c'est la
   même surface qu'en mode `transcript`, et c'est elle qui permet à un adaptateur
   de tâche de fournir son contexte de tâche à K (§H16.1, `docs/SPEC_BANCS.md`
-  §S6.2) sans toucher au noyau ; le message utilisateur compose Σ sérialisé
+  §S6.2) sans toucher au noyau ; le message utilisateur compose — dans l'ordre
+  fixé par §H15.11 — Σ sérialisé
   (§H15.5), les notes
   (§H6.2, mêmes qu'une continuation), l'observation courante et les actions
   disponibles, et une invite de protocole (nouvelle constante `prompts.PROTOCOLE_ETAT`,
@@ -1123,6 +1124,58 @@ sans perte pour le diagnostic et pour retrouver après coup ce que Σ n'a pas
 projeté. Elle n'entre JAMAIS dans un prompt : la propriété O(1) de §H15.1 est
 intacte, et le préremplissage ne la voit pas. Sans workspace (boucle éprouvée sur
 un environnement factice), rien n'est écrit.
+
+**H15.11 — Ordre du message composé d'un pas : le moins volatil d'abord, Σ en
+queue.** Mesure qui désigne la règle (journal 2026-09-27, dépouillement de la
+campagne U25 tranche 2 — 25 jeux sous `qwen3.8:27b`) : 89 s par appel abouti
+dont 48 s d'inférence, la différence étant la première tentative perdue au pont
+443 (~680 appels sur 681, §H4.5 absorbant chaque perte) ; et la cause de cette
+perte est le préremplissage FROID, mesurée le même jour sur le vrai endpoint,
+avec un message générique de 9 256 tokens (`num_predict: 1`) :
+
+| Requête | Préfixe | Issue |
+|---|---|---|
+| prompt neuf | froid | coupé par le pont à 37,8 s (`500`, « the edge function timed out ») ; sa relance 2 s plus tard aboutit en 16,7 s avec 315 ms de `prompt_eval_duration` — l'origine a terminé le préremplissage malgré la coupure et l'a mis en cache |
+| même prompt, à l'identique | chaud | 1,1 s |
+| tête changée (~500 tokens) | froid dès la tête | coupé à 36,3 s : tout est repayé |
+| queue changée (~500 tokens), tête inchangée | chaud jusqu'à la queue | 8,6 s (4,9 s de `prompt_eval_duration`) |
+
+Le préremplissage froid coûte donc ~170 tokens/s sur cet endpoint, et le cache
+de préfixe ne sert que jusqu'au PREMIER token qui change. Or le message du pas
+(§H15.8) s'ouvrait sur Σ, qui change à chaque pas : tout ce qui suivait — notes,
+observation (~8 200 tokens pour une grille 64×64, soit 78 % des ~10 500 tokens
+d'un pas), invite de protocole — était repayé à froid à chaque tour, y compris
+sur les pas dont l'observation n'avait pas changé (69 pas à observation
+inchangée sur les 14 jeux qui portent ce compteur, ~25 % des pas), et y compris
+sur les relances d'un pas refusé (§H15.4), dont Σ et observation sont identiques.
+
+Règle : dans le contenu recomposé d'un pas, les parties s'ordonnent de la moins
+volatile à la plus volatile — (1) les notes (§H6.2) ; (2) l'observation courante
+et les actions disponibles (§H15.8) ; (3) Σ sérialisé (§H15.5) ; (4) l'invite de
+protocole (§H15.9), qui reste adjacente à la réponse — sa position est mesurée
+(§H16.0.7) et ne change pas. Les messages exceptionnels — erreur nommée d'un pas
+refusé (§H16.0.6), rappel de patch annulé (§H15.8), message du superviseur
+(§H10.3), amorce documentaire (§H16.0.7), invite d'idéation (§H18.2) — gardent
+leur place en TÊTE du message : leur position est mesurée pour la saillance, et
+ils sont rares ; quand l'un d'eux apparaît, le pas repaie son préfixe, et c'est
+accepté. Aucune partie ne change de contenu ni de forme : seule la position de Σ
+passe de la tête à la queue, juste avant le protocole. Même principe côté rendu
+ARC : la ligne d'état, qui porte le compteur d'actions du niveau (il change à
+chaque action valide), SUIT la grille au lieu de la précéder (§A4.1 révisé) —
+sans quoi la grille entière restait froide à chaque pas.
+
+Invariant, vérifié par test : deux pas consécutifs dont notes et observation
+sont identiques produisent un message utilisateur dont le préfixe jusqu'à Σ est
+identique octet à octet ; et l'ordre notes → observation → Σ → protocole est
+tenu. La propriété O(1) de §H15.1 est intacte, le contrat de réponse (§H15.1)
+inchangé, et la règle ne nomme aucun environnement (§A5.1). Les cassettes de
+rejeu, appariées sur le corps de requête (§H4.7), se régénèrent par les
+commandes du dépôt (`make seed-e2e`), jamais à la main. Attendu, à mesurer en
+campagne (U31) : les tokens froids d'un pas passent de ~10 500 à ~1 300 sur un
+pas à observation inchangée et, sur un pas à observation changée, au préfixe de
+la grille jusqu'à sa première cellule modifiée plus ~1 300 ; le pont ne coupe
+plus les pas dont le préremplissage froid tient sous 40 s, et la relance d'un
+pas refusé ne repaie plus que l'erreur nommée en tête.
 
 ## H16. Gardes de méthode dans les phases — la structure impose ce que le prompt conseille
 

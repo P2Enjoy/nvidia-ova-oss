@@ -5736,3 +5736,66 @@ conséquence mesurée : toutes les règles (annonce d'ouverture, rattachement
 ont été appliquées. Rappel pour les sessions suivantes : la lecture de
 `docs/CloudWorker.md` se fait SEULE, avant tout autre appel, y compris un
 diagnostic lancé en parallèle.
+
+## 2026-09-27 (session planifiée) — U31 : dépouillement de la tranche 2 ; cause de la perte de première tentative MESURÉE (préremplissage froid, Σ en tête du message) ; amélioration §H15.11 spécifiée avant le code
+
+**Environnement.** Machine éphémère rattachée à `main` (aucun commit local à
+sauver), identité posée, `.env` écrit et vérifié ignoré. Docker démarré
+directement (`dockerd` en arrière-plan). Autorité du proxy copiée dans `certs/`,
+`make up` et `make seed` verts, `llm-replay` et `arc-replay` `healthy`.
+Écart de procédure nommé : le tout premier appel d'outil a joint un `git status`
+et un `ls` du fichier à la lecture de `docs/CloudWorker.md` ; aucune décision
+ni modification n'a précédé la lecture intégrale.
+
+**Observer — dépouillement de la tranche 2 (25 rapports `u25-t2-*.md`, relevés
+du journal).** Rapport agrégé committé : `docs/rapports/u25-t2-final.md`.
+Chiffres clés : 0/183 niveaux, 454 actions, 665 appels, 6,95 M tokens de
+prompt, 8,9 h d'inférence pour 16,5 h de jeu ; sur les 23 jeux à 2 400 s :
+18,7 actions/jeu, **132 s par action, 89 s par appel dont 48 s d'inférence**.
+Comparé à la tranche 1 (`qwen3.6:35b`, 1 200 s) : 29,5 actions/jeu et 41,5 s
+par action — le débit par action est divisé par trois malgré un budget doublé.
+Deux composantes : inférence par appel 28 s → 48 s, et ~41 s perdus par appel
+hors inférence (première tentative coupée par le pont, ~680/681). Actions
+invalides : 93 sur 19 jeux documentés (0,26/action) contre 161/646 (0,25) en
+tranche 1 — l'annonce des paramètres (§H15.8) n'a pas réduit le taux, les
+motifs ont changé (valeurs manquantes ou en trop plutôt que noms inventés).
+Retries de patch : 52/19 jeux, tous récupérés. Superviseur : 11 interventions
+au seuil, 14 jeux sous le seuil. Observations inchangées : 69 pas sur 14 jeux
+(~25 % des pas).
+
+**Mesure de plomberie sur le vrai endpoint (4 appels séquentiels,
+`num_predict: 1`, message générique de 9 256 tokens, aucun jeu).** Prompt neuf :
+coupé par le pont à 37,8 s (`500 the edge function timed out`) ; relance 2 s
+après : 200 en 16,7 s avec 315 ms de `prompt_eval_duration` — l'origine a
+terminé le préremplissage malgré la coupure et l'a mis en cache. Même prompt à
+l'identique : 1,1 s. Tête changée (~500 tokens) : coupé à 36,3 s — tout est
+repayé. Queue changée (~500 tokens), tête inchangée : 8,6 s (4,9 s de
+`prompt_eval_duration`). Conclusion : préremplissage froid ~170 tokens/s ; le
+cache ne sert que jusqu'au premier token modifié. Or le message du pas `state`
+s'ouvrait sur Σ (change à chaque pas), suivi des notes, de l'observation
+(~8 200 tokens de grille, 78 % du prompt) et du protocole : tout était froid à
+chaque tour, même à observation inchangée et même sur les relances d'un pas
+refusé. La « perte de première tentative » n'est donc pas un défaut du pont
+seul : c'est le coût d'un préremplissage froid de ~10 500 tokens que le pont
+rend visible en le coupant à 40 s.
+
+**Décision (autonomie, point tranché) — amélioration GÉNÉRIQUE désignée par la
+mesure, spécifiée AVANT le code : §H15.11.** Ordre du contenu recomposé d'un
+pas : notes → observation + actions → Σ → protocole (le protocole reste
+adjacent à la réponse, position mesurée §H16.0.7 ; les messages exceptionnels
+gardent la tête, rares et mesurés pour la saillance). Côté rendu ARC (§A4.1
+révisé), la ligne d'état — qui porte le compteur d'actions du niveau — suit la
+grille. Option écartée : déplacer aussi le protocole en tête pour tout mettre
+en cache — gain ~700 tokens/pas, mais position du protocole non mesurée sous ce
+changement ; « Exactitude avant tout » : on ne touche pas à ce qui est mesuré.
+Aucun contenu ne change, aucun terme d'environnement, balayage §A5 sans objet
+nouveau. Attendu : tokens froids par pas ~10 500 → ~1 300 à observation
+inchangée, et jusqu'à la première cellule modifiée sinon. Cassettes à régénérer
+par `make seed-e2e`. La correction côté pont (déploiement Netlify, cas 4) reste
+souhaitable mais n'est plus la seule voie.
+
+**Suite de la session.** Coder §H15.11 (`_messages_etat`, `rendre_observation`),
+tests unitaires (ordre, invariant de préfixe), régénération des cassettes,
+campagne complète `make check` + `make build`, puis validation en réel sur un
+jeu (une exécution live) en relevant `prompt_eval_duration` et les pertes de
+première tentative.

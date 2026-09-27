@@ -1142,6 +1142,22 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-27 (session planifiée)** — observer et améliorer :
+**tranche 2 dépouillée**, rapport agrégé `docs/rapports/u25-t2-final.md`
+(0/183 niveaux, 454 actions, 665 appels ; 132 s par action et 89 s par appel
+dont 48 s d'inférence sur les 23 jeux à 2 400 s, contre 41,5 s par action en
+tranche 1 ; actions invalides 0,26/action, taux inchangé malgré §H15.8 ;
+11 interventions du superviseur ; 69 pas à observation inchangée sur 14 jeux).
+Cause de la perte de première tentative MESURÉE sur le vrai endpoint
+(journal du jour) : préremplissage froid ~170 tokens/s, cache de préfixe
+inopérant parce que Σ — qui change à chaque pas — ouvrait le message.
+Amélioration générique désignée et **spécifiée avant le code** : §H15.11
+(ordre du message du pas : notes → observation → Σ → protocole ; ligne d'état
+ARC après la grille, §A4.1 révisé). Reste de l'itération : code, tests
+unitaires (ordre et invariant de préfixe), cassettes régénérées, `make check`,
+`make build`, validation en réel sur un jeu — état `[~]` tant que ces preuves
+ne sont pas exécutées.
+
 **Itération du 2026-09-25 (session planifiée)** — jouer et observer, tranche 2 :
 `ft09-0d8bbf25` joué (17e de l'ordre du jour), run `u25-t2-ft09`, plafond
 2 400 s : 0/6 niveaux, 20 actions, RHAE 0,00, arrêt au plafond de temps,
