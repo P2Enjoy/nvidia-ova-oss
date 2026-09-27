@@ -95,6 +95,12 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
   activable explicitement. Départage fait par mesure, pas par principe : A/B sur
   rejeu (U27, `docs/rapports/ab_mode_contexte.md`) puis A/B en conditions réelles
   (U28, `docs/rapports/ab-u28-state.md`).
+  En mode `state`, le message du pas s'ordonne du moins volatil au plus volatil
+  — notes, observation et actions disponibles, Σ, protocole — pour que le cache
+  de préfixe de l'endpoint serve jusqu'à Σ (H15.11, mesuré le 2026-09-27 : le
+  cache ne sert que jusqu'au premier token modifié, et Σ en tête rendait froid
+  le préremplissage entier à chaque pas) ; la ligne d'état ARC suit la grille
+  pour le même motif (A4.1).
 - Gardes de méthode dans les phases (H16, U30) : la structure impose ce que le
   prompt conseille — artefact documentaire (`WORKING.md`, ou `hypotheses` de Σ)
   avant de déverrouiller l'action, prédiction requise par le schéma des outils

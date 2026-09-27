@@ -2,6 +2,24 @@
 
 ## [Non publié]
 
+### 2026-09-27 — U31 : message du pas `state` ordonné pour le cache de préfixe (H15.11, A4.1)
+
+- Dépouillement de la campagne ARC tranche 2 (`docs/rapports/u25-t2-final.md`) :
+  89 s par appel dont 48 s d'inférence, la différence étant la première
+  tentative coupée par le pont 443 pendant un préremplissage FROID de
+  ~10 500 tokens. Mesuré sur le vrai endpoint : le cache de préfixe ne sert que
+  jusqu'au premier token modifié (~170 tokens/s à froid, 1,1 s à chaud, 8,6 s
+  quand seule la queue change) — et Σ, qui change à chaque pas, ouvrait le
+  message.
+- Le contenu recomposé d'un pas s'ordonne désormais notes → observation et
+  actions → Σ → protocole (le protocole reste adjacent à la réponse, les
+  messages exceptionnels restent en tête) ; la ligne d'état ARC, qui porte le
+  compteur d'actions, suit la grille au lieu de la précéder. Aucun contenu ne
+  change ; aucun terme d'environnement.
+- Preuves : tests unitaires d'ordre et d'invariant de préfixe
+  (`tests/unit/test_ordre_message_etat.py`), tests de rendu adaptés, cassettes
+  E2E régénérées (`make seed-e2e`, régénération vérifiée à l'identique).
+
 ### 2026-09-18 — U31 : construction des images sous sortie réseau limitée au TLS 443 (H2.4)
 
 - La construction des images échouait au premier `apt-get update` sur les
