@@ -5850,3 +5850,15 @@ cas 4) et, à concevoir SUR MESURE seulement, un rendu d'observation dont le
 préfixe est stable. Relevés ouverts : perte de première tentative (~710/711),
 superviseur borné par le débit (13 interventions au seuil). Le marqueur EN
 COURS de ls20 est retiré au backlog.
+
+**Écarts de procédure nommés (session du 2026-09-27).** (1) Le tout premier
+appel d'outil a joint un diagnostic Git (`git status`, `git log`, `git branch`)
+et un `ls` du fichier à la localisation de `docs/CloudWorker.md` ; la lecture
+intégrale a été le deuxième appel, avant toute lecture de backlog et toute
+modification. Même écart que la session du 2026-09-26 : la lecture se fait
+SEULE, en premier. (2) Un `pkill -f 'make up'` a été employé pour arrêter ma
+propre boucle de relance de la pile : l'option `-f` a fait correspondre la
+ligne de commande du shell courant, qui a été tué (sortie 144). Le §2.1 ter
+interdit ce motif ; la règle vaut pour tout mot, pas seulement `vite` : cibler
+un PID, jamais une ligne de commande. Aucune conséquence sur le dépôt ni sur
+la pile ; le document a été relu intégralement avant la clôture.
