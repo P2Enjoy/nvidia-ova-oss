@@ -9,6 +9,8 @@
       §H8.3 (arrêt sur état terminal)
 @spec docs/BACKLOG.md U30 — garde de prédiction (§H16.2 : paramètre `prediction`
       des outils d'action, acheminé tronqué vers `reasoning` du fil officiel)
+@spec docs/BACKLOG.md U31 — changements depuis l'observation précédente rendus au pas
+      (§A4.5 `rendu_changements`, §H15.8 méthode facultative de l'environnement)
 
 **Contrainte fondatrice** (billet NVIDIA, VISTA) : l'agent reçoit les actions
 disponibles *sans* description des règles ni du but. Ce module est le seul endroit où
@@ -27,7 +29,7 @@ from dataclasses import dataclass, field
 from typing import Any, Final
 
 from avo.arc.client import ArcClient, EtatArc, FrameResult, TypeFrame
-from avo.arc.memoire import MemoireFrames
+from avo.arc.memoire import MemoireFrames, rendre_difference
 from avo.arc.rendu import COTE, rendre_grille, rendre_observation
 from avo.loop.etats import Evenement
 from avo.tools.registre import Outil, RegistreOutils
@@ -136,6 +138,9 @@ class InterfaceArc:
         self.comptage = Comptage()
         self.guid: str | None = None
         self.dernier: FrameResult | None = None
+        # §A4.5 : résultat précédent, pour rendre les changements depuis
+        # l'observation précédente — deux résultats, jamais plus.
+        self._precedent: FrameResult | None = None
         self._derniere_issue: IssueArc | None = None
 
     # ------------------------------------------------------------------ départ
@@ -197,6 +202,29 @@ class InterfaceArc:
             f"actions={actions} transitoires={transitoires}\n"
             f"{rendre_grille(frame.grille)}"
         )
+
+    def rendu_changements(self) -> str:
+        """Changements entre la frame de décision précédente et la courante (§A4.5).
+
+        Méthode FACULTATIVE du contrat `Environnement` (§H15.8) : la boucle la lit
+        par `getattr`. Le rendu est factuel et borné — la différence de cellules
+        de §A4.3, partagée avec l'outil `diff` —, il nomme la première observation
+        et l'absence de changement, et n'interprète rien (§A5.1).
+        """
+        if self.dernier is None:
+            raise RuntimeError("partie non démarrée : appeler demarrer() d'abord")
+        if self._precedent is None:
+            return "première observation : rien à comparer"
+        avant = (self._precedent.frame_de_decision or self._precedent.frames[-1]).grille
+        apres = (self.dernier.frame_de_decision or self.dernier.frames[-1]).grille
+        difference = rendre_difference(avant, apres)
+        if self.dernier.niveau != self._precedent.niveau:
+            compte = difference.split("\n", 1)[0]
+            return (
+                f"niveau {self._precedent.niveau} → {self.dernier.niveau} : "
+                f"nouvelle grille ({compte})"
+            )
+        return difference
 
     def actions_disponibles(self) -> Sequence[str]:
         return () if self.dernier is None else self.dernier.actions_disponibles
@@ -332,6 +360,7 @@ class InterfaceArc:
             self.comptage.actions_jeu += 1
         if resultat.niveau != niveau_avant:
             self.comptage.actions_niveau = 0
+        self._precedent = self.dernier
         self.dernier = resultat
         if self.registre is not None:
             self.registre.synchroniser(ETIQUETTE_ACTION, self.outils())

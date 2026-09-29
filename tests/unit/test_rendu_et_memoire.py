@@ -242,7 +242,10 @@ class TestDiff(unittest.TestCase):
         apres[5][7] = 3
         memoire.enregistrer_tour([("decision", apres)])
         rendu = memoire.diff(1, 2)
-        self.assertIn("1 cellules modifiées", rendu)
+        # Révisé le 2026-09-29 (§A4.5) : le rendu de différence est partagé avec le
+        # bloc « Changements depuis l'observation précédente » et s'accorde au
+        # nombre — une cellule, « 1 cellule modifiée ».
+        self.assertIn("1 cellule modifiée", rendu)
         self.assertIn("(5,7):0→3", rendu)
 
     def test_la_liste_est_bornee_et_le_reste_est_compte(self) -> None:

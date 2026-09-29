@@ -2,6 +2,29 @@
 
 ## [Non publié]
 
+### 2026-09-29 — U31 : les changements observés sont rendus au pas, pas seulement demandés (H15.8, A4.5)
+
+- Mesuré sur `tr87-cd924810` : à chaque pas le modèle émet la même prédiction
+  générique puis « VERDICT: caduque » (7 sur 11 actions) en écrivant qu'il ne
+  peut pas savoir si l'action a eu un effet — le message du pas `state` ne
+  recompose que l'observation courante, sans la précédente ni outil
+  d'inspection : la règle VISTA « énoncer les changements observés », exigée
+  par le message système, était structurellement inapplicable.
+- Le bloc d'observation composé par la boucle porte, entre l'observation et
+  les actions disponibles, « Changements depuis l'observation précédente : »
+  suivi du rendu de la méthode FACULTATIVE `rendu_changements()` de
+  l'environnement (lue par `getattr`, comme `empreinte_observation`). Un
+  environnement sans la méthode compose comme avant.
+- Interface ARC : `rendu_changements()` compare les grilles de décision des
+  deux derniers résultats — première observation nommée, absence de changement
+  nommée, changement de niveau nommé, différence de cellules bornée
+  (`DIFF_CELLULES_MAX`). Le rendu de différence est une fonction PURE partagée
+  avec l'outil `diff` (§A4.3), qui s'accorde désormais au nombre (« 1 cellule
+  modifiée »). Aucun indice de jeu, aucune interprétation.
+- Preuves : `tests/unit/test_rendu_changements.py` (rendu pur et borne, cinq cas
+  de l'interface, position du bloc dans la boucle, absence sans la méthode,
+  bloc identique sur la relance d'un pas refusé) ; test `diff` existant révisé.
+
 ### 2026-09-29 — U31 : métrique `prefixe_pas`, lecture hors ligne du froid de préremplissage (H11.2)
 
 - Mesuré sur `tr87-cd924810` (run `u31-h1511-tr87`) : quand le pont coupe la

@@ -4,6 +4,8 @@
 @spec docs/SPEC_ARCAGI3.md §A4.3 (mémoire sans perte, `inspect`, `read_pixels`,
       `diff`), §A4.2 (coordonnées (row, col)), §A4.4 (outils purs)
 @spec docs/SPEC_ARCAGI3.md §A1.2 (l'inspection ne coûte aucune action)
+@spec docs/BACKLOG.md U31 — rendu de différence PUR partagé avec le bloc « Changements
+      depuis l'observation précédente » (§A4.5, §H15.8)
 
 Mécanisme repris de VISTA : **toute** frame reçue est conservée, décision comme
 transitoire, et l'agent décide seul de ce qu'il veut revoir. C'est ce qui remplace la
@@ -56,6 +58,32 @@ def valider_region(region: Region) -> Region:
             f"région mal ordonnée : ({ligne0},{colonne0}) doit précéder ({ligne1},{colonne1})"
         )
     return region
+
+
+def rendre_difference(avant: Sequence[Sequence[int]], apres: Sequence[Sequence[int]]) -> str:
+    """Cellules qui changent entre deux grilles (§A4.3, §A4.5) — rendu PUR et partagé.
+
+    Une seule façon de dire qu'une cellule a changé : l'outil `diff` et le bloc
+    « Changements depuis l'observation précédente » l'emploient tous deux. La
+    liste est bornée : au-delà, le compte suffit — une énumération de milliers
+    de cellules noierait l'information utile et le budget de contexte avec.
+    """
+    changements = [
+        (ligne, colonne, avant[ligne][colonne], apres[ligne][colonne])
+        for ligne in range(COTE)
+        for colonne in range(COTE)
+        if avant[ligne][colonne] != apres[ligne][colonne]
+    ]
+    if not changements:
+        return "aucune cellule modifiée"
+    listees = changements[:DIFF_CELLULES_MAX]
+    details = " ".join(
+        f"({ligne},{colonne}):{ancien}→{nouveau}" for ligne, colonne, ancien, nouveau in listees
+    )
+    restants = len(changements) - len(listees)
+    suite = "" if not restants else f" … et {restants} autres"
+    pluriel = "s" if len(changements) > 1 else ""
+    return f"{len(changements)} cellule{pluriel} modifiée{pluriel}\n{details}{suite}"
 
 
 def rendre_region(grille: Sequence[Sequence[int]], region: Region) -> str:
@@ -176,26 +204,7 @@ class MemoireFrames:
         """
         avant = self.frame(tour_a).grille
         apres = self.frame(tour_b).grille
-        changements = [
-            (ligne, colonne, avant[ligne][colonne], apres[ligne][colonne])
-            for ligne in range(COTE)
-            for colonne in range(COTE)
-            if avant[ligne][colonne] != apres[ligne][colonne]
-        ]
-        if not changements:
-            return f"tours {tour_a} → {tour_b} : aucune cellule modifiée"
-        listees = changements[:DIFF_CELLULES_MAX]
-        details = " ".join(
-            f"({ligne},{colonne}):{ancien}→{nouveau}" for ligne, colonne, ancien, nouveau in listees
-        )
-        suite = (
-            ""
-            if len(changements) == len(listees)
-            else f" … et {len(changements) - len(listees)} autres"
-        )
-        return (
-            f"tours {tour_a} → {tour_b} : {len(changements)} cellules modifiées\n{details}{suite}"
-        )
+        return f"tours {tour_a} → {tour_b} : {rendre_difference(avant, apres)}"
 
     def resume(self) -> dict[str, Any]:
         """Résumé journalisable : des compteurs, aucune grille (§H4.6)."""

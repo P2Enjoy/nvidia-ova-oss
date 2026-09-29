@@ -14,7 +14,8 @@
       `coupure_transport` dans la métrique `llm` (§H4.10, §H11.2),
       ordre du message composé d'un pas — notes, observation, Σ, protocole (§H15.11),
       durées de préremplissage et de génération du serveur dans la métrique `llm` (§H11.2),
-      métrique `prefixe_pas` — préfixe commun et partie de divergence du message de pas (§H11.2)
+      métrique `prefixe_pas` — préfixe commun et partie de divergence du message de pas (§H11.2),
+      bloc « Changements depuis l'observation précédente » du bloc d'observation (§H15.8, §A4.5)
 @spec docs/BACKLOG.md U30 — gardes de méthode dans les phases (§H16.1 garde
       documentaire, §H16.2 garde de prédiction, §H16.3 garde d'évaluation,
       §H16.4 garde de persistance, §H16.5 observabilité)
@@ -1467,9 +1468,16 @@ class BoucleAgent:
             )
             for nom in self.environnement.actions_disponibles()
         )
-        etat = (
-            f"Observation :\n{self.environnement.observation()}\n\nActions disponibles : {annonces}"
-        )
+        etat = f"Observation :\n{self.environnement.observation()}"
+        # §H15.8 : les changements observés sont RENDUS, pas seulement demandés
+        # — quand l'environnement sait les rendre (méthode facultative, lue par
+        # getattr comme `empreinte_observation`). Mesuré (2026-09-29, tr87) : sans
+        # eux, le pas `state` ne voit que l'observation courante et le modèle
+        # qualifie chaque prédiction de caduque faute de pouvoir la vérifier.
+        rendu_changements = getattr(self.environnement, "rendu_changements", None)
+        if rendu_changements is not None:
+            etat = f"{etat}\n\nChangements depuis l'observation précédente :\n{rendu_changements()}"
+        etat = f"{etat}\n\nActions disponibles : {annonces}"
         return f"{etat}\n\n{invite}"
 
     def _action_demandee(self, resultat: Any) -> Any | None:
