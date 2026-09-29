@@ -1142,6 +1142,24 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-29, suite (session planifiée)** — jouer et observer avec
+les deux instruments : `re86-8af5384d` joué (3e de l'ordre du jour), run
+`u31-h1511-re86`, plafonds de la tranche 2 : 0/8 niveaux, 14 actions, RHAE
+0,00, plafond de temps, scorecard `5f4e4827…` fermé, réconciliation exacte
+14 = 14, rapport `docs/rapports/u31-h1511-re86.md` (ACTION1–5 3/2/6/1/2,
+0 action invalide, 2 retries de patch, 1 réponse tronquée à 4 096 tokens avec
+résumé de coupure, 1 superviseur « corrections en rafale »). **Effet du bloc
+de changements mesuré** : verdicts 5 confirmées, 10 contredites, **0 caduque**
+(16/24 sur tr87 sans le bloc), 17/17 réponses décrivent les changements, Σ
+porte des hypothèses concrètes par action ; contrepartie 964 tokens générés
+par appel (266), 117 s par appel (78,6), 14 actions au lieu de 24. **`prefixe_pas`
+mesuré** : divergence au début de la grille sur 10/17 messages (préfixe commun
+3 566–3 993 caractères sur ~15 000) — le froid de ~7 500 tokens par pas est
+structurel à la grille, pas à l'ordre du message. Les deux mécanismes passent
+« implémentés et vérifiés en campagne » (un jeu). Rien de nouveau codé dans
+cette itération. Prochain jeu : `cd82-fb555c5d` (journal du jour, « Où
+reprendre »).
+
 **Itération du 2026-09-29 (session planifiée)** — jouer, observer, améliorer :
 `tr87-cd924810` joué (2e de l'ordre du jour) en validation instrumentée, run
 `u31-h1511-tr87`, plafonds de la tranche 2 : 0/6 niveaux, 24 actions, RHAE

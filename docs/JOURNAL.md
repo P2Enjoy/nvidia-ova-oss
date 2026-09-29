@@ -5977,3 +5977,75 @@ status`, `git branch` et un `ls` du fichier à la localisation de
 toute décision, toute lecture de backlog et toute modification. Même écart que
 les sessions des 2026-09-26 et 2026-09-27.
 
+## 2026-09-29 (session planifiée, suite) — U31 : re86 joué avec le bloc de changements et `prefixe_pas` (0/8, 14 actions) ; caduques 16/24 → 0/14 ; froid de préremplissage structurel à la grille (divergence au début de l'observation sur 10/17 messages)
+
+**Environnement.** Même machine, `main` propre et à jour, Docker et pile
+toujours debout et `healthy`, seed contrôlé, endpoint et API ARC joignables.
+Itération ouverte par la lecture intégrale de `docs/CloudWorker.md`, seule.
+
+**Jouer — `re86-8af5384d` (3e de l'ordre du jour), run `u31-h1511-re86`,
+plafonds de la tranche 2, code du jour (bloc « Changements depuis
+l'observation précédente » et métrique `prefixe_pas` actifs).** 0/8 niveaux,
+**14 actions** (baseline 26 au niveau 1), 15 tours, 19 appels dont 1 tronqué
+par la limite de sortie, 195 487 tokens de prompt, 18 315 générés, 1 618 s
+d'inférence pour 2 455 s de jeu, RHAE 0,00, arrêt au plafond de temps ;
+scorecard `5f4e4827…` FERMÉ, réconciliation exacte (14 = 14, `divergences: []`) ;
+rapport `docs/rapports/u31-h1511-re86.md`. Actions ACTION1–5 (3/2/6/1/2),
+0 action invalide, 2 retries de patch récupérés (une réponse tronquée sans
+bloc JSON, un bloc aux mauvaises clés), 0 observation inchangée, 1 idéation
+d'ouverture, 1 résumé de coupure (§H17), 1 intervention du superviseur au
+motif « corrections en rafale : 6 passages consécutifs en Bug-Fixing » à
+l'action 13 (sonde fraîche, curation appliquée). Perte de première tentative
+19/21 (coût ~1 s/appel, cause close — relevé tenu pour mémoire seulement).
+
+**Observer 1 — effet du bloc de changements : le mécanisme fait ce qu'il
+devait.** Verdicts sur les 17 réponses archivées : **5 confirmées, 10
+contredites, 0 caduque** (tr87, sans le bloc : 16 caduques sur 24). Les 17
+réponses décrivent des cellules ou des changements ; Σ accumule des hypothèses
+concrètes sur l'effet de chaque action (déplacements quantifiés d'une
+structure, inverses l'une de l'autre, effets « complexes » nommés comme tels
+quand la prédiction est contredite) — c'est la boucle VISTA prédiction →
+observation → révision, jusqu'ici inopérante en mode `state`. Les 10
+contradictions ont déclenché autant de passages en Bug-Fixing et le
+superviseur au 6e consécutif : le harnais révise, il ne tourne plus à vide.
+**Contrepartie mesurée** : 964 tokens générés par appel en moyenne (266 sur
+tr87), 70,6 s de génération par appel (20,7), paroi 117 s par appel (78,6) ;
+un appel a atteint `num_predict` 4 096 (313 s, résumé de coupure) ; **14
+actions dans 2 400 s contre 24** — le modèle écrit désormais une analyse des
+changements avant son bloc, et elle est longue. Sur un seul jeu, cette
+mesure ne désigne pas encore de correctif : la longueur des réponses se
+relit sur les jeux suivants avant toute règle (« Exactitude avant tout » :
+le raisonnement n'est pas un coût à couper, la troncature en est un).
+
+**Observer 2 — `prefixe_pas` tranche la question ouverte la veille.** 17
+messages : `observation` 10, `tete` 3 (superviseur, erreurs nommées), `notes`
+3 (message suivant une tête : divergence au 1er caractère), `premier` 1. Sur
+les 10 messages à divergence dans l'observation, le préfixe commun vaut
+3 566–3 993 caractères sur ~15 000 (24–29 %) — exactement le début de la
+grille, constant d'un pas à l'autre : **la grille change dans ses premières
+lignes à chaque pas**. Seuls le message système et les notes sont servis par
+le cache ; les ~11 000 caractères suivants (~7 500 tokens : grille, bloc de
+changements, actions, Σ, protocole) sont repayés à froid, ce qui rejoint les
+~45 s de froid par pas déduits de la paroi sur tr87. Le froid est donc
+STRUCTUREL au rendu de la grille sur ces jeux, pas à l'ordre du message :
+§H15.11 est juste et ne peut rien de plus. Le levier restant est un rendu
+d'observation dont le préfixe est stable quand la grille change tôt — à
+concevoir sur mesure et à mesurer, jamais par indice de jeu — ou l'acceptation
+du coût, le budget de temps étant la seule chose qu'il tronque.
+
+**Améliorer.** Rien de nouveau codé dans cette itération : les deux mécanismes
+livrés le matin sont maintenant **implémentés et vérifiés en campagne** sur un
+jeu (effet mesuré ci-dessus) ; `make check` et `make build` de la session
+restent la campagne complète du code courant, inchangé depuis.
+
+**Où reprendre (boucle planifiée).** U31 : jouer le jeu suivant de l'ordre du
+jour (`cd82-fb555c5d`), `run-id u31-h1511-<code>`, mêmes plafonds, et relever
+(a) le taux de verdicts et la longueur des réponses (964 tokens/appel sur
+re86 : si la longueur se confirme et tronque encore, concevoir une règle
+GÉNÉRIQUE de forme de réponse — analyse bornée avant le bloc — spécifiée
+avant le code) ; (b) `prefixe_pas` — si la divergence tombe encore au début
+de la grille, le froid est acquis comme structurel et le rendu à préfixe
+stable devient l'unité à spécifier. Relevé ouvert : superviseur (1
+intervention, motif corrections en rafale — nouveau motif, cohérent avec la
+révision active).
+
