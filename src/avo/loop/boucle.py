@@ -13,7 +13,8 @@
       contexte monté (§H15.9), refus de garde = pas blanc atomique (§H16.1),
       `coupure_transport` dans la métrique `llm` (§H4.10, §H11.2),
       ordre du message composé d'un pas — notes, observation, Σ, protocole (§H15.11),
-      durées de préremplissage et de génération du serveur dans la métrique `llm` (§H11.2)
+      durées de préremplissage et de génération du serveur dans la métrique `llm` (§H11.2),
+      métrique `prefixe_pas` — préfixe commun et partie de divergence du message de pas (§H11.2)
 @spec docs/BACKLOG.md U30 — gardes de méthode dans les phases (§H16.1 garde
       documentaire, §H16.2 garde de prédiction, §H16.3 garde d'évaluation,
       §H16.4 garde de persistance, §H16.5 observabilité)
@@ -69,6 +70,7 @@ from avo.llm.client import (
 )
 from avo.loop import prompts
 from avo.loop.etats import Evenement, Phase, suivant
+from avo.loop.prefixe import mesurer_prefixe
 from avo.memory.notes import GUIDE, WORKING, Notes
 from avo.memory.workspace import Workspace
 from avo.supervisor import Superviseur
@@ -328,6 +330,9 @@ class BoucleAgent:
         #: le transcript n'y serait jamais lu — la remise est UNE fois, puis c'est
         #: le modèle qui décide de ce qui en survit dans Σ ou ses notes.
         self._message_superviseur: str | None = None
+        # §H11.2 : message utilisateur du pas précédent, pour la métrique
+        # `prefixe_pas` — longueurs seules journalisées, jamais le contenu.
+        self._contenu_pas_precedent: str | None = None
         #: Mode `state` (§H16.3) : verdicts manquants consécutifs pour la même
         #: prédiction, avant l'issue prudente.
         self._echecs_verdict = 0
@@ -919,10 +924,10 @@ class BoucleAgent:
         # rendait froid le préremplissage entier (~10 500 tokens, dont ~8 200
         # de grille) à chaque pas, même à observation inchangée, et le pont 443
         # coupait chaque première tentative à 40 s.
-        etat_puis_protocole = f"État courant (Σ) :\n{self.etat.vers_json()}\n\n{protocole}"
-        contenu = (
-            f"{self.notes.pour_segment_frais()}\n\n{self._avec_observation(etat_puis_protocole)}"
-        )
+        bloc_etat = f"État courant (Σ) :\n{self.etat.vers_json()}"
+        etat_puis_protocole = f"{bloc_etat}\n\n{protocole}"
+        bloc_notes = self.notes.pour_segment_frais()
+        contenu = f"{bloc_notes}\n\n{self._avec_observation(etat_puis_protocole)}"
         # §H18.2 : le pas d'idéation ouvre sur son invite dédiée, qui subsume
         # l'amorce documentaire (elle demande davantage : plusieurs approches).
         if ideation:
@@ -950,6 +955,23 @@ class BoucleAgent:
         # refusée serait perdue en silence, le prompt étant recomposé à neuf.
         if rappel_annulation is not None:
             contenu = f"{rappel_annulation}\n\n{contenu}"
+        # §H11.2 : métrique `prefixe_pas` — où le cache de préfixe se rompt entre
+        # ce message et le précédent. Les repères sont les offsets réels des
+        # parties dans le message composé, têtes exceptionnelles comprises ;
+        # seules des longueurs et un nom de partie sont journalisés.
+        debut_notes = contenu.index(bloc_notes)
+        debut_observation = contenu.index("Observation :\n", debut_notes)
+        debut_etat = contenu.index(bloc_etat, debut_observation)
+        reperes = {
+            "notes": debut_notes,
+            "observation": debut_observation,
+            "etat": debut_etat,
+            "protocole": debut_etat + len(bloc_etat) + 2,
+        }
+        self._metrique(
+            "prefixe_pas", **mesurer_prefixe(self._contenu_pas_precedent, contenu, reperes)
+        )
+        self._contenu_pas_precedent = contenu
         # §H15.8 : le message système est celui du contexte monté par l'appelant
         # (défaut `prompts.SYSTEME`) — même surface qu'en mode `transcript`, et la
         # seule par laquelle un adaptateur fournit son contexte de tâche (§H16.1).

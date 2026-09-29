@@ -2,6 +2,21 @@
 
 ## [Non publié]
 
+### 2026-09-29 — U31 : métrique `prefixe_pas`, lecture hors ligne du froid de préremplissage (H11.2)
+
+- Mesuré sur `tr87-cd924810` (run `u31-h1511-tr87`) : quand le pont coupe la
+  première tentative, la tentative aboutie trouve le préfixe chaud
+  (`prefill_ms` ≈ 310 ms sur chaque pas) — l'origine achève le préremplissage
+  pendant la coupure ; le froid réel se lit dans la paroi (~38 s coupés plus
+  ~8 s d'attente), sans dire OÙ le cache s'est rompu.
+- La boucle émet, en mode `state`, la métrique `prefixe_pas` par message
+  composé (relances comprises) : `caracteres`, `prefixe_commun` avec le message
+  précédent, et `divergence` — la partie (tête, notes, observation, Σ,
+  protocole, aucune, premier) où tombe le premier caractère qui change. Aucun
+  contenu journalisé ; aucun comportement modifié.
+- Preuves : `tests/unit/test_prefixe_pas.py` (fonctions pures, une métrique par
+  message, divergence dans Σ à observation inchangée, en tête sur une relance).
+
 ### 2026-09-27 — U31 : message du pas `state` ordonné pour le cache de préfixe (H15.11, A4.1)
 
 - Dépouillement de la campagne ARC tranche 2 (`docs/rapports/u25-t2-final.md`) :
