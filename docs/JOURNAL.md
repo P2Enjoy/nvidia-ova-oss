@@ -6049,3 +6049,39 @@ stable devient l'unité à spécifier. Relevé ouvert : superviseur (1
 intervention, motif corrections en rafale — nouveau motif, cohérent avec la
 révision active).
 
+## 2026-09-29 (session planifiée, troisième itération) — U31 : section « Inférence par appel et cache de préfixe » du rapport de run (A7.3) ; rapports tr87 et re86 régénérés
+
+**Environnement.** Itération ouverte par la lecture intégrale de
+`docs/CloudWorker.md`, seule, en premier appel d'outil ; `main` propre et à
+jour, Docker et pile debout, `.env` ignoré. Aucune exécution live dans cette
+itération : la session en a déjà joué deux (tr87, re86) et `CLAUDE_PROJECT.md`
+n'en admet qu'une par session planifiée au titre du plafond de parallélisme.
+
+**Unité et motif mesuré.** U31, volet « observer » : les sessions des
+2026-09-27 et 2026-09-29 ont recalculé à la main, depuis `metrics.jsonl`, les
+mêmes agrégats absents de `report.md` — tokens générés et durée par appel,
+préremplissage, débit de génération, répartition de `prefixe_pas`, verdicts
+caduques — et les `runs/` sont éphémères : ce qui n'est pas dans le rapport
+committé est perdu. Amélioration générique, spécifiée avant le code (§A7.3
+amendé) : la section « Inférence par appel et cache de préfixe », calculée
+depuis les métriques persistées ; une famille absente se dit « aucune »,
+jamais zéro ; des lectures, aucune décision.
+
+**Livré.** `avo.arc.rapport.inference_par_appel`, insérée après « Coûts » ;
+tests (`tests/unit/test_rapport.py` : agrégats, familles absentes, ordre des
+divergences ; test des sections révisé). Les deux rapports de la session
+sont régénérés par le vrai chemin de code sur leurs `runs/` : tr87 — 265,6
+tokens générés par appel, 29,3 s par appel, préremplissage 0,31 s sur 29
+appels, 12,8 tokens/s, 16 caduques ; re86 — 964 tokens par appel (max 4 096),
+85,2 s, 0,31 s sur 18 appels, 13,7 tokens/s, `prefixe_pas` 17 (observation
+10, tête 3, notes 3, premier 1), part médiane du préfixe commun 23,8 %. Les
+chiffres reproduisent ceux calculés à la main plus tôt dans la session.
+
+**Preuves.** `make check` VERT (lint, mypy, 945 unitaires, 157 intégration,
+12 E2E), `make build` vert. Formulation §25 : implémenté et vérifié.
+
+**Où reprendre (boucle planifiée).** Inchangé : U31, jouer `cd82-fb555c5d`
+(`run-id u31-h1511-<code>`, mêmes plafonds) et lire, dans le rapport
+désormais, la longueur des réponses, le débit, la répartition de
+`prefixe_pas` et les verdicts (entrée précédente, « Où reprendre »).
+

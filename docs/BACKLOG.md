@@ -1142,6 +1142,14 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-29, troisième (session planifiée)** — améliorer
+l'observation : section « Inférence par appel et cache de préfixe » du rapport
+de run (§A7.3, calculée depuis les métriques `llm`, `prefixe_pas`, `garde` ;
+« aucune » plutôt que zéro), `tests/unit/test_rapport.py` étendu, rapports
+tr87 et re86 régénérés par le vrai chemin de code. `make check` VERT, `make
+build` vert. Implémenté et vérifié. Aucune exécution live (deux déjà jouées
+dans la session). Prochain jeu : `cd82-fb555c5d`.
+
 **Itération du 2026-09-29, suite (session planifiée)** — jouer et observer avec
 les deux instruments : `re86-8af5384d` joué (3e de l'ordre du jour), run
 `u31-h1511-re86`, plafonds de la tranche 2 : 0/8 niveaux, 14 actions, RHAE
