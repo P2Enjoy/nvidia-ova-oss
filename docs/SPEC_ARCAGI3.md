@@ -435,6 +435,22 @@ rapport à zéro partout). Les lignes de partie — actions dépensées, tours j
 durée cumulée de jeu — restent celles des jeux menés à leur terme ; lorsque des jeux
 ont été refusés, le rapport nomme explicitement que ces lignes ne les couvrent pas.
 
+Le rapport porte aussi une section « Inférence par appel et cache de préfixe »,
+calculée depuis les métriques persistées du run (§H11.2), pour que les mesures qui
+guident la boucle U31 survivent au `runs/` éphémère (motif, mesuré : les sessions
+des 2026-09-27 et 2026-09-29 ont recalculé les mêmes agrégats à la main, run
+après run) : sur les métriques `llm` — tokens générés par appel (moyenne et
+maximum), durée serveur par appel (moyenne), préremplissage moyen et médian
+(`prefill_ms`, sur les appels qui le portent), débit de génération (tokens
+générés par seconde de `generation_ms`) ; sur les métriques `prefixe_pas` —
+nombre de messages composés, répartition par `divergence` (dans l'ordre : tête,
+notes, observation, Σ, protocole, aucune, premier) et part médiane du préfixe
+commun (`prefixe_commun / caracteres`, en pour cent, sur les messages qui ont un
+précédent) ; sur les métriques `garde` — évaluations caduques et redemandes.
+Quand un run ne porte aucune métrique d'une famille, la ligne le dit (« aucune »)
+au lieu d'afficher zéro : un zéro se lirait comme une mesure. Ce sont des
+lectures, jamais des décisions : la section ne qualifie rien.
+
 ## A8. Plan de tests ARC
 
 **A8.1 — Unitaires** : rendu A4.1 (sorties exactes sur fixtures), coordonnées A4.2,
