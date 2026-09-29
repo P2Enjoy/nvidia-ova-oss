@@ -1142,6 +1142,30 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-29 (session planifiée)** — jouer, observer, améliorer :
+`tr87-cd924810` joué (2e de l'ordre du jour) en validation instrumentée, run
+`u31-h1511-tr87`, plafonds de la tranche 2 : 0/6 niveaux, 24 actions, RHAE
+0,00, plafond de temps, scorecard `316e8101…` fermé, réconciliation exacte
+24 = 24, rapport `docs/rapports/u31-h1511-tr87.md` (ACTION1–4 5/8/6/5,
+0 action invalide, 3 retries de patch, 0 observation inchangée, 16 évaluations
+caduques, 1 superviseur au seuil des 20 actions ; perte de première tentative
+28/29, cumul ~739/740). Observé : `prefill_ms` ≈ 310 ms sur 29/29 appels (la
+tentative aboutie est toujours chaude) ; froid réel ~7 700 tokens par pas
+déduit de la paroi (~45 s), constant ; génération 12,8 tokens/s. Sonde de
+plomberie après le run : après la coupure du pont l'origine achève le
+préremplissage mais ne poursuit pas la génération — la coupure coûte ~1 s par
+appel, **cause de la perte de première tentative CLOSE** (c'était le
+préremplissage froid, jamais une perte). Sur les pas archivés : même
+prédiction générique à chaque pas puis « caduque » (16/24), le modèle n'ayant
+ni l'observation précédente ni outil pour comparer. Livré (spécifié avant le
+code, `make check` VERT, `make build` vert, cassettes régénérées) : métrique
+`prefixe_pas` (§H11.2, `tests/unit/test_prefixe_pas.py`) et bloc « Changements
+depuis l'observation précédente » (§H15.8, §A4.5, `rendu_changements`
+facultatif, différence de grilles ARC partagée avec `diff`,
+`tests/unit/test_rendu_changements.py`). Implémenté et vérifié hors ligne ;
+effet en campagne à lire au prochain jeu (`re86-8af5384d`) : distribution de
+`divergence` et taux de caduques (journal du jour, « Où reprendre »).
+
 **Itération du 2026-09-27 (session planifiée)** — observer et améliorer :
 **tranche 2 dépouillée**, rapport agrégé `docs/rapports/u25-t2-final.md`
 (0/183 niveaux, 454 actions, 665 appels ; 132 s par action et 89 s par appel

@@ -5862,3 +5862,118 @@ ligne de commande du shell courant, qui a été tué (sortie 144). Le §2.1 ter
 interdit ce motif ; la règle vaut pour tout mot, pas seulement `vite` : cibler
 un PID, jamais une ligne de commande. Aucune conséquence sur le dépôt ni sur
 la pile ; le document a été relu intégralement avant la clôture.
+
+## 2026-09-29 (session planifiée) — U31 : tr87 joué en validation instrumentée (0/6, 24 actions) ; cause de la perte de première tentative CLOSE (préremplissage froid ~7 700 tokens/pas, coupure quasi gratuite) ; deux améliorations génériques livrées — métrique `prefixe_pas` et bloc « Changements depuis l'observation précédente »
+
+**Environnement.** Machine éphémère rattachée à `main` (aucun commit local à
+sauver), identité posée, `.env` écrit et vérifié ignoré. `dockerd` lancé
+directement, autorité du proxy copiée dans `certs/`, `make up` et `make seed`
+verts, `llm-replay` et `arc-replay` `healthy`. Endpoint (`/api/version` 200 en
+2,5 s) et API ARC (`/api/games` 200) joignables.
+
+**Jouer — `tr87-cd924810` (2e de l'ordre du jour), run `u31-h1511-tr87`,
+plafonds de la tranche 2 (80/300/2 400 s/1,5 M/400).** 0/6 niveaux, **24
+actions** (baseline 54 au niveau 1), 25 tours, 29 appels, 291 645 tokens de
+prompt, 7 702 générés, 848,6 s d'inférence pour 2 436 s de jeu, RHAE 0,00,
+arrêt au plafond de temps ; scorecard `316e8101…` FERMÉ, réconciliation exacte
+(24 = 24, `divergences: []`) ; rapport `docs/rapports/u31-h1511-tr87.md`.
+Actions ACTION1–4 (5/8/6/5), 0 action invalide, 3 retries de patch récupérés,
+0 observation inchangée, 1 idéation d'ouverture (4 hypothèses, 4 tâches),
+**16 évaluations caduques sur 24 actions**, 1 intervention du superviseur au
+seuil des 20 actions (sonde fraîche, curation appliquée). Perte de première
+tentative 28/29 (l'appel 22 a abouti du premier coup ; 4 escalades t2) —
+cumul ~739/740.
+
+**Observer 1 — `prefill_ms` lu par pas : la tentative aboutie est TOUJOURS
+chaude.** Sur 29/29 appels, `prefill_ms` = 310–320 ms : le préremplissage
+froid est intégralement payé dans la tentative coupée (~38 s) plus l'attente
+avant que la relance soit servie (`duree_ms − prefill_ms − generation_ms`,
+7,3–8,9 s sur 24 pas, 20 s au premier appel). Le froid par pas se déduit
+donc de la paroi, non de `prefill_ms` : ~45 s ≈ **7 500–7 800 tokens froids
+sur ~10 000**, à CHAQUE pas, constant de la 4e à la 29e requête — soit la
+grille entière plus Σ et le protocole ; seuls le message système et les
+notes (~2 300 tokens) sont servis par le cache. Génération : 12,8 tokens/s en
+moyenne (9–16), 266 tokens par appel (79–768), 20,7 s ; durée serveur de la
+tentative aboutie 29,3 s ; paroi par appel 78,6 s en moyenne (52–145 s hors
+superviseur, 292 s autour de l'intervention). Comparé à ls20 (84,5 s) et à la
+tranche 2 (89 s) : même ordre, même cause.
+
+**Observer 2 — sonde de plomberie (aucun jeu, 5 requêtes séquentielles après le
+run).** Prompt générique froid de 11 360 tokens, `num_predict: 400` : coupé par
+le pont à 36,5 s (`500`, « the edge function timed out »). Requête minuscule
+envoyée aussitôt : **bloquée 27 s** puis connexion fermée sans réponse —
+l'origine était occupée à ACHEVER le préremplissage de la requête coupée
+(36,5 + 27 ≈ 63 s ≈ 11 360 tokens à ~180 tokens/s). Même prompt, `num_predict:
+1`, 1 s plus tard : 200 en 4,5 s, `prompt_eval_duration` 313 ms — préfixe chaud.
+Petite requête de contrôle : 1,9 s ; même prompt à nouveau : 1,5 s. **Conclusion,
+qui CLÔT la cause de la perte de première tentative** : après la coupure,
+l'origine termine le préremplissage (le slot reste occupé, les autres requêtes
+attendent) mais ne poursuit PAS la génération ; la coupure coûte ~1 s de
+relance plus l'attente de fin de préremplissage — c'est-à-dire presque rien.
+La « perte » de ~40 s par appel des dépouillements antérieurs n'est pas une
+perte : c'est le préremplissage froid lui-même, que `total_duration` de la
+tentative aboutie ne compte pas. La correction côté pont (cas 4) n'apporterait
+donc que ~1 s par appel ; le levier réel est le nombre de tokens repayés à
+chaque pas, et il dépend d'OÙ la grille change (mesuré au prochain run par
+`prefixe_pas`).
+
+**Observer 3 — comportement du harnais sur les pas archivés (`state/pas.jsonl`).**
+À chaque pas le modèle émet la MÊME prédiction générique (« soit un refus si
+une position est requise, soit un changement local ou global de la grille »),
+puis « VERDICT: caduque » (16/24) en écrivant qu'il ne peut pas savoir si
+l'action a eu un effet ; Σ ne reçoit que des statuts de `plan`, les hypothèses
+restent celles de l'idéation ; il cycle ACTION1→4 sans accumuler de
+connaissance. Cause STRUCTURELLE, générique : en mode `state`, le message du
+pas recompose la seule observation courante — la précédente n'est plus dans le
+contexte et aucun outil (`inspect`, `diff`) n'est déclaré à cet appel
+(§H15.8) ; la règle VISTA « énoncer les changements observés après l'action »,
+que le message système exige, est inapplicable. Aucune information de jeu
+n'est en cause : le modèle n'a littéralement pas de quoi comparer.
+
+**Améliorer (autonomie, deux points tranchés, spécifiés AVANT le code, balayage
+§A5 sans objet nouveau).** (1) **Métrique `prefixe_pas`** (§H11.2) : par
+message de pas composé, relances comprises, `caracteres`, `prefixe_commun`
+avec le message précédent et `divergence` — la partie (tête, notes,
+observation, Σ, protocole, aucune, premier) où le cache se rompt ; module pur
+`avo.loop.prefixe`, aucun contenu journalisé. C'est la lecture hors ligne du
+froid que `prefill_ms` ne rend pas (Observer 1). (2) **Bloc « Changements
+depuis l'observation précédente »** (§H15.8, §A4.5) : quand l'environnement
+déclare la méthode facultative `rendu_changements()` (lue par `getattr`,
+comme `empreinte_observation`), la boucle l'insère entre l'observation et les
+actions disponibles ; ARC compare les grilles de décision des deux derniers
+résultats — première observation nommée, absence de changement nommée,
+changement de niveau nommé, différence de cellules bornée — par une fonction
+PURE partagée avec l'outil `diff` (qui s'accorde désormais au nombre : « 1
+cellule modifiée », test existant révisé). Option écartée : réexposer les
+outils d'inspection au pas `state` — cela romprait le contrat texte seul
+(§H15.1) et coûterait un aller-retour par pas ; le rendu direct est plus
+simple et identique sur les relances. Cache : le bloc suit l'observation,
+déjà froide quand elle change. Cassettes régénérées (`make seed-e2e`, 4
+cassettes ARC changées, bancs inchangés, régénération vérifiée à l'identique),
+pile relancée.
+
+**Preuves.** `tests/unit/test_prefixe_pas.py` (8 tests), `tests/unit/test_rendu_changements.py`
+(14 tests) ; **`make check` VERT** (lint, mypy, 942 unitaires, 157 intégration,
+12 E2E), **`make build` vert**. Formulation §25 : les deux améliorations sont
+**implémentées et vérifiées** hors ligne ; leur effet en campagne (taux de
+verdicts caduques, distribution de `divergence`) n'est pas encore mesuré —
+le run de ce jour a tourné sur le code d'avant.
+
+**Où reprendre (boucle planifiée).** U31 : jouer le jeu suivant de l'ordre du
+jour (`re86-8af5384d`), `run-id u31-h1511-<code>`, mêmes plafonds, et lire :
+(a) `prefixe_pas` — distribution de `divergence` et `prefixe_commun` par pas :
+si la divergence tombe dans l'observation dès ses premières lignes sur la
+plupart des pas, le froid de ~7 700 tokens est structurel à la grille et le
+levier restant est le rendu (à concevoir sur mesure, jamais par indice de
+jeu) ; (b) le taux de « caduque » et le contenu de Σ face au bloc de
+changements (16/24 sur tr87 sans le bloc). Relevés clos : perte de première
+tentative (cause mesurée, coût ~1 s/appel — cesser de la compter comme une
+perte). Relevé ouvert : superviseur borné par le débit (1 intervention au
+seuil).
+
+**Écart de procédure nommé.** Le tout premier appel d'outil a joint `git
+status`, `git branch` et un `ls` du fichier à la localisation de
+`docs/CloudWorker.md` ; la lecture intégrale a été le deuxième appel, avant
+toute décision, toute lecture de backlog et toute modification. Même écart que
+les sessions des 2026-09-26 et 2026-09-27.
+
