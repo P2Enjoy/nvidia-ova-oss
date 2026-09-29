@@ -187,6 +187,19 @@ transitoire) est stockée, indexée (tour, index de frame). Outils gratuits au s
 **A4.4 —** Le rendu et les outils d'inspection sont purs (sans effet sur
 l'environnement) et testés sur fixtures avec sorties attendues exactes.
 
+**A4.5 — Changements depuis l'observation précédente** (`rendu_changements()`,
+§H15.8). L'interface compare la grille de la frame de décision du résultat
+précédent à celle du résultat courant et rend : sur la première observation,
+« première observation : rien à comparer » ; si le niveau a changé, « niveau
+a → b : nouvelle grille » suivi du compte de cellules différentes ; sinon le
+rendu de différence de §A4.3 — « N cellule(s) modifiée(s) » puis la liste
+bornée `(ligne,colonne):ancien→nouveau` (`DIFF_CELLULES_MAX`, « … et k
+autres » au-delà), ou « aucune cellule modifiée ». Le score, la ligne d'état
+et les frames transitoires ne sont pas répétés (déjà dans l'observation). La
+fonction de rendu est PURE et partagée avec l'outil `diff` (§A4.3) — une seule
+façon de dire qu'une cellule a changé ; elle ne nomme, n'interprète ni ne
+qualifie rien (§A5.1).
+
 ## A5. Interface de tâche direct-interaction
 
 **A5.1 — Contrainte fondatrice** (billet NVIDIA, VISTA) : l'agent reçoit les actions

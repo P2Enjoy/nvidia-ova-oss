@@ -987,6 +987,28 @@ le module `avo.context.etat` restant inchangé et pur :
   résolu est exécuté par le registre comme n'importe quel outil d'action
   (§H8.1 : « c'est le registre qui l'exécute ») ; un nom inconnu ou des valeurs en
   nombre incorrect produisent l'erreur d'outil habituelle (§H7.4), jamais fatale.
+- **Les changements observés sont RENDUS, pas seulement demandés.** Mesuré
+  (journal 2026-09-29, run `u31-h1511-tr87`, 11 actions) : à chaque pas le
+  modèle émet la même prédiction générique, puis « VERDICT: caduque » (7 sur
+  11) en écrivant qu'il ne peut pas savoir si l'action a eu un effet — et il a
+  raison : le message d'un pas recompose la SEULE observation courante, la
+  précédente n'est plus dans le contexte et aucun outil d'inspection n'est
+  déclaré à cet appel ; la règle VISTA « énoncer les changements observés
+  après l'action », que le message système exige, est structurellement
+  inapplicable, et aucune connaissance ne s'accumule dans Σ. Règle : quand
+  l'environnement déclare la méthode FACULTATIVE `rendu_changements()` (lue
+  par `getattr`, comme `empreinte_observation`, §H11.2), le bloc d'observation
+  composé par la boucle porte, après l'observation courante et avant les
+  actions disponibles, la section « Changements depuis l'observation
+  précédente : » suivie de ce rendu. Le rendu appartient à l'environnement —
+  il connaît sa structure — et il est BORNÉ, factuel, sans interprétation ;
+  il nomme la première observation (rien à comparer) et l'absence de
+  changement, qui est une information (c'est le signal explicite de la
+  mesure de non-progrès, §H11.2). Un environnement sans cette méthode
+  compose son bloc comme avant. Aucun terme d'environnement dans la boucle
+  (§A5.1) ; le rendu ne dépend que des deux dernières observations, il est
+  donc identique sur les relances d'un pas refusé (§H15.4) et se place après
+  l'observation, déjà repayée à froid quand elle change (§H15.11).
 - **Les actions disponibles s'annoncent avec leurs valeurs requises, et un refus
   de résolution se clôt par la forme attendue.** Motif, mesuré (journal
   2026-09-05, suite 46 — dépouillement des 25 jeux de la campagne U25
