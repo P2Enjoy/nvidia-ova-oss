@@ -1,6 +1,7 @@
 """Preuves du rapport de campagne : ce qu'il dit, et ce qu'il refuse de taire.
 
 @verifies docs/BACKLOG.md U23 — Runner de campagne et rapport
+@verifies docs/BACKLOG.md U31 — section « Inférence par appel et cache de préfixe » (§A7.3)
 @verifies docs/SPEC_ARCAGI3.md §A7.3 (contenu du rapport), §A7.4 (fonction pure),
           §A6.1 (le détail par niveau rend le RHAE vérifiable à la main)
 """
@@ -17,6 +18,7 @@ from avo.arc.rapport import (
     couts,
     evenements,
     formater,
+    inference_par_appel,
     limites,
     sections,
     table_par_jeu,
@@ -146,6 +148,75 @@ class TestCoutsEtEvenements(unittest.TestCase):
         self.assertIn("interventions du superviseur : **3**", rendu)
 
 
+class TestInferenceParAppel(unittest.TestCase):
+    """§A7.3 : lectures par appel et cache de préfixe, depuis les métriques (U31)."""
+
+    def test_les_agregats_viennent_des_metriques(self) -> None:
+        metriques: list[dict[str, Any]] = [
+            {
+                "type": "llm",
+                "tokens_generes": 100,
+                "duree_ms": 10000,
+                "prefill_ms": 300,
+                "generation_ms": 5000,
+            },
+            {
+                "type": "llm",
+                "tokens_generes": 300,
+                "duree_ms": 30000,
+                "prefill_ms": 500,
+                "generation_ms": 15000,
+            },
+            {"type": "llm", "tokens_generes": 200, "duree_ms": 20000},
+            {
+                "type": "prefixe_pas",
+                "caracteres": 100,
+                "prefixe_commun": 0,
+                "divergence": "premier",
+            },
+            {
+                "type": "prefixe_pas",
+                "caracteres": 100,
+                "prefixe_commun": 25,
+                "divergence": "observation",
+            },
+            {"type": "prefixe_pas", "caracteres": 200, "prefixe_commun": 150, "divergence": "etat"},
+            {"type": "garde", "garde": "evaluation", "issue": "caduque"},
+            {"type": "garde", "garde": "evaluation", "issue": "caduque"},
+            {"type": "garde", "garde": "documentaire", "issue": "redemandee"},
+        ]
+        rendu = inference_par_appel(metriques)
+        self.assertIn("tokens générés par appel : moyenne **200.00**, maximum **300**", rendu)
+        self.assertIn("durée serveur par appel : moyenne **20.00 s**", rendu)
+        self.assertIn(
+            "préremplissage (`prefill_ms`) : moyenne **0.40 s**, médiane **0.40 s** sur 2 appel(s)",
+            rendu,
+        )
+        # 400 tokens générés sur les appels mesurés en 20 s de génération.
+        self.assertIn("débit de génération : **30.00 tokens/s**", rendu)
+        self.assertIn(
+            "(`prefixe_pas`) : **3** — divergence : observation 1, etat 1, premier 1", rendu
+        )
+        # Médiane de 25 % et 75 % ; le premier message n'a pas de précédent.
+        self.assertIn("part médiane du préfixe commun : **50.00 %**", rendu)
+        self.assertIn("évaluations caduques **2**, redemandes **1**", rendu)
+
+    def test_une_famille_absente_se_dit_aucune_et_jamais_zero(self) -> None:
+        rendu = inference_par_appel([{"type": "action"}])
+        self.assertIn("appels au modèle : aucune métrique `llm`", rendu)
+        self.assertIn("(`prefixe_pas`) : aucune métrique", rendu)
+        self.assertIn("gardes d'évaluation : aucune métrique", rendu)
+        self.assertNotIn("**0**", rendu)
+
+    def test_l_ordre_des_divergences_est_stable(self) -> None:
+        metriques: list[dict[str, Any]] = [
+            {"type": "prefixe_pas", "caracteres": 10, "prefixe_commun": 1, "divergence": "notes"},
+            {"type": "prefixe_pas", "caracteres": 10, "prefixe_commun": 0, "divergence": "tete"},
+        ]
+        rendu = inference_par_appel(metriques)
+        self.assertIn("divergence : tete 1, notes 1", rendu)
+
+
 class TestComparaisonEtLimites(unittest.TestCase):
     def test_les_trois_references_publiees_figurent(self) -> None:
         rendu = comparaison(_campagne())
@@ -187,6 +258,9 @@ class TestSections(unittest.TestCase):
                 "Par jeu",
                 "Détail par niveau",
                 "Coûts",
+                # Section ajoutée le 2026-09-29 (§A7.3 amendé, U31) : les lectures par
+                # appel et de cache de préfixe survivent au `runs/` éphémère.
+                "Inférence par appel et cache de préfixe",
                 "Événements",
                 "Comparaison aux références publiées",
                 "Limites et écarts",

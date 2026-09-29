@@ -2,6 +2,18 @@
 
 ## [Non publié]
 
+### 2026-09-29 — U31 : section « Inférence par appel et cache de préfixe » du rapport de run (A7.3)
+
+- `report.md` porte une section calculée depuis les métriques persistées : tokens
+  générés par appel (moyenne, maximum), durée serveur par appel, préremplissage
+  moyen et médian, débit de génération, répartition des divergences de
+  `prefixe_pas` et part médiane du préfixe commun, évaluations caduques et
+  redemandes. Motif mesuré : trois sessions ont recalculé ces agrégats à la
+  main depuis des `runs/` éphémères. Une famille absente se dit « aucune »,
+  jamais zéro.
+- Preuves : `tests/unit/test_rapport.py` (agrégats, familles absentes, ordre
+  des divergences ; test des sections révisé).
+
 ### 2026-09-29 — U31 : les changements observés sont rendus au pas, pas seulement demandés (H15.8, A4.5)
 
 - Mesuré sur `tr87-cd924810` : à chaque pas le modèle émet la même prédiction

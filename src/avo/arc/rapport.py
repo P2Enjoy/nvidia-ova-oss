@@ -6,6 +6,8 @@
 @spec docs/SPEC_HARNAIS.md §H6.1 (`report.md` dans le workspace), §H11.2 (métriques)
 @spec docs/BACKLOG.md U34 — ligne des résumés de coupure dans les événements (§H17.5)
 @spec docs/BACKLOG.md U37 — lignes des idéations et curations dans les événements (§H18.5)
+@spec docs/BACKLOG.md U31 — section « Inférence par appel et cache de préfixe » calculée
+      depuis les métriques `llm`, `prefixe_pas` et `garde` (§A7.3, §H11.2)
 
 Fonction **pure** : elle ne rejoue rien, n'interroge aucun service et ne devine
 aucun chiffre. Tout ce qu'elle écrit vient du résultat de campagne ou des métriques
@@ -14,6 +16,7 @@ que le run a réellement produites — ce qui est absent est dit absent.
 
 from __future__ import annotations
 
+import statistics
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -103,6 +106,86 @@ def couts(
     return "\n".join(lignes)
 
 
+ORDRE_DIVERGENCES = ("tete", "notes", "observation", "etat", "protocole", "aucune", "premier")
+
+
+def inference_par_appel(metriques: Sequence[Mapping[str, Any]]) -> str:
+    """Lectures par appel et cache de préfixe, depuis les métriques du run (§A7.3, §H11.2).
+
+    Des lectures, jamais des décisions. Une famille de métriques absente se dit
+    « aucune » plutôt que zéro : un zéro se lirait comme une mesure.
+    """
+    llm = [ligne for ligne in metriques if ligne.get("type") == "llm"]
+    lignes: list[str] = []
+    if not llm:
+        lignes.append("- appels au modèle : aucune métrique `llm`")
+    else:
+        generes = [int(ligne.get("tokens_generes", 0)) for ligne in llm]
+        durees = [float(ligne.get("duree_ms", 0)) / 1000.0 for ligne in llm]
+        prefills = [
+            float(ligne["prefill_ms"]) / 1000.0
+            for ligne in llm
+            if ligne.get("prefill_ms") is not None
+        ]
+        generation_ms = sum(
+            float(ligne.get("generation_ms") or 0)
+            for ligne in llm
+            if ligne.get("generation_ms") is not None
+        )
+        lignes.append(
+            f"- tokens générés par appel : moyenne **{formater(statistics.mean(generes))}**, "
+            f"maximum **{max(generes)}**"
+        )
+        lignes.append(
+            f"- durée serveur par appel : moyenne **{formater(statistics.mean(durees))} s**"
+        )
+        if prefills:
+            moyenne_prefill = formater(statistics.mean(prefills))
+            mediane_prefill = formater(statistics.median(prefills))
+            lignes.append(
+                f"- préremplissage (`prefill_ms`) : moyenne **{moyenne_prefill} s**, "
+                f"médiane **{mediane_prefill} s** sur {len(prefills)} appel(s)"
+            )
+        else:
+            lignes.append("- préremplissage (`prefill_ms`) : aucune métrique")
+        if generation_ms > 0:
+            debit = formater(sum(generes) / (generation_ms / 1000.0))
+            lignes.append(f"- débit de génération : **{debit} tokens/s**")
+        else:
+            lignes.append("- débit de génération : aucune métrique `generation_ms`")
+    prefixes = [ligne for ligne in metriques if ligne.get("type") == "prefixe_pas"]
+    if not prefixes:
+        lignes.append("- messages de pas composés (`prefixe_pas`) : aucune métrique")
+    else:
+        comptes = {nom: 0 for nom in ORDRE_DIVERGENCES}
+        for ligne in prefixes:
+            comptes[str(ligne.get("divergence"))] = comptes.get(str(ligne.get("divergence")), 0) + 1
+        repartition = ", ".join(f"{nom} {compte}" for nom, compte in comptes.items() if compte)
+        parts = [
+            100.0 * float(ligne.get("prefixe_commun", 0)) / float(ligne["caracteres"])
+            for ligne in prefixes
+            if ligne.get("divergence") != "premier" and float(ligne.get("caracteres", 0)) > 0
+        ]
+        lignes.append(
+            f"- messages de pas composés (`prefixe_pas`) : **{len(prefixes)}** — "
+            f"divergence : {repartition}"
+        )
+        if parts:
+            lignes.append(
+                f"- part médiane du préfixe commun : **{formater(statistics.median(parts))} %**"
+            )
+    gardes = [ligne for ligne in metriques if ligne.get("type") == "garde"]
+    if not gardes:
+        lignes.append("- gardes d'évaluation : aucune métrique")
+    else:
+        caduques = sum(1 for ligne in gardes if ligne.get("issue") == "caduque")
+        redemandes = sum(1 for ligne in gardes if ligne.get("issue") == "redemandee")
+        lignes.append(
+            f"- gardes : évaluations caduques **{caduques}**, redemandes **{redemandes}**"
+        )
+    return "\n".join(lignes)
+
+
 def evenements(jeux: Sequence[ResultatJeu]) -> str:
     """Continuations, dépassements, interventions, versions committées (§A7.3)."""
     return "\n".join(
@@ -182,6 +265,7 @@ def sections(
         ("Par jeu", table_par_jeu(resultat.jeux)),
         ("Détail par niveau", table_par_niveau(resultat.jeux)),
         ("Coûts", couts(resultat.jeux, metriques, jeux_refuses=len(resultat.refus))),
+        ("Inférence par appel et cache de préfixe", inference_par_appel(metriques)),
         ("Événements", evenements(resultat.jeux)),
         ("Comparaison aux références publiées", comparaison(resultat)),
         ("Limites et écarts", limites(resultat)),
