@@ -724,6 +724,26 @@ la mesure, et uniquement la mesure : elle ne modifie ni le prompt, ni le
 superviseur, ni aucun comportement ; un éventuel détecteur s'instruira sur
 ses relevés.
 
+La boucle émet enfin, en mode `state`, la métrique `prefixe_pas` à chaque
+message de pas composé (§H15.8, §H15.11) — une par appel, relances comprises :
+`caracteres` (longueur du message utilisateur composé), `prefixe_commun`
+(longueur, en caractères, du préfixe identique au message composé
+précédent du même jeu) et `divergence`, la partie du message où tombe le
+premier caractère qui change : `tete` (message exceptionnel : erreur nommée,
+rappel, superviseur, amorce, idéation), `notes`, `observation` (observation et
+actions disponibles), `etat` (Σ), `protocole`, `aucune` (message identique) ou
+`premier` (aucun message précédent). Motif, mesuré (journal 2026-09-29, run
+`u31-h1511-tr87`) : `prefill_ms` ne lit PAS le froid d'un pas quand le pont
+coupe la première tentative — l'origine achève le préremplissage pendant la
+coupure, et la tentative aboutie le trouve chaud (~310 ms sur chaque pas) ; le
+froid réel se déduit alors de la paroi (~38 s coupés plus l'attente en file),
+sans dire OÙ le cache s'est rompu. Cette métrique le dit, exactement et hors
+ligne : le message système est constant, le préfixe commun du message
+utilisateur est donc la part servie par le cache, et la partie de divergence
+désigne la première partie repayée. Mesure seule : elle ne modifie ni le
+message, ni le prompt, ni aucun comportement ; aucun contenu n'est journalisé
+(§H4.6), seulement des longueurs et un nom de partie.
+
 **H11.3 — Transcripts.** Chaque segment intégral en JSONL (messages exacts envoyés et
 reçus). C'est la preuve d'exécution et l'entrée du rejeu.
 
