@@ -100,7 +100,15 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
   de préfixe de l'endpoint serve jusqu'à Σ (H15.11, mesuré le 2026-09-27 : le
   cache ne sert que jusqu'au premier token modifié, et Σ en tête rendait froid
   le préremplissage entier à chaque pas) ; la ligne d'état ARC suit la grille
-  pour le même motif (A4.1).
+  pour le même motif (A4.1). Le bloc d'observation porte, entre l'observation
+  et les actions disponibles, « Changements depuis l'observation précédente »
+  quand l'environnement déclare la méthode facultative `rendu_changements()`
+  (H15.8 ; ARC : différence de grilles de décision bornée, partagée avec
+  l'outil `diff`, A4.5) — mesuré le 2026-09-29 : sans elle, le pas `state` ne
+  voit que l'observation courante et le modèle qualifie ses prédictions de
+  caduques faute de pouvoir les vérifier. La métrique `prefixe_pas`
+  (`metrics.jsonl`, H11.2) mesure par message composé la longueur du préfixe
+  commun avec le précédent et la partie où le cache se rompt.
 - Gardes de méthode dans les phases (H16, U30) : la structure impose ce que le
   prompt conseille — artefact documentaire (`WORKING.md`, ou `hypotheses` de Σ)
   avant de déverrouiller l'action, prédiction requise par le schéma des outils
