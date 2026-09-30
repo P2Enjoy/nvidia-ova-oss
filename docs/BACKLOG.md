@@ -1142,6 +1142,24 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-09-30 (session planifiée)** — jouer, observer, améliorer :
+`cd82-fb555c5d` joué (4e de l'ordre du jour), run `u31-h1511-cd82`, plafonds
+de la tranche 2 : 0/6 niveaux, 20 actions, RHAE 0,00, plafond de temps,
+scorecard `e048ac37…` fermé, réconciliation exacte 20 = 20, rapport
+`docs/rapports/u31-h1511-cd82.md` (ACTION1–6 2/6/3/5/2/2, 1 action invalide,
+2 retries de patch, 4 observations inchangées, 0 troncature, 1 superviseur au
+seuil des 20 actions). Observé : verdicts 12 confirmées, 6 contredites,
+3 caduques (bloc de changements confirmé sur un 2e jeu) ; 692 tokens générés
+par appel, paroi 104,5 s ; `prefixe_pas` divergence dans l'observation 15/25,
+part médiane 17,9 % (froid structurel à la grille, acquis sur deux jeux) ;
+les 2 retries de patch sont un même défaut de FORME (champs de Σ à la racine
+du bloc, sans « state_patch »), déjà vu sur re86. Livré (spécifié avant le
+code) : **patch aplati normalisé par les noms de champs du schéma** (§H15.4,
+`decoder_pas(schema=…)`, archive `patch_aplati`, métrique,
+`tests/unit/test_patch_aplati.py`). `make check` VERT (960/157/12), `make build` vert : implémenté et vérifié hors ligne, effet en campagne à lire au prochain jeu. Prochain jeu :
+`lp85-305b61c3` ; à lire : métrique `patch_aplati` (journal du jour, « Où
+reprendre »).
+
 **Itération du 2026-09-29, troisième (session planifiée)** — améliorer
 l'observation : section « Inférence par appel et cache de préfixe » du rapport
 de run (§A7.3, calculée depuis les métriques `llm`, `prefixe_pas`, `garde` ;

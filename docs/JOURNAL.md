@@ -6085,3 +6085,88 @@ chiffres reproduisent ceux calculés à la main plus tôt dans la session.
 désormais, la longueur des réponses, le débit, la répartition de
 `prefixe_pas` et les verdicts (entrée précédente, « Où reprendre »).
 
+## 2026-09-30 (session planifiée) — U31 : cd82 joué (0/6, 20 actions, RHAE 0,00) ; bloc de changements confirmé sur un 2e jeu (3 caduques sur 25) ; froid structurel à la grille confirmé (divergence dans l'observation 15/25) ; amélioration générique livrée — patch aplati normalisé par le schéma (§H15.4)
+
+**Environnement.** Machine éphémère rattachée à `main` (aucun commit local à
+sauver), identité posée, `.env` écrit et vérifié ignoré. `dockerd` lancé
+directement ; `make up` a d'abord échoué au premier `apt-get` de l'image
+(autorité du proxy absente du checkout neuf) — autorité copiée dans `certs/`
+(ignorée par git), construction et pile vertes, `llm-replay` et `arc-replay`
+`healthy`, `make seed` vert. Endpoint (`/api/version` 200 en 2,3 s) et API ARC
+(`/api/games` 200) joignables depuis l'hôte et depuis le conteneur.
+Itération ouverte par la lecture intégrale de `docs/CloudWorker.md` ; écart de
+procédure nommé : le premier appel d'outil a joint `git status`, `git branch`
+et un `ls` du fichier à la vérification de sa présence (même écart que les
+sessions des 2026-09-26, 27 et 29).
+
+**Jouer — `cd82-fb555c5d` (4e de l'ordre du jour), run `u31-h1511-cd82`,
+plafonds de la tranche 2 (80/300/2 400 s/1,5 M/400), modèle `qwen3.8:27b`
+(défaut du dépôt).** 0/6 niveaux, **20 actions** (baseline 55 au niveau 1),
+23 tours, 26 appels (25 pas + 1 curation), 273 532 tokens de prompt, 18 003
+générés, 1 548 s d'inférence pour 2 718 s de jeu, RHAE 0,00, arrêt au plafond
+de temps ; scorecard `e048ac37…` FERMÉ, réconciliation exacte (20 = 20,
+`divergences: []`) ; rapport `docs/rapports/u31-h1511-cd82.md`. Actions
+ACTION1–6 (2/6/3/5/2/2), 1 action invalide (`action6` sans coordonnées malgré
+la forme annoncée), 2 retries de patch, 4 observations inchangées, 1 idéation
+d'ouverture, 0 réponse tronquée, 1 intervention du superviseur au seuil des
+20 actions (sonde fraîche, curation appliquée). Première tentative perdue
+26/26 (cause close, ~1 s/appel).
+
+**Observer 1 — le bloc de changements tient sur un deuxième jeu.** Verdicts sur
+les 25 réponses archivées : **12 confirmées, 6 contredites, 3 caduques** (re86 :
+5/10/0 ; tr87 sans le bloc : 16 caduques sur 24). Σ final porte 12 hypothèses
+concrètes sur l'effet de chaque action (déplacements, remplissages, no-op
+conditionnel), une par action testée. Longueur des réponses : **692 tokens
+générés par appel** en moyenne (re86 964, tr87 266), maximum 1 546, **aucune
+troncature** à `num_predict` — la longueur observée sur re86 ne se confirme
+pas comme défaut : aucune règle de forme de réponse n'est désignée. Durée
+serveur 59,5 s par appel (génération 48,7 s à 14,2 tokens/s), paroi 104,5 s
+par appel (re86 117, tr87 78,6).
+
+**Observer 2 — le froid de préremplissage est acquis comme structurel à la
+grille.** `prefixe_pas` : divergence dans l'`observation` sur **15/25**
+messages, `tete` 4 (superviseur, erreurs nommées, rappel), `notes` 5 (messages
+suivant une tête), `premier` 1 ; part médiane du préfixe commun **17,9 %**
+(re86 : 23,8 %, observation 10/17). Deuxième jeu, même lecture : la grille
+change dans ses premières lignes à chaque pas et seuls le message système et
+les notes sont servis par le cache. Le levier restant reste un rendu
+d'observation à préfixe stable — à concevoir comme mécanisme GÉNÉRIQUE du
+rendu (jamais par indice de jeu) et à mesurer ; point noté, non tranché dans
+cette itération (une seule unité de code par session).
+
+**Observer 3 — deux appels sur 26 perdus sur un défaut de FORME, pas de fond.**
+Les deux `retry_patch` du run portent le même écart : le bloc JSON écrit les
+champs de Σ à sa racine, à côté d'« action », sans l'enveloppe « state_patch »
+(`{"plan": [...], "action": "ACTION1"}` au tour 2 ; `{"essai": 8, "plan":
+[...]}` sans action au tour 11). Même écart sur re86 (« un bloc aux mauvaises
+clés »). Le contenu est un pas valide ; le refus strict coûtait un appel
+entier (~100 s de paroi) pour obtenir la même réponse enveloppée.
+
+**Améliorer (autonomie, point tranché, spécifié AVANT le code, balayage §A5 :
+aucun texte de prompt ajouté, un message d'erreur générique).** §H15.4 amendé :
+quand le bloc ne porte pas « state_patch » et que CHAQUE clé autre
+qu'« action » est un champ du schéma effectif (§H15.9 — les noms viennent du
+schéma déclaré, jamais d'une liste du noyau), l'enveloppe est levée ; une clé
+étrangère ou un schéma absent laissent le refus nommé inchangé ; un bloc
+aplati sans « action » est refusé en nommant l'absence d'« action » ; l'écart
+s'archive au pas (`patch_aplati: true`) et se compte en métrique
+(`patch_aplati`). Options écartées : (a) tolérer toute clé inconnue comme
+champ de patch — la validation nommerait ensuite la clé, mais l'enveloppe
+serait devinée, pas déduite ; (b) reformuler le protocole — la forme est déjà
+annoncée d'emblée (§H16.0.7) et le modèle la viole malgré tout. Livré :
+`avo.context.etat` (`decoder_pas(schema=…)`, `Pas.aplati`, `appliquer`
+passe `etat.schema`), `avo.loop.boucle` (les deux pas, archive et métrique),
+`tests/unit/test_patch_aplati.py` (15 tests), CHANGELOG, DAT.
+
+**Preuves.** `make check` VERT (lint, mypy, 960 unitaires dont les 15 nouveaux, 157 intégration, 12 E2E — cassettes inchangées, aucun corps de requête modifié), `make build` vert. Formulation §25 : la normalisation est **implémentée et vérifiée** hors ligne ; son effet en campagne (métrique `patch_aplati`, disparition des `retry_patch` de ce motif) se lit au prochain jeu — le run de ce jour a tourné sur le code d'avant.
+
+**Où reprendre (boucle planifiée).** U31 : jouer le jeu suivant de l'ordre du
+jour (`lp85-305b61c3`), `run-id u31-h1511-<code>`, mêmes plafonds, et lire
+dans le rapport : (a) la métrique `patch_aplati` — nombre d'enveloppes levées
+et absence de `retry_patch` sur ce motif ; (b) verdicts et `prefixe_pas`,
+attendus dans la continuité (bloc de changements actif, froid structurel).
+Candidats notés pour une session dont c'est l'unité, chacun sur mesure
+acquise : un rendu d'observation à préfixe stable (Observer 2, deux jeux) ;
+la répartition des verdicts (confirmées/contredites) en métrique `garde`
+pour que le rapport la porte — comptée à la main sur trois runs (tr87, re86,
+cd82). Relevé ouvert : superviseur (1 intervention au seuil des 20 actions).
