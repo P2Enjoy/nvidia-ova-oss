@@ -108,7 +108,12 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
   voit que l'observation courante et le modèle qualifie ses prédictions de
   caduques faute de pouvoir les vérifier. La métrique `prefixe_pas`
   (`metrics.jsonl`, H11.2) mesure par message composé la longueur du préfixe
-  commun avec le précédent et la partie où le cache se rompt.
+  commun avec le précédent et la partie où le cache se rompt. Le décodeur du
+  pas reçoit le schéma effectif et lève l'enveloppe d'un patch APLATI — les
+  champs de Σ écrits à la racine du bloc à côté d'« action » — quand chaque
+  clé est un champ du schéma déclaré (H15.4, mesuré le 2026-09-30 sur cd82 :
+  2 appels sur 26 perdus à redemander la même réponse enveloppée) ; l'écart
+  s'archive au pas (`patch_aplati`) et se compte en métrique.
 - Gardes de méthode dans les phases (H16, U30) : la structure impose ce que le
   prompt conseille — artefact documentaire (`WORKING.md`, ou `hypotheses` de Σ)
   avant de déverrouiller l'action, prédiction requise par le schéma des outils

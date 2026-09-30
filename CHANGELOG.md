@@ -2,6 +2,27 @@
 
 ## [Non publié]
 
+### 2026-09-30 — U31 : patch aplati normalisé par les noms de champs du schéma (H15.4)
+
+- Mesuré sur `cd82-fb555c5d` (2 appels sur 26) et `re86-8af5384d` (1 appel) :
+  le modèle écrit les champs de Σ à la racine du bloc JSON, à côté
+  d'« action », sans l'enveloppe « state_patch » — le contenu est un pas
+  valide, le refus strict coûtait un appel entier (~100 s de paroi) pour
+  obtenir la même réponse enveloppée.
+- Le décodeur du pas (`avo.context.etat.decoder_pas`) reçoit le schéma
+  effectif : quand le bloc ne porte pas « state_patch » et que chaque clé
+  autre qu'« action » est un champ du schéma, l'enveloppe est levée — les
+  noms viennent du schéma déclaré, jamais d'une liste du noyau ; une clé
+  étrangère ou un schéma absent laissent le refus nommé inchangé ; un bloc
+  aplati sans « action » est refusé en nommant l'absence d'« action ». La
+  validation des valeurs et l'opérateur ⊕ sont inchangés.
+- L'écart n'est jamais silencieux : la ligne d'archive du pas porte
+  `patch_aplati: true` et la boucle écrit la métrique `patch_aplati`.
+- Preuves : `tests/unit/test_patch_aplati.py` (décodeur : cas nominal,
+  enveloppe présente, sans schéma, clé étrangère, sans action, action seule,
+  validation des valeurs, schéma déclaré ; boucle : un seul appel, archive et
+  métrique, redemande nommée, pas d'idéation).
+
 ### 2026-09-29 — U31 : section « Inférence par appel et cache de préfixe » du rapport de run (A7.3)
 
 - `report.md` porte une section calculée depuis les métriques persistées : tokens

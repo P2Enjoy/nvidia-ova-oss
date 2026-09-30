@@ -6,8 +6,9 @@
       schéma et remplacement curé (§H18.1, §H18.3)
 @spec docs/SPEC_HARNAIS.md §H15.1 (contrat de pas, bloc JSON à deux clés),
       §H15.2 (opérateur ⊕, suppression par null), §H15.3 (schéma possédé par le
-      runtime), §H15.4 (rollback-retry borné), §H15.5 (sérialisation aller-retour),
-      §H15.6 (schéma ARC v1, défaut du noyau), §H15.9 (schéma déclaré par le
+      runtime), §H15.4 (rollback-retry borné ; patch aplati : enveloppe levée par
+      les seuls noms de champs du schéma, écart nommé), §H15.5 (sérialisation
+      aller-retour), §H15.6 (schéma ARC v1, défaut du noyau), §H15.9 (schéma déclaré par le
       domaine : genres génériques du noyau, champ commun `hypotheses`, fusion clé
       par clé du genre dictionnaire), §H16.1 (`hypotheses` ne se vide pas en
       cours de run), §H18.1 (genre `liste_taches` : fusion par `id`, statuts,
@@ -483,9 +484,35 @@ class Pas:
 
     patch: Mapping[str, Any]
     action: str
+    #: Vrai quand le bloc portait les champs de Σ à sa racine, sans enveloppe
+    #: « state_patch », et que le schéma a permis de la lever (§H15.4) — l'écart
+    #: s'archive au pas, jamais silencieux.
+    aplati: bool = False
 
 
-def decoder_pas(texte: str, action_optionnelle: bool = False) -> Pas:
+def _lever_enveloppe(bloc: Mapping[str, Any], schema: SchemaEtat | None) -> Mapping[str, Any]:
+    """Patch aplati (§H15.4) : rend le bloc normalisé, ou le bloc tel quel.
+
+    L'enveloppe n'est levée que si le bloc ne porte pas « state_patch » et que
+    CHAQUE clé autre qu'« action » est un champ du schéma fourni — les noms
+    viennent du schéma déclaré (§H15.9), jamais d'une liste du noyau. Sans
+    schéma, ou dès qu'une clé est étrangère, rien n'est normalisé : le refus
+    nommé de `decoder_pas` s'applique.
+    """
+    if schema is None or "state_patch" in bloc:
+        return bloc
+    champs = {cle: valeur for cle, valeur in bloc.items() if cle != "action"}
+    if not champs or any(cle not in schema.noms for cle in champs):
+        return bloc
+    normalise: dict[str, Any] = {"state_patch": champs}
+    if "action" in bloc:
+        normalise["action"] = bloc["action"]
+    return normalise
+
+
+def decoder_pas(
+    texte: str, action_optionnelle: bool = False, schema: SchemaEtat | None = None
+) -> Pas:
     """Extrait `(state_patch, action)` du bloc JSON attendu (annexe A.4 SKILL.state).
 
     Le raisonnement qui précède le bloc n'est jamais retourné : il est déjà jeté à ce
@@ -494,6 +521,10 @@ def decoder_pas(texte: str, action_optionnelle: bool = False) -> Pas:
     `action_optionnelle` (§H18.2, pas d'idéation SEUL) tolère une action vide :
     la structure qui déclare ne pas jouer l'action ne peut pas l'exiger
     (mesuré, u38-ctf-s6 : trois tentatives mortes sur `"action": ""`).
+    `schema` (§H15.4) permet de lever l'enveloppe d'un patch APLATI — les champs
+    de Σ écrits à la racine du bloc, à côté d'« action » (mesuré, cd82 :
+    2 appels sur 26 perdus à redemander la même réponse enveloppée) ; le pas
+    rendu porte alors `aplati`. Sans schéma, le contrat strict s'applique.
     """
     correspondance = _BLOC_JSON.search(texte)
     if correspondance is None:
@@ -505,7 +536,18 @@ def decoder_pas(texte: str, action_optionnelle: bool = False) -> Pas:
         bloc = json.loads(correspondance.group(1))
     except json.JSONDecodeError as erreur:
         raise PatchMalforme(f"bloc JSON illisible : {erreur}") from erreur
+    aplati = False
+    if isinstance(bloc, Mapping):
+        normalise = _lever_enveloppe(bloc, schema)
+        aplati = normalise is not bloc
+        bloc = normalise
     if not isinstance(bloc, Mapping) or set(bloc) != {"state_patch", "action"}:
+        if aplati and "action" not in bloc:
+            # §H15.4 : bloc aplati sans action — le refus nomme le manque réel.
+            raise PatchMalforme(
+                "« action » manquante dans le bloc JSON : le bloc porte des champs "
+                f"de Σ ({sorted(bloc['state_patch'])!r}) mais aucune « action »"
+            )
         cles = sorted(bloc) if isinstance(bloc, Mapping) else bloc
         raise PatchMalforme(
             "le bloc JSON doit avoir exactement les clés « state_patch » et « action », "
@@ -516,7 +558,7 @@ def decoder_pas(texte: str, action_optionnelle: bool = False) -> Pas:
         raise PatchMalforme(f"« state_patch » : objet attendu, reçu {patch!r}")
     if not isinstance(action, str) or (not action and not action_optionnelle):
         raise PatchMalforme(f"« action » : chaîne non vide attendue, reçue {action!r}")
-    return Pas(patch=patch, action=action)
+    return Pas(patch=patch, action=action, aplati=aplati)
 
 
 def appliquer(etat: Etat, texte: str, action_optionnelle: bool = False) -> tuple[Etat, str]:
@@ -527,7 +569,7 @@ def appliquer(etat: Etat, texte: str, action_optionnelle: bool = False) -> tuple
     (U27) de rejouer l'appel LLM sur échec, budgété par `CompteurRetries` — ce module
     reste sans effet de bord et ne connaît rien du client d'inférence.
     """
-    pas = decoder_pas(texte, action_optionnelle=action_optionnelle)
+    pas = decoder_pas(texte, action_optionnelle=action_optionnelle, schema=etat.schema)
     return etat.fusionner(pas.patch), pas.action
 
 

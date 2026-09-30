@@ -14,6 +14,7 @@
       `coupure_transport` dans la métrique `llm` (§H4.10, §H11.2),
       ordre du message composé d'un pas — notes, observation, Σ, protocole (§H15.11),
       durées de préremplissage et de génération du serveur dans la métrique `llm` (§H11.2),
+      patch aplati : enveloppe levée par le schéma, archive `patch_aplati` et métrique (§H15.4),
       métrique `prefixe_pas` — préfixe commun et partie de divergence du message de pas (§H11.2),
       bloc « Changements depuis l'observation précédente » du bloc d'observation (§H15.8, §A4.5)
 @spec docs/BACKLOG.md U30 — gardes de méthode dans les phases (§H16.1 garde
@@ -1212,9 +1213,16 @@ class BoucleAgent:
                     nouvel_etat, action_texte = appliquer_pas(
                         self.etat, resultat.content, action_optionnelle=True
                     )
-                    patch = dict(decoder_pas(resultat.content, action_optionnelle=True).patch)
+                    pas = decoder_pas(
+                        resultat.content, action_optionnelle=True, schema=self.etat.schema
+                    )
+                    patch = dict(pas.patch)
                     purge = taches_purgees(self.etat, patch, nouvel_etat)
                     extra: dict[str, Any] = {"taches_purgees": list(purge)} if purge else {}
+                    # §H15.4 : enveloppe levée d'un patch aplati — écart nommé.
+                    if pas.aplati:
+                        extra["patch_aplati"] = True
+                        self._metrique("patch_aplati")
                     self._archiver_pas(
                         numero,
                         compteur.consommees,
@@ -1289,7 +1297,8 @@ class BoucleAgent:
                 )
                 try:
                     nouvel_etat, action_texte = appliquer_pas(self.etat, resultat.content)
-                    patch = dict(decoder_pas(resultat.content).patch)
+                    pas = decoder_pas(resultat.content, schema=self.etat.schema)
+                    patch = dict(pas.patch)
                     # §H16.1 : un vidage d'« hypotheses » resté sans effet est un
                     # écart nommé, jamais silencieux — il s'archive (§H15.10).
                     conservation: dict[str, Any] = (
@@ -1304,6 +1313,11 @@ class BoucleAgent:
                     purge = taches_purgees(self.etat, patch, nouvel_etat)
                     if purge:
                         conservation["taches_purgees"] = list(purge)
+                    # §H15.4 : enveloppe levée d'un patch aplati — écart nommé à
+                    # l'archive et en métrique, jamais silencieux.
+                    if pas.aplati:
+                        conservation["patch_aplati"] = True
+                        self._metrique("patch_aplati")
                     self._archiver_pas(
                         numero,
                         compteur.consommees,
