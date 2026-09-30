@@ -859,6 +859,28 @@ sans patch valide est une erreur fatale explicite qui arrête le run proprement
 tentative refusée est comptée en événement (H11.2, au même titre qu'une continuation
 ou un `413` absorbé) et lue par les détecteurs du superviseur (H15.7).
 
+**Patch aplati : normalisé par le schéma, jamais deviné.** Bruit de format des
+modèles open-weight, mesuré en conditions réelles (run `u31-h1511-cd82`,
+2026-09-30 : 2 des 26 appels ; run `u31-h1511-re86`, 2026-09-29 : 1 appel) :
+le bloc rendu porte les CHAMPS de Σ au niveau racine, à côté d'« action », au
+lieu de les envelopper sous « state_patch » — `{"plan": [...], "action":
+"ACTION1"}`. Le contenu est un pas valide ; seule l'enveloppe manque, et le
+refus strict coûte un appel entier (~100 s de paroi sur cet endpoint) pour
+obtenir la même réponse enveloppée. Règle, du même ordre que les
+normalisations syntaxiques de la résolution d'action (§H15.8) : quand le bloc
+ne porte pas « state_patch » et que CHAQUE clé autre qu'« action » est le nom
+d'un champ du schéma effectif (§H15.9 — les noms viennent du schéma déclaré,
+jamais d'une liste écrite dans le noyau), ces clés forment le patch, et
+« action » reste lue comme avant (chaîne non vide, ou vide sur le seul pas
+d'idéation, §H18.2). Une clé qui n'est ni « action » ni un champ du schéma
+laisse le refus nommé inchangé ; sans schéma fourni au décodeur, aucune
+normalisation. Un bloc aplati SANS « action » reste un refus, qui nomme
+désormais l'absence d'« action » plutôt que les clés reçues. L'écart n'est
+jamais silencieux : la ligne d'archive du pas (§H15.10) porte
+`patch_aplati: true` et la boucle écrit l'événement `patch_aplati` (§H11.2).
+La normalisation ne touche ni les valeurs, ni la validation (§H15.3), ni
+l'opérateur `⊕` (§H15.2) : elle ne fait que lever l'enveloppe.
+
 **H15.5 — Persistance et reprise.** Σ est sérialisé dans le workspace du run
 (`runs/<run_id>/state/etat.json`, aux côtés de `notes/` et `transcripts/` — H6.1) après
 chaque pas validé. La sérialisation est un aller-retour à l'identique : relire Σ
