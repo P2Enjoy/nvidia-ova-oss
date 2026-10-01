@@ -1,7 +1,8 @@
 """Preuves du rapport de campagne : ce qu'il dit, et ce qu'il refuse de taire.
 
 @verifies docs/BACKLOG.md U23 — Runner de campagne et rapport
-@verifies docs/BACKLOG.md U31 — section « Inférence par appel et cache de préfixe » (§A7.3)
+@verifies docs/BACKLOG.md U31 — section « Inférence par appel et cache de préfixe » (§A7.3),
+          répartition des verdicts de la garde d'évaluation (§H16.5)
 @verifies docs/SPEC_ARCAGI3.md §A7.3 (contenu du rapport), §A7.4 (fonction pure),
           §A6.1 (le détail par niveau rend le RHAE vérifiable à la main)
 """
@@ -181,6 +182,9 @@ class TestInferenceParAppel(unittest.TestCase):
                 "divergence": "observation",
             },
             {"type": "prefixe_pas", "caracteres": 200, "prefixe_commun": 150, "divergence": "etat"},
+            {"type": "garde", "garde": "evaluation", "issue": "confirmee"},
+            {"type": "garde", "garde": "evaluation", "issue": "contredite"},
+            {"type": "garde", "garde": "evaluation", "issue": "forcee"},
             {"type": "garde", "garde": "evaluation", "issue": "caduque"},
             {"type": "garde", "garde": "evaluation", "issue": "caduque"},
             {"type": "garde", "garde": "documentaire", "issue": "redemandee"},
@@ -199,7 +203,11 @@ class TestInferenceParAppel(unittest.TestCase):
         )
         # Médiane de 25 % et 75 % ; le premier message n'a pas de précédent.
         self.assertIn("part médiane du préfixe commun : **50.00 %**", rendu)
-        self.assertIn("évaluations caduques **2**, redemandes **1**", rendu)
+        self.assertIn(
+            "verdicts confirmées **1**, contredites **2** (dont forcées **1**), "
+            "caduques **2**, redemandes **1**",
+            rendu,
+        )
 
     def test_une_famille_absente_se_dit_aucune_et_jamais_zero(self) -> None:
         rendu = inference_par_appel([{"type": "action"}])

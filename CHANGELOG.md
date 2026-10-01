@@ -2,6 +2,27 @@
 
 ## [Non publié]
 
+### 2026-10-01 — U31 : verdicts de la garde d'évaluation portés par la métrique `garde` et le rapport (H16.5, A7.3)
+
+- Mesuré sur trois runs successifs (`u31-h1511-tr87`, `-re86`, `-cd82`) : la
+  répartition des verdicts — confirmées contre contredites — est la lecture qui
+  dit si le modèle du monde du harnais tient ou se corrige, et elle se comptait à
+  la main dans les pas archivés, la métrique `garde` n'écrivant que les écarts
+  (redemandes, issue forcée, caduques).
+- La garde d'évaluation écrit désormais CHAQUE verdict rendu, chemin nominal
+  compris : `issue` ∈ {confirmee, contredite, caduque} pour un verdict explicite,
+  `forcee` pour l'issue prudente — une seule ligne par prédiction qualifiée, dans
+  les deux modes de contexte ; le premier pas d'un run, sans prédiction, n'écrit
+  rien. Les gardes documentaire, de prédiction et de persistance restent
+  silencieuses sur leur chemin nominal.
+- `report.md`, section « Inférence par appel et cache de préfixe » : la ligne des
+  gardes porte « verdicts confirmées N, contredites N (dont forcées N), caduques N,
+  redemandes N ».
+- Preuves : `tests/unit/test_verdicts_metrique.py` (mode `state` : ordre des
+  trois issues, rien au premier pas, issue prudente écrite `forcee` une seule
+  fois ; mode `transcript` : mêmes cas ; rapport : répartition et « aucune »),
+  `tests/unit/test_rapport.py` étendu.
+
 ### 2026-09-30 — U31 : patch aplati normalisé par les noms de champs du schéma (H15.4)
 
 - Mesuré sur `cd82-fb555c5d` (2 appels sur 26) et `re86-8af5384d` (1 appel) :

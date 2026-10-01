@@ -7,7 +7,8 @@
 @spec docs/BACKLOG.md U34 — ligne des résumés de coupure dans les événements (§H17.5)
 @spec docs/BACKLOG.md U37 — lignes des idéations et curations dans les événements (§H18.5)
 @spec docs/BACKLOG.md U31 — section « Inférence par appel et cache de préfixe » calculée
-      depuis les métriques `llm`, `prefixe_pas` et `garde` (§A7.3, §H11.2)
+      depuis les métriques `llm`, `prefixe_pas` et `garde` (§A7.3, §H11.2) ; répartition
+      des verdicts de la garde d'évaluation (§A7.3, §H16.5)
 
 Fonction **pure** : elle ne rejoue rien, n'interroge aucun service et ne devine
 aucun chiffre. Tout ce qu'elle écrit vient du résultat de campagne ou des métriques
@@ -178,10 +179,17 @@ def inference_par_appel(metriques: Sequence[Mapping[str, Any]]) -> str:
     if not gardes:
         lignes.append("- gardes d'évaluation : aucune métrique")
     else:
-        caduques = sum(1 for ligne in gardes if ligne.get("issue") == "caduque")
-        redemandes = sum(1 for ligne in gardes if ligne.get("issue") == "redemandee")
+        compte = {
+            issue: sum(1 for ligne in gardes if ligne.get("issue") == issue)
+            for issue in ("confirmee", "contredite", "forcee", "caduque", "redemandee")
+        }
+        # §H16.5 : l'issue prudente est une contradiction réputée — elle compte
+        # parmi les contredites et se nomme à part.
         lignes.append(
-            f"- gardes : évaluations caduques **{caduques}**, redemandes **{redemandes}**"
+            f"- gardes : verdicts confirmées **{compte['confirmee']}**, "
+            f"contredites **{compte['contredite'] + compte['forcee']}** "
+            f"(dont forcées **{compte['forcee']}**), caduques **{compte['caduque']}**, "
+            f"redemandes **{compte['redemandee']}**"
         )
     return "\n".join(lignes)
 

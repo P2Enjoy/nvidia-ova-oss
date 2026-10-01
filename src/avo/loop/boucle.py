@@ -16,7 +16,9 @@
       durées de préremplissage et de génération du serveur dans la métrique `llm` (§H11.2),
       patch aplati : enveloppe levée par le schéma, archive `patch_aplati` et métrique (§H15.4),
       métrique `prefixe_pas` — préfixe commun et partie de divergence du message de pas (§H11.2),
-      bloc « Changements depuis l'observation précédente » du bloc d'observation (§H15.8, §A4.5)
+      bloc « Changements depuis l'observation précédente » du bloc d'observation (§H15.8, §A4.5),
+      verdicts de la garde d'évaluation écrits dans la métrique `garde`, chemin nominal
+      compris — confirmee, contredite, caduque, forcee (§H16.5)
 @spec docs/BACKLOG.md U30 — gardes de méthode dans les phases (§H16.1 garde
       documentaire, §H16.2 garde de prédiction, §H16.3 garde d'évaluation,
       §H16.4 garde de persistance, §H16.5 observabilité)
@@ -755,9 +757,10 @@ class BoucleAgent:
         if verdict is None:
             self._metrique("garde", garde="evaluation", issue="forcee")
             verdict = "contredite"
-        elif verdict == "caduque":
-            # §H16.3 : ni validée ni démentie — tracée à part (§H16.5).
-            self._metrique("garde", garde="evaluation", issue="caduque")
+        else:
+            # §H16.5 : chaque verdict rendu s'écrit, chemin nominal compris —
+            # « caduque » (§H16.3) y reste distinct des confirmées.
+            self._metrique("garde", garde="evaluation", issue=verdict)
         self._prediction_courante = None
         return verdict
 
@@ -1183,10 +1186,11 @@ class BoucleAgent:
             return f"{' ; '.join(manques)}. {forme}", None, None
         if verdict_force:
             self._metrique("garde", garde="evaluation", issue="forcee")
-        if verdict == "caduque":
-            # §H16.3 : une prédiction rendue sans objet par un événement
-            # postérieur n'est ni validée ni démentie — tracée à part (§H16.5).
-            self._metrique("garde", garde="evaluation", issue="caduque")
+        elif verdict is not None and self._prediction_courante:
+            # §H16.5 : chaque verdict rendu s'écrit, chemin nominal compris —
+            # « confirmee », « contredite », ou « caduque » (§H16.3 : ni validée
+            # ni démentie). La répartition est la lecture, pas le seul écart.
+            self._metrique("garde", garde="evaluation", issue=verdict)
         self._echecs_verdict = 0
         return None, verdict, prediction
 
