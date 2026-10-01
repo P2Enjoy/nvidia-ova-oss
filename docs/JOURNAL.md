@@ -6170,3 +6170,104 @@ acquise : un rendu d'observation à préfixe stable (Observer 2, deux jeux) ;
 la répartition des verdicts (confirmées/contredites) en métrique `garde`
 pour que le rapport la porte — comptée à la main sur trois runs (tr87, re86,
 cd82). Relevé ouvert : superviseur (1 intervention au seuil des 20 actions).
+
+## 2026-10-01 (session planifiée) — U31 : lp85 joué (0/8, 22 actions, RHAE 0,00) ; 22 observations inchangées sur 22 actions ; préfixe commun jusqu'à la grille (59,6 %) rompu par le compteur de la ligne d'état ; amélioration d'observation livrée — verdicts de la garde d'évaluation dans la métrique `garde` et le rapport (§H16.5, §A7.3)
+
+**Environnement.** Machine éphémère rattachée à `main` (aucun commit local à
+sauver), identité posée, `.env` écrit et vérifié ignoré. `dockerd` lancé
+directement, autorité du proxy copiée dans `certs/`, `make up` et `make seed`
+verts, `llm-replay` et `arc-replay` `healthy`. Endpoint (`/api/version` 200
+en 2,2 s) et API ARC (`/api/games` 200, 25 jeux) joignables. Itération
+ouverte par la lecture intégrale de `docs/CloudWorker.md` ; écart de procédure
+nommé : le premier appel d'outil a joint `git status` et `git branch` à la
+vérification de présence du fichier (même écart que les sessions précédentes).
+Marqueur EN COURS posé et poussé avant le lancement (protocole anti-collision).
+
+**Jouer — `lp85-305b61c3` (5e de l'ordre du jour), run `u31-h1511-lp85`,
+plafonds de la tranche 2 (80/300/2 400 s/1,5 M/400), modèle `qwen3.8:27b`.**
+0/8 niveaux, **22 actions** (baseline 17 au niveau 1, 388 au total), 26 tours,
+28 appels (27 pas dont 1 idéation + 1 curation), 288 386 tokens de prompt,
+10 558 générés, 1 130 s d'inférence pour 2 423 s de jeu, RHAE 0,00, arrêt au
+plafond de temps ; scorecard `9dc3d756…` FERMÉ, réconciliation exacte (22 = 22,
+`divergences: []`) ; rapport `docs/rapports/u31-h1511-lp85.md`. Actions
+ACTION6 uniquement (22/22 — seule action disponible), **22 observations
+inchangées sur 22 actions** (aucun clic n'a modifié la grille), 3 actions
+invalides (`action6` sans coordonnées), 1 retry de patch, 1 idéation
+d'ouverture, 0 réponse tronquée, 1 intervention du superviseur à l'action 18
+sur « corrections en rafale : 6 passages consécutifs en Bug-Fixing » (sonde
+fraîche, curation appliquée, 12 tâches, `p4` purgée). Perte de première
+tentative 30/30 (1 escalade t2 ; cause close, ~1 s/appel).
+
+**Observer 1 — le retry de patch est un patch aplati SANS action.** Le seul
+`retry_patch` du run (tour 3) porte les champs de Σ à la racine du bloc et
+aucune « action » : le normaliseur §H15.4 livré hier l'a traité comme spécifié
+— refus nommant l'absence d'« action », pas de redemande d'enveloppe. Aucun
+patch aplati AVEC action (`patch_aplati` 0) : l'enveloppe n'a pas été levée sur
+ce jeu, la métrique reste à lire sur les suivants.
+
+**Observer 2 — verdicts : 10 confirmées, 15 contredites, 0 caduque** (comptés
+à la main dans les pas archivés, le run ayant tourné sur le code d'avant la
+métrique). Les contredites s'enchaînent : six passages consécutifs en
+Bug-Fixing ont déclenché le superviseur. Sur un jeu où rien ne change à
+l'écran, le modèle prédit un changement, le dément, prédit un autre
+emplacement ; 377 tokens générés par appel (cd82 692, re86 964), maximum
+1 297, aucune troncature ; durée serveur 40,4 s par appel, génération
+12,1 tokens/s.
+
+**Observer 3 — le préfixe commun court jusqu'à la grille et se rompt sur la
+ligne d'état.** `prefixe_pas` : divergence dans l'`observation` sur 16/27
+messages, `tete` 5, `notes` 5, `premier` 1 ; **part médiane du préfixe commun
+59,6 %** (cd82 17,9 %, re86 23,8 %). Lecture : la grille n'a jamais changé,
+donc le préfixe tient jusqu'à sa fin ; la seule chose qui diverge ensuite dans
+l'observation est la ligne d'état (§A4.1, `rendre_observation`), dont le
+compteur `actions_niveau` change à chaque action valide — c'est lui qui rompt
+le cache avant le bloc de changements, Σ et le protocole. Candidat GÉNÉRIQUE
+désigné par cette mesure, pour une session dont c'est l'unité : sortir les
+compteurs de présentation de l'observation (ils ne décrivent pas
+l'environnement, `empreinte_observation` les exclut déjà) et les porter dans
+la partie du message qui diverge de toute façon (Σ), de sorte qu'une
+observation inchangée soit servie en entier par le cache. À spécifier (§A4.1,
+§H15.11) et à mesurer sur `prefixe_pas` (part médiane attendue au-delà de la
+grille quand elle ne change pas).
+
+**Améliorer (autonomie, point tranché, spécifié AVANT le code, balayage §A5 :
+aucun prompt touché, aucun indice de jeu).** §H16.5 amendé : la garde
+d'évaluation écrit CHAQUE verdict rendu, chemin nominal compris — `confirmee`,
+`contredite`, `caduque` pour un verdict explicite, `forcee` pour l'issue
+prudente —, une ligne par prédiction qualifiée, dans les deux modes ; les
+gardes documentaire, de prédiction et de persistance restent muettes sur leur
+chemin nominal. §A7.3 : la ligne des gardes du rapport porte « verdicts
+confirmées N, contredites N (dont forcées N), caduques N, redemandes N ».
+Motif : la répartition confirmées/contredites est la lecture qui dit si le
+modèle du monde tient ou se corrige, et quatre runs de suite l'ont comptée à la
+main. Option écartée : la déduire des événements de tour (`contradiction` /
+`prediction_confirmee`) — ces événements confondent la caduque et la confirmée
+et portent aussi les issues de l'environnement. Livré : `avo.loop.boucle`
+(`_gardes_etat`, `_exiger_verdict`), `avo.arc.rapport` (ligne des gardes),
+`tests/unit/test_verdicts_metrique.py` (6 tests), `tests/unit/test_rapport.py`
+étendu, CHANGELOG, DAT. La preuve d'intégration
+`tests/integration/test_gardes_sur_cible.py` (« chemin nominal : aucun
+événement de garde ») est devenue rouge par le changement de règle : révisée
+dans le fichier avec son motif — un `confirmee` par action sur une partie
+parfaite, rien d'autre.
+
+**Preuves.** Preuves ciblées vertes pendant le travail (unitaires, lint,
+mypy) ; campagne complète `make check` rejouée d'un trait après la révision :
+VERTE (lint, format, mypy, 966 unitaires dont les 6 nouveaux, 157
+intégration, 12 E2E — cassettes inchangées, aucun corps de requête modifié),
+`make build` vert. Formulation §25 : la métrique des verdicts est
+**implémentée et vérifiée** hors ligne ; sa lecture en campagne (ligne du
+rapport) se fait au prochain jeu — le run de ce jour a tourné sur le code
+d'avant.
+
+**Où reprendre (boucle planifiée).** U31 : jouer le jeu suivant de l'ordre du
+jour (`ka59-…`, code complet dans le listing `/api/games`), `run-id
+u31-h1511-<code>`, mêmes plafonds, et lire dans le rapport : (a) la ligne des
+gardes — verdicts confirmées/contredites/caduques/forcées désormais portés ;
+(b) `patch_aplati` ; (c) `prefixe_pas` — divergence et part médiane, à
+rapprocher du fait que la grille change ou non. Amélioration de code candidate,
+sur mesure acquise (Observer 3) : compteurs de présentation hors de
+l'observation. Relevé ouvert : superviseur (1 intervention « corrections en
+rafale » à l'action 18) ; 22 observations inchangées sur 22 actions (le modèle
+n'a pas trouvé, en 22 clics, une cellule qui réagit — comportement du harnais à
+suivre sur les jeux `click`, sans jamais lui souffler où cliquer).

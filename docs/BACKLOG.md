@@ -1142,9 +1142,24 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
-**Itération du 2026-10-01 (session planifiée) — EN COURS** : `lp85-305b61c3`
-(5e de l'ordre du jour), run `u31-h1511-lp85`, plafonds de la tranche 2 ; marqueur
-anti-collision, retiré au rapport.
+**Itération du 2026-10-01 (session planifiée)** — jouer, observer, améliorer :
+`lp85-305b61c3` joué (5e de l'ordre du jour), run `u31-h1511-lp85`, plafonds
+de la tranche 2 : 0/8 niveaux, 22 actions, RHAE 0,00, plafond de temps,
+scorecard `9dc3d756…` fermé, réconciliation exacte 22 = 22, rapport
+`docs/rapports/u31-h1511-lp85.md` (ACTION6 22/22, 22 observations inchangées,
+3 actions invalides, 1 retry de patch — aplati sans action, refusé en nommant
+« action » par §H15.4 —, 0 troncature, 1 superviseur « corrections en
+rafale » à l'action 18). Observé : verdicts 10 confirmées, 15 contredites,
+0 caduque (comptés à la main) ; 377 tokens générés par appel, 40,4 s par appel ;
+`prefixe_pas` divergence dans l'observation 16/27, part médiane 59,6 % — la
+grille ne changeant jamais, le préfixe tient jusqu'à elle et se rompt sur le
+compteur de la ligne d'état (candidat générique noté au journal). Livré
+(spécifié avant le code) : **verdicts de la garde d'évaluation écrits dans la
+métrique `garde` et répartition portée par le rapport** (§H16.5, §A7.3,
+`tests/unit/test_verdicts_metrique.py`, preuve d'intégration sur `cible`
+révisée avec son motif). `make check` VERT (966/157/12), `make build` vert :
+implémenté et vérifié hors ligne, lecture en campagne au prochain jeu.
+Prochain jeu : `ka59` (journal du jour, « Où reprendre »).
 
 **Itération du 2026-09-30 (session planifiée)** — jouer, observer, améliorer :
 `cd82-fb555c5d` joué (4e de l'ordre du jour), run `u31-h1511-cd82`, plafonds
