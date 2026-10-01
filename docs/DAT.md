@@ -118,7 +118,9 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
   prompt conseille — artefact documentaire (`WORKING.md`, ou `hypotheses` de Σ)
   avant de déverrouiller l'action, prédiction requise par le schéma des outils
   d'action et acheminée vers `reasoning` du fil officiel, verdict
-  confirmé/contredit exigé à l'évaluation, écriture de `GUIDE.md` exigée aux
+  confirmé/contredit exigé à l'évaluation — et écrit tel quel dans la métrique
+  `garde` (confirmee, contredite, caduque, forcee ; H16.5), dont le rapport
+  porte la répartition —, écriture de `GUIDE.md` exigée aux
   complétions, game over et interventions. Jamais fatales, bornées
   (`AVO_GARDE_RETRIES`), débrayables (`AVO_GARDES`), valables dans les deux modes
   de contexte ; A/B sur `cible` : aucune action ni aucun appel de plus sur
