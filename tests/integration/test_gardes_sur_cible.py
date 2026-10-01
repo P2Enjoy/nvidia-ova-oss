@@ -4,7 +4,9 @@
 @verifies docs/SPEC_HARNAIS.md §H16.1 (WORKING écrit avant la première action),
           §H16.2 (prédiction dans chaque action, acheminée vers le fil),
           §H16.3 (verdict à chaque évaluation), §H16.4 (GUIDE écrit aux
-          complétions), §H16.5 (chemin nominal : aucun événement de garde)
+          complétions), §H16.5 (chemin nominal : aucun événement des gardes
+          documentaire, de prédiction et de persistance ; un verdict
+          « confirmee » par action pour la garde d'évaluation)
 @verifies docs/SPEC_ARCAGI3.md §A8.2 (rejeu ARC local), §A3.2 (jeu `cible`)
 @verifies docs/SPEC_HARNAIS.md §H16.0.4 (comparaison avant/après gardes sur `cible` :
           mêmes issues et mêmes appels sur politique conforme, artefacts en plus)
@@ -158,14 +160,26 @@ class TestPartieSousGardes(unittest.TestCase):
             self.assertIn("j'ignore", working, "l'artefact documentaire est écrit (§H16.1)")
             self.assertIn("apprend", guide, "la persistance est écrite (§H16.4)")
 
-            # Chemin nominal : aucun événement de garde dans les métriques (§H16.5).
+            # Chemin nominal (§H16.5) : les gardes documentaire, de prédiction et de
+            # persistance n'écrivent rien quand l'artefact est présent du premier
+            # coup ; la garde d'évaluation, elle, écrit CHAQUE verdict rendu —
+            # révision du 2026-10-01 (U31) : la répartition des verdicts est la
+            # lecture qui guide la boucle, elle se comptait à la main sur trois
+            # runs. Partie parfaite : un « confirmee » par action, rien d'autre.
             metriques = (workspace.chemin / "metrics.jsonl").read_text(encoding="utf-8")
             evenements_garde = [
                 json.loads(ligne)
                 for ligne in metriques.splitlines()
                 if ligne and json.loads(ligne).get("type") == "garde"
             ]
-            self.assertEqual(evenements_garde, [], "artefacts présents du premier coup")
+            self.assertEqual(
+                {(e["garde"], e["issue"]) for e in evenements_garde},
+                {("evaluation", "confirmee")},
+                "artefacts présents du premier coup : seuls les verdicts nominaux s'écrivent",
+            )
+            self.assertEqual(
+                len(evenements_garde), jeu.actions, "un verdict par prédiction qualifiée"
+            )
 
     def test_avant_apres_gardes_memes_issues_artefacts_en_plus(self) -> None:
         """A/B sur `cible` (§H16.0.4) : les gardes ne coûtent ni action ni appel
