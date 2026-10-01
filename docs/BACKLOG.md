@@ -1159,7 +1159,7 @@ métrique `garde` et répartition portée par le rapport** (§H16.5, §A7.3,
 `tests/unit/test_verdicts_metrique.py`, preuve d'intégration sur `cible`
 révisée avec son motif). `make check` VERT (966/157/12), `make build` vert :
 implémenté et vérifié hors ligne, lecture en campagne au prochain jeu.
-Prochain jeu : `ka59` (journal du jour, « Où reprendre »).
+Prochain jeu : `ka59-38d34dbb` (journal du jour, « Où reprendre »).
 
 **Itération du 2026-09-30 (session planifiée)** — jouer, observer, améliorer :
 `cd82-fb555c5d` joué (4e de l'ordre du jour), run `u31-h1511-cd82`, plafonds

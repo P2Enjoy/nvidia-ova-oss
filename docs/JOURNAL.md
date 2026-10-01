@@ -6261,7 +6261,7 @@ rapport) se fait au prochain jeu — le run de ce jour a tourné sur le code
 d'avant.
 
 **Où reprendre (boucle planifiée).** U31 : jouer le jeu suivant de l'ordre du
-jour (`ka59-…`, code complet dans le listing `/api/games`), `run-id
+jour (`ka59-38d34dbb`), `run-id
 u31-h1511-<code>`, mêmes plafonds, et lire dans le rapport : (a) la ligne des
 gardes — verdicts confirmées/contredites/caduques/forcées désormais portés ;
 (b) `patch_aplati` ; (c) `prefixe_pas` — divergence et part médiane, à
