@@ -1494,11 +1494,18 @@ la mise à jour de `GUIDE.md` est exigée avant de poursuivre.
 **H16.5 — Observabilité et preuves.** Chaque décision de garde écrit un événement
 `garde` dans `metrics.jsonl` (H11.2) : `garde` ∈ {documentaire, prediction,
 evaluation, persistance}, `issue` ∈ {satisfaite_apres_redemande, redemandee,
-tour_clos, forcee, caduque} — le chemin nominal (artefact présent du premier
-coup) n'écrit rien, pour ne pas noyer les métriques ; `caduque` (§H16.3) trace
-chaque prédiction qualifiée sans objet, pour que le relevé distingue les
-confirmées des caduques. Le bilan de run compte les redemandes
-totales. Preuves exigées (U30) : unitaires par garde (refus nommé quand l'artefact
+tour_clos, forcee, confirmee, contredite, caduque}. Pour les gardes documentaire,
+de prédiction et de persistance, le chemin nominal (artefact présent du premier
+coup) n'écrit rien, pour ne pas noyer les métriques. La garde d'évaluation écrit
+CHAQUE verdict rendu, chemin nominal compris : `confirmee`, `contredite` et
+`caduque` (§H16.3) pour un verdict explicite du modèle, `forcee` pour l'issue
+prudente (budget de redemandes épuisé, prédiction réputée contredite) — une
+seule ligne par prédiction qualifiée, jamais deux. Motif, mesuré : la
+répartition des verdicts est la lecture qui dit si le modèle du monde du
+harnais tient (confirmées) ou se corrige (contredites) ; portée par les seuls
+écarts, la métrique ne la rendait pas, et trois runs successifs (journal des
+2026-09-29 et 2026-09-30) l'ont comptée à la main dans les pas archivés. Le
+bilan de run compte les redemandes totales. Preuves exigées (U30) : unitaires par garde (refus nommé quand l'artefact
 manque, passage quand il est là, budget épuisé → issue écrite ici), intégration
 sur `cible` (partie jouée sous gardes, artefacts dans le workspace), E2E rejeu
 (cassettes régénérées sous gardes), et comparaison avant/après gardes sur `cible`

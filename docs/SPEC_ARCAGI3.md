@@ -446,8 +446,9 @@ générés par seconde de `generation_ms`) ; sur les métriques `prefixe_pas` �
 nombre de messages composés, répartition par `divergence` (dans l'ordre : tête,
 notes, observation, Σ, protocole, aucune, premier) et part médiane du préfixe
 commun (`prefixe_commun / caracteres`, en pour cent, sur les messages qui ont un
-précédent) ; sur les métriques `garde` — évaluations caduques et redemandes.
-Quand un run ne porte aucune métrique d'une famille, la ligne le dit (« aucune »)
+précédent) ; sur les métriques `garde` — verdicts rendus par la garde
+d'évaluation (§H16.5) : confirmées, contredites (dont forcées par l'issue
+prudente), caduques, et redemandes. Quand un run ne porte aucune métrique d'une famille, la ligne le dit (« aucune »)
 au lieu d'afficher zéro : un zéro se lirait comme une mesure. Ce sont des
 lectures, jamais des décisions : la section ne qualifie rien.
 
