@@ -6271,3 +6271,98 @@ l'observation. Relevé ouvert : superviseur (1 intervention « corrections en
 rafale » à l'action 18) ; 22 observations inchangées sur 22 actions (le modèle
 n'a pas trouvé, en 22 clics, une cellule qui réagit — comportement du harnais à
 suivre sur les jeux `click`, sans jamais lui souffler où cliquer).
+
+## 2026-10-02 (session planifiée) — U31 : ka59 joué (0/7, 15 actions, RHAE 0,00) ; verdicts 8/6 lus dans le rapport ; défaut général du superviseur mesuré et corrigé — le détecteur de cycle comparait des observations qui portaient le compteur d'actions (§H10.2)
+
+**Environnement.** Machine éphémère rattachée à `main` (aucun commit local à
+sauver), identité posée, `.env` écrit et vérifié ignoré. `dockerd` lancé
+directement, autorité du proxy copiée dans `certs/`, premier `make up` rejeté
+par un `429` de docker.io, relancé et vert ; `make seed` vert, `llm-replay` et
+`arc-replay` `healthy`. Endpoint (`/api/version` 200 en 2,3 s) et API ARC
+(`/api/games` 200, 25 jeux) joignables. Marqueur EN COURS posé et poussé avant
+le lancement. Écart de procédure nommé : le premier appel d'outil a joint `git
+status` et `git log` à la vérification de présence de `docs/CloudWorker.md`.
+
+**Jouer — `ka59-38d34dbb` (6e de l'ordre du jour), run `u31-h1511-ka59`,
+plafonds de la tranche 2 (80/300/2 400 s/1,5 M/400), modèle `qwen3.8:27b`.**
+0/7 niveaux, **15 actions** (baseline 28 au niveau 1, 730 au total), 16 tours,
+19 appels (18 pas dont 1 idéation + 1 résumé de coupure), 182 898 tokens de
+prompt, 17 748 générés, 1 729 s d'inférence pour 2 593 s de jeu, RHAE 0,00,
+arrêt au plafond de temps ; scorecard `5cdf73d7…` FERMÉ, réconciliation exacte
+(15 = 15, `divergences: []`) ; rapport `docs/rapports/u31-h1511-ka59.md`.
+ACTION1–4 : 3/6/3/3, aucune action invalide, **15 observations changées sur 15**,
+2 retries de patch (tour 1 : bloc d'idéation sans clé « action » ; tour 15 :
+réponse tronquée à 4 096 tokens sans bloc JSON, résumé de coupure §H17 injecté),
+0 intervention du superviseur (15 actions, seuil de stagnation à 20 ; frames
+toujours différentes, le détecteur de cycle est sans objet ici). Perte de
+première tentative 19/19 (21 relances ; cause close, pont 443).
+
+**Observer 1 — la ligne des gardes du rapport porte les verdicts : 8 confirmées,
+6 contredites, 0 caduque, 0 forcée.** La métrique livrée hier est confirmée en
+campagne. Lecture : le modèle a identifié dès la 2e action un agent mobile et a
+testé ACTION1–4 comme directions ; au tour 16 l'agent « disparaît » d'une
+position pour réapparaître loin, et Σ finit avec `position: null` et des
+hypothèses reformulées (« la couleur 0 est un état de case plutôt qu'un
+agent »). La réponse tronquée du tour 15 est un raisonnement en boucle sur des
+coordonnées (« Attendez. Réexaminons… ») — la coupure §H17 l'a résumée et le pas
+suivant a abouti.
+
+**Observer 2 — inférence.** 934 tokens générés par appel (maximum 4 096, la
+tronquée), 91,0 s par appel serveur, 11,4 tokens/s, `prefill_ms` 0,31 s sur
+18/18 ; `prefixe_pas` : divergence dans l'observation 13/18, tête 2, notes 2,
+part médiane 30,6 % — cohérent avec cd82/re86 (grille modifiée à chaque action)
+et à l'opposé de lp85 (59,6 %, grille immobile).
+
+**Observer 3 — défaut GÉNÉRAL du superviseur, mesuré sur le code à partir du
+relevé lp85.** `BoucleAgent._superviser` enregistrait dans la trajectoire
+`issue.observation`, c'est-à-dire l'observation RENDUE, qui porte en ARC la ligne
+d'état et son compteur `actions_niveau` — incrémenté à chaque action valide.
+L'empreinte de frame (`empreinte_frame`, SHA-256 du texte) changeait donc à
+chaque action, et la double condition du détecteur de cycle (§H10.2 : ≥ 8 fois la
+même action sur 12 SANS changement de frame) ne pouvait jamais être vraie :
+**zéro « cycle improductif » dans les 74 rapports committés**, y compris lp85
+(22 fois ACTION6, grille jamais modifiée — seule la rafale de Bug-Fixing a fait
+intervenir le superviseur, à l'action 18). Le candidat noté hier (« compteurs de
+présentation hors de l'observation ») désignait le même compteur, mais pour le
+cache de préfixe ; quantifié ce jour depuis la composition du message
+(`_avec_observation`) : entre la ligne d'état et Σ ne restent que le bloc de
+changements et l'annonce des actions, ~200–300 caractères, Σ divergeant ensuite
+à chaque pas — gain marginal, candidat ÉCARTÉ pour ce motif (point tranché).
+
+**Améliorer (autonomie, point tranché, spécifié AVANT le code, balayage §A5 :
+aucun prompt touché, aucun indice de jeu).** §H10.2 amendé : « sans changement
+de frame » se juge sur l'état observable — la trajectoire enregistre
+l'`empreinte_observation()` de l'environnement quand il la déclare (le même
+contenu que la mesure de non-progrès §H11.2), l'observation rendue sinon. Aucun
+seuil, aucun message, aucun prompt ne change. Livré : `avo.loop.boucle`
+(`_superviser`), `tests/unit/test_cycle_sur_empreinte.py` (3 tests : le cycle se
+déclenche malgré un compteur qui change, l'empreinte est constante, et sans
+empreinte déclarée le comportement est inchangé), DAT, CHANGELOG. Motif de la
+forme : le contrat `Environnement` reste inchangé (méthode facultative lue par
+`getattr`, comme pour la métrique), et l'adaptateur ARC la déclare déjà.
+Option écartée : retirer le compteur de l'observation — il informe le modèle de
+sa dépense d'actions, et la règle doit tenir pour tout environnement dont
+l'observation porte une comptabilité.
+
+**Preuves.** Preuves ciblées vertes pendant le travail (37 unitaires du
+superviseur, lint, mypy, 157 intégration, 12 E2E — cassettes inchangées, aucun
+corps de requête modifié) ; campagne complète `make check` rejouée d'un trait
+en fin de session : VERTE (lint, format, mypy, 969 unitaires dont les 3
+nouveaux, 157 intégration, 12 E2E), `make build` vert au second essai (premier
+rejeté par un `429` de docker.io, comme `make up`). Formulation §25 : la
+trajectoire sur empreinte est **implémentée et vérifiée** hors ligne ; son effet
+en campagne se lit au prochain jeu dont la grille ne réagit pas (métrique
+`superviseur`, motif « cycle improductif »).
+
+**Où reprendre (boucle planifiée).** U31 : jouer le jeu suivant de l'ordre du
+jour (`bp35-0a0ad940`), `run-id u31-h1511-<code>`, mêmes plafonds, et lire dans
+le rapport : (a) interventions du superviseur et leur motif (`metrics.jsonl`,
+type `superviseur`) — un « cycle improductif » attendu si une commande se répète
+sans effet ; (b) la ligne des gardes ; (c) `prefixe_pas`. Relevés ouverts, à
+recouper avant tout code : (1) bloc d'idéation rendu SANS clé « action » (ka59
+tour 1 ; lp85 tour 3 un patch aplati sans action) — le retry coûte un appel
+d'idéation entier (~150 s) ; une tolérance GÉNÉRIQUE au pas d'idéation, où
+l'action est ignorée par construction, est candidate si le motif se répète ;
+(2) réponse tronquée à 4 096 tokens sur un raisonnement en boucle de
+coordonnées (ka59 tour 15 ; re86 une occurrence) — le résumé de coupure §H17 a
+fonctionné.

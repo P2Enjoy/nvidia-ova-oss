@@ -1142,9 +1142,33 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
-**Itération du 2026-10-02 (session planifiée) — EN COURS** : `ka59-38d34dbb`
-(6e de l'ordre du jour), run `u31-h1511-ka59`, plafonds de la tranche 2 ; marqueur
-anti-collision, retiré au rapport.
+**Itération du 2026-10-02 (session planifiée)** — jouer, observer, améliorer :
+`ka59-38d34dbb` joué (6e de l'ordre du jour), run `u31-h1511-ka59`, plafonds
+de la tranche 2 : 0/7 niveaux, 15 actions, RHAE 0,00, plafond de temps,
+scorecard `5cdf73d7…` fermé, réconciliation exacte 15 = 15, rapport
+`docs/rapports/u31-h1511-ka59.md` (ACTION1–4 3/6/3/3, 0 action invalide,
+15 observations changées sur 15, 2 retries de patch — bloc sans « action » au
+pas d'idéation, réponse tronquée à 4 096 tokens sans bloc JSON —, 1 résumé de
+coupure, 0 intervention du superviseur). Observé : **verdicts 8 confirmées,
+6 contredites, 0 caduque, lus dans la ligne des gardes du rapport** (métrique
+d'hier confirmée en campagne) ; 934 tokens générés par appel, 91 s par appel,
+11,4 tokens/s ; `prefixe_pas` divergence dans l'observation 13/18, part médiane
+30,6 % (la grille change à chaque action) ; perte de première tentative 19/19.
+Défaut GÉNÉRAL mesuré en relisant le superviseur à partir de lp85 : la
+trajectoire recevait l'observation rendue — dont le compteur de la ligne d'état
+change à chaque action valide —, donc deux frames identiques n'avaient jamais la
+même empreinte et le détecteur de cycle (§H10.2) n'a jamais déclenché sur aucun
+des rapports committés. Livré (spécifié avant le code) : **trajectoire du
+superviseur sur l'`empreinte_observation()` de l'environnement** (§H10.2 amendé,
+`avo.loop.boucle._superviser`, `tests/unit/test_cycle_sur_empreinte.py`, DAT,
+CHANGELOG). `make check` VERT (969/157/12, cassettes inchangées), `make build`
+vert : implémenté et vérifié hors ligne ; effet en campagne à lire sur un jeu
+dont la grille ne réagit pas (lp85 en est le cas type). Point tranché : le
+candidat « compteurs de présentation hors de l'observation » n'est pas poursuivi
+pour le cache de préfixe — le gain se borne au bloc de changements et à
+l'annonce des actions (~200–300 caractères par pas), Σ divergeant de toute façon
+juste après ; son vrai effet, la comparaison de frames, est livré par le
+superviseur. Prochain jeu : `bp35-0a0ad940` (journal du jour, « Où reprendre »).
 
 **Itération du 2026-10-01 (session planifiée)** — jouer, observer, améliorer :
 `lp85-305b61c3` joué (5e de l'ordre du jour), run `u31-h1511-lp85`, plafonds
