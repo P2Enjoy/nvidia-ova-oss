@@ -1142,6 +1142,10 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
+**Itération du 2026-10-02 (session planifiée) — EN COURS** : `ka59-38d34dbb`
+(6e de l'ordre du jour), run `u31-h1511-ka59`, plafonds de la tranche 2 ; marqueur
+anti-collision, retiré au rapport.
+
 **Itération du 2026-10-01 (session planifiée)** — jouer, observer, améliorer :
 `lp85-305b61c3` joué (5e de l'ordre du jour), run `u31-h1511-lp85`, plafonds
 de la tranche 2 : 0/8 niveaux, 22 actions, RHAE 0,00, plafond de temps,
