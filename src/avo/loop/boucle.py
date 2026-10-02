@@ -9,6 +9,9 @@
       §H12 (politique de raisonnement portée par la configuration)
 @spec docs/SPEC_ARCAGI3.md §A5.1 (direct-interaction : aucune règle de jeu fournie)
 @spec docs/BACKLOG.md U27 — mode `state` de la boucle (§H15.7, §H15.8)
+@spec docs/BACKLOG.md U31 — trajectoire du superviseur sur l'empreinte d'observation
+      de l'environnement (§H10.2 : « sans changement de frame » se juge sur l'état
+      observable, jamais sur un compteur de présentation)
 @spec docs/BACKLOG.md U31 — archive des pas du mode `state` (§H15.10), schéma de Σ du
       contexte monté (§H15.9), refus de garde = pas blanc atomique (§H16.1),
       `coupure_transport` dans la métrique `llm` (§H4.10, §H11.2),
@@ -526,9 +529,17 @@ class BoucleAgent:
         """
         if self.superviseur is None or tour.action is None:
             return
+        # §H10.2 : « sans changement de frame » se juge sur l'état observable —
+        # l'empreinte d'observation de l'environnement quand il la déclare (le
+        # même contenu que la mesure de non-progrès, §H11.2), l'observation
+        # rendue sinon. Mesuré (2026-10-02) : l'observation rendue porte en ARC
+        # un compteur de présentation qui change à chaque action valide ; deux
+        # frames identiques n'avaient jamais la même empreinte et le détecteur
+        # de cycle n'a jamais déclenché sur aucun run de campagne.
+        empreinte = getattr(self.environnement, "empreinte_observation", None)
         self.superviseur.trajectoire.enregistrer(
             action=tour.action,
-            observation=observation,
+            observation=empreinte() if empreinte is not None else observation,
             niveau_complete=tour.evenement is Evenement.NIVEAU_COMPLETE,
             bug_fixing=tour.evenement in (Evenement.CONTRADICTION, Evenement.GAME_OVER),
         )
