@@ -42,7 +42,9 @@ public) en direct-interaction texte (grilles 64×64 exactes, actions sans descri
 3. **Lignée** : complétion de niveau → commit (connaissance + score) dans le dépôt
    git jetable du run.
 4. **Supervision** : stall/cycles détectés → appel LLM séparé → directive
-   `[SUPERVISEUR]` injectée en append.
+   `[SUPERVISEUR]` injectée en append. La trajectoire compare les frames par
+   l'`empreinte_observation()` de l'environnement quand elle existe (état
+   observable, sans compteur de présentation — §H10.2, §H11.2).
 5. **Campagne** : runner séquentiel multi-jeux, scorecard officiel (live) ou
    arc-replay (replay), RHAE, `report.md`.
 

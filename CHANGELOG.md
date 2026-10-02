@@ -2,6 +2,22 @@
 
 ## [Non publié]
 
+### 2026-10-02 — U31 : le détecteur de cycle du superviseur compare l'état observable, pas la comptabilité du harnais (H10.2)
+
+- Mesuré : zéro déclenchement du détecteur de cycle sur l'ensemble des rapports
+  de campagne committés ; sur `u31-h1511-lp85`, 22 fois la même commande sans
+  que la grille change et aucune intervention à ce titre. Cause : la trajectoire
+  du superviseur recevait l'observation rendue, dont la ligne d'état porte le
+  compteur d'actions du niveau — il change à chaque action valide, donc deux
+  frames identiques n'avaient jamais la même empreinte.
+- La boucle enregistre désormais dans la trajectoire l'`empreinte_observation()`
+  de l'environnement lorsqu'il la déclare (le même contenu que la mesure de
+  non-progrès §H11.2), et l'observation rendue sinon. Aucun seuil ni message
+  ne change ; aucun prompt n'est touché.
+- Preuves : `tests/unit/test_remise_superviseur_etat.py` étendu (environnement
+  qui déclare une empreinte stable sous une observation qui change : le cycle
+  se déclenche ; sans empreinte, comportement inchangé).
+
 ### 2026-10-01 — U31 : verdicts de la garde d'évaluation portés par la métrique `garde` et le rapport (H16.5, A7.3)
 
 - Mesuré sur trois runs successifs (`u31-h1511-tr87`, `-re86`, `-cd82`) : la

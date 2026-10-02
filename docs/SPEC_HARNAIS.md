@@ -604,6 +604,20 @@ au-dessus de la fenêtre du détecteur de cycle (12) pour ne pas interférer ave
 l'exploration initiale. Générique : la règle porte la relation seuil/budget,
 jamais un environnement particulier.
 
+« Sans changement de frame » se juge sur l'ÉTAT OBSERVABLE de l'environnement,
+jamais sur la comptabilité du harnais : la trajectoire du superviseur enregistre
+l'`empreinte_observation()` de §H11.2 lorsque l'environnement la déclare — le
+même contenu que la mesure de non-progrès —, et l'observation rendue sinon.
+Mesuré (journal 2026-10-02) : la trajectoire recevait l'observation rendue, qui
+porte en ARC une ligne d'état dont le compteur d'actions du niveau change à
+chaque action valide (§A4.1) ; deux frames identiques n'avaient donc jamais la
+même empreinte, et le détecteur de cycle était structurellement muet — zéro
+déclenchement sur l'ensemble des rapports de campagne committés, y compris
+`u31-h1511-lp85` (22 fois la même commande, grille jamais modifiée, seule une
+rafale de Bug-Fixing a fait intervenir le superviseur, à l'action 18). La règle
+est générique : un compteur de présentation n'est pas un changement d'état, dans
+quelque environnement que ce soit.
+
 **H10.3 — Intervention.** Appel LLM séparé (contexte propre : résumé de trajectoire,
 notes, dernières frames rendues en texte) qui produit un diagnostic et 2–3 directions
 alternatives ; le résultat est injecté dans le transcript principal comme message
