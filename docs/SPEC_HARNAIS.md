@@ -889,7 +889,8 @@ jamais d'une liste écrite dans le noyau), ces clés forment le patch, et
 d'idéation, §H18.2). Une clé qui n'est ni « action » ni un champ du schéma
 laisse le refus nommé inchangé ; sans schéma fourni au décodeur, aucune
 normalisation. Un bloc aplati SANS « action » reste un refus, qui nomme
-désormais l'absence d'« action » plutôt que les clés reçues. L'écart n'est
+désormais l'absence d'« action » plutôt que les clés reçues — sauf sur le pas
+d'idéation, où l'absence vaut vide (§H18.2). L'écart n'est
 jamais silencieux : la ligne d'archive du pas (§H15.10) porte
 `patch_aplati: true` et la boucle écrit l'événement `patch_aplati` (§H11.2).
 La normalisation ne touche ni les valeurs, ni la validation (§H15.3), ni
@@ -1722,7 +1723,17 @@ un pas dédié à le produire.
   tentative. La structure qui déclare ne pas jouer l'action ne peut pas
   exiger une action : la tolérance appartient au pas d'idéation, l'invite
   (constante) dit désormais aussi la forme (« action » vide ou « aucune » —
-  principe §H16.0.7). Le patch du pas S'APPLIQUE — aucune action jouée ne l'accompagne dont il écrirait l'effet
+  principe §H16.0.7). La tolérance couvre les DEUX formes logiques de
+  « pas d'action » : le champ vide (`"action": ""`) et le champ ABSENT du
+  bloc — enveloppé (`{"state_patch": {…}}` seul) comme aplati (§H15.4,
+  champs du schéma à la racine sans « action »). Mesure qui désigne la
+  seconde forme (run `u31-h1511-ka59`, 2026-10-02, tour 1) : le bloc
+  d'idéation portait les approches et aucune clé « action » ; le refus strict
+  a coûté un appel d'idéation entier (~150 s, 6 % du budget de temps du jeu)
+  pour obtenir la même réponse avec `"action": ""`. Sur ce pas, l'absence
+  vaut vide — l'action rendue n'est pas jouée, quelle qu'elle soit —, et le
+  pas archivé porte `action: ""`. Hors du pas d'idéation, l'absence reste
+  le refus nommé de §H15.4 (« action » manquante), inchangé. Le patch du pas S'APPLIQUE — aucune action jouée ne l'accompagne dont il écrirait l'effet
   attendu : le motif du pas blanc atomique (§H16.1) ne s'applique pas — ;
   l'action rendue n'est PAS jouée, quelle qu'elle soit : gratuite au score,
   archivée (§H15.10, `ideation: true`). L'idéation est UNE fois par exécution

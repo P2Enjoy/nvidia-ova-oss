@@ -167,7 +167,8 @@ d'environnement de production : le « déploiement » est la campagne d'évaluat
   `id`, borne à 12 avec purge nommée des terminales, schéma DÉRIVÉ `+plan` —
   jamais déclaré par un domaine) ; pas d'idéation d'ouverture (premier pas
   sans action jouée, approches distinctes dans `hypotheses`, tâches d'amorce
-  dans `plan`) ; curation à l'intervention (appel séparé de manager, la liste
+  dans `plan` ; le champ « action » y est toléré vide OU absent, enveloppé
+  comme aplati — H18.2) ; curation à l'intervention (appel séparé de manager, la liste
   ENTIÈRE curée remplace le seul champ `plan`, validée par le runtime,
   dégradation propre). Trois interrupteurs indépendants (`AVO_PLAN_LEDGER`,
   `AVO_IDEATION_OUVERTURE`, `AVO_SUP_CURATION`, défauts `true`) ;

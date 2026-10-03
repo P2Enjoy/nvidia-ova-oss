@@ -2,6 +2,20 @@
 
 ## [Non publié]
 
+### 2026-10-03 — U31 : le pas d'idéation tolère l'absence de la clé « action », comme sa vacuité (H18.2, H15.4)
+
+- Mesuré (`u31-h1511-ka59`, tour 1) : le bloc d'idéation portait les approches
+  sans clé « action » ; le contrat strict l'a refusé et la redemande a coûté un
+  appel d'idéation entier (~150 s) pour la même réponse avec `"action": ""`.
+  L'invite annonce qu'aucune action ne sera jouée : omettre le champ est la
+  seconde forme logique de « pas d'action », à côté du champ vide déjà toléré.
+- `decoder_pas(action_optionnelle=True)` lit désormais un bloc sans « action »
+  — enveloppé ou aplati — comme `action: ""` ; hors du pas d'idéation, le refus
+  nommé (« action » manquante) est inchangé. Aucun prompt ne change.
+- Preuves : `tests/unit/test_ideation_action_absente.py` (décodeur : les deux
+  formes tolérées sur le pas d'idéation seul, refus strict ailleurs ; boucle :
+  le pas d'idéation sans « action » s'acquiert en un appel, rien n'est joué).
+
 ### 2026-10-02 — U31 : le détecteur de cycle du superviseur compare l'état observable, pas la comptabilité du harnais (H10.2)
 
 - Mesuré : zéro déclenchement du détecteur de cycle sur l'ensemble des rapports
