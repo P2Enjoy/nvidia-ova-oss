@@ -6366,3 +6366,100 @@ l'action est ignorée par construction, est candidate si le motif se répète ;
 (2) réponse tronquée à 4 096 tokens sur un raisonnement en boucle de
 coordonnées (ka59 tour 15 ; re86 une occurrence) — le résumé de coupure §H17 a
 fonctionné.
+
+## 2026-10-03 (session planifiée) — U31 : bp35 joué (0/9, 15 actions, RHAE 0,00) ; 8 appels sur 25 perdus à émettre une commande paramétrée sans ses valeurs ; tolérance livrée — clé « action » absente au pas d'idéation (§H18.2)
+
+**Environnement.** Machine éphémère rattachée à `main` (aucun commit local à
+sauver), identité posée, `.env` écrit et vérifié ignoré. `dockerd` lancé
+directement, autorité du proxy copiée dans `certs/` (le premier `make image`,
+lancé sans elle, a échoué sur `apt-get` — recette `certs/README.md` rejouée),
+`make up` et `make seed` verts, `llm-replay` et `arc-replay` `healthy`. Endpoint
+(`/api/version` 200 en 2,3 s ; modèles `qwen3.8:27b`, `qwen3.6:35b`,
+`all-minilm`) et API ARC (`/api/games` 200, 25 jeux) joignables. Marqueur EN
+COURS posé et poussé avant le lancement. Modèle : `qwen3.8:27b`, défaut H3.1
+(décision du responsable du 2026-09-12 ; le prompt planifié cite encore
+`qwen3.6:35b`, antérieur — le dépôt fait foi).
+
+**Jouer — `bp35-0a0ad940` (7e de l'ordre du jour), run `u31-h1511-bp35`,
+plafonds de la tranche 2 (80/300/2 400 s/1,5 M/400).** 0/9 niveaux, **15
+actions** (baseline 21 au niveau 1, 651 au total), 25 tours, 25 appels (1
+idéation + 24 pas), 301 123 tokens de prompt, 14 065 générés, 1 466 s
+d'inférence pour 2 433 s de jeu, RHAE 0,00, arrêt au plafond de temps ;
+scorecard `01a67aad…` FERMÉ, réconciliation exacte (15 = 15,
+`divergences: []`) ; rapport `docs/rapports/u31-h1511-bp35.md`. ACTION3/4/6/7 :
+3/4/4/4, 15 observations changées sur 15 (`prediction_confirmee` ×15 à
+l'événement, verdicts 11 confirmées, 9 contredites, 2 caduques, 1 redemande),
+**0 retry de patch** mais **3 patchs aplatis normalisés** (§H15.4 : trois
+appels sauvés, le mécanisme de cd82 confirmé sur un 3e jeu), 0 troncature,
+0 résumé de coupure, 0 intervention du superviseur (15 actions, seuil 20 ; les
+frames changent à chaque action, le détecteur de cycle est sans objet).
+Perte de première tentative 21/25 (21 `ServerError` t1, 1 `TransportError`
+t2 ; cause close, pont 443).
+
+**Observer 1 — le relevé qui coûte : 8 `action_invalide` sur 23 actions
+émises, toutes « ACTION6 » SANS ses valeurs (`row, col`).** Tours 3-4-5, 8,
+13, 16-18-19-20 : à chaque fois le modèle écrit `"action": "ACTION6"` nue, la
+boucle refuse en nommant la forme (« 2 valeur(s) attendue(s) (row, col), 0
+reçue(s). Forme attendue : « action6 row, col » ») et relaie l'erreur au pas
+suivant ; le modèle récidive deux à quatre fois de suite avant d'écrire
+« ACTION6 0, 0 », « ACTION6 28, 19 », « ACTION6 38, 25 », « ACTION6 38, 30 ».
+Chaque refus coûte un pas entier (un appel, ~59 s) : **~8 min, 19 % du budget
+de temps, sans action jouée**. Lecture : le défaut est de FORME et GÉNÉRIQUE —
+une commande paramétrée dont le modèle connaît le nom mais oublie les valeurs,
+et dont le retour d'erreur n'est pas suffisant pour l'en guérir au pas
+suivant. La solution N'EST PAS de lui souffler des coordonnées (benchmaxing,
+règle du responsable) ; les candidats génériques, à mesurer sur le code AVANT
+tout changement : (a) la forme paramétrée est-elle annoncée dans la ligne des
+actions disponibles de CHAQUE pas (« ACTION6 row, col ») ou seulement dans le
+protocole d'ouverture ? ; (b) un pas dont l'action est refusée pour forme
+pourrait être redemandé DANS LE MÊME TOUR, comme un patch malformé (§H15.4,
+`CompteurRetries`), au lieu de consommer un tour et de laisser Σ avancer sur
+une action non jouée — à condition que le patch ne soit pas acquis deux fois.
+Le choix se fait sur la mesure (a) ; aucun prompt ni code n'est modifié à ce
+titre dans cette session.
+
+**Observer 2 — inférence.** 563 tokens générés par appel (max 1 038, aucune
+tronquée), 58,6 s par appel serveur, 13,0 tokens/s, `prefill_ms` 0,32 s sur
+25/25 ; `prefixe_pas` : divergence dans l'observation 9/25, notes 6, tête 5,
+état 2, aucune 2 ; part médiane 35,2 % — cohérent avec ka59/cd82 (grille
+modifiée à chaque action). Le pas d'idéation a abouti du premier coup, 5
+hypothèses et 4 tâches, avec `"action": ""` — la forme que l'invite demande.
+
+**Améliorer (autonomie, point tranché, spécifié AVANT le code, balayage §A5 :
+aucun prompt touché, aucun indice de jeu).** Le relevé de ka59 (tour 1 : bloc
+d'idéation sans clé « action », un appel d'idéation entier perdu, ~150 s) est
+traité : §H18.2 amendé — sur le pas d'idéation, et sur lui seul, la clé
+« action » ABSENTE vaut vide, enveloppée comme aplatie ; §H15.4 renvoie à cette
+exception ; hors idéation, le refus nommé (« action » manquante) est inchangé.
+Livré : `decoder_pas` (cinq lignes : un bloc réduit à `state_patch` sous
+`action_optionnelle` reçoit `action: ""`), `tests/unit/test_ideation_action_absente.py`
+(8 tests : décodeur, les deux formes tolérées sur le pas d'idéation seul, clé
+étrangère et bloc vide toujours refusés, refus strict hors idéation ; boucle :
+pas d'idéation sans clé acquis en un appel, rien joué, écart `patch_aplati`
+nommé, pas ordinaire sans clé toujours redemandé), DAT, CHANGELOG. Motif de
+trancher sans attendre une récidive : la règle de §H18.2 est déjà « la
+structure qui déclare ne pas jouer l'action ne peut pas l'exiger », l'omission
+est la seconde forme logique de « pas d'action », le changement est une
+tolérance bornée à ce pas, sans prompt. Option écartée : renforcer l'invite —
+elle dit déjà la forme, et ka59 l'a ignorée une fois ; une tolérance vaut
+mieux qu'une injonction répétée.
+
+**Preuves.** Preuves ciblées vertes pendant le travail (8 nouveaux + 15 du
+patch aplati, lint, format, mypy) ; campagne complète `make check` rejouée
+d'un trait : VERTE (lint, format, mypy, 977 unitaires dont les 8 nouveaux,
+157 intégration, 12 E2E — cassettes inchangées, aucun corps de requête
+modifié), `make build` vert. Formulation §25 : la tolérance est **implémentée
+et vérifiée** hors ligne ; son effet en campagne se lit au prochain pas
+d'idéation rendu sans clé « action » (archive `ideation: true`, `action: ""`,
+0 `retry_patch` au tour 1).
+
+**Où reprendre (boucle planifiée).** U31 : jouer le jeu suivant de l'ordre du
+jour (`wa30-ee6fef47`), `run-id u31-h1511-<code>`, mêmes plafonds, et lire
+dans le rapport : (a) le nombre d'`action_invalide` et leur motif — si des
+commandes paramétrées sans valeurs réapparaissent, le relevé de bp35 est
+confirmé sur un 2e jeu ; AVANT tout code, mesurer sur `_avec_observation` /
+`prompts.py` comment la forme paramétrée est annoncée à chaque pas (candidat
+(a) ci-dessus) et ce que coûte un refus (candidat (b)) ; (b) la ligne des
+gardes ; (c) `patch_aplati` (3 sur bp35, 0 retry : le mécanisme tient) ;
+(d) `prefixe_pas`. Relevé clos : la clé « action » absente au pas d'idéation
+(ka59) — tolérance livrée ce jour.

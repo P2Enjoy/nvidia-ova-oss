@@ -1142,9 +1142,26 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
-**Itération du 2026-10-03 (session planifiée) — EN COURS** : `bp35-0a0ad940`
-(7e de l'ordre du jour), run `u31-h1511-bp35`, plafonds de la tranche 2 ; marqueur
-anti-collision, retiré au rapport.
+**Itération du 2026-10-03 (session planifiée)** — jouer, observer, améliorer :
+`bp35-0a0ad940` joué (7e de l'ordre du jour), run `u31-h1511-bp35`, plafonds
+de la tranche 2 : 0/9 niveaux, 15 actions, RHAE 0,00, plafond de temps,
+scorecard `01a67aad…` fermé, réconciliation exacte 15 = 15, rapport
+`docs/rapports/u31-h1511-bp35.md` (ACTION3/4/6/7 3/4/4/4, **8 actions
+invalides — toutes « ACTION6 » sans ses valeurs `row, col`, ~8 min soit 19 %
+du budget de temps perdus en pas sans action jouée**, 15 observations changées
+sur 15, 0 retry de patch, 3 patchs aplatis normalisés sans perte, 0
+troncature, 0 intervention du superviseur). Observé : verdicts 11 confirmées,
+9 contredites, 2 caduques, 1 redemande ; 563 tokens générés par appel, 58,6 s
+par appel, 13,0 tokens/s ; `prefixe_pas` divergence dans l'observation 9/25,
+part médiane 35,2 % ; perte de première tentative 21/25. Livré (spécifié
+avant le code, mesure ka59 tour 1) : **la clé « action » absente au pas
+d'idéation vaut vide, enveloppée comme aplatie — sur ce pas seul** (§H18.2
+amendé, §H15.4 renvoi, `decoder_pas`, `tests/unit/test_ideation_action_absente.py`,
+DAT, CHANGELOG). `make check` VERT (977/157/12, cassettes inchangées), `make
+build` vert : implémenté et vérifié hors ligne. Candidat ouvert, à mesurer sur
+le code avant tout changement : annonce de la forme paramétrée à chaque pas,
+ou redemande dans le même tour d'une action refusée pour forme (journal du
+jour). Prochain jeu : `wa30-ee6fef47` (journal du jour, « Où reprendre »).
 
 **Itération du 2026-10-02 (session planifiée)** — jouer, observer, améliorer :
 `ka59-38d34dbb` joué (6e de l'ordre du jour), run `u31-h1511-ka59`, plafonds
