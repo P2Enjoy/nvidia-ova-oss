@@ -520,7 +520,10 @@ def decoder_pas(
     manquantes ou en trop, types incorrects — lève `PatchMalforme` en la nommant.
     `action_optionnelle` (§H18.2, pas d'idéation SEUL) tolère une action vide :
     la structure qui déclare ne pas jouer l'action ne peut pas l'exiger
-    (mesuré, u38-ctf-s6 : trois tentatives mortes sur `"action": ""`).
+    (mesuré, u38-ctf-s6 : trois tentatives mortes sur `"action": ""`) — et,
+    pour le même motif, une action ABSENTE du bloc, enveloppé comme aplati
+    (mesuré, u31-h1511-ka59 tour 1 : un appel d'idéation entier perdu à
+    redemander la même réponse avec `"action": ""`) ; l'absence vaut vide.
     `schema` (§H15.4) permet de lever l'enveloppe d'un patch APLATI — les champs
     de Σ écrits à la racine du bloc, à côté d'« action » (mesuré, cd82 :
     2 appels sur 26 perdus à redemander la même réponse enveloppée) ; le pas
@@ -541,6 +544,11 @@ def decoder_pas(
         normalise = _lever_enveloppe(bloc, schema)
         aplati = normalise is not bloc
         bloc = normalise
+        # §H18.2 : sur le pas d'idéation — et sur lui seul —, un bloc qui ne
+        # porte que « state_patch » (enveloppé, ou aplati et normalisé) est lu
+        # comme s'il portait `"action": ""` : l'absence vaut vide.
+        if action_optionnelle and set(bloc) == {"state_patch"}:
+            bloc = {**bloc, "action": ""}
     if not isinstance(bloc, Mapping) or set(bloc) != {"state_patch", "action"}:
         if aplati and "action" not in bloc:
             # §H15.4 : bloc aplati sans action — le refus nomme le manque réel.
