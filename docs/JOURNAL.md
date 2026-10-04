@@ -6474,6 +6474,11 @@ coup, `make seed` vert, `llm-replay` et `arc-replay` `healthy`. Endpoint
 `all-minilm`) et API ARC (`/api/games` 200, 25 jeux) joignables. Marqueur EN
 COURS posé et poussé avant le lancement. Modèle : `qwen3.8:27b`, défaut H3.1
 (le prompt planifié cite encore `qwen3.6:35b`, antérieur — le dépôt fait foi).
+Écart de procédure nommé, le même que le 2026-10-02 : le premier appel d'outil a
+joint `git status`, `git log` et le test de présence de `docs/CloudWorker.md`
+avant sa lecture intégrale (faite ensuite en quatre tranches, lignes 1 à 1134,
+puis relue en entier en fin de session sans règle omise). La règle est : lire
+le document AVANT tout diagnostic, y compris Git.
 
 **Jouer — `wa30-ee6fef47` (8e de l'ordre du jour), run `u31-h1511-wa30`,
 plafonds de la tranche 2 (80/300/2 400 s/1,5 M/400).** 0/9 niveaux, **21
