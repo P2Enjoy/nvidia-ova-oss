@@ -1130,6 +1130,29 @@ le module `avo.context.etat` restant inchangé et pur :
   (récompense la répétition de l'action refusée et perd la correction précisément
   quand le modèle joue autre chose). L'invariant appliqué est celui du
   responsable : aucune perte silencieuse — un écart nommé plutôt que masqué.
+- **Action irrésoluble = même pas blanc que le refus d'environnement.** La
+  résolution de l'action (ci-dessus) peut échouer après toutes ses
+  normalisations : nom inconnu, compte de valeurs incorrect, type invalide.
+  Rien n'est alors joué, et le pas est de même nature que le pas blanc des
+  gardes (§H16.1) et que le refus d'environnement : le patch du même pas écrit
+  l'effet ATTENDU d'une action qui n'a pas eu lieu. Mesuré (run
+  `u31-h1511-bp35`, 2026-10-03) : 8 des 23 actions émises étaient une commande
+  paramétrée nommée SANS ses valeurs — la forme est pourtant annoncée à
+  chaque pas et répétée dans le refus —, et le harnais acquérait le patch de
+  chacun de ces pas comme si l'action avait été jouée, seul des trois refus à
+  le faire. Règle, la même que pour `refusee` : quand l'action d'un pas n'est
+  pas résoluble, le `state_patch` du même pas est ANNULÉ — Σ et le workspace
+  reviennent à leur valeur d'avant le pas, la ligne d'archive (§H15.10) porte
+  le patch annulé avec `patch_annule: true`, l'événement `patch_annule` est
+  écrit à côté de l'événement `action_invalide` (§H11.2), et le pas suivant
+  reçoit à la fois l'erreur de résolution nommée (forme complète attendue,
+  ci-dessus) et le rappel verbatim du patch annulé (paragraphe précédent, mêmes
+  bornes : omis quand le patch est vide). Le pas est consommé comme avant — la
+  redemande dans le même tour (§H15.4) est ÉCARTÉE : son budget borné (trois
+  tentatives) ferait d'une récidive de forme, observée quatre fois de suite
+  sur ce run, une erreur fatale qui arrête le jeu, là où le refus
+  d'environnement ne l'est jamais ; deux refus de même nature se traitent de
+  la même façon. Aucun prompt ne change ; aucun nom d'action n'est codé.
 - **Persistance (§H15.5).** Σ est écrit dans `runs/<run_id>/state/etat.json` après
   chaque tour réussi (`Workspace.ecrire_etat`). La reprise au niveau où l'existant
   la supporte réellement est **par jeu**, pas par tour (§A7.4 : un jeu entamé est

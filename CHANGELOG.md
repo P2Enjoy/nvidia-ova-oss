@@ -2,6 +2,23 @@
 
 ## [Non publié]
 
+### 2026-10-04 — U31 : une action irrésoluble annule le patch de son pas, comme un refus d'environnement (H15.8)
+
+- Mesuré (`u31-h1511-bp35`) : 8 des 23 actions émises nommaient une commande
+  paramétrée sans ses valeurs ; chaque refus de résolution consommait un pas et
+  laissait Σ acquérir le patch — l'effet attendu d'une action jamais jouée —,
+  seul des trois refus (gardes, environnement, résolution) à ne pas l'annuler.
+- En mode `state`, un pas dont l'action n'est pas résoluble (nom inconnu, compte
+  de valeurs, type) est désormais le même pas blanc atomique que le refus
+  d'environnement : Σ et le workspace reviennent à l'avant-pas, l'archive porte
+  `patch_annule: true`, l'événement `patch_annule` accompagne `action_invalide`,
+  et le pas suivant reçoit l'erreur nommée ET le rappel verbatim du patch
+  annulé. Aucun prompt ne change ; la redemande dans le même tour est écartée
+  (son budget borné rendrait une récidive de forme fatale).
+- Preuves : `tests/unit/test_action_irresoluble.py` (Σ et workspace revenus à
+  l'avant-pas, archive, métriques, rappel au pas suivant, erreur nommée
+  conservée, action valide inchangée).
+
 ### 2026-10-03 — U31 : le pas d'idéation tolère l'absence de la clé « action », comme sa vacuité (H18.2, H15.4)
 
 - Mesuré (`u31-h1511-ka59`, tour 1) : le bloc d'idéation portait les approches
