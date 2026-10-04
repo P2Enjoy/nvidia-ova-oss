@@ -1403,6 +1403,11 @@ class BoucleAgent:
                 appel.erreur_arguments or f"« {appel.nom} » n'est pas une action disponible"
             )
             self._metrique("action_invalide", nom=appel.nom, erreur=self._erreur_action_precedente)
+            # §H15.8 : une action IRRÉSOLUBLE n'a rien joué — même pas blanc que le
+            # refus d'environnement : le patch du même pas est annulé et rappelé.
+            # Mesuré (bp35, 2026-10-03) : 8 commandes paramétrées sans valeurs,
+            # chacune acquise à Σ comme si l'action avait été jouée.
+            self._annuler_patch(etat_avant, numero, compteur.consommees, patch, appel.nom)
             tour.phase_finale = Phase.PLANNING
             return tour
 
@@ -1420,18 +1425,7 @@ class BoucleAgent:
         # score restent l'affaire de l'environnement. Un environnement qui ne
         # déclare pas `refusee` se comporte comme avant (défaut faux).
         if getattr(issue, "refusee", False):
-            self.etat = etat_avant
-            if self.workspace is not None:
-                self.workspace.ecrire_etat(self.etat)
-            self._archiver_pas(numero, compteur.consommees, None, patch=patch, patch_annule=True)
-            self._metrique("patch_annule", action=appel.nom)
-            # §H15.8 : le pas suivant reçoit le patch annulé verbatim — c'est le
-            # modèle qui décide de ce qui y survit, jamais le harnais. Un patch
-            # vide n'a rien à rappeler.
-            if patch:
-                self._rappel_patch_annule = prompts.rappel_patch_annule(
-                    appel.nom, json.dumps(patch, ensure_ascii=False, sort_keys=True)
-                )
+            self._annuler_patch(etat_avant, numero, compteur.consommees, patch, appel.nom)
         tour.action = appel.nom
         # La prédiction accompagne l'action jouée (§H16.2) et attend sa
         # qualification au pas suivant (§H16.3).
@@ -1477,6 +1471,27 @@ class BoucleAgent:
         return self.bilan
 
     # ----------------------------------------------------------------- internes
+    def _annuler_patch(
+        self, etat_avant: Any, numero: int, tentative: int, patch: dict[str, Any], nom: str
+    ) -> None:
+        """Annule le patch d'un pas dont l'action n'a pas eu lieu (§H15.8).
+
+        Un seul chemin pour les deux refus — action refusée par l'environnement,
+        action irrésoluble — : Σ et le workspace reviennent à l'avant-pas, l'archive
+        porte le patch annulé, l'événement est écrit, et le pas suivant reçoit le
+        patch verbatim — c'est le modèle qui décide de ce qui y survit, jamais le
+        harnais. Un patch vide n'a rien à rappeler.
+        """
+        self.etat = etat_avant
+        if self.workspace is not None:
+            self.workspace.ecrire_etat(self.etat)
+        self._archiver_pas(numero, tentative, None, patch=patch, patch_annule=True)
+        self._metrique("patch_annule", action=nom)
+        if patch:
+            self._rappel_patch_annule = prompts.rappel_patch_annule(
+                nom, json.dumps(patch, ensure_ascii=False, sort_keys=True)
+            )
+
     def _avec_observation(self, invite: str) -> str:
         # §H15.8 : chaque action disponible s'annonce avec ses valeurs requises,
         # lues dans son schéma au registre — la forme d'appel ne doit jamais
