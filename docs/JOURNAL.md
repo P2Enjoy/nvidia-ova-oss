@@ -6463,3 +6463,91 @@ confirmé sur un 2e jeu ; AVANT tout code, mesurer sur `_avec_observation` /
 gardes ; (c) `patch_aplati` (3 sur bp35, 0 retry : le mécanisme tient) ;
 (d) `prefixe_pas`. Relevé clos : la clé « action » absente au pas d'idéation
 (ka59) — tolérance livrée ce jour.
+
+## 2026-10-04 (session planifiée) — U31 : wa30 joué (0/9, 21 actions, RHAE 0,00) ; aucune action invalide (jeu sans commande paramétrée) ; amélioration générique livrée — une action irrésoluble annule le patch de son pas comme un refus d'environnement (§H15.8)
+
+**Environnement.** Machine éphémère rattachée à `main` (aucun commit local à
+sauver), identité posée, `.env` écrit et vérifié ignoré. `dockerd` lancé
+directement, autorité du proxy copiée dans `certs/`, `make up` vert du premier
+coup, `make seed` vert, `llm-replay` et `arc-replay` `healthy`. Endpoint
+(`/api/version` 200 en 2,3 s ; modèles `qwen3.8:27b`, `qwen3.6:35b`,
+`all-minilm`) et API ARC (`/api/games` 200, 25 jeux) joignables. Marqueur EN
+COURS posé et poussé avant le lancement. Modèle : `qwen3.8:27b`, défaut H3.1
+(le prompt planifié cite encore `qwen3.6:35b`, antérieur — le dépôt fait foi).
+
+**Jouer — `wa30-ee6fef47` (8e de l'ordre du jour), run `u31-h1511-wa30`,
+plafonds de la tranche 2 (80/300/2 400 s/1,5 M/400).** 0/9 niveaux, **21
+actions** (baseline 71 au niveau 1, 1 843 au total), 22 tours, 24 appels (1
+idéation + 23 pas dont 1 relance), 244 819 tokens de prompt, 13 325 générés,
+1 244 s d'inférence pour 2 453 s de jeu, RHAE 0,00, arrêt au plafond de
+temps ; scorecard `0bc75c24…` FERMÉ, réconciliation exacte (21 = 21,
+`divergences: []`) ; rapport `docs/rapports/u31-h1511-wa30.md`. ACTION1–5 :
+5/4/5/3/4, **0 action invalide**, 1 observation inchangée (tour 21), verdicts
+15 confirmées, 4 contredites, 1 caduque, 0 redemande, 0 troncature, 0 résumé de
+coupure, **1 retry de patch** (tour 14 : bloc aplati SANS clé « action » sur un
+pas ordinaire — refus nommé « action » manquante, conforme à §H15.4/§H18.2 ; un
+appel perdu, ~52 s), **1 intervention du superviseur** (stagnation : 20 actions
+sans progrès, seuil 20 ; sonde fraîche et curation du ledger, 1 tâche purgée,
+12 tâches avant et après). Perte de première tentative 24/24 (26 `ServerError`,
+1 `TransportError` ; cause close, pont 443).
+
+**Observer 1 — le relevé de bp35 n'est ni confirmé ni infirmé ici.** wa30
+n'expose que des commandes SANS valeurs (ACTION1–5) : aucune commande
+paramétrée à oublier, donc aucune occasion pour le défaut de forme de bp35 ni
+pour le mécanisme livré ce jour (0 `patch_annule`, attendu). Le relevé reste à
+lire sur le prochain jeu qui expose une commande à coordonnées.
+
+**Observer 2 — inférence.** 555 tokens générés par appel (max 1 491, aucune
+tronquée), 51,8 s par appel serveur, 13,2 tokens/s, `prefill_ms` 0,31 s sur
+24/24 ; `prefixe_pas` : divergence dans l'observation 18/23, tête 2, notes 2 ;
+part médiane 42,9 % — même profil que bp35/ka59/cd82 (la grille change à
+chaque action). Le pas d'idéation a abouti du premier coup.
+
+**Mesure sur le code AVANT tout changement (candidats (a) et (b) de bp35).**
+(a) La forme paramétrée EST annoncée à chaque pas — `_avec_observation` rend
+« nom (valeurs requises : p1, p2) » depuis le schéma du registre
+(`prompts.annonce_action`) — et le refus se clôt par la forme complète
+(`prompts.forme_appel_attendue`) : rien à ajouter de ce côté, bp35 l'a reçue
+huit fois et a récidivé. (b) Le coût d'un refus de résolution : un tour et un
+appel consommés, l'erreur relayée au pas suivant — ET `self.etat =
+nouvel_etat` posé AVANT la résolution sans être défait : Σ acquérait le patch
+du pas, c'est-à-dire l'effet attendu d'une action jamais jouée, seul des trois
+refus (gardes §H16.1, environnement `refusee`, résolution) à le faire.
+
+**Améliorer (autonomie, point tranché, spécifié AVANT le code, balayage §A5 :
+aucun prompt touché, aucun indice de jeu).** §H15.8 amendé : une action
+irrésoluble (nom inconnu, compte de valeurs, type) est le même pas blanc
+atomique que le refus d'environnement — Σ et workspace reviennent à
+l'avant-pas, archive `patch_annule: true`, événement `patch_annule` à côté
+d'`action_invalide`, rappel verbatim du patch annulé au pas suivant à côté de
+l'erreur de forme. Livré : `BoucleAgent._annuler_patch` (chemin unique partagé
+par le refus d'environnement, qui l'appelle désormais aussi — aucun
+comportement de ce dernier ne change), appel dans la branche d'action
+invalide ; `tests/unit/test_action_irresoluble.py` (6 tests : commande sans
+valeurs, nom inconnu, type invalide → Σ, workspace, archive, métriques ;
+erreur nommée ET rappel au pas suivant ; patch vide sans rappel ; action
+résoluble inchangée) ; DAT, CHANGELOG. Option écartée et motivée dans la
+spécification : la redemande dans le même tour (§H15.4) — son budget borné à
+trois tentatives rendrait fatale une récidive de forme observée quatre fois de
+suite sur bp35, là où le refus d'environnement n'est jamais fatal.
+
+**Preuves.** Preuves ciblées vertes pendant le travail (983 unitaires dont les
+6 nouveaux, lint, format, mypy, 157 intégration, 12 E2E — cassettes inchangées,
+aucun corps de requête modifié sur les scénarios existants). Campagne complète
+`make check` et `make build` : voir le compte rendu de fin de session (rejouées
+d'un trait après ce commit). Formulation §25 : l'annulation est **implémentée
+et vérifiée** hors ligne ; son effet en campagne se lit au prochain
+`action_invalide` d'un pas `state` (archive `patch_annule: true`, métrique
+`patch_annule`, rappel dans le prompt du pas suivant).
+
+**Où reprendre (boucle planifiée).** U31 : jouer le jeu suivant de l'ordre du
+jour (`sp80-589a99af`, 9e), `run-id u31-h1511-<code>`, mêmes plafonds, et lire
+dans le rapport : (a) `action_invalide` et, s'il y en a, `patch_annule` en
+regard — le mécanisme du jour tient si chaque refus de résolution porte son
+annulation et si le pas suivant ne rejoue pas l'effet annulé ; (b) le bloc
+aplati sans « action » sur un pas ordinaire (wa30 tour 14, 1 appel perdu) :
+s'il récidive, mesurer si une relance porte la clé — le refus strict hors
+idéation reste la règle (§H15.4) tant qu'une mesure ne désigne pas mieux ; (c)
+la ligne des gardes ; (d) `prefixe_pas`. Relevé ouvert : le défaut de forme
+des commandes paramétrées (bp35) — à lire sur le prochain jeu qui en expose.
+

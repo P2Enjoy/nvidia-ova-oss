@@ -1142,9 +1142,29 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
-**Itération du 2026-10-04 (session planifiée) — EN COURS** : `wa30-ee6fef47`
-(8e de l'ordre du jour), run `u31-h1511-wa30`, plafonds de la tranche 2 ; marqueur
-anti-collision, retiré au rapport.
+**Itération du 2026-10-04 (session planifiée)** — jouer, observer, améliorer :
+`wa30-ee6fef47` joué (8e de l'ordre du jour), run `u31-h1511-wa30`, plafonds
+de la tranche 2 : 0/9 niveaux, 21 actions, RHAE 0,00, plafond de temps,
+scorecard `0bc75c24…` fermé, réconciliation exacte 21 = 21, rapport
+`docs/rapports/u31-h1511-wa30.md` (ACTION1–5 5/4/5/3/4, **0 action invalide —
+le jeu n'expose aucune commande paramétrée, le relevé de bp35 reste à lire
+ailleurs**, 1 retry de patch — bloc aplati sans « action » sur un pas
+ordinaire, refus nommé —, 1 observation inchangée, 0 troncature, 1
+intervention du superviseur à 20 actions sans progrès avec curation). Observé :
+verdicts 15 confirmées, 4 contredites, 1 caduque ; 555 tokens générés par
+appel, 51,8 s par appel, 13,2 tokens/s ; `prefixe_pas` divergence dans
+l'observation 18/23, part médiane 42,9 % ; perte de première tentative 24/24.
+Mesuré sur le code (candidats de bp35) : la forme paramétrée est déjà annoncée
+à chaque pas et dans le refus ; un refus de résolution laissait Σ acquérir le
+patch d'une action jamais jouée. Livré (spécifié avant le code) : **une action
+irrésoluble annule le patch de son pas comme un refus d'environnement** —
+chemin d'annulation commun `_annuler_patch`, archive, métrique `patch_annule`,
+rappel verbatim et erreur nommée au pas suivant (§H15.8 amendé,
+`tests/unit/test_action_irresoluble.py`, DAT, CHANGELOG). Preuves ciblées
+vertes (983/157/12, cassettes inchangées) ; campagne complète et `make build`
+en fin de session : implémenté et vérifié hors ligne, effet en campagne à lire
+au prochain `action_invalide`. Prochain jeu : `sp80-589a99af` (journal du
+jour, « Où reprendre »).
 
 **Itération du 2026-10-03 (session planifiée)** — jouer, observer, améliorer :
 `bp35-0a0ad940` joué (7e de l'ordre du jour), run `u31-h1511-bp35`, plafonds
