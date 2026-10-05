@@ -6556,3 +6556,96 @@ idéation reste la règle (§H15.4) tant qu'une mesure ne désigne pas mieux ; (
 la ligne des gardes ; (d) `prefixe_pas`. Relevé ouvert : le défaut de forme
 des commandes paramétrées (bp35) — à lire sur le prochain jeu qui en expose.
 
+
+## 2026-10-05 (session planifiée) — U31 : sp80 joué (0/6, 19 actions, RHAE 0,00) ; annulation du patch sur action irrésoluble CONFIRMÉE en campagne ; aucune amélioration désignée — le refus strict d'un bloc sans « state_patch » a récupéré un patch substantiel
+
+**Environnement.** Machine éphémère rattachée à `main` (aucun commit local à
+sauver), identité posée, `.env` écrit et vérifié ignoré. `dockerd` lancé
+directement, autorité du proxy copiée dans `certs/`, `make up` vert du premier
+coup, `make seed` vert, `llm-replay` et `arc-replay` `healthy`. Endpoint
+(`/api/version` 200 en 2,6 s ; modèles `qwen3.8:27b`, `qwen3.6:35b`,
+`all-minilm`) et API ARC (`/api/games` 200, 25 jeux) joignables. Marqueur EN
+COURS posé et poussé avant le lancement. Modèle : `qwen3.8:27b`, défaut H3.1
+(le prompt planifié cite encore `qwen3.6:35b`, antérieur — le dépôt fait foi).
+Écart de procédure nommé, le même que les deux sessions précédentes : le
+premier appel d'outil a joint `git status`, `git log` et le test de présence de
+`docs/CloudWorker.md` avant sa lecture intégrale (faite ensuite en cinq
+tranches, lignes 1 à 1134). La règle est : lire le document AVANT tout
+diagnostic, y compris Git.
+
+**Jouer — `sp80-589a99af` (9e de l'ordre du jour), run `u31-h1511-sp80`,
+plafonds de la tranche 2 (80/300/2 400 s/1,5 M/400).** 0/6 niveaux, **19
+actions** (baseline 39 au niveau 1, 518 au total), 21 tours, 22 appels (1
+idéation + 21 pas dont 1 relance), 304 874 tokens de prompt, 13 217 générés,
+1 536 s d'inférence pour 2 400 s de jeu, RHAE 0,00, arrêt au plafond de
+temps ; scorecard `e8e26cd3…` FERMÉ, réconciliation exacte (19 = 19,
+`divergences: []`) ; rapport `docs/rapports/u31-h1511-sp80.md`. ACTION1–6 :
+3/3/7/3/2/1, **1 action invalide**, 4 patchs aplatis normalisés, 1 retry de
+patch, 0 observation inchangée, 0 troncature, 0 résumé de coupure, verdicts
+10 confirmées, 7 contredites, 2 caduques, 0 redemande, 0 intervention du
+superviseur (19 actions < seuil 20, occurrence de plus du relevé connu).
+Perte de première tentative 22/22 (22 relances t1, 1 escalade t2, toutes
+`ServerError` ; cause close, pont 443). Contre `u25-t2-sp80` du 2026-09-23 :
+16 → 19 actions, 4 → 1 action invalide, 4 → 1 retry de patch.
+
+**Observer 1 — le mécanisme du 2026-10-04 (§H15.8) tient en campagne.** Tour
+10 : « ACTION6 » émise sans ses valeurs (`row, col`), refus de résolution
+nommé avec la forme complète, événements `action_invalide` ET `patch_annule`
+en regard, archive du pas en deux lignes (le pas avec son patch aplati
+normalisé, puis le même patch marqué `patch_annule: true`). Tour 11 : le
+modèle rejoue « ACTION6 0, 0 » — résolue et jouée — et son patch réinscrit
+les dix hypothèses annulées plus une onzième (la commande exige des
+coordonnées) et ajoute une tâche au plan : rien de la correction n'est perdu,
+l'effet attendu de l'action non jouée ne l'est pas non plus. Relevé de bp35
+(8 commandes paramétrées sans valeurs sur 23) : 1 sur 19 ici, et sans
+récidive après le refus.
+
+**Observer 2 — un bloc `{"action": "ACTION4"}` SANS « state_patch » sur un pas
+ordinaire (tour 14), et la mesure qui écarte sa tolérance.** Le contrat
+strict (§H15.4) l'a refusé (« exactement les clés state_patch et action,
+reçu ['action'] »), un appel perdu (~70 s, 3 % du budget de temps). Candidat
+symétrique de §H18.2 (« state_patch » absent vaudrait `{}`) : ÉCARTÉ par la
+redemande elle-même, qui a rendu un patch substantiel — les hypothèses
+réécrites avec une onzième nouvelle, le plan mis à jour — ET une autre action
+(« ACTION1 » au lieu d'« ACTION4 »). La première réponse n'était pas « rien
+à inscrire », c'était un pas oublié ; l'accepter comme patch vide aurait
+acquis une action non délibérée sans son état. Le refus strict reste la
+règle ; à relire sur une prochaine occurrence : si la redemande rend `{}`
+ou le même patch, la mesure change de sens.
+
+**Observer 3 — préfixe commun médian 1,5 % (contre 30 à 43 % sur les quatre
+jeux précédents).** Sur les 16 messages qui divergent dans l'observation, le
+point de divergence recule de 6 caractères par pas (355, 349, 343 … 247) :
+une bande de la première ligne de la grille rétrécit de deux cellules à
+chaque action, et le préfixe se rompt dès les premiers caractères de la
+grille. Propriété du jeu, pas du harnais : l'ordre des parties (§H15.11) et
+le rendu grille puis ligne d'état sont déjà les bons ; aucun mécanisme
+générique n'est désigné (ignorer les cellules qui changent à chaque action
+serait une interprétation du jeu par le harnais). Les trois divergences
+« notes » à 0 caractère et les deux « tête » à 1 sont les pas qui portent un
+message exceptionnel en tête (invite d'idéation, erreur nommée, rappel de
+patch annulé), conformes à §H15.11. Relevé : sur un tel jeu la métrique
+`observation_inchangee` est aveugle par construction (0 sur 19).
+
+**Observer 4 — inférence.** 601 tokens générés par appel (max 975, aucune
+tronquée), 69,8 s par appel serveur, 13,8 tokens/s, `prefill_ms` 0,32 s sur
+22/22 (cache chaud par la tentative perdue, comme mesuré le 2026-09-29).
+
+**Améliorer : rien.** Aucune mesure fraîche ne désigne un mécanisme absent :
+le seul candidat du jour (observer 2) est écarté par sa propre mesure, et
+les autres relevés sont des occurrences d'observations déjà consignées ou
+des propriétés du jeu. Aucun code modifié, aucun prompt touché. Session
+sans commit de code, au titre de la règle de U31 (« pas de mesure fraîche
+qui désigne une amélioration : pas d'amélioration inventée »).
+
+**Preuves.** Campagne complète `make check` et `make build` rejouées en fin
+de session sur le dépôt inchangé : voir le compte rendu.
+
+**Où reprendre (boucle planifiée).** U31 : jouer le jeu suivant de l'ordre du
+jour (`dc22-fdcac232`, 10e), `run-id u31-h1511-<code>`, mêmes plafonds, et
+lire dans le rapport : (a) `action_invalide` / `patch_annule` en regard et la
+réinscription au pas suivant (deuxième lecture du mécanisme §H15.8) ; (b)
+tout retry de patch — bloc sans « state_patch » ou aplati sans « action » —
+et ce que la redemande rend (patch substantiel ou vide : la mesure qui
+désigne, ou non, une tolérance) ; (c) la ligne des gardes ; (d) `prefixe_pas`
+et la position de divergence.

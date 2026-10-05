@@ -1142,9 +1142,28 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
-**Itération du 2026-10-05 (session planifiée) — EN COURS** : `sp80-589a99af`
-(9e de l'ordre du jour), run `u31-h1511-sp80`, plafonds de la tranche 2 ; marqueur
-anti-collision, retiré au rapport.
+**Itération du 2026-10-05 (session planifiée)** — jouer, observer, améliorer :
+`sp80-589a99af` joué (9e de l'ordre du jour), run `u31-h1511-sp80`, plafonds
+de la tranche 2 : 0/6 niveaux, 19 actions, RHAE 0,00, plafond de temps,
+scorecard `e8e26cd3…` fermé, réconciliation exacte 19 = 19, rapport
+`docs/rapports/u31-h1511-sp80.md` (ACTION1–6 3/3/7/3/2/1, **1 action invalide
+— ACTION6 sans ses valeurs — et 1 `patch_annule` en regard : le mécanisme du
+2026-10-04 est CONFIRMÉ en campagne**, le pas suivant a rejoué ACTION6 avec ses
+valeurs et réinscrit le patch annulé augmenté ; 4 patchs aplatis normalisés ;
+1 retry de patch — bloc `{"action"}` SANS « state_patch » sur un pas ordinaire,
+dont la redemande a rendu un patch substantiel et une autre action ; 0
+observation inchangée, 0 troncature, 0 intervention du superviseur à 19 actions).
+Observé : verdicts 10 confirmées, 7 contredites, 2 caduques ; 601 tokens
+générés par appel, 69,8 s par appel, 13,8 tokens/s ; `prefixe_pas` divergence
+dans l'observation 16/22, part médiane **1,5 %** — le point de divergence
+recule de 6 caractères à chaque pas (355 → 247) : une bande de la première
+ligne de la grille rétrécit à chaque action, propriété du jeu ; perte de
+première tentative 22/22. Contre `u25-t2-sp80` (2026-09-23) : 16 → 19 actions,
+4 → 1 action invalide, 4 → 1 retry. **Améliorer : rien** — aucune mesure
+fraîche ne désigne un mécanisme absent ; la tolérance d'un « state_patch »
+absent est ÉCARTÉE par la mesure même (journal du jour). Aucun code modifié ;
+campagne complète rejouée en fin de session. Prochain jeu : `dc22-fdcac232`
+(journal du jour, « Où reprendre »).
 
 **Itération du 2026-10-04 (session planifiée)** — jouer, observer, améliorer :
 `wa30-ee6fef47` joué (8e de l'ordre du jour), run `u31-h1511-wa30`, plafonds
