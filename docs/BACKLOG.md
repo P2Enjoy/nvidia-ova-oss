@@ -1142,9 +1142,25 @@ ordre :
   toute modification du harnais ses preuves propres plus la campagne complète
   (`make check`).
 
-**Itération du 2026-10-05 (session planifiée, suite) — EN COURS** : `dc22-fdcac232`
-(10e de l'ordre du jour), run `u31-h1511-dc22`, plafonds de la tranche 2 ; marqueur
-anti-collision, retiré au rapport.
+**Itération du 2026-10-05 (session planifiée, suite)** — jouer, observer,
+améliorer : `dc22-fdcac232` joué (10e de l'ordre du jour), run `u31-h1511-dc22`,
+plafonds de la tranche 2 : 0/6 niveaux, 21 actions, RHAE 0,00, plafond de
+temps, scorecard `9434fee6…` fermé, réconciliation exacte 21 = 21, rapport
+`docs/rapports/u31-h1511-dc22.md` (ACTION1–4/6 6/3/5/6/1, **3 actions
+invalides — toutes ACTION6 sans ses valeurs, 3 `patch_annule` en regard**, 2
+patchs aplatis normalisés, 1 retry — bloc aplati sans « action » sur un pas
+ordinaire —, 1 redemande de garde, 1 observation inchangée, 1 intervention du
+superviseur à 20 actions avec curation). Observé : verdicts 10 confirmées, 11
+contredites, 2 caduques ; 489 tokens générés par appel, 44,8 s par appel ;
+`prefixe_pas` médiane 39,6 % ; perte de première tentative 30/30. Mesure qui
+désigne une amélioration GÉNÉRIQUE : sur trois runs, 12 émissions sur 18 d'une
+commande à coordonnées sont NUES malgré l'annonce « nom (valeurs requises :
+p1, p2) », et la forme littérale du refus (« nom p1, p2 ») est reproduite au
+pas suivant à chaque fois. Livré (spécifié avant le code) : **l'annonce des
+actions disponibles prend la forme d'appel littérale, avec les types, la même
+que le refus** (§H15.8 amendé, `prompts.annonce_action`, tests, cassettes des
+bancs régénérées, DAT, CHANGELOG) ; preuves : voir le journal du jour.
+Prochain jeu : `cn04-2fe56bfb` (11e).
 
 **Itération du 2026-10-05 (session planifiée)** — jouer, observer, améliorer :
 `sp80-589a99af` joué (9e de l'ordre du jour), run `u31-h1511-sp80`, plafonds

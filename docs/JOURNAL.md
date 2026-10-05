@@ -6649,3 +6649,56 @@ tout retry de patch — bloc sans « state_patch » ou aplati sans « action » 
 et ce que la redemande rend (patch substantiel ou vide : la mesure qui
 désigne, ou non, une tolérance) ; (c) la ligne des gardes ; (d) `prefixe_pas`
 et la position de divergence.
+
+## 2026-10-05 (session planifiée, suite) — U31 : dc22 joué (0/6, 21 actions, RHAE 0,00) ; 3 commandes à coordonnées émises nues, 3 annulations ; amélioration générique désignée par trois runs — l'annonce des actions prend la forme d'appel littérale du refus (§H15.8)
+
+**Pourquoi une suite.** La garde de fin de session a refusé la clôture pour un
+écart de procédure qui ne se répare pas après coup (lecture de
+`docs/CloudWorker.md` après le diagnostic Git). Plutôt que de boucler à vide,
+la session a fait avancer l'unité : un seul run live à la fois, marqueur EN
+COURS poussé avant le lancement, aucun autre marqueur sur `origin/main`.
+
+**Jouer — `dc22-fdcac232` (10e de l'ordre du jour), run `u31-h1511-dc22`,
+plafonds de la tranche 2.** 0/6 niveaux, **21 actions** (baseline 59 au
+niveau 1, 1 228 au total), 26 tours, 28 appels, 270 730 tokens de prompt,
+13 681 générés, 1 254 s d'inférence, RHAE 0,00, arrêt au plafond de temps ;
+scorecard `9434fee6…` FERMÉ, réconciliation exacte (21 = 21,
+`divergences: []`) ; rapport `docs/rapports/u31-h1511-dc22.md`. ACTION1–4/6 :
+6/3/5/6/1, **3 actions invalides** (tours 6, 24, 26 : « ACTION6 » sans
+`row, col`), 3 `patch_annule` en regard, 2 patchs aplatis normalisés, 1 retry
+(tour 6, tentative 0 : bloc aplati SANS « action » sur un pas ordinaire, refus
+nommé, la redemande a rendu l'action — nue), 1 redemande de garde (tour 13),
+1 observation inchangée (tour 15), 1 intervention du superviseur à 20 actions
+sans progrès (sonde fraîche, curation 6 → 7 tâches), verdicts 10 confirmées,
+11 contredites, 2 caduques ; 489 tokens générés par appel (max 1 567, aucune
+tronquée), 44,8 s par appel, 13,0 tokens/s ; `prefixe_pas` divergence dans
+l'observation 17/27, tête 5, notes 4, part médiane 39,6 % (profil de wa30) ;
+perte de première tentative 30/30, aucune escalade. Contre `u25-t2-dc22`
+(2026-09-23) : 20 → 21 actions, 30 → 28 appels, 1 → 3 actions invalides,
+7 → 1 retry de patch.
+
+**Observer — le mécanisme §H15.8 tient, et la mesure désigne la cause amont.**
+Chaque refus de résolution porte son annulation (3/3) ; au pas suivant : tour 7
+joue ACTION4 avec un patch réécrit, tour 25 joue « action6 38, 10 » — la
+forme littérale du refus, reproduite — et réinscrit le plan annulé à
+l'identique ; tour 26 réémet « ACTION6 » nue, un pas après l'avoir réussie.
+Cumul sur trois runs : bp35 8 nues sur 12 émissions, sp80 1 sur 2, dc22 3 sur
+4 — **12 sur 18**, chacune un pas consommé sans action jouée, alors que
+l'annonce « ACTION6 (valeurs requises : row, col) » figure à chaque pas. Les
+deux fois où la forme littérale « action6 row, col » a été reçue (dans le
+refus), elle a été reproduite au pas suivant. La différence entre les deux
+textes est la seule variable : l'annonce descriptive est lue comme une
+description, la forme littérale comme un gabarit.
+
+**Améliorer (point tranché, spécifié AVANT le code, balayage §A5 : aucun nom
+d'action codé, forme et types lus au schéma).** §H15.8 amendé : la ligne
+« Actions disponibles » annonce la forme d'appel littérale avec les types,
+celle-là même que le refus énonce — « ACTION6 row, col (remplacer chaque nom
+par sa valeur : row : integer, col : integer) » —, « nom (aucune valeur) »
+inchangé, nom sans schéma nu. Option écartée : la redemande dans le même tour
+(§H15.4), pour le motif consigné hier (budget borné, récidive fatale). Mise
+en œuvre : `prompts.annonce_action` reçoit les types, les deux appelants de la
+boucle (annonce du pas, refus pour nom inconnu) les lui passent ; tests
+unitaires adaptés et test de forme ajouté ; les quatre cassettes E2E des bancs
+portent l'annonce : régénérées par `make seed-e2e` (déterministe, vérifié) ;
+DAT, CHANGELOG. Preuves et commits : voir la fin de cette entrée.

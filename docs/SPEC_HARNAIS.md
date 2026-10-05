@@ -1063,9 +1063,20 @@ le module `avo.context.etat` restant inchangé et pur :
   ENGENDRÉES des schémas déclarés au registre au moment du rendu, jamais d'une
   liste codée (interdiction de benchmaxing) :
   - la ligne « Actions disponibles » (commune aux deux modes) annonce, pour
-    chaque action que l'environnement déclare disponible, ses paramètres requis
-    dans l'ordre du schéma — « nom (aucune valeur) » ou « nom (valeurs
-    requises : p1, p2) » ; un nom sans schéma au registre reste nu ;
+    chaque action que l'environnement déclare disponible, sa FORME D'APPEL
+    LITTÉRALE, paramètres requis dans l'ordre du schéma et types déclarés —
+    « nom (aucune valeur) » ou « nom p1, p2 (remplacer chaque nom par sa
+    valeur : p1 : type, p2 : type) » ; un nom sans schéma au registre reste
+    nu. La forme littérale remplace l'annonce descriptive « nom (valeurs
+    requises : p1, p2) », mesurée insuffisante (runs `u31-h1511-bp35`,
+    `-sp80`, `-dc22`, 2026-10-03 au 2026-10-05) : lue comme une description,
+    elle laissait la commande à coordonnées émise NUE — 12 émissions sur 18,
+    chacune un pas consommé sans action jouée —, alors que le refus, qui
+    énonce la forme littérale « nom p1, p2 », a été reproduit au pas suivant à
+    chaque fois (sp80 tour 11, dc22 tour 25) sans être retenu au-delà (dc22
+    tour 26, nue à nouveau). L'annonce dit donc la forme comme le refus la
+    dit, et la dit à chaque pas (§H16.0.7) ; même gabarit, même source — le
+    schéma —, aucun nom d'action codé ;
   - l'erreur de résolution (§H7.4 : nom inconnu, compte de valeurs, type
     invalide) se clôt par la forme complète attendue — pour un nom inconnu, la
     liste des actions disponibles avec leurs valeurs requises ; pour un compte
